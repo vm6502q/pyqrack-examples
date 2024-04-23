@@ -7,11 +7,12 @@ import time
 from pyqrack import QrackSimulator
 
 
-def bench_qrack(n):
+def bench_qrack(n, sdrp):
     # This is a discrete Fourier transform, after initializing all qubits randomly but separably.
     start = time.perf_counter()
 
     sim = QrackSimulator(n)
+    sim.set_sdrp(sdrp)
 
     lcv_range = range(n)
     all_bits = list(lcv_range)
@@ -32,13 +33,20 @@ def bench_qrack(n):
 
 
 def main():
-    bench_qrack(1)
+    bench_qrack(1, 0.5)
 
+    sdrp = 0.5
     max_qb = 24
     samples = 1
-    if len(sys.argv) > 1:
-        max_qb = int(sys.argv[1])
+    if len(sys.argv) < 2:
+        raise RuntimeError('Must specify (at least) SDRP floating-point [0.0, 1.0] argument on command line.')
+
+    sdrp = float(sys.argv[1])
+
     if len(sys.argv) > 2:
+        max_qb = int(sys.argv[1])
+
+    if len(sys.argv) > 3:
         samples = int(sys.argv[2])
 
     for n in range(1, max_qb + 1):
@@ -46,7 +54,7 @@ def main():
         
         # Run the benchmarks
         for i in range(samples):
-            width_results.append(bench_qrack(n))
+            width_results.append(bench_qrack(n, sdrp))
 
         time_result = sum(r[0] for r in width_results) / samples
         fidelity_result = sum(r[1] for r in width_results) / samples

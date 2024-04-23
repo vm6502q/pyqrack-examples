@@ -57,6 +57,8 @@ def main():
         fidelity_result = sum(r[1] for r in width_results) / samples
         print(n, ": ", time_result, " seconds, ", fidelity_result, " out of 1.0 fidelity")
 
+    return 0
+
 
 if __name__ == '__main__':
     sys.exit(main())
