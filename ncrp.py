@@ -67,7 +67,7 @@ def bench_qrack(width, depth, magic, ncrp):
     sim.set_ncrp(ncrp)
 
     magic_fraction = 3 * width * depth / magic
-    
+
     # Nearest-neighbor couplers:
     gateSequence = [ 0, 3, 2, 1, 2, 1, 0, 3 ]
     two_bit_gates = swap, pswap, mswap, nswap, iswap, iiswap, cx, cy, cz, acx, acy, acz
@@ -82,7 +82,7 @@ def bench_qrack(width, depth, magic, ncrp):
         for j in range(width):
             for _ in range(3):
                 # We're trying to cover 3 Pauli axes
-                # with Euler angle axes x-z-x. 
+                # with Euler angle axes x-z-x.
                 sim.h(j)
 
                 # We can trace out a quarter rotations around the Bloch sphere with stabilizer.
@@ -151,7 +151,7 @@ def main():
 
     if len(sys.argv) > 5:
         samples = int(sys.argv[5])
-        
+
     # Run the benchmarks
     width_results = []
     for i in range(samples):

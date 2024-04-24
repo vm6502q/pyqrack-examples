@@ -135,7 +135,7 @@ def main():
 
     if len(sys.argv) > 5:
         samples = int(sys.argv[5])
-        
+
     # Run the benchmarks
     width_results = []
     for i in range(samples):
