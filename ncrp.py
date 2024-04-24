@@ -60,6 +60,7 @@ def nswap(sim, q1, q2):
 
 
 def bench_qrack(width, depth, magic, ncrp):
+    # This is a "nearest-neighbor" coupler random circuit.
     start = time.perf_counter()
 
     sim = QrackSimulator(width, isTensorNetwork=False, isSchmidtDecompose=False)
