@@ -10,18 +10,16 @@ def bench_qrack(n):
     # This is a discrete Fourier transform, after initializing all qubits randomly but separably.
     start = time.perf_counter()
 
-    sim = QrackSimulator(n)
+    sim = QrackSimulator(n, isTensorNetwork=False, isSchmidtDecompose=False, isStabilizerHybrid=True)
 
     lcv_range = range(n)
     all_bits = list(lcv_range)
 
     single_count = 0
     double_count = 0
-    for _ in lcv_range:
-        # Single-qubit gates
-        for i in lcv_range:
-            sim.u(i, random.uniform(0, 2 * math.pi), random.uniform(0, 2 * math.pi), random.uniform(0, 2 * math.pi))
-    sim.qft(all_bits)
+    sim.h(0)
+    for q in range(n - 1):
+        sim.mcx([q], q + 1)
 
     fidelity = sim.get_unitary_fidelity()
     # Terminal measurement
