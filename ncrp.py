@@ -45,7 +45,7 @@ def iiswap(sim, q1, q2):
 
 def pswap(sim, q1, q2):
     sim.mcz([q1], q2)
-    sim.swap(q1, q2)   
+    sim.swap(q1, q2)
 
 
 def mswap(sim, q1, q2):
@@ -61,6 +61,7 @@ def nswap(sim, q1, q2):
 
 def bench_qrack(width, depth, magic, ncrp):
     start = time.perf_counter()
+
     sim = QrackSimulator(width, isTensorNetwork=False, isSchmidtDecompose=False)
     sim.set_ncrp(ncrp)
 
@@ -127,36 +128,37 @@ def bench_qrack(width, depth, magic, ncrp):
 
 
 def main():
-    bench_qrack(1, 1, 1, 1)
+    bench_qrack(1, 1, 1, 0.5)
 
-    ncrp = 0.5
+    width = 36
+    depth = 6
     magic = 6
-    max_qb = 24
     samples = 1
-    if len(sys.argv) < 3:
-        raise RuntimeError('Must specify (at least) NCRP floating-point [0.0, 1.0] argument followed by "magic" amount (integer) on command line.')
+    if len(sys.argv) < 6:
+        raise RuntimeError('Usage: python3 sdrp.py [ncrp] [width] [depth] [magic] [samples]')
 
     ncrp = float(sys.argv[1])
-    magic = int(sys.argv[2])
-    if magic < 1:
-        raise RuntimeError("Magic amount must be at least 1.")
+
+    if len(sys.argv) > 2:
+        width = int(sys.argv[2])
 
     if len(sys.argv) > 3:
-        max_qb = int(sys.argv[3])
+        depth = int(sys.argv[3])
 
     if len(sys.argv) > 4:
-        samples = int(sys.argv[4])
+        magic = int(sys.argv[4])
 
-    for n in range(1, max_qb + 1):
-        width_results = []
+    if len(sys.argv) > 5:
+        samples = int(sys.argv[5])
         
-        # Run the benchmarks
-        for i in range(samples):
-            width_results.append(bench_qrack(n, n, magic, ncrp))
+    # Run the benchmarks
+    width_results = []
+    for i in range(samples):
+        width_results.append(bench_qrack(width, depth, magic, ncrp))
 
-        time_result = sum(r[0] for r in width_results) / samples
-        fidelity_result = sum(r[1] for r in width_results) / samples
-        print(n, ": ", time_result, " seconds, ", fidelity_result, " out of 1.0 fidelity")
+    time_result = sum(r[0] for r in width_results) / samples
+    fidelity_result = sum(r[1] for r in width_results) / samples
+    print("Width=", width, ", Depth=", depth, ": ", time_result, " seconds, ", fidelity_result, " out of 1.0 fidelity")
 
     return 0
 
