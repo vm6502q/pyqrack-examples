@@ -49,10 +49,10 @@ def main():
     sdrp = float(sys.argv[1])
 
     if len(sys.argv) > 2:
-        max_qb = int(sys.argv[1])
+        max_qb = int(sys.argv[2])
 
     if len(sys.argv) > 3:
-        samples = int(sys.argv[2])
+        samples = int(sys.argv[3])
 
     for n in range(1, max_qb + 1):
         width_results = []
