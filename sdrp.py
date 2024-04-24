@@ -8,11 +8,11 @@ from pyqrack import QrackSimulator
 
 
 def bench_qrack(n, sdrp):
-    # This is a discrete Fourier transform, after initializing all qubits randomly but separably.
+    # This is basically a "quantum volume" (random) circuit.
     start = time.perf_counter()
 
-    sim = QrackSimulator(n)
-    sim.set_sdrp(sdrp)
+    sim = QrackSimulator(n, isTensorNetwork=False)
+    sim.set_sdrp(n)
 
     lcv_range = range(n)
     all_bits = list(lcv_range)
@@ -23,7 +23,12 @@ def bench_qrack(n, sdrp):
         # Single-qubit gates
         for i in lcv_range:
             sim.u(i, random.uniform(0, 2 * math.pi), random.uniform(0, 2 * math.pi), random.uniform(0, 2 * math.pi))
-    sim.qft(all_bits)
+
+        # 2-qubit couplers
+        unused_bits = all_bits.copy()
+        random.shuffle(unused_bits)
+        while len(unused_bits) > 1:
+            sim.mcx([unused_bits.pop()], unused_bits.pop())
 
     fidelity = sim.get_unitary_fidelity()
     # Terminal measurement
