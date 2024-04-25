@@ -45,6 +45,11 @@ def main():
 
     sim.reset_all()
     train_time = time.perf_counter() - start
+
+    with open(f"qft_{width}.csv", "w") as f:
+        for b in i_range:
+            f.write(str(neurons[b].get_angles()))
+
     start = time.perf_counter()
     for i in i_range:
         sim.u(i, random.uniform(0, 2 * math.pi), random.uniform(0, 2 * math.pi), random.uniform(0, 2 * math.pi))
