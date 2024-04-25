@@ -41,7 +41,7 @@ def main():
 
         # Learn
         for b in i_range:
-            neurons[b].learn(eta, True, False)
+            neurons[b].learn_permutation(eta, True, False)
 
     sim.reset_all()
     train_time = time.perf_counter() - start
