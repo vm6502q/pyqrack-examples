@@ -24,6 +24,7 @@ def main():
     i_range = range(width)
     o_range = range(width, width_x2)
     pow_width = 1 << width
+    eta = 1 / pow_width
 
     neurons = []
     for b in o_range:
@@ -40,7 +41,7 @@ def main():
 
         # Learn
         for b in i_range:
-            neurons[b].learn(1, True, False)
+            neurons[b].learn(eta, True, False)
 
     sim.reset_all()
     train_time = time.perf_counter() - start
