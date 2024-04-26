@@ -1,3 +1,5 @@
+# Demonstrates the use of "Schmidt decomposition rounding parameter" ("SDRP")
+
 import math
 import random
 import sys

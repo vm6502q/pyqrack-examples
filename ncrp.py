@@ -1,3 +1,5 @@
+# Demonstrates the use of "Near-Clifford rounding parameter" ("NCRP")
+
 import math
 import random
 import sys

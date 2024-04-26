@@ -1,3 +1,5 @@
+#Quantum binary becision diagram GHZ state preparation simulation
+
 import math
 import os
 import random
@@ -8,7 +10,6 @@ from pyqrack import QrackSimulator
 
 
 def bench_qrack(n):
-    # This is a discrete Fourier transform, after initializing all qubits randomly but separably.
     start = time.perf_counter()
 
     sim = QrackSimulator(n, isSchmidtDecompose=False, isBinaryDecisionTree=True)

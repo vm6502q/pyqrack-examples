@@ -1,3 +1,5 @@
+# Random Circuit Sampling (RCS) benchmark
+
 import math
 import random
 import sys

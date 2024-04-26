@@ -1,3 +1,5 @@
+# Near-Clifford GHZ state preparation simulation
+
 import math
 import random
 import sys
@@ -7,7 +9,6 @@ from pyqrack import QrackSimulator
 
 
 def bench_qrack(n):
-    # This is a discrete Fourier transform, after initializing all qubits randomly but separably.
     start = time.perf_counter()
 
     sim = QrackSimulator(n, isTensorNetwork=False, isSchmidtDecompose=False, isStabilizerHybrid=True)

@@ -1,4 +1,4 @@
-# Train a Hopfield neural network (associative memory) to associate integers with their respective "two's complement" (equivalent to multiplying a common signed integer by -1)
+# Train a Hopfield neural network (associative memory) to associate base-2 integers to their respective representations with base-10 "nibbles" (also historically called "binary-coded decimal," "BCD")
 
 import math
 import random
@@ -11,21 +11,19 @@ from pyqrack import QrackSimulator, QrackNeuron
 def main():
     start = time.perf_counter()
 
-    width = 4
-    if len(sys.argv) > 1:
-        width = int(sys.argv[1])
-    width_x2 = width << 1
-    sim = QrackSimulator(width_x2, isTensorNetwork=False)
-    i_range = range(width)
-    o_range = range(width, width_x2)
-    pow_width = 1 << width
+    width_i = 4
+    width_o = 5
+    sim = QrackSimulator(width_i + width_o, isTensorNetwork=False)
+    i_range = range(width_i)
+    o_range = range(width_o)
+    pow_width = 1 << width_i
     i_mask = pow_width - 1
-    o_mask = i_mask << width
+    o_mask = ((1 << width_o) - 1) << width_i
     eta = 0.5
 
     neurons = []
     for b in o_range:
-        neurons.append(QrackNeuron(sim, i_range, b))
+        neurons.append(QrackNeuron(sim, i_range, b + width_i))
 
     for p in range(pow_width):
         # Prepare input.
@@ -35,8 +33,8 @@ def main():
                 sim.x(b)
 
         # Train on output.
-        comp = ((~p) + 1) & i_mask
-        for b in i_range:
+        comp = (p % 10) | ((p // 10) << 4)
+        for b in o_range:
             neurons[b].learn_permutation(eta, ((comp >> b) & 1))
 
     sim.reset_all()
@@ -61,11 +59,11 @@ def main():
 
         result = sim.m_all()
 
-        print("Input", result & i_mask, "produces output", (result & o_mask) >> width)
+        print("Input", result & i_mask, "produces output", (result & o_mask) >> width_i)
 
     predict_time = time.perf_counter() - start
 
-    print(width, "qubits input; Train: ", train_time, "seconds, Predict:" , predict_time, "seconds.")
+    print(width_i, "qubits input; Train: ", train_time, "seconds, Predict:" , predict_time, "seconds.")
 
     return 0
 

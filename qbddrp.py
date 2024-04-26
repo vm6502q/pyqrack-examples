@@ -1,3 +1,5 @@
+# Demonstrates the use of "Quantum Binary Decision Diagram (QBDD) rounding parameter" ("QBDDRP")
+
 import math
 import os
 import random
