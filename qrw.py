@@ -16,7 +16,7 @@ def main():
 
     sim = QrackSimulator(lattice_qb_count + 1)
 
-    for _ in range(sign_power):
+    for _ in range(sign_power - 1):
         sim.h(coin_qubit)
         sim.mcadd(1, [coin_qubit], lattice_qubits)
         sim.x(coin_qubit)
