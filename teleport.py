@@ -1,3 +1,5 @@
+# Example of the quantum teleportation algorithm
+
 import math
 import random
 import sys
