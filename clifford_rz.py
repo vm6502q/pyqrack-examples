@@ -45,7 +45,7 @@ def random_circuit(width, max_magic, circ):
 
 
 def bench_qrack(n):
-    # This is a discrete Fourier transform, after initializing all qubits randomly but separably.
+    # This is a demonstration of near-Clifford capabilities, with Clifford+RZ gate set.
     start = time.perf_counter()
 
     sim = QrackSimulator(n, isStabilizerHybrid=True, isTensorNetwork=False, isSchmidtDecomposeMulti=False, isSchmidtDecompose=False, isOpenCL=False)
