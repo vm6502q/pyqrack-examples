@@ -131,8 +131,13 @@ def random_circuit(width, max_magic, circ):
                     bases[j] -= 3
                 
             # Rotate around local Z axis
-            if (width * width * random.random()) < max_magic:
+            if (3 * width * width * random.random()) < max_magic:
+                # T gate:
+                # rnd = math.pi / 4
+
+                # General RZ gate:
                 rnd = random.uniform(0, 2 * math.pi)
+
                 circ.mtrx([1, 0, 0, math.cos(rnd) + math.sin(rnd) * 1j], j)
             
         # Nearest-neighbor couplers:
@@ -169,7 +174,7 @@ def bench_qrack(n):
     random_circuit(n, 4, qcircuit)
 
     nc_sim = QrackSimulator(n, isStabilizerHybrid=True, isTensorNetwork=False, isSchmidtDecomposeMulti=False, isSchmidtDecompose=False, isOpenCL=False)
-    sv_sim = QrackSimulator(n)
+    sv_sim = QrackSimulator(n, isStabilizerHybrid=False, isTensorNetwork=False, isSchmidtDecomposeMulti=False, isSchmidtDecompose=False, isOpenCL=False)
 
     qcircuit.run(nc_sim)
     qcircuit.run(sv_sim)
