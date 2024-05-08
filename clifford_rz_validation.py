@@ -170,21 +170,23 @@ def bench_qrack(n):
     # This is a demonstration of near-Clifford capabilities, with Clifford+RZ gate set.
 
     # Run a near-Clifford circuit
-    qcircuit = QrackCircuit(False)
-    random_circuit(n, 4, qcircuit)
+    qcircuit = QrackCircuit(is_collapse=False)
+    random_circuit(n, 6, qcircuit)
 
     nc_sim = QrackSimulator(n, isStabilizerHybrid=True, isTensorNetwork=False, isSchmidtDecomposeMulti=False, isSchmidtDecompose=False, isOpenCL=False)
-    sv_sim = QrackSimulator(n, isStabilizerHybrid=False, isTensorNetwork=False, isSchmidtDecomposeMulti=False, isSchmidtDecompose=False, isOpenCL=False)
-
     qcircuit.run(nc_sim)
+
+    sv_sim = QrackSimulator(n, isStabilizerHybrid=False, isTensorNetwork=False, isSchmidtDecomposeMulti=False, isSchmidtDecompose=False, isOpenCL=False)
     qcircuit.run(sv_sim)
 
     nc_sv = nc_sim.out_ket()
     sv_sv = sv_sim.out_ket()
-
-    # fidelity = sim.get_unitary_fidelity()
     
-    return np.abs(sum([np.conj(x) * y for x, y in zip(nc_sv, sv_sv)]))
+    result = np.abs(sum([np.conj(x) * y for x, y in zip(nc_sv, sv_sv)]))
+    if result < 0.9:
+        qcircuit.out_to_file('qrack_circuit.qc')
+
+    return result
 
 
 def main():
