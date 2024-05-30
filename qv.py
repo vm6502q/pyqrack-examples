@@ -1,4 +1,4 @@
-# Random Circuit Sampling (RCS) benchmark
+# Quantum volume protocol certification
 
 import math
 import random
@@ -12,7 +12,7 @@ from pyqrack import QrackSimulator, QrackCircuit
 
 
 def bench_qrack(n, sdrp = 0):
-    # This is basically a "quantum volume" (random) circuit.
+    # This is a "quantum volume" (random) circuit.
     circ = QrackCircuit()
 
     lcv_range = range(n)
@@ -59,10 +59,8 @@ def bench_qrack(n, sdrp = 0):
 
 
 def main():
-    bench_qrack(1)
-
     n = 12
-    sdrp = 0.42
+    sdrp = 0.4
     if len(sys.argv) > 1:
         n = int(sys.argv[1])
     if len(sys.argv) > 2:
@@ -76,6 +74,8 @@ def main():
     interval = results[2]
     fidelity = results[3]
 
+    # We compare probabilities of (ideal) "heavy outputs."
+    # If the probability is above 2/3, the protocol certifies/passes the qubit width.
     threshold = statistics.median(ideal_probs)
     sum_prob = 0
     for i in range(n_pow):
