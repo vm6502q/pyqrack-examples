@@ -41,12 +41,12 @@ def bench_qrack(n, sdrp = 0):
             x_op = [0, 1, 1, 0]
             circ.ucmtrx([unused_bits.pop()], x_op, unused_bits.pop(), 1)
 
-    sim = QrackSimulator(n)
+    sim = QrackSimulator(n, isTensorNetwork=False)
     circ.run(sim)
     ideal_probs = [np.real(x * np.conj(x)) for x in sim.out_ket()]
 
     start = time.perf_counter()
-    sim = QrackSimulator(n)
+    sim = QrackSimulator(n, isTensorNetwork=False)
     if sdrp > 0:
         sim.set_sdrp(sdrp)
     circ.run(sim)
@@ -62,7 +62,7 @@ def main():
     bench_qrack(1)
 
     n = 12
-    sdrp = 0.1
+    sdrp = 0.42
     if len(sys.argv) > 1:
         n = int(sys.argv[1])
     if len(sys.argv) > 2:
