@@ -6,8 +6,6 @@ import statistics
 import sys
 import time
 
-import numpy as np
-
 from pyqrack import QrackSimulator, QrackCircuit
 
 
@@ -26,11 +24,11 @@ def bench_qrack(n, sdrp = 0):
             th = random.uniform(0, 2 * math.pi)
             ph = random.uniform(0, 2 * math.pi)
             lm = random.uniform(0, 2 * math.pi)
-            cos0 = np.cos(th / 2);
-            sin0 = np.sin(th / 2);
+            cos0 = math.cos(th / 2);
+            sin0 = math.sin(th / 2);
             u_op = [
-                cos0 + 0j, sin0 * (-np.cos(lm) + -np.sin(lm) * 1j),
-                sin0 * (np.cos(ph) + np.sin(ph) * 1j), cos0 * (np.cos(ph + lm) + np.sin(ph + lm) * 1j)
+                cos0 + 0j, sin0 * (-math.cos(lm) + -math.sin(lm) * 1j),
+                sin0 * (math.cos(ph) + math.sin(ph) * 1j), cos0 * (math.cos(ph + lm) + math.sin(ph + lm) * 1j)
             ]
             circ.mtrx(u_op, i)
 
@@ -43,7 +41,7 @@ def bench_qrack(n, sdrp = 0):
 
     sim = QrackSimulator(n, isTensorNetwork=False)
     circ.run(sim)
-    ideal_probs = [np.real(x * np.conj(x)) for x in sim.out_ket()]
+    ideal_probs = [(x * (x.conjugate())).real for x in sim.out_ket()]
 
     start = time.perf_counter()
     sim = QrackSimulator(n, isTensorNetwork=False)
@@ -53,7 +51,7 @@ def bench_qrack(n, sdrp = 0):
     interval = time.perf_counter() - start
 
     fidelity = sim.get_unitary_fidelity()
-    approx_probs = [np.real(x * np.conj(x)) for x in sim.out_ket()]
+    approx_probs = [(x * (x.conjugate())).real for x in sim.out_ket()]
 
     return (ideal_probs, approx_probs, interval, fidelity)
 
