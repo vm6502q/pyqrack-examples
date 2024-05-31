@@ -77,7 +77,7 @@ def main():
     threshold = statistics.median(ideal_probs)
     sum_prob = 0
     for i in range(n_pow):
-        if ideal_probs[i] >= threshold:
+        if ideal_probs[i] > threshold:
             sum_prob = sum_prob + approx_probs[i]
 
     print(n, "qubits,", sdrp, "SDRP:", interval, "seconds,", fidelity, "fidelity,", sum_prob, "HOG probability")
