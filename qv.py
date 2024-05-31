@@ -62,7 +62,7 @@ def main():
     if len(sys.argv) > 1:
         n = int(sys.argv[1])
     if len(sys.argv) > 2:
-        sdrp = float(sys.argv[1])
+        sdrp = float(sys.argv[2])
     n_pow = 1 << n
 
     results = bench_qrack(n, sdrp)
