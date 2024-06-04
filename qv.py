@@ -5,11 +5,48 @@ import random
 import statistics
 import sys
 import time
+import tracemalloc
 
 from pyqrack import QrackSimulator, QrackCircuit
 
+import threading, pynvml
+
+# See https://discuss.pytorch.org/t/measuring-peak-memory-usage-tracemalloc-for-pytorch/34067/6
+# for GPU memory usage monitoring
+def gpu_mem_used(id):
+    handle = pynvml.nvmlDeviceGetHandleByIndex(id)
+    info = pynvml.nvmlDeviceGetMemoryInfo(handle)
+    return info.used
+
+
+def peak_monitor_start():
+    global peak_monitoring
+    peak_monitoring = True
+
+    # this thread samples RAM usage as long as the current epoch of the fit loop is running
+    peak_monitor_thread = threading.Thread(target=peak_monitor_func)
+    peak_monitor_thread.daemon = True
+    peak_monitor_thread.start()
+
+
+def peak_monitor_stop():
+    global peak_monitoring
+    peak_monitoring = False
+
+
+def peak_monitor_func():
+    global nvml_peak, peak_monitoring
+    nvml_peak = 0
+
+    while True:
+        nvml_peak = max(gpu_mem_used(0), nvml_peak)
+        if not peak_monitoring: break
+        time.sleep(0.1) # 0.1sec
+
 
 def bench_qrack(n, sdrp = 0):
+    global nvml_peak, peak_monitoring
+
     # This is a "quantum volume" (random) circuit.
     circ = QrackCircuit()
 
@@ -43,17 +80,28 @@ def bench_qrack(n, sdrp = 0):
     circ.run(sim)
     ideal_probs = [(x * (x.conjugate())).real for x in sim.out_ket()]
 
+    tracemalloc.start()
+    peak_monitoring = False
+    nvml_peak = 0
+    pynvml.nvmlInit()
+    peak_monitor_start()
     start = time.perf_counter()
+
     sim = QrackSimulator(n, isTensorNetwork=False)
     if sdrp > 0:
         sim.set_sdrp(sdrp)
     circ.run(sim)
+
     interval = time.perf_counter() - start
+    traced_memory = tracemalloc.get_traced_memory()
+    nvml_after = gpu_mem_used(0)
+    peak_monitor_stop()
+    tracemalloc.stop()
 
     fidelity = sim.get_unitary_fidelity()
     approx_probs = [(x * (x.conjugate())).real for x in sim.out_ket()]
 
-    return (ideal_probs, approx_probs, interval, fidelity)
+    return (ideal_probs, approx_probs, interval, fidelity, (traced_memory[1] - traced_memory[0]) / 1024, (nvml_peak - nvml_after) / (1024 * 1024))
 
 
 def main():
@@ -71,6 +119,8 @@ def main():
     approx_probs = results[1]
     interval = results[2]
     fidelity = results[3]
+    memory_cpu = results[4]
+    memory_gpu = results[5]
 
     # We compare probabilities of (ideal) "heavy outputs."
     # If the probability is above 2/3, the protocol certifies/passes the qubit width.
@@ -80,7 +130,13 @@ def main():
         if ideal_probs[i] > threshold:
             sum_prob = sum_prob + approx_probs[i]
 
-    print(n, "qubits,", sdrp, "SDRP:", interval, "seconds,", fidelity, "fidelity,", sum_prob, "HOG probability")
+    print(n, "qubits,", sdrp, "SDRP:",
+        interval, "seconds,",
+        fidelity, "fidelity,",
+        sum_prob, "HOG probability,",
+        memory_cpu, "MB heap memory peak",
+        memory_gpu, "MB GPU memory peak"
+    )
 
     return 0
 
