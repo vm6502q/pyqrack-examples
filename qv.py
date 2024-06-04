@@ -79,6 +79,7 @@ def bench_qrack(n, sdrp = 0):
     sim = QrackSimulator(n, isTensorNetwork=False)
     circ.run(sim)
     ideal_probs = [(x * (x.conjugate())).real for x in sim.out_ket()]
+    del sim
 
     tracemalloc.start()
     traced_memory_start = tracemalloc.get_traced_memory()
