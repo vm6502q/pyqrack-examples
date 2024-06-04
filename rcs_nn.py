@@ -53,6 +53,8 @@ def bench_qrack(n, sdrp = 0):
     lcv_range = range(n)
     all_bits = list(lcv_range)
     x_op = [0, 1, 1, 0]
+    gateSequence = [ 0, 3, 2, 1, 2, 1, 0, 3 ]
+    row_len = math.ceil(math.sqrt(n))
 
     single_count = 0
     double_count = 0
@@ -70,11 +72,31 @@ def bench_qrack(n, sdrp = 0):
             ]
             circ.mtrx(u_op, i)
 
-        # 2-qubit couplers
-        unused_bits = all_bits.copy()
-        random.shuffle(unused_bits)
-        while len(unused_bits) > 1:
-            circ.ucmtrx([unused_bits.pop()], x_op, unused_bits.pop(), 1)
+        # Nearest-neighbor couplers:
+        gate = gateSequence.pop(0)
+        gateSequence.append(gate)
+        for row in range(1, row_len, 2):
+            for col in range(row_len):
+                temp_row = row
+                temp_col = col
+                temp_row = temp_row + (1 if (gate & 2) else -1);
+                temp_col = temp_col + (1 if (gate & 1) else 0)
+
+                if (temp_row < 0) or (temp_col < 0) or (temp_row >= row_len) or (temp_col >= row_len):
+                    continue
+
+                b1 = row * row_len + col
+                b2 = temp_row * row_len + temp_col
+
+                if (b1 >= n) or (b2 >= n):
+                    continue
+
+                if random.uniform(0, 1) < 0.5:
+                    tmp = b1
+                    b1 = b2
+                    b2 = tmp
+
+                circ.ucmtrx([b1], x_op, b2, 1)
 
     sim = QrackSimulator(n, isTensorNetwork=False)
     circ.run(sim)
