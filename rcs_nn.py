@@ -103,6 +103,7 @@ def bench_qrack(n, sdrp = 0):
     ideal_probs = [(x * (x.conjugate())).real for x in sim.out_ket()]
 
     tracemalloc.start()
+    traced_memory_start = tracemalloc.get_traced_memory()
     peak_monitoring = False
     nvml_peak = 0
     pynvml.nvmlInit()
@@ -115,7 +116,7 @@ def bench_qrack(n, sdrp = 0):
     circ.run(sim)
 
     interval = time.perf_counter() - start
-    traced_memory = tracemalloc.get_traced_memory()
+    traced_memory_end = tracemalloc.get_traced_memory()
     nvml_after = gpu_mem_used(0)
     peak_monitor_stop()
     tracemalloc.stop()
@@ -123,7 +124,7 @@ def bench_qrack(n, sdrp = 0):
     fidelity = sim.get_unitary_fidelity()
     approx_probs = [(x * (x.conjugate())).real for x in sim.out_ket()]
 
-    return (ideal_probs, approx_probs, interval, fidelity, (traced_memory[1] - traced_memory[0]) / 1024, (nvml_peak - nvml_after) / (1024 * 1024))
+    return (ideal_probs, approx_probs, interval, fidelity, (traced_memory_end[1] - traced_memory_start[0]) / 1024, (nvml_peak - nvml_after) / (1024 * 1024))
 
 
 def main():
