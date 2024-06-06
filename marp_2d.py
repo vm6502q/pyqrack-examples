@@ -76,9 +76,8 @@ def bench_qrack(width, depth, sdrp_samples):
         col_len -= 1
     row_len = width // col_len
 
-    sdrp = 0
-    fidelity = 0
     for i in range(0, sdrp_samples):
+        start = time.perf_counter()
         sdrp = 1 if sdrp_samples == 1 else (1 - i / (sdrp_samples - 1))
 
         sim = QrackSimulator(width, isTensorNetwork=False)
@@ -129,12 +128,16 @@ def bench_qrack(width, depth, sdrp_samples):
         # Terminal measurement
         sim.m_all()
 
-    return (time.perf_counter() - start, fidelity)
+        print({
+            'width': width,
+            'depth': depth,
+            'sdrp': sdrp,
+            'time': time.perf_counter() - start,
+            'fidelity': fidelity
+        })
 
 
 def main():
-    bench_qrack(1, 1, 1)
-
     width = 36
     depth = 6
     circuit_trials = 1
@@ -148,18 +151,8 @@ def main():
     sdrp_samples = int(sys.argv[4])
 
     # Run the benchmarks
-    width_results = []
     for i in range(circuit_trials):
-        width_results.append(bench_qrack(width, depth, sdrp_samples))
-
-    print({
-        'width': width,
-        'depth': depth,
-        'circuit_trials': circuit_trials,
-        'sdrp_samples': sdrp_samples,
-        'time': sum(r[0] for r in width_results) / circuit_trials,
-        'fidelity': sum(r[1] for r in width_results) / circuit_trials
-    })
+        bench_qrack(width, depth, sdrp_samples)
 
     return 0
 
