@@ -125,24 +125,18 @@ def main():
         raise RuntimeError('Usage: python3 sdrp_2d.py [sdrp] [width] [depth] [samples]')
 
     sdrp = float(sys.argv[1])
-
-    if len(sys.argv) > 2:
-        width = int(sys.argv[2])
-
-    if len(sys.argv) > 3:
-        depth = int(sys.argv[3])
-
-    if len(sys.argv) > 4:
-        samples = int(sys.argv[4])
+    width = int(sys.argv[2])
+    depth = int(sys.argv[3])
+    samples = int(sys.argv[4])
 
     # Run the benchmarks
     width_results = []
     for i in range(samples):
         width_results.append(bench_qrack(width, depth, sdrp))
 
-    time_result = sum(r[0] for r in width_results) / samples
-    fidelity_result = sum(r[1] for r in width_results) / samples
-    print("Width =", width, ", Depth =", depth, "", time_result, "seconds,", fidelity_result, "out of 1.0 fidelity")
+    time = sum(r[0] for r in width_results) / samples
+    fidelity = sum(r[1] for r in width_results) / samples
+    print("Width =", width, ", Depth =", depth, "", time, "seconds,", fidelity, "out of 1.0 fidelity")
 
     return 0
 

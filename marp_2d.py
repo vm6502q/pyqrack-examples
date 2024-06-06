@@ -60,7 +60,7 @@ def nswap(sim, q1, q2):
     sim.mcz([q1], q2)
 
 
-def bench_qrack(width, depth):
+def bench_qrack(width, depth, sdrp_samples):
     # This is a "nearest-neighbor" coupler random circuit.
     start = time.perf_counter()
 
@@ -78,8 +78,8 @@ def bench_qrack(width, depth):
 
     sdrp = 0
     fidelity = 0
-    for i in range(0, 11):
-        sdrp = 1 - 0.1 * i
+    for i in range(0, sdrp_samples):
+        sdrp = 1 if sdrp_samples == 1 else (1 - i / (sdrp_samples - 1))
 
         sim = QrackSimulator(width, isTensorNetwork=False)
         if sdrp > 0:
@@ -133,31 +133,28 @@ def bench_qrack(width, depth):
 
 
 def main():
-    bench_qrack(1, 1)
+    bench_qrack(1, 1, 1)
 
     width = 36
     depth = 6
-    samples = 1
-    if len(sys.argv) < 4:
-        raise RuntimeError('Usage: python3 marp_2d.py [width] [depth] [samples]')
+    circuit_samples = 1
+    sdrp_samples = 11
+    if len(sys.argv) < 5:
+        raise RuntimeError('Usage: python3 marp_2d.py [width] [depth] [circuit_samples] [sdrp_samples]')
 
-    if len(sys.argv) > 1:
-        width = int(sys.argv[1])
-
-    if len(sys.argv) > 2:
-        depth = int(sys.argv[2])
-
-    if len(sys.argv) > 3:
-        samples = int(sys.argv[3])
+    width = int(sys.argv[1])
+    depth = int(sys.argv[2])
+    circuit_samples = int(sys.argv[3])
+    sdrp_samples = int(sys.argv[4])
 
     # Run the benchmarks
     width_results = []
-    for i in range(samples):
-        width_results.append(bench_qrack(width, depth))
+    for i in range(circuit_samples):
+        width_results.append(bench_qrack(width, depth, sdrp_samples))
 
-    time_result = sum(r[0] for r in width_results) / samples
-    fidelity_result = sum(r[1] for r in width_results) / samples
-    print("Width =", width, ", Depth =", depth, "", time_result, "seconds,", fidelity_result, "out of 1.0 fidelity")
+    time = sum(r[0] for r in width_results) / circuit_samples
+    fidelity = sum(r[1] for r in width_results) / circuit_samples
+    print("Width =", width, ", Depth =", depth, "", time, "seconds,", fidelity, "out of 1.0 avg. fidelity")
 
     return 0
 
