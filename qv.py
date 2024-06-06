@@ -132,13 +132,15 @@ def main():
         if ideal_probs[i] > threshold:
             sum_prob = sum_prob + approx_probs[i]
 
-    print(n, "qubits,", sdrp, "SDRP:",
-        interval, "seconds,",
-        fidelity, "fidelity,",
-        sum_prob, "HOG probability,",
-        memory_cpu, "MB heap memory peak",
-        memory_gpu, "MB GPU memory peak"
-    )
+    print({
+        'qubits': n,
+        'sdrp': sdrp,
+        'seconds': interval,
+        'fidelity': fidelity,
+        'hog_prob': sum_prob,
+        'peak_cpu_mb': memory_cpu,
+        'peak_gpu_mb': memory_gpu
+    })
 
     return 0
 

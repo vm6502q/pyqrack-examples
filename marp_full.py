@@ -123,24 +123,29 @@ def main():
 
     width = 36
     depth = 6
-    circuit_samples = 1
+    circuit_trials = 1
     sdrp_samples = 11
     if len(sys.argv) < 5:
-        raise RuntimeError('Usage: python3 marp_full.py [width] [depth] [circuit_samples] [sdrp_samples]')
+        raise RuntimeError('Usage: python3 marp_full.py [width] [depth] [circuit_trials] [sdrp_samples]')
 
     width = int(sys.argv[1])
     depth = int(sys.argv[2])
-    circuit_samples = int(sys.argv[3])
+    circuit_trials = int(sys.argv[3])
     sdrp_samples = int(sys.argv[4])
 
     # Run the benchmarks
     width_results = []
-    for i in range(circuit_samples):
+    for i in range(circuit_trials):
         width_results.append(bench_qrack(width, depth, sdrp_samples))
 
-    time = sum(r[0] for r in width_results) / circuit_samples
-    fidelity = sum(r[1] for r in width_results) / circuit_samples
-    print("Width =", width, ", Depth =", depth, "", time, "seconds,", fidelity, "out of 1.0 avg. fidelity")
+    print({
+        'width': width,
+        'depth': depth,
+        'circuit_trials': circuit_trials,
+        'sdrp_samples': sdrp_samples,
+        'time': sum(r[0] for r in width_results) / circuit_trials,
+        'fidelity': sum(r[1] for r in width_results) / circuit_trials
+    })
 
     return 0
 

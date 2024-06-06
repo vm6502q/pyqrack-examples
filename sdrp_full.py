@@ -104,23 +104,28 @@ def main():
 
     width = 36
     depth = 6
-    samples = 1
+    trials = 1
     if len(sys.argv) < 5:
-        raise RuntimeError('Usage: python3 sdrp_full.py [sdrp] [width] [depth] [samples]')
+        raise RuntimeError('Usage: python3 sdrp_full.py [sdrp] [width] [depth] [trials]')
 
     sdrp = float(sys.argv[1])
     width = int(sys.argv[2])
     depth = int(sys.argv[3])
-    samples = int(sys.argv[4])
+    trials = int(sys.argv[4])
 
     # Run the benchmarks
     width_results = []
-    for i in range(samples):
+    for i in range(trials):
         width_results.append(bench_qrack(width, depth, sdrp))
 
-    time = sum(r[0] for r in width_results) / samples
-    fidelity = sum(r[1] for r in width_results) / samples
-    print("Width =", width, ", Depth =", depth, "", time, "seconds,", fidelity, "out of 1.0 fidelity")
+    print({
+        'sdrp': sdrp,
+        'width': width,
+        'depth': depth,
+        'trials': trials,
+        'time': sum(r[0] for r in width_results) / circuit_samples,
+        'fidelity': sum(r[1] for r in width_results) / circuit_samples
+    })
 
     return 0
 
