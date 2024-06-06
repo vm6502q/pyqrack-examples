@@ -46,7 +46,7 @@ def peak_monitor_func():
         time.sleep(0.1) # 0.1sec
 
 
-def bench_qrack(file, sdrp = 0):
+def bench_qrack(file, sdrp):
     global nvml_peak, peak_monitoring
 
     circ = QuantumCircuit.from_qasm_file(file)
@@ -79,7 +79,7 @@ def bench_qrack(file, sdrp = 0):
 
 def main():
     file = "qft.qasm"
-    sdrp = 0.3
+    sdrp = 0
     if len(sys.argv) > 1:
         file = str(sys.argv[1])
     if len(sys.argv) > 2:
