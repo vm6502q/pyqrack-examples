@@ -84,28 +84,12 @@ def bench_qrack(width, depth, sdrp):
         for i in lcv_range:
             sim.u(i, random.uniform(0, 2 * math.pi), random.uniform(0, 2 * math.pi), random.uniform(0, 2 * math.pi))
 
-        # Nearest-neighbor couplers:
-        ############################
-        gate = gateSequence.pop(0)
-        gateSequence.append(gate)
-        for row in range(1, row_len, 2):
-            for col in range(col_len):
-                temp_row = row
-                temp_col = col
-                temp_row = temp_row + (1 if (gate & 2) else -1);
-                temp_col = temp_col + (1 if (gate & 1) else 0)
-
-                if (temp_row < 0) or (temp_col < 0) or (temp_row >= row_len) or (temp_col >= row_len):
-                    continue
-
-                b1 = row * row_len + col
-                b2 = temp_row * row_len + temp_col
-
-                if (b1 >= width) or (b2 >= width):
-                    continue
-
-                g = random.choice(two_bit_gates)
-                g(sim, b1, b2)
+        # 2-qubit couplers
+        unused_bits = all_bits.copy()
+        random.shuffle(unused_bits)
+        while len(unused_bits) > 1:
+            g = random.choice(two_bit_gates)
+            g(sim, unused_bits.pop(), unused_bits.pop())
 
     fidelity = sim.get_unitary_fidelity()
     # Terminal measurement
@@ -141,7 +125,7 @@ def main():
 
     time_result = sum(r[0] for r in width_results) / samples
     fidelity_result = sum(r[1] for r in width_results) / samples
-    print("Width=", width, ", Depth=", depth, ": ", time_result, " seconds, ", fidelity_result, " out of 1.0 fidelity")
+    print("Width =", width, ", Depth =", depth, "", time_result, "seconds,", fidelity_result, "out of 1.0 fidelity")
 
     return 0
 
