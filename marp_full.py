@@ -1,4 +1,5 @@
 # Demonstrates the use of "Schmidt decomposition rounding parameter" ("SDRP")
+# Searches for the "minimum attainable rounding parameter" ("MARP")
 
 import math
 import random
@@ -60,12 +61,9 @@ def nswap(sim, q1, q2):
     sim.mcz([q1], q2)
 
 
-def bench_qrack(width, depth, sdrp):
-    # This is full-connectivity random circuit.
+def bench_qrack(width, depth):
+    # This is a full-connectivity random circuit.
     start = time.perf_counter()
-
-    sim = QrackSimulator(width, isTensorNetwork=False)
-    sim.set_sdrp(sdrp)
 
     lcv_range = range(width)
     all_bits = list(lcv_range)
@@ -77,52 +75,71 @@ def bench_qrack(width, depth, sdrp):
         col_len -= 1
     row_len = width // col_len
 
-    for _ in range(depth):
-        # Single-qubit gates
-        for i in lcv_range:
-            sim.u(i, random.uniform(0, 2 * math.pi), random.uniform(0, 2 * math.pi), random.uniform(0, 2 * math.pi))
+    sdrp = 0
+    fidelity = 0
+    for i in range(0, 11):
+        sdrp = 1 - 0.1 * i
 
-        # 2-qubit couplers
-        unused_bits = all_bits.copy()
-        random.shuffle(unused_bits)
-        while len(unused_bits) > 1:
-            g = random.choice(two_bit_gates)
-            b1 = unused_bits.pop()
-            b2 = unused_bits.pop()
-            g(sim, b1, b2)
-            sim.try_separate_2qb(b1, b2)
+        sim = QrackSimulator(width, isTensorNetwork=False)
+        if sdrp > 0:
+            sim.set_sdrp(sdrp)
 
-    fidelity = sim.get_unitary_fidelity()
-    # Terminal measurement
-    sim.m_all()
+        is_fail = False
+        for _ in range(depth):
+            # Single-qubit gates
+            for i in lcv_range:
+                try:
+                    sim.u(i, random.uniform(0, 2 * math.pi), random.uniform(0, 2 * math.pi), random.uniform(0, 2 * math.pi))
+                except:
+                    is_fail = True
+                    break
+
+            # 2-qubit couplers
+            unused_bits = all_bits.copy()
+            random.shuffle(unused_bits)
+            while len(unused_bits) > 1:
+                g = random.choice(two_bit_gates)
+                b1 = unused_bits.pop()
+                b2 = unused_bits.pop()
+                try:
+                    g(sim, b1, b2)
+                    sim.try_separate_2qb(b1, b2)
+                except:
+                    is_fail = True
+                    break
+
+        if is_fail:
+            break
+
+        fidelity = sim.get_unitary_fidelity()
+        # Terminal measurement
+        sim.m_all()
 
     return (time.perf_counter() - start, fidelity)
 
 
 def main():
-    bench_qrack(1, 1, 0.5)
+    bench_qrack(1, 1)
 
     width = 36
     depth = 6
     samples = 1
-    if len(sys.argv) < 5:
-        raise RuntimeError('Usage: python3 sdrp_full.py [sdrp] [width] [depth] [samples]')
+    if len(sys.argv) < 4:
+        raise RuntimeError('Usage: python3 marp_full.py [width] [depth] [samples]')
 
-    sdrp = float(sys.argv[1])
+    if len(sys.argv) > 1:
+        width = int(sys.argv[1])
 
     if len(sys.argv) > 2:
-        width = int(sys.argv[2])
+        depth = int(sys.argv[2])
 
     if len(sys.argv) > 3:
-        depth = int(sys.argv[3])
-
-    if len(sys.argv) > 4:
-        samples = int(sys.argv[4])
+        samples = int(sys.argv[3])
 
     # Run the benchmarks
     width_results = []
     for i in range(samples):
-        width_results.append(bench_qrack(width, depth, sdrp))
+        width_results.append(bench_qrack(width, depth))
 
     time_result = sum(r[0] for r in width_results) / samples
     fidelity_result = sum(r[1] for r in width_results) / samples

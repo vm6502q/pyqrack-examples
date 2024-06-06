@@ -122,7 +122,7 @@ def main():
     depth = 6
     samples = 1
     if len(sys.argv) < 5:
-        raise RuntimeError('Usage: python3 sdrp.py [sdrp] [width] [depth] [samples]')
+        raise RuntimeError('Usage: python3 sdrp_2d.py [sdrp] [width] [depth] [samples]')
 
     sdrp = float(sys.argv[1])
 
