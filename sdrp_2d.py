@@ -106,6 +106,7 @@ def bench_qrack(width, depth, sdrp):
 
                 g = random.choice(two_bit_gates)
                 g(sim, b1, b2)
+                sim.try_separate_2qb(b1, b2)
 
     fidelity = sim.get_unitary_fidelity()
     # Terminal measurement

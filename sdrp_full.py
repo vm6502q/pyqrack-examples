@@ -87,7 +87,10 @@ def bench_qrack(width, depth, sdrp):
         random.shuffle(unused_bits)
         while len(unused_bits) > 1:
             g = random.choice(two_bit_gates)
-            g(sim, unused_bits.pop(), unused_bits.pop())
+            b1 = unused_bits.pop()
+            b2 = unused_bits.pop()
+            g(sim, b1, b2)
+            sim.try_separate_2qb(b1, b2)
 
     fidelity = sim.get_unitary_fidelity()
     # Terminal measurement
