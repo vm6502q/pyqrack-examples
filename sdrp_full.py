@@ -70,8 +70,6 @@ def bench_qrack(width, depth, sdrp):
     lcv_range = range(width)
     all_bits = list(lcv_range)
 
-    # Nearest-neighbor couplers:
-    gateSequence = [ 0, 3, 2, 1, 2, 1, 0, 3 ]
     two_bit_gates = swap, pswap, mswap, nswap, iswap, iiswap, cx, cy, cz, acx, acy, acz
 
     col_len = math.floor(math.sqrt(width))
