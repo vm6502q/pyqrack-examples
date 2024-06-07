@@ -2,8 +2,10 @@ import sys
 
 def main():
     file = "marp.txt"
-    if len(sys.argv) > 1:
-        file = str(sys.argv[1])
+    if len(sys.argv) < 2:
+        raise RuntimeError('Usage: python3 parse_marp.py [file_name]')
+
+    file = str(sys.argv[1])
 
     avg_fidelity = 0
     avg_time = 0
