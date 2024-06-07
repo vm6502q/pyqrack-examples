@@ -32,7 +32,7 @@ def main():
     avg_time = avg_time / sample_count
 
     print({
-        "avg_fidelity:": avg_fidelity,
+        "avg_fidelity": avg_fidelity,
         "avg_seconds": avg_time
     })
 
