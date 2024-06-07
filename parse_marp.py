@@ -56,8 +56,8 @@ def main():
         trials = trial_count[key]
         print({
             'depth': int(key),
-            'trials': trials,
-            'avg_fidelity': avg_fidelity[key] / trials,
+            'successful_trials': trials,
+            'avg_fidelity': avg_fidelity[key] / 100,
             'avg_sdrp_seconds': avg_sdrp_time[key] / trials,
             'avg_marp_seconds': avg_marp_time[key] / trials
         })
