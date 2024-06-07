@@ -145,7 +145,7 @@ def main():
     depth = 6
     sdrp_samples = 11
     if len(sys.argv) != 4:
-        raise RuntimeError('Usage: python3 marp_full.py [width] [depth] [sdrp_samples]')
+        raise RuntimeError('Usage: python3 marp_2d.py [width] [depth] [sdrp_samples]')
 
     width = int(sys.argv[1])
     depth = int(sys.argv[2])
