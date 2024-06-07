@@ -19,7 +19,7 @@ def main():
             if not line:
                 # Last sample
                 if depth > 0:
-                    if dpth in avg_fidelity.keys():
+                    if depth in avg_fidelity.keys():
                         avg_fidelity[depth] = avg_fidelity[depth] + fidelity
                         avg_time[depth] = avg_time[depth] + time
                     else:
@@ -36,7 +36,7 @@ def main():
                     trial_count[dpth] = 1
                 # Finalize last samples
                 if depth > 0:
-                    if dpth in avg_fidelity.keys():
+                    if depth in avg_fidelity.keys():
                         avg_fidelity[depth] = avg_fidelity[depth] + fidelity
                         avg_time[depth] = avg_time[depth] + time
                     else:
@@ -51,6 +51,7 @@ def main():
         trials = trial_count[key]
         print({
             'depth': int(key),
+            'trials': trials,
             'avg_fidelity': avg_fidelity[key] / trials,
             'avg_seconds': avg_time[key] / trials
         })
