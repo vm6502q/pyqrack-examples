@@ -14,21 +14,26 @@ def main():
         while True:
             line = in_file.readline()
             if not line:
-                break
-            d = eval(line)
-            fidelity = d['fidelity']
-            time = d['time']
-            if d['sdrp'] == 1:
-                sample_count = sample_count + 1
+                # Last sample
                 avg_fidelity = avg_fidelity + fidelity
                 avg_time = avg_time + time
+                break
+            d = eval(line)
+            if d['sdrp'] == 1:
+                # Update count
+                sample_count = sample_count + 1
+                # Finalize last samples
+                avg_fidelity = avg_fidelity + fidelity
+                avg_time = avg_time + time
+            fidelity = d['fidelity']
+            time = d['time']
 
     avg_fidelity = avg_fidelity / sample_count
     avg_time = avg_time / sample_count
 
     print({
-        avg_fidelity, "avg. fidelity,",
-        avg_time, "avg. seconds"
+        "avg_fidelity:": avg_fidelity,
+        "avg_seconds": avg_time
     })
 
     return 0
