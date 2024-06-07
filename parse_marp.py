@@ -7,36 +7,53 @@ def main():
 
     file = str(sys.argv[1])
 
-    avg_fidelity = 0
-    avg_time = 0
-    sample_count = 0
+    avg_fidelity = {}
+    avg_time = {}
+    trial_count = {}
     with open(file, 'r') as in_file:
+        depth = 0
         fidelity = 0
         time = 0
         while True:
             line = in_file.readline()
             if not line:
                 # Last sample
-                avg_fidelity = avg_fidelity + fidelity
-                avg_time = avg_time + time
+                if depth > 0:
+                    if dpth in avg_fidelity.keys():
+                        avg_fidelity[depth] = avg_fidelity[depth] + fidelity
+                        avg_time[depth] = avg_time[depth] + time
+                    else:
+                        avg_fidelity[depth] = fidelity
+                        avg_time[depth] = time
                 break
             d = eval(line)
             if d['sdrp'] == 1:
                 # Update count
-                sample_count = sample_count + 1
+                dpth = d['depth']
+                if dpth in trial_count.keys():
+                    trial_count[dpth] = trial_count[dpth] + 1
+                else:
+                    trial_count[dpth] = 1
                 # Finalize last samples
-                avg_fidelity = avg_fidelity + fidelity
-                avg_time = avg_time + time
+                if depth > 0:
+                    if dpth in avg_fidelity.keys():
+                        avg_fidelity[depth] = avg_fidelity[depth] + fidelity
+                        avg_time[depth] = avg_time[depth] + time
+                    else:
+                        avg_fidelity[depth] = fidelity
+                        avg_time[depth] = time
+            depth = d['depth']
             fidelity = d['fidelity']
             time = d['time']
 
-    avg_fidelity = avg_fidelity / sample_count
-    avg_time = avg_time / sample_count
-
-    print({
-        "avg_fidelity": avg_fidelity,
-        "avg_seconds": avg_time
-    })
+    for key in avg_fidelity.keys():
+        depth = int(key)
+        trials = trial_count[key]
+        print({
+            'depth': int(key),
+            'avg_fidelity': avg_fidelity[key] / trials,
+            'avg_seconds': avg_time[key] / trials
+        })
 
     return 0
 
