@@ -73,6 +73,7 @@ def bench_qrack(width, depth, sdrp_samples):
         col_len -= 1
     row_len = width // col_len
 
+    sdrp_segments = sdrp_samples - 1
     for i in range(0, sdrp_samples):
         start = time.perf_counter()
         sdrp = 1 if sdrp_samples == 1 else ((sdrp_segments - i) / sdrp_segments)
