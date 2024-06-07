@@ -125,19 +125,16 @@ def bench_qrack(width, depth, sdrp_samples):
 def main():
     width = 36
     depth = 6
-    circuit_trials = 1
     sdrp_samples = 11
-    if len(sys.argv) < 5:
-        raise RuntimeError('Usage: python3 marp_full.py [width] [depth] [circuit_trials] [sdrp_samples]')
+    if len(sys.argv) != 4:
+        raise RuntimeError('Usage: python3 marp_full.py [width] [depth] [sdrp_samples]')
 
     width = int(sys.argv[1])
     depth = int(sys.argv[2])
-    circuit_trials = int(sys.argv[3])
-    sdrp_samples = int(sys.argv[4])
+    sdrp_samples = int(sys.argv[3])
 
     # Run the benchmarks
-    for i in range(circuit_trials):
-        bench_qrack(width, depth, sdrp_samples)
+    bench_qrack(width, depth, sdrp_samples)
 
     return 0
 
