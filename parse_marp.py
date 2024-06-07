@@ -8,7 +8,8 @@ def main():
     file = str(sys.argv[1])
 
     avg_fidelity = {}
-    avg_time = {}
+    avg_sdrp_time = {}
+    avg_marp_time = {}
     trial_count = {}
     with open(file, 'r') as in_file:
         depth = 0
@@ -21,10 +22,10 @@ def main():
                 if depth > 0:
                     if depth in avg_fidelity.keys():
                         avg_fidelity[depth] = avg_fidelity[depth] + fidelity
-                        avg_time[depth] = avg_time[depth] + time
+                        avg_sdrp_time[depth] = avg_sdrp_time[depth] + time
                     else:
                         avg_fidelity[depth] = fidelity
-                        avg_time[depth] = time
+                        avg_sdrp_time[depth] = time
                 break
             d = eval(line)
             if d['sdrp'] == 1:
@@ -38,13 +39,17 @@ def main():
                 if depth > 0:
                     if depth in avg_fidelity.keys():
                         avg_fidelity[depth] = avg_fidelity[depth] + fidelity
-                        avg_time[depth] = avg_time[depth] + time
+                        avg_sdrp_time[depth] = avg_sdrp_time[depth] + time
                     else:
                         avg_fidelity[depth] = fidelity
-                        avg_time[depth] = time
+                        avg_sdrp_time[depth] = time
             depth = d['depth']
             fidelity = d['fidelity']
             time = d['time']
+            if depth in avg_marp_time.keys():
+                avg_marp_time[depth] = avg_marp_time[depth] + time
+            else:
+                avg_marp_time[depth] = time
 
     for key in avg_fidelity.keys():
         depth = int(key)
@@ -53,7 +58,8 @@ def main():
             'depth': int(key),
             'trials': trials,
             'avg_fidelity': avg_fidelity[key] / trials,
-            'avg_seconds': avg_time[key] / trials
+            'avg_sdrp_seconds': avg_sdrp_time[key] / trials,
+            'avg_marp_seconds': avg_marp_time[key] / trials
         })
 
     return 0
