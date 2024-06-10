@@ -42,7 +42,7 @@ def main():
             if d['sdrp'] == 1:
                 # Update count
                 dpth = d['depth']
-                if dpth in trial_count.keys():
+                if dpth in trial_count[-1].keys():
                     trial_count[dpth] = trial_count[dpth] + 1
                 else:
                     trial_count[dpth] = 1
