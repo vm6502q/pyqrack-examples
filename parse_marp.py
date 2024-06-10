@@ -67,6 +67,8 @@ def main():
     for i in range(len(avg_fidelity)):
         for key in avg_fidelity[i].keys():
             depth = int(key)
+            if key not in trial_count[i]:
+                continue
             trials = trial_count[i][key]
             print({
                 'depth': int(key),
