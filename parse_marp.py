@@ -30,11 +30,11 @@ def main():
                 # Last sample
                 if depth > 0:
                     if depth in avg_fidelity[-1].keys():
-                        avg_fidelity[depth] = avg_fidelity[depth] + fidelity
-                        avg_sdrp_time[depth] = avg_sdrp_time[depth] + time
+                        avg_fidelity[-1][depth] = avg_fidelity[-1][depth] + fidelity
+                        avg_sdrp_time[-1][depth] = avg_sdrp_time[-1][depth] + time
                     else:
-                        avg_fidelity[depth] = fidelity
-                        avg_sdrp_time[depth] = time
+                        avg_fidelity[-1][depth] = fidelity
+                        avg_sdrp_time[-1][depth] = time
                 break
 
             d = eval(line)
@@ -43,7 +43,7 @@ def main():
                 # Update count
                 dpth = d['depth']
                 if dpth in trial_count[-1].keys():
-                    trial_count[dpth] = trial_count[dpth] + 1
+                    trial_count[-1][dpth] = trial_count[-1][dpth] + 1
                 else:
                     trial_count[dpth] = 1
                 # Finalize last samples
