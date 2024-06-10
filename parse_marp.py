@@ -59,10 +59,10 @@ def main():
             fidelity = d['fidelity']
             time = d['time']
 
-            if depth in avg_marp_time.keys():
-                avg_marp_time[depth] = avg_marp_time[depth] + time
+            if depth in avg_marp_time[-1].keys():
+                avg_marp_time[-1][depth] = avg_marp_time[-1][depth] + time
             else:
-                avg_marp_time[depth] = time
+                avg_marp_time[-1][depth] = time
 
     for i in range(len(avg_fidelity)):
         for key in avg_fidelity[i].keys():
@@ -71,10 +71,10 @@ def main():
             print({
                 'depth': int(key),
                 'successful_trials': trials,
-                'avg_fidelity': avg_fidelity[-1][key] / 100,
-                'avg_sdrp_seconds': avg_sdrp_time[-1][key] / trials,
-                'avg_marp_seconds': avg_marp_time[-1][key] / trials,
-                'ideal_capacity_qb': ideal_capacity[-1]
+                'avg_fidelity': avg_fidelity[i][key] / 100,
+                'avg_sdrp_seconds': avg_sdrp_time[i][key] / trials,
+                'avg_marp_seconds': avg_marp_time[i][key] / trials,
+                'ideal_capacity_qb': ideal_capacity[i]
             })
 
     return 0
