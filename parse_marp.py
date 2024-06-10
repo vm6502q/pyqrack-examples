@@ -45,7 +45,7 @@ def main():
                 if dpth in trial_count[-1].keys():
                     trial_count[-1][dpth] = trial_count[-1][dpth] + 1
                 else:
-                    trial_count[dpth] = 1
+                    trial_count[-1][dpth] = 1
                 # Finalize last samples
                 if depth > 0:
                     if depth in avg_fidelity[-1].keys():
