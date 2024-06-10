@@ -7,29 +7,29 @@ def main():
 
     file = str(sys.argv[1])
 
-    avg_fidelity = {}
-    avg_sdrp_time = {}
-    avg_marp_time = {}
-    trial_count = {}
+    avg_fidelity = []
+    avg_sdrp_time = []
+    avg_marp_time = []
+    trial_count = []
+    ideal_capacity = []
     with open(file, 'r') as in_file:
         depth = 0
         fidelity = 0
         time = 0
-        ideal_capacity = 33
         while True:
             line = in_file.readline()
             if 'QRACK_MAX_PAGING_QB=' in line:
-                ideal_capacity = int(line.split('QRACK_MAX_PAGING_QB=',1)[1])
-                avg_fidelity = {}
-                avg_sdrp_time = {}
-                avg_marp_time = {}
-                trial_count = {}
+                ideal_capacity.append(int(line.split('QRACK_MAX_PAGING_QB=',1)[1]))
+                avg_fidelity.append({})
+                avg_sdrp_time.append({})
+                avg_marp_time.append({})
+                trial_count.append({})
                 continue
 
             if not line:
                 # Last sample
                 if depth > 0:
-                    if depth in avg_fidelity.keys():
+                    if depth in avg_fidelity[-1].keys():
                         avg_fidelity[depth] = avg_fidelity[depth] + fidelity
                         avg_sdrp_time[depth] = avg_sdrp_time[depth] + time
                     else:
@@ -48,12 +48,12 @@ def main():
                     trial_count[dpth] = 1
                 # Finalize last samples
                 if depth > 0:
-                    if depth in avg_fidelity.keys():
-                        avg_fidelity[depth] = avg_fidelity[depth] + fidelity
-                        avg_sdrp_time[depth] = avg_sdrp_time[depth] + time
+                    if depth in avg_fidelity[-1].keys():
+                        avg_fidelity[-1][depth] = avg_fidelity[-1][depth] + fidelity
+                        avg_sdrp_time[-1][depth] = avg_sdrp_time[-1][depth] + time
                     else:
-                        avg_fidelity[depth] = fidelity
-                        avg_sdrp_time[depth] = time
+                        avg_fidelity[-1][depth] = fidelity
+                        avg_sdrp_time[-1][depth] = time
 
             depth = d['depth']
             fidelity = d['fidelity']
@@ -64,17 +64,18 @@ def main():
             else:
                 avg_marp_time[depth] = time
 
-    for key in avg_fidelity.keys():
-        depth = int(key)
-        trials = trial_count[key]
-        print({
-            'depth': int(key),
-            'successful_trials': trials,
-            'avg_fidelity': avg_fidelity[key] / 100,
-            'avg_sdrp_seconds': avg_sdrp_time[key] / trials,
-            'avg_marp_seconds': avg_marp_time[key] / trials,
-            'ideal_capacity_qb': ideal_capacity
-        })
+    for i in range(len(avg_fidelity)):
+        for key in avg_fidelity[i].keys():
+            depth = int(key)
+            trials = trial_count[i][key]
+            print({
+                'depth': int(key),
+                'successful_trials': trials,
+                'avg_fidelity': avg_fidelity[-1][key] / 100,
+                'avg_sdrp_seconds': avg_sdrp_time[-1][key] / trials,
+                'avg_marp_seconds': avg_marp_time[-1][key] / trials,
+                'ideal_capacity_qb': ideal_capacity[-1]
+            })
 
     return 0
 
