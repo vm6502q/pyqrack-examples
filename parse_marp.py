@@ -15,8 +15,17 @@ def main():
         depth = 0
         fidelity = 0
         time = 0
+        ideal_capacity = 33
         while True:
             line = in_file.readline()
+            if 'QRACK_MAX_PAGING_QB=' in line:
+                ideal_capacity = int(line.split('QRACK_MAX_PAGING_QB=',1)[1])
+                avg_fidelity = {}
+                avg_sdrp_time = {}
+                avg_marp_time = {}
+                trial_count = {}
+                continue
+
             if not line:
                 # Last sample
                 if depth > 0:
@@ -27,7 +36,9 @@ def main():
                         avg_fidelity[depth] = fidelity
                         avg_sdrp_time[depth] = time
                 break
+
             d = eval(line)
+
             if d['sdrp'] == 1:
                 # Update count
                 dpth = d['depth']
@@ -43,9 +54,11 @@ def main():
                     else:
                         avg_fidelity[depth] = fidelity
                         avg_sdrp_time[depth] = time
+
             depth = d['depth']
             fidelity = d['fidelity']
             time = d['time']
+
             if depth in avg_marp_time.keys():
                 avg_marp_time[depth] = avg_marp_time[depth] + time
             else:
@@ -59,7 +72,8 @@ def main():
             'successful_trials': trials,
             'avg_fidelity': avg_fidelity[key] / 100,
             'avg_sdrp_seconds': avg_sdrp_time[key] / trials,
-            'avg_marp_seconds': avg_marp_time[key] / trials
+            'avg_marp_seconds': avg_marp_time[key] / trials,
+            'ideal_capacity_qb': ideal_capacity
         })
 
     return 0
