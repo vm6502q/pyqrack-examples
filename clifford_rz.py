@@ -51,7 +51,7 @@ def bench_qrack(n):
     sim = QrackSimulator(n, isStabilizerHybrid=True, isTensorNetwork=False, isSchmidtDecomposeMulti=False, isSchmidtDecompose=False, isOpenCL=False)
 
     # Run a near-Clifford circuit
-    random_circuit(n, 3, sim)
+    random_circuit(n, 8, sim)
     result = sim.prob_perm(list(range(n)), [False]*n)
 
     # fidelity = sim.get_unitary_fidelity()
