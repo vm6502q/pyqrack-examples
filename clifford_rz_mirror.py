@@ -107,7 +107,9 @@ def random_circuit(width, max_magic, circ):
     # Don't repeat bases:
     bases = [0] * width
     directions = [0] * width
-    
+
+    magic_count = 0
+
     for i in range(3 * width):
         # Single bit gates
         for j in range(width):
@@ -137,8 +139,8 @@ def random_circuit(width, max_magic, circ):
 
                 # General RZ gate:
                 rnd = random.uniform(0, 2 * math.pi)
-
                 circ.mtrx([1, 0, 0, math.cos(rnd) + math.sin(rnd) * 1j], j)
+                magic_count = magic_count + 1
             
         # Nearest-neighbor couplers:
         ############################
@@ -163,7 +165,7 @@ def random_circuit(width, max_magic, circ):
                 g = random.choice(two_bit_gates)
                 g(circ, b1, b2)
 
-    return circ
+    return magic_count
 
 
 def bench_qrack(n, magic):
@@ -172,7 +174,7 @@ def bench_qrack(n, magic):
     # Run a near-Clifford circuit
     start = time.perf_counter()
     qcircuit = QrackCircuit(is_collapse=False)
-    random_circuit(n, magic, qcircuit)
+    magic = random_circuit(n, magic, qcircuit)
     qsim = QrackSimulator(n, isStabilizerHybrid=True, isTensorNetwork=False, isSchmidtDecomposeMulti=False, isSchmidtDecompose=False, isOpenCL=False)
     qcircuit.run(qsim)
     qcircuit.inverse().run(qsim)
@@ -181,7 +183,7 @@ def bench_qrack(n, magic):
     if result != 0:
         raise Exception("Mirror circuit failed!")
 
-    return time.perf_counter() - start
+    return (magic, time.perf_counter() - start)
 
 
 def main():
@@ -204,8 +206,9 @@ def main():
     for i in range(samples):
         results.append(bench_qrack(qubits, magic))
 
-    inner_product_result = sum(r for r in results) / samples
-    print(qubits, "qubits: ", inner_product_result, "seconds to mirror circuit sample")
+    r_magic = sum(r[0] for r in results) / samples
+    time = sum(r[1] for r in results) / samples
+    print(f"{qubits} qubits, {r_magic} magic, ({magic} average magic): {time} seconds to mirror circuit sample")
 
     return 0
 
