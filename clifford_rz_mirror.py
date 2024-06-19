@@ -175,7 +175,7 @@ def bench_qrack(n, magic):
     start = time.perf_counter()
     qcircuit = QrackCircuit(is_collapse=False)
     magic = random_circuit(n, magic, qcircuit)
-    qsim = QrackSimulator(n, isStabilizerHybrid=True, isTensorNetwork=False, isSchmidtDecomposeMulti=False, isSchmidtDecompose=False, isOpenCL=False)
+    qsim = QrackSimulator(n)
     qcircuit.run(qsim)
     qcircuit.inverse().run(qsim)
 
