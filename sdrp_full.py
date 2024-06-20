@@ -123,8 +123,8 @@ def main():
         'width': width,
         'depth': depth,
         'trials': trials,
-        'time': sum(r[0] for r in width_results) / circuit_samples,
-        'fidelity': sum(r[1] for r in width_results) / circuit_samples
+        'time': sum(r[0] for r in width_results) / trials,
+        'fidelity': sum(r[1] for r in width_results) / trials
     })
 
     return 0
