@@ -31,8 +31,8 @@ def main():
         sim.x(coin_qubit)
 
     exp_pos = sim.permutation_expectation(lattice_qubits) - sign_power
-    obs_pos = (sim.m_all() & ~(1 << coin_qubit)) - sign_power
     print("Expected position:", exp_pos)
+    obs_pos = (sim.m_all() & ~(1 << coin_qubit)) - sign_power
     print("Observed position:", obs_pos)
 
 
