@@ -47,7 +47,6 @@ def peak_monitor_func():
 def bench_qrack(n, sdrp = 0):
     global nvml_peak, peak_monitoring
 
-    # This is a "quantum volume" (random) circuit.
     circ = QrackCircuit()
 
     lcv_range = range(n)

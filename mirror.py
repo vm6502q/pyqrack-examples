@@ -9,8 +9,6 @@ from pyqrack import QrackSimulator, QrackCircuit
 
 
 def bench_qrack(n):
-
-    # This is a "quantum volume" (random) circuit.
     circ = QrackCircuit()
 
     lcv_range = range(n)
