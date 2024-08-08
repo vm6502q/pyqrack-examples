@@ -2,7 +2,7 @@
 Useful and "cool" example scripts for PyQrack
 
 ## Introduction
-[PyQrack](https://github.com/unitaryfund/pyqrack) is the official Python wrapper for the (C++) [Qrack](https://github.com/unitaryfund/qrack) quantum computer simulator and framework. [Examples already exist as a Jupyter Notebook collection.](https://github.vom/vm6502q/pyqrack-jupyter).
+[PyQrack](https://github.com/unitaryfund/pyqrack) is the official Python wrapper for the (C++) [Qrack](https://github.com/unitaryfund/qrack) quantum computer simulator and framework. [Examples already exist as a Jupyter Notebook collection](https://github.vom/vm6502q/pyqrack-jupyter).
 
 Most people with interest in quantum computing would probably be happy to consume PyQrack via Jupyter Notebook and Jupyter Lab. However, while Qrack recognizes and supports that popular ("data science") workflow, relying on so many development environment and runtime dependencies is, basically, antithetical to the original point and design of the Qrack project. Qrack has _no_ required dependencies whatsoever, except for the C ABI, `libc6`, as a dependency of any C or C++ "pure-language" code project. Qrack optionally provides GPU acceleration via choice of OpenCL or CUDA, but even this is an _optional_ dependency that can be omitted. 128-bit floating point math can optionally be supplied by the [Boost libraries](https://www.boost.org/), but even Qrack's ("big integers") "arbitrary precision integers," when demanded according to user build settings, is _"pure language standard."_
 
