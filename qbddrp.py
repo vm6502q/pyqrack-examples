@@ -144,7 +144,7 @@ def main():
         width_results.append(bench_qrack(width, depth, sdrp))
 
     time_result = sum(t for t in width_results) / samples
-    print("Width=", width, ", Depth=", depth, ": ", time_result, " seconds. (Fidelity is unknown.)")
+    print("Width=" + str(width) + ", Depth=" + str(depth) + ": " + str(time_result) + " seconds. (Fidelity is unknown.)")
 
     return 0
 
