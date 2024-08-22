@@ -27,20 +27,15 @@ def bench_qrack(width, sdrp):
         sim.u(i, random.uniform(0, 2 * math.pi), random.uniform(0, 2 * math.pi), random.uniform(0, 2 * math.pi))
 
         # Conditional causal actions
-        for j in range(i - 1):
-            # Average about 1 conditional action per decision point
-            if random.randrange(i - 1) >= 1:
-                continue
-
-            g = random.choice(two_bit_gates)
-
+        for j in range(random.randrange(i)):
             # The conditional action can depend on any subset of the past decision points
             ctrls = []
             for k in range(i - 1):
-                if random.randrange(i - 1) == 0:
+                if random.randrange(2) == 0:
                     ctrls.append(k)
 
             # Dispatch conditional action
+            g = random.choice(two_bit_gates)
             g(ctrls, i)
 
     # Terminal measurement
@@ -50,7 +45,7 @@ def bench_qrack(width, sdrp):
 
 
 def main():
-    width = 25
+    width = 16
     sdrp = 0
     qbddrp = 0
 
