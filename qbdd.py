@@ -18,9 +18,10 @@ def bench_qrack(width, sdrp):
     if (sdrp > 0):
         sim.set_sdrp(sdrp)
 
-    # Start with a random (causal) action at first decision points
+    # Start with a random (causal) action at first decision point
     sim.u(0, random.uniform(0, 2 * math.pi), random.uniform(0, 2 * math.pi), random.uniform(0, 2 * math.pi))
-    # Loop over the sequence of decision points
+
+    # Loop over the sequence of conditional decision points
     for i in range(1, width):
         # Independent causal action for decision point
         sim.u(i, random.uniform(0, 2 * math.pi), random.uniform(0, 2 * math.pi), random.uniform(0, 2 * math.pi))
