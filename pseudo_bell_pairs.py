@@ -14,13 +14,10 @@ import sys
 from pyqrack import QrackSimulator
 
 
-def bench_qrack(width, sdrp):
+def bench_qrack(width):
 
     rng = QrackSimulator(1)
     sim = QrackSimulator(width)
-    two_bit_gates = sim.mcx, sim.mcy, sim.mcz, sim.macx, sim.macy, sim.macz
-    if (sdrp > 0):
-        sim.set_sdrp(sdrp)
 
     # Loop over the sequence of conditional decision points
     for i in range(width):
@@ -37,23 +34,11 @@ def bench_qrack(width, sdrp):
 
 def main():
     width = 256
-    sdrp = 0
-    qbddrp = 0
-
     if len(sys.argv) > 1:
-        width = int(sys.argv[3])
-    if len(sys.argv) > 2:
-        qbddrp = sys.argv[1]
-    if len(sys.argv) > 3:
-        sdrp = float(sys.argv[2])
-
-    # Prep the environment
-    if qbddrp > 0:
-        os.environ['QRACK_QBDT_SEPARABILITY_THRESHOLD'] = sys.argv[1]
-    bench_qrack(1, 0.5)
+        width = int(sys.argv[1])
 
     # Run the example
-    result = bench_qrack(width, sdrp)
+    result = bench_qrack(width)
 
     print("Width=" + str(width) + ": " + str(result) + " result.")
 
