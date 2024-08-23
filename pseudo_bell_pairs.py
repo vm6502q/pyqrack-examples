@@ -2,9 +2,12 @@
 #
 # Imagine that Qrack's RNG carries 1:1 bits of von Neumann entropy.
 # (It's possible `cmake -DENABLE_RDRAND=ON ..` will achieve this.)
-# Then, if we act a Z gate conditionally on a virtual Qrack qubit,
+# Then, if we act a X gate conditionally on a virtual Qrack qubit,
 # it can be as if "creating a Bell pair" between a Qrack qubit and
 # a physical qubit (or Everettian "world" pair) from thermal noise.
+#
+# (Obviously, the state is already "collapsed"! The point is to
+# question what "entanglement" could really mean, though.)
 
 import math
 import os
@@ -21,17 +24,11 @@ def bench_qrack(width):
 
     for i in range(width):
         # H(0)
-        sim.h(i)
-        
-        # H(1)
         rng.h(i)
 
-        # CZ(0, 1)
+        # CNOT(0, 1)
         if rng.m(i):
-            sim.z(i)
-
-        # H(0)
-        sim.h(i)
+            sim.x(i)
 
         # Circuit diagram "creates a Bell pair"
 
