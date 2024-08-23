@@ -16,7 +16,7 @@ from pyqrack import QrackSimulator
 
 def bench_qrack(width):
 
-    rng = QrackSimulator(1)
+    rng = QrackSimulator(width)
     sim = QrackSimulator(width)
 
     for i in range(width):
@@ -24,21 +24,18 @@ def bench_qrack(width):
         sim.h(i)
         
         # H(1)
-        rng.h(0)
+        rng.h(i)
 
         # CZ(0, 1)
-        if rng.m(0):
+        if rng.m(i):
             sim.z(i)
-
-            # (Reset RNG bit)
-            rng.x(0)
 
         # H(0)
         sim.h(i)
 
         # Circuit diagram "creates a Bell pair"
 
-    return sim.m_all()
+    return (sim.m_all(), rng.m_all())
 
 
 def main():
