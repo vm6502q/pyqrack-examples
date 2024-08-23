@@ -19,7 +19,6 @@ def state_prep(sim, qubit):
 
 
 def bench_qrack():
-
     rng = QrackSimulator(1)
     sim = QrackSimulator(3)
 
@@ -32,16 +31,14 @@ def bench_qrack():
     sim.h(1)
 
     if sim.m(0):
-        sim.x(1)
-        
-    rng.h(0)
-    if rng.m(0):
-        print("Teleported bit measurement is |1>.")
-        sim.z(1)
-        rng.x(0)
-    else:
-        print("Teleported bit measurement is |0>.")
+        sim.x(2)
+    if sim.m(1):
+        sim.z(2)
 
+    if sim.m(2):
+        print("Measured |1>.")
+    else:
+        print("Measured |0>.")
 
 def main():
     # Run the example
