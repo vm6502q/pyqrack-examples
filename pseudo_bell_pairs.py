@@ -19,15 +19,24 @@ def bench_qrack(width):
     rng = QrackSimulator(1)
     sim = QrackSimulator(width)
 
-    # Loop over the sequence of conditional decision points
     for i in range(width):
-        # Independent causal action for decision point
+        # H(0)
         sim.h(i)
         
+        # H(1)
         rng.h(0)
+
+        # CZ(0, 1)
         if rng.m(0):
             sim.z(i)
+
+            # (Reset RNG bit)
             rng.x(0)
+
+        # H(0)
+        sim.h(i)
+
+        # Circuit diagram "creates a Bell pair"
 
     return sim.m_all()
 
