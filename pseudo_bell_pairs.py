@@ -1,7 +1,8 @@
 # "pseudo_bell_pairs.py"
 #
 # Imagine that Qrack's RNG carries 1:1 bits of von Neumann entropy.
-# (It's possible `cmake -DENABLE_RDRAND=ON ..` will achieve this.)
+# (`cmake -DENABLE_RDRAND=ON ..` get us partway to this condition,
+# or load your own von Neumann entropy with `-DENABLE_RNDFILE=ON`.)
 # Then, if we act a X gate conditionally on a virtual Qrack qubit,
 # it can be as if "creating a Bell pair" between a Qrack qubit and
 # a physical qubit (or Everettian "world" pair) from thermal noise.
