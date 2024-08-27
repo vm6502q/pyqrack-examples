@@ -173,10 +173,10 @@ def bench_qrack(n):
     qcircuit = QrackCircuit(is_collapse=False)
     random_circuit(n, 6, qcircuit)
 
-    nc_sim = QrackSimulator(n, isStabilizerHybrid=True, isTensorNetwork=False, isSchmidtDecomposeMulti=False, isSchmidtDecompose=False, isOpenCL=False)
+    nc_sim = QrackSimulator(n, isStabilizerHybrid=True, isTensorNetwork=False, isSchmidtDecomposeMulti=False, isSchmidtDecompose=False)
     qcircuit.run(nc_sim)
 
-    sv_sim = QrackSimulator(n, isStabilizerHybrid=False, isTensorNetwork=False, isSchmidtDecomposeMulti=False, isSchmidtDecompose=False, isOpenCL=False)
+    sv_sim = QrackSimulator(n, isStabilizerHybrid=False, isTensorNetwork=False, isSchmidtDecomposeMulti=False, isSchmidtDecompose=False)
     qcircuit.run(sv_sim)
 
     nc_sv = nc_sim.out_ket()
