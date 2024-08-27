@@ -28,6 +28,7 @@ def bench_qrack(width):
         rng.h(i)
 
         # CNOT(0, 1)
+        # (Remember that measurement and control commute!)
         if rng.m(i):
             sim.x(i)
 
