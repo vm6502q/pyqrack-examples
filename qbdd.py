@@ -50,15 +50,16 @@ def main():
     qbddrp = 0
 
     if len(sys.argv) > 1:
-        width = int(sys.argv[3])
+        width = int(sys.argv[1])
     if len(sys.argv) > 2:
-        qbddrp = sys.argv[1]
+        qbddrp = float(sys.argv[2])
     if len(sys.argv) > 3:
-        sdrp = float(sys.argv[2])
+        sdrp = float(sys.argv[3])
 
     # Prep the environment
+    os.environ['QRACK_QBDT_HYBRID_THRESHOLD'] = "2"
     if qbddrp > 0:
-        os.environ['QRACK_QBDT_SEPARABILITY_THRESHOLD'] = sys.argv[1]
+        os.environ['QRACK_QBDT_SEPARABILITY_THRESHOLD'] = str(qbddrp)
     bench_qrack(1, 0.5)
 
     # Run the benchmarks
