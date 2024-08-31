@@ -61,12 +61,11 @@ def nswap(sim, q1, q2):
     sim.mcz([q1], q2)
 
 
-def bench_qrack(width, depth, sdrp):
+def bench_qrack(width, depth):
     # This is a "nearest-neighbor" coupler random circuit.
     start = time.perf_counter()
 
     sim = QrackSimulator(width, isBinaryDecisionTree=True)
-    sim.set_sdrp(sdrp)
 
     lcv_range = range(width)
     all_bits = list(lcv_range)
@@ -115,32 +114,27 @@ def bench_qrack(width, depth, sdrp):
 
 
 def main():
-    width = 36
-    depth = 6
-    samples = 1
     if len(sys.argv) < 5:
         raise RuntimeError('Usage: python3 sdrp.py [qbddrp] [sdrp] [width] [depth] [samples]')
 
-    os.environ['QRACK_QBDT_SEPARABILITY_THRESHOLD'] = sys.argv[1]
+    qbddrp = float(sys.argv[1])
+    if (qbddrp > 0):
+        os.environ['QRACK_QBDT_SEPARABILITY_THRESHOLD'] = sys.argv[1]
 
-    bench_qrack(1, 1, 0.5)
+    sdrp = float(sys.argv[2])
+    if (sdrp > 0):
+        os.environ['QRACK_QUNIT_SEPARABILITY_THRESHOLD'] = sys.argv[2]
 
-    if len(sys.argv) > 2:
-        sdrp = float(sys.argv[2])
+    width = int(sys.argv[3])
 
-    if len(sys.argv) > 3:
-        width = int(sys.argv[3])
+    depth = int(sys.argv[4])
 
-    if len(sys.argv) > 4:
-        depth = int(sys.argv[4])
-
-    if len(sys.argv) > 5:
-        samples = int(sys.argv[5])
+    samples = int(sys.argv[5])
 
     # Run the benchmarks
     width_results = []
     for i in range(samples):
-        width_results.append(bench_qrack(width, depth, sdrp))
+        width_results.append(bench_qrack(width, depth))
 
     time_result = sum(t for t in width_results) / samples
     print("Width=" + str(width) + ", Depth=" + str(depth) + ": " + str(time_result) + " seconds. (Fidelity is unknown.)")
