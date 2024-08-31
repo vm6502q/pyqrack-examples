@@ -65,7 +65,7 @@ def bench_qrack(width, depth, sdrp):
     # This is a "nearest-neighbor" coupler random circuit.
     start = time.perf_counter()
 
-    sim = QrackSimulator(width, isTensorNetwork=False, isBinaryDecisionTree=True)
+    sim = QrackSimulator(width, isBinaryDecisionTree=True)
     sim.set_sdrp(sdrp)
 
     lcv_range = range(width)
@@ -108,7 +108,6 @@ def bench_qrack(width, depth, sdrp):
                 g = random.choice(two_bit_gates)
                 g(sim, b1, b2)
 
-    fidelity = sim.get_unitary_fidelity()
     # Terminal measurement
     sim.m_all()
 
