@@ -114,7 +114,7 @@ def bench_qrack(width, depth):
 
 
 def main():
-    if len(sys.argv) < 5:
+    if len(sys.argv) < 6:
         raise RuntimeError('Usage: python3 sdrp.py [qbddrp] [sdrp] [width] [depth] [samples]')
 
     qbddrp = float(sys.argv[1])
