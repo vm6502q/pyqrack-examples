@@ -137,7 +137,7 @@ def main():
 
     # Run the benchmarks
     # width_results = []
-    for i in [4, 6, 9, 10, 12, 16, 18, 20, 22, 24, 25]:
+    for i in [4, 6, 8, 9, 10, 12, 14, 15, 16, 18, 20, 21, 22, 24, 25]:
         print("Width=" + str(i) + ":")
         for j in range(samples):
             bench_qrack(i, i)
