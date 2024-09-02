@@ -81,11 +81,7 @@ def bench_qrack(width, depth):
         col_len -= 1
     row_len = width // col_len
 
-    f = []
-    t = []
-    t_tot = 0
-
-    for _ in range(depth):
+    for d in range(depth):
         start = time.perf_counter()
         # Single-qubit gates
         for i in lcv_range:
@@ -119,16 +115,10 @@ def bench_qrack(width, depth):
                 g(experiment, b1, b2)
                 g(control, b1, b2)
 
-        _t = time.perf_counter() - start
-        t_tot = t_tot + _t
-        t.append(t_tot)
-
         experiment_sv = experiment.out_ket()
         control_sv = control.out_ket()
     
-        f.append(np.abs(sum([np.conj(x) * y for x, y in zip(experiment_sv, control_sv)])))
-
-    return (t, f)
+        print("Depth=" + str(d + 1) + ", fidelity=" + str(np.abs(sum([np.conj(x) * y for x, y in zip(experiment_sv, control_sv)]))))
 
 
 def main():
@@ -147,14 +137,10 @@ def main():
 
     # Run the benchmarks
     # width_results = []
-    for i in [4, 9, 16]:
-        # width_results.append([])
+    for i in [4, 6, 9, 10, 12, 16, 18, 20, 22, 24, 25]:
+        print("Width=" + str(i) + ":")
         for j in range(samples):
-            print("Width=" + str(i) + ": " + str(bench_qrack(i, i)))
-
-    # time_result = sum(t for t in width_results) / samples
-    # print("Width=" + str(width) + ", Depth=" + str(depth) + ": " + str(time_result) + " seconds. (Fidelity is unknown.)")
-    # print(width_results)
+            bench_qrack(i, i)
 
     return 0
 
