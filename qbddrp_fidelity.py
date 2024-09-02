@@ -146,15 +146,15 @@ def main():
     samples = int(sys.argv[3])
 
     # Run the benchmarks
-    width_results = []
+    # width_results = []
     for i in [4, 9, 16]:
-        width_results.append([])
+        # width_results.append([])
         for j in range(samples):
-            width_results[-1].append(bench_qrack(i, i))
+            print("Width=" + str(i) + ": " + str(bench_qrack(i, i)))
 
     # time_result = sum(t for t in width_results) / samples
     # print("Width=" + str(width) + ", Depth=" + str(depth) + ": " + str(time_result) + " seconds. (Fidelity is unknown.)")
-    print(width_results)
+    # print(width_results)
 
     return 0
 
