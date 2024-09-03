@@ -114,22 +114,18 @@ def bench_qrack(width, depth):
 
 
 def main():
-    if len(sys.argv) < 6:
-        raise RuntimeError('Usage: python3 sdrp.py [qbddrp] [sdrp] [width] [depth] [samples]')
+    if len(sys.argv) < 5:
+        raise RuntimeError('Usage: python3 sdrp.py [qbddrp] [width] [depth] [samples]')
 
     qbddrp = float(sys.argv[1])
     if (qbddrp > 0):
         os.environ['QRACK_QBDT_SEPARABILITY_THRESHOLD'] = sys.argv[1]
 
-    sdrp = float(sys.argv[2])
-    if (sdrp > 0):
-        os.environ['QRACK_QUNIT_SEPARABILITY_THRESHOLD'] = sys.argv[2]
+    width = int(sys.argv[2])
 
-    width = int(sys.argv[3])
+    depth = int(sys.argv[3])
 
-    depth = int(sys.argv[4])
-
-    samples = int(sys.argv[5])
+    samples = int(sys.argv[4])
 
     # Run the benchmarks
     width_results = []
