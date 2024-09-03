@@ -36,8 +36,8 @@ def bench_qrack(width, depth):
 
 
 def main():
-    if len(sys.argv) < 5:
-        raise RuntimeError('Usage: python3 sdrp.py [qbddrp] [width] [depth] [samples]')
+    if len(sys.argv) < 4:
+        raise RuntimeError('Usage: python3 sdrp.py [qbddrp] [width] [depth]')
 
     qbddrp = float(sys.argv[1])
     if (qbddrp > 0):
@@ -47,14 +47,9 @@ def main():
 
     depth = int(sys.argv[3])
 
-    samples = int(sys.argv[4])
-
     # Run the benchmarks
-    width_results = []
-    for i in range(samples):
-        width_results.append(bench_qrack(width, depth))
+    time_result = bench_qrack(width, depth)
 
-    time_result = sum(t for t in width_results) / samples
     print("Width=" + str(width) + ", Depth=" + str(depth) + ": " + str(time_result) + " seconds. (Fidelity is unknown.)")
 
     return 0
