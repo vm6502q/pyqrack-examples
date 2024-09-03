@@ -27,7 +27,7 @@ def bench_qrack(width, depth):
         unused_bits = all_bits.copy()
         random.shuffle(unused_bits)
         while len(unused_bits) > 1:
-            sim.mcz([unused_bits.pop()], unused_bits.pop())
+            sim.mcx([unused_bits.pop()], unused_bits.pop())
 
     # Terminal measurement
     sim.m_all()
