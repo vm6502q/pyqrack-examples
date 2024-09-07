@@ -10,30 +10,46 @@ import numpy as np
 
 from pyqrack import QrackSimulator
 
+from qiskit import QuantumCircuit
+from qiskit.compiler import transpile
+from qiskit_aer.backends import AerSimulator
+
+
+def rand_u3(sim, q):
+    th = random.uniform(0, 2 * math.pi)
+    ph = random.uniform(0, 2 * math.pi)
+    lm = random.uniform(0, 2 * math.pi)
+    sim.u(th, ph, lm, q)
 
 
 def cx(sim, q1, q2):
-    sim.mcx([q1], q2)
+    sim.cx(q1, q2)
 
 
 def cy(sim, q1, q2):
-    sim.mcy([q1], q2)
+    sim.cy(q1, q2)
 
 
 def cz(sim, q1, q2):
-    sim.mcz([q1], q2)
+    sim.cz(q1, q2)
 
 
 def acx(sim, q1, q2):
-    sim.macx([q1], q2)
+    sim.x(q1)
+    sim.cx(q1, q2)
+    sim.x(q1)
 
 
 def acy(sim, q1, q2):
-    sim.macy([q1], q2)
+    sim.x(q1)
+    sim.cy(q1, q2)
+    sim.x(q1)
 
 
 def acz(sim, q1, q2):
-    sim.macz([q1], q2)
+    sim.x(q1)
+    sim.cz(q1, q2)
+    sim.x(q1)
 
 
 def swap(sim, q1, q2):
@@ -41,33 +57,39 @@ def swap(sim, q1, q2):
 
 
 def iswap(sim, q1, q2):
-    sim.iswap(q1, q2)
+    sim.swap(q1, q2)
+    sim.cz(q1, q2)
+    sim.s(q1)
+    sim.s(q2)
 
 
 def iiswap(sim, q1, q2):
-    sim.adjiswap(q1, q2)
+    iswap(sim, q1, q2)
+    iswap(sim, q1, q2)
+    iswap(sim, q1, q2)
 
 
 def pswap(sim, q1, q2):
-    sim.mcz([q1], q2)
+    sim.cz(q1, q2)
     sim.swap(q1, q2)
 
 
 def mswap(sim, q1, q2):
     sim.swap(q1, q2)
-    sim.mcz([q1], q2)
+    sim.cz(q1, q2)
 
 
 def nswap(sim, q1, q2):
-    sim.mcz([q1], q2)
+    sim.cz(q1, q2)
     sim.swap(q1, q2)
-    sim.mcz([q1], q2)
+    sim.cz(q1, q2)
 
 
 def bench_qrack(width, depth):
     # This is a "nearest-neighbor" coupler random circuit.
+    circ = QuantumCircuit(width)
     experiment = QrackSimulator(width, isBinaryDecisionTree=True)
-    control = QrackSimulator(width)
+    control = AerSimulator(method="statevector")
 
     lcv_range = range(width)
     all_bits = list(lcv_range)
@@ -85,14 +107,11 @@ def bench_qrack(width, depth):
         return
 
     for d in range(depth):
+        experiment.reset_all()
         start = time.perf_counter()
         # Single-qubit gates
         for i in lcv_range:
-            th = random.uniform(0, 2 * math.pi)
-            ph = random.uniform(0, 2 * math.pi)
-            lm = random.uniform(0, 2 * math.pi)
-            experiment.u(i, th, ph, lm)
-            control.u(i, th, ph, lm)
+            rand_u3(circ, i)
 
         # Nearest-neighbor couplers:
         ############################
@@ -115,11 +134,16 @@ def bench_qrack(width, depth):
                     continue
 
                 g = random.choice(two_bit_gates)
-                g(experiment, b1, b2)
-                g(control, b1, b2)
+                g(circ, b1, b2)
+
+        experiment.run_qiskit_circuit(circ)
+
+        circ_aer = transpile(circ, backend=control)
+        circ_aer.save_statevector()
+        job = control.run(circ_aer)
 
         experiment_sv = experiment.out_ket()
-        control_sv = control.out_ket()
+        control_sv = np.asarray(job.result().get_statevector())
 
         print("Depth=" + str(d + 1) + ", fidelity=" + str(np.abs(sum([np.conj(x) * y for x, y in zip(experiment_sv, control_sv)]))))
 
