@@ -22,67 +22,10 @@ def rand_u3(sim, q):
     sim.u(th, ph, lm, q)
 
 
-def cx(sim, q1, q2):
-    sim.cx(q1, q2)
-
-
-def cy(sim, q1, q2):
-    sim.cy(q1, q2)
-
-
-def cz(sim, q1, q2):
+def coupler(sim, q1, q2):
+    sim.h(q2)
     sim.cz(q1, q2)
-
-
-def acx(sim, q1, q2):
-    sim.x(q1)
-    sim.cx(q1, q2)
-    sim.x(q1)
-
-
-def acy(sim, q1, q2):
-    sim.x(q1)
-    sim.cy(q1, q2)
-    sim.x(q1)
-
-
-def acz(sim, q1, q2):
-    sim.x(q1)
-    sim.cz(q1, q2)
-    sim.x(q1)
-
-
-def swap(sim, q1, q2):
-    sim.swap(q1, q2)
-
-
-def iswap(sim, q1, q2):
-    sim.swap(q1, q2)
-    sim.cz(q1, q2)
-    sim.s(q1)
-    sim.s(q2)
-
-
-def iiswap(sim, q1, q2):
-    iswap(sim, q1, q2)
-    iswap(sim, q1, q2)
-    iswap(sim, q1, q2)
-
-
-def pswap(sim, q1, q2):
-    sim.cz(q1, q2)
-    sim.swap(q1, q2)
-
-
-def mswap(sim, q1, q2):
-    sim.swap(q1, q2)
-    sim.cz(q1, q2)
-
-
-def nswap(sim, q1, q2):
-    sim.cz(q1, q2)
-    sim.swap(q1, q2)
-    sim.cz(q1, q2)
+    sim.h(q2)
 
 
 def bench_qrack(width, depth):
@@ -113,28 +56,13 @@ def bench_qrack(width, depth):
         for i in lcv_range:
             rand_u3(circ, i)
 
-        # Nearest-neighbor couplers:
-        ############################
-        gate = gateSequence.pop(0)
-        gateSequence.append(gate)
-        for row in range(1, row_len, 2):
-            for col in range(col_len):
-                temp_row = row
-                temp_col = col
-                temp_row = temp_row + (1 if (gate & 2) else -1);
-                temp_col = temp_col + (1 if (gate & 1) else 0)
-
-                if (temp_row < 0) or (temp_col < 0) or (temp_row >= row_len) or (temp_col >= row_len):
-                    continue
-
-                b1 = row * row_len + col
-                b2 = temp_row * row_len + temp_col
-
-                if (b1 >= width) or (b2 >= width):
-                    continue
-
-                g = random.choice(two_bit_gates)
-                g(circ, b1, b2)
+        # 2-qubit couplers
+        unused_bits = all_bits.copy()
+        random.shuffle(unused_bits)
+        while len(unused_bits) > 1:
+            c = unused_bits.pop()
+            t = unused_bits.pop()
+            coupler(circ, c, t)
 
         gate_count = sum(dict(circ.count_ops()).values())
 
@@ -162,9 +90,8 @@ def main():
         os.environ['QRACK_QBDT_SEPARABILITY_THRESHOLD'] = sys.argv[1]
 
     # Run the benchmarks
-    for i in range(1, 21):
-        print("Width=" + str(i) + ":")
-        bench_qrack(i, i)
+    print("Width=25:")
+    bench_qrack(25, 7)
 
     return 0
 
