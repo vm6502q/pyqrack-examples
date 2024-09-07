@@ -136,6 +136,8 @@ def bench_qrack(width, depth):
                 g = random.choice(two_bit_gates)
                 g(circ, b1, b2)
 
+        gate_count = sum(dict(circ.count_ops()).values())
+
         experiment.run_qiskit_circuit(circ)
 
         circ_aer = transpile(circ, backend=control)
@@ -145,7 +147,10 @@ def bench_qrack(width, depth):
         experiment_sv = experiment.out_ket()
         control_sv = np.asarray(job.result().get_statevector())
 
-        print("Depth=" + str(d + 1) + ", fidelity=" + str(np.abs(sum([np.conj(x) * y for x, y in zip(experiment_sv, control_sv)]))))
+        overall_fidelity = np.abs(sum([np.conj(x) * y for x, y in zip(experiment_sv, control_sv)]))
+        per_gate_fidelity = overall_fidelity ** (1 / gate_count)
+
+        print("Depth=" + str(d + 1) + ", overall fidelity=" + str(overall_fidelity) + ", per-gate fidelity avg.=" + str(per_gate_fidelity))
 
 
 def main():
