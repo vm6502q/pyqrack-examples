@@ -162,7 +162,7 @@ def main():
         os.environ['QRACK_QBDT_SEPARABILITY_THRESHOLD'] = sys.argv[1]
 
     # Run the benchmarks
-    for i in range(1, 20):
+    for i in range(1, 21):
         print("Width=" + str(i) + ":")
         bench_qrack(i, i)
 
