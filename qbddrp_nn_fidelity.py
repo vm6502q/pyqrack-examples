@@ -120,7 +120,7 @@ def bench_qrack(width, depth):
                 temp_row = temp_row + (1 if (gate & 2) else -1);
                 temp_col = temp_col + (1 if (gate & 1) else 0)
 
-                if (temp_row < 0) or (temp_col < 0) or (temp_row >= row_len) or (temp_col >= row_len):
+                if (temp_row < 0) or (temp_col < 0) or (temp_row >= row_len) or (temp_col >= col_len):
                     continue
 
                 b1 = row * row_len + col
