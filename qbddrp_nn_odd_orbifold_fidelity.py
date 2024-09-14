@@ -103,6 +103,9 @@ def bench_qrack(width, depth):
     if col_len == 1:
         print("(Prime - skipped)")
         return
+    if ((col_len & 1) == 0) or ((row_len & 1) == 0):
+        print("(Not odd-by-odd - skipped)")
+        return
 
     gate_count = 0
 
@@ -157,24 +160,14 @@ def bench_qrack(width, depth):
 
 
 def main():
-    if len(sys.argv) < 4:
-        raise RuntimeError('Usage: python3 sdrp.py [qbddrp] [width] [depth]')
+    if len(sys.argv) < 2:
+        raise RuntimeError('Usage: python3 [filename].py [qbddrp]')
 
     os.environ['QRACK_QBDT_HYBRID_THRESHOLD'] = '2'
 
     qbddrp = float(sys.argv[1])
     if (qbddrp > 0):
         os.environ['QRACK_QBDT_SEPARABILITY_THRESHOLD'] = sys.argv[1]
-
-    width = int(sys.argv[2])
-
-    row_len, col_len = factor_width(width)
-    if ((row_len & 1) == 0) or ((col_len & 1) == 0):
-        print("Row count=" + str(row_len))
-        print("Column count=" + str(col_len))
-        raise Exception("ERROR: Orbifold boundary conditions will overflow unless [width] can be factored as closely to square as the product of 2 odd whole numbers.")
-
-    depth = int(sys.argv[3])
 
     # Run the benchmarks
     for i in range(1, 21):
