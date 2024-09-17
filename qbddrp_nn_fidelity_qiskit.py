@@ -1,4 +1,4 @@
-# Demonstrates the use of "Quantum Binary Decision Diagram (QBDD) rounding parameter" ("QBDDRP")
+# Validates (with Qiskit) the use of "Quantum Binary Decision Diagram" (QBDD) with lght-cone (nearest-neighbor)
 
 import math
 import os
