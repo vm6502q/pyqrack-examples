@@ -54,15 +54,26 @@ def bench_qrack(depth):
 
     # Nearest-neighbor couplers:
     gateSequence = [ 0, 3, 2, 1, 2, 1, 0, 3 ]
-    one_bit_gates = sqrt_x, sqrt_y, sqrt_w
+    one_bit_gates = [ sqrt_x, sqrt_y, sqrt_w ]
+    last_gates = []
 
     row_len, col_len = factor_width(width)
 
     for d in range(depth):
         # Single-qubit gates
-        for i in lcv_range:
-            g = random.choice(one_bit_gates)
-            g(sim, i)
+        if d == 0:
+            for i in lcv_range:
+                g = random.choice(one_bit_gates)
+                g(sim, i)
+                last_gates.append(g)
+        else:
+            # Don't repeat the same gate on the next layer.
+            for i in lcv_range:
+                temp_gates = one_bit_gates.copy()
+                temp_gates.remove(last_gates[i])
+                g = random.choice(one_bit_gates)
+                g(sim, i)
+                last_gates[i] = g
 
         # Nearest-neighbor couplers:
         ############################
