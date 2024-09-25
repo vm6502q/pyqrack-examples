@@ -127,9 +127,9 @@ def main():
     if len(sys.argv) < 3:
         raise RuntimeError('Usage: python3 qbdd_sycamore_2019_parallel.py [depth] [shots]')
 
-    depth = int(sys.argv[2])
+    depth = int(sys.argv[1])
 
-    shots = int(sys.argv[3])
+    shots = int(sys.argv[2])
 
     # Run the benchmarks
     pool = multiprocessing.Pool(processes = multiprocessing.cpu_count())
