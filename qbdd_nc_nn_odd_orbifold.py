@@ -1,4 +1,4 @@
-# Demonstrates the use of "Quantum Binary Decision Diagram" (QBDD) and QBDD rounding parameter ("QBDDRP") with light-cone (nearest neighbor)
+# Demonstrates the use of "Quantum Binary Decision Diagram" (QBDD) and QBDD rounding parameter (QBDDRP) with near-Clifford (nearest-neighbor)
 
 import math
 import os
@@ -6,8 +6,18 @@ import random
 import sys
 import time
 
-from pyqrack import QrackSimulator
+from pyqrack import QrackSimulator, Pauli
 
+
+def factor_width(width):
+    col_len = math.floor(math.sqrt(width))
+    while (((width // col_len) * col_len) != width):
+        col_len -= 1
+    row_len = width // col_len
+    if col_len == 1:
+        raise Exception("ERROR: Can't simulate prime number width!")
+
+    return (row_len, col_len)
 
 def cx(sim, q1, q2):
     sim.mcx([q1], q2)
@@ -74,17 +84,15 @@ def bench_qrack(width, depth):
     gateSequence = [ 0, 3, 2, 1, 2, 1, 0, 3 ]
     two_bit_gates = swap, pswap, mswap, nswap, iswap, iiswap, cx, cy, cz, acx, acy, acz
 
-    col_len = math.floor(math.sqrt(width))
-    while (((width // col_len) * col_len) != width):
-        col_len -= 1
-    row_len = width // col_len
-    if col_len == 1:
-        raise Exception("ERROR: Can't simulate prime number width!")
+    row_len, col_len = factor_width(width)
 
     for _ in range(depth):
         # Single-qubit gates
         for i in lcv_range:
-            sim.u(i, random.uniform(0, 2 * math.pi), random.uniform(0, 2 * math.pi), random.uniform(0, 2 * math.pi))
+            for _ in range(3):
+                # x-z-x Euler axes
+                sim.h(i)
+                sim.r(Pauli.PauliZ, random.uniform(0, 2 * math.pi), i)
 
         # Nearest-neighbor couplers:
         ############################
@@ -97,8 +105,14 @@ def bench_qrack(width, depth):
                 temp_row = temp_row + (1 if (gate & 2) else -1);
                 temp_col = temp_col + (1 if (gate & 1) else 0)
 
-                if (temp_row < 0) or (temp_col < 0) or (temp_row >= row_len) or (temp_col >= col_len):
-                    continue
+                if temp_row < 0:
+                    temp_row = temp_row + row_len
+                if temp_col < 0:
+                    temp_col = temp_col + col_len
+                if temp_row >= row_len:
+                    temp_row = temp_row - row_len
+                if temp_col >= col_len:
+                    temp_col = temp_col - col_len
 
                 b1 = row * row_len + col
                 b2 = temp_row * row_len + temp_col
@@ -116,18 +130,18 @@ def bench_qrack(width, depth):
 
 
 def main():
-    if len(sys.argv) < 4:
-        raise RuntimeError('Usage: python3 sdrp.py [qbddrp] [width] [depth]')
+    if len(sys.argv) < 3:
+        raise RuntimeError('Usage: python3 qbdd_nc_nn_odd_orbifold.py [width] [depth]')
 
-    os.environ['QRACK_QBDT_HYBRID_THRESHOLD'] = '2'
+    width = int(sys.argv[1])
 
-    qbddrp = float(sys.argv[1])
-    if (qbddrp > 0):
-        os.environ['QRACK_QBDT_SEPARABILITY_THRESHOLD'] = sys.argv[1]
+    row_len, col_len = factor_width(width)
+    if ((row_len & 1) == 0) or ((col_len & 1) == 0):
+        print("Row count=" + str(row_len))
+        print("Column count=" + str(col_len))
+        raise Exception("ERROR: Orbifold boundary conditions will overflow unless [width] can be factored as closely to square as the product of 2 odd whole numbers.")
 
-    width = int(sys.argv[2])
-
-    depth = int(sys.argv[3])
+    depth = int(sys.argv[2])
 
     # Run the benchmarks
     time_result = bench_qrack(width, depth)

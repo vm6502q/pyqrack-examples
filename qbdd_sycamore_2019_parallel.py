@@ -124,14 +124,8 @@ def bench_qrack(depth):
 
 
 def main():
-    if len(sys.argv) < 4:
-        raise RuntimeError('Usage: python3 sdrp.py [qbddrp] [depth] [shots]')
-
-    os.environ['QRACK_QBDT_HYBRID_THRESHOLD'] = '2'
-
-    qbddrp = float(sys.argv[1])
-    if (qbddrp > 0):
-        os.environ['QRACK_QBDT_SEPARABILITY_THRESHOLD'] = sys.argv[1]
+    if len(sys.argv) < 3:
+        raise RuntimeError('Usage: python3 qbdd_sycamore_2019_parallel.py [depth] [shots]')
 
     depth = int(sys.argv[2])
 

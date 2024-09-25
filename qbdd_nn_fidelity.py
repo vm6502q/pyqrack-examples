@@ -1,4 +1,4 @@
-# Validates the use of "Quantum Binary Decision Diagram" (QBDD) with light-cone (nearest-neighbor, orbifolded)
+# Validates the use of "Quantum Binary Decision Diagram" (QBDD) and QBDD rounding parameter ("QBDDRP") with light-cone (nearest-neighbor)
 
 import math
 import os
@@ -8,18 +8,9 @@ import time
 
 import numpy as np
 
-from pyqrack import QrackSimulator, Pauli
+from pyqrack import QrackSimulator
 
 
-def factor_width(width):
-    col_len = math.floor(math.sqrt(width))
-    while (((width // col_len) * col_len) != width):
-        col_len -= 1
-    row_len = width // col_len
-    if col_len == 1:
-        raise Exception("ERROR: Can't simulate prime number width!")
-
-    return (row_len, col_len)
 
 def cx(sim, q1, q2):
     sim.mcx([q1], q2)
@@ -84,6 +75,7 @@ def nswap(sim, q1, q2):
     sim.mcz([q1], q2)
     return 3
 
+
 def bench_qrack(width, depth):
     # This is a "nearest-neighbor" coupler random circuit.
     experiment = QrackSimulator(width, isBinaryDecisionTree=True)
@@ -103,9 +95,6 @@ def bench_qrack(width, depth):
     if col_len == 1:
         print("(Prime - skipped)")
         return
-    if ((col_len & 1) == 0) or ((row_len & 1) == 0):
-        print("(Not odd-by-odd - skipped)")
-        return
 
     gate_count = 0
 
@@ -113,14 +102,12 @@ def bench_qrack(width, depth):
         start = time.perf_counter()
         # Single-qubit gates
         for i in lcv_range:
-            for _ in range(3):
-                # x-z-x Euler axes
-                angle = random.uniform(0, 2 * math.pi)
-                experiment.h(i)
-                control.h(i)
-                experiment.r(Pauli.PauliZ, angle, i)
-                control.r(Pauli.PauliZ, angle, i)
-                gate_count = gate_count + 2
+            th = random.uniform(0, 2 * math.pi)
+            ph = random.uniform(0, 2 * math.pi)
+            lm = random.uniform(0, 2 * math.pi)
+            experiment.u(i, th, ph, lm)
+            control.u(i, th, ph, lm)
+            gate_count = gate_count + 1
 
         # Nearest-neighbor couplers:
         ############################
@@ -133,14 +120,8 @@ def bench_qrack(width, depth):
                 temp_row = temp_row + (1 if (gate & 2) else -1);
                 temp_col = temp_col + (1 if (gate & 1) else 0)
 
-                if temp_row < 0:
-                    temp_row = temp_row + row_len
-                if temp_col < 0:
-                    temp_col = temp_col + col_len
-                if temp_row >= row_len:
-                    temp_row = temp_row - row_len
-                if temp_col >= col_len:
-                    temp_col = temp_col - col_len
+                if (temp_row < 0) or (temp_col < 0) or (temp_row >= row_len) or (temp_col >= col_len):
+                    continue
 
                 b1 = row * row_len + col
                 b2 = temp_row * row_len + temp_col
@@ -162,15 +143,6 @@ def bench_qrack(width, depth):
 
 
 def main():
-    if len(sys.argv) < 2:
-        raise RuntimeError('Usage: python3 [filename].py [qbddrp]')
-
-    os.environ['QRACK_QBDT_HYBRID_THRESHOLD'] = '2'
-
-    qbddrp = float(sys.argv[1])
-    if (qbddrp > 0):
-        os.environ['QRACK_QBDT_SEPARABILITY_THRESHOLD'] = sys.argv[1]
-
     # Run the benchmarks
     for i in range(1, 21):
         print("Width=" + str(i) + ":")
