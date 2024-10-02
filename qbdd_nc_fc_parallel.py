@@ -43,7 +43,11 @@ def bench_qrack(width_depth):
     # Terminal measurement
     sim.m_all()
 
-    return time.perf_counter() - start
+    time_result = time.perf_counter() - start
+
+    print("Width=" + str(width) + ", Depth=" + str(depth) + ": " + str(time_result) + " seconds. (Fidelity is unknown.)")
+
+    return time_result
 
 
 def main():
