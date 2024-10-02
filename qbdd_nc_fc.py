@@ -6,7 +6,7 @@ import random
 import sys
 import time
 
-from pyqrack import QrackSimulator
+from pyqrack import QrackSimulator, Pauli
 
 
 def bench_qrack(width, depth):

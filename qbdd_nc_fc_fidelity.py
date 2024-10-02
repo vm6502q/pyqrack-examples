@@ -8,9 +8,7 @@ import time
 
 import numpy as np
 
-from pyqrack import QrackSimulator
-
-
+from pyqrack import QrackSimulator, Pauli
 
 
 def bench_qrack(width, depth):

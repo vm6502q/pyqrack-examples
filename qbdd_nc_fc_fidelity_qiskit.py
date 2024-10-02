@@ -8,7 +8,7 @@ import time
 
 import numpy as np
 
-from pyqrack import QrackSimulator
+from pyqrack import QrackSimulator, Pauli
 
 from qiskit import QuantumCircuit
 from qiskit.compiler import transpile
