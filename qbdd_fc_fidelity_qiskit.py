@@ -37,18 +37,6 @@ def bench_qrack(width, depth):
     lcv_range = range(width)
     all_bits = list(lcv_range)
 
-    # Nearest-neighbor couplers:
-    gateSequence = [ 0, 3, 2, 1, 2, 1, 0, 3 ]
-    two_bit_gates = swap, pswap, mswap, nswap, iswap, iiswap, cx, cy, cz, acx, acy, acz
-
-    col_len = math.floor(math.sqrt(width))
-    while (((width // col_len) * col_len) != width):
-        col_len -= 1
-    row_len = width // col_len
-    if col_len == 1:
-        print("(Prime - skipped)")
-        return
-
     for d in range(depth):
         experiment.reset_all()
         start = time.perf_counter()
