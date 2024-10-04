@@ -6,6 +6,8 @@ import statistics
 import sys
 import time
 
+from scipy.stats import binom
+
 from pyqrack import QrackSimulator
 
 from qiskit import QuantumCircuit
@@ -80,16 +82,21 @@ def main():
     # If the probability is above 2/3, the protocol certifies/passes the qubit width.
     threshold = statistics.median(ideal_probs)
     sum_prob = 0
+    sum_counts = 0
     for i in range(n_pow):
         b = (bin(i)[2:]).zfill(n)
         if (ideal_probs[i] >= threshold) and (b in counts):
+            sum_counts = sum_counts + counts[b]
             sum_prob = sum_prob + (counts[b] / n_pow)
+
+    p_val = 1 - binom.cdf(sum_counts, n_pow, 1 / 2)
 
     print({
         'qubits': n,
         'seconds': interval,
         'hog_prob': sum_prob,
-        'pass': (sum_prob >= 2 / 3)
+        'pass': (sum_prob >= 2 / 3),
+        'p-value': p_val
     })
 
     return 0
