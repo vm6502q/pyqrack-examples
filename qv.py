@@ -138,6 +138,7 @@ def main():
         'seconds': interval,
         'fidelity': fidelity,
         'hog_prob': sum_prob,
+        'pass': (sum_prob >= 2 / 3),
         'peak_cpu_mb': memory_cpu,
         'peak_gpu_mb': memory_gpu
     })
