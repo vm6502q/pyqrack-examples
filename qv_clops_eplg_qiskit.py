@@ -87,11 +87,12 @@ def calc_stats(ideal_probs, counts, interval, shots):
         m_u = m_u + ideal * (count / shots)
 
         # QV / HOG
-        if ideal_probs[i] > threshold:
+        if ideal > threshold:
             sum_hog_counts = sum_hog_counts + count
 
     hog_prob = sum_hog_counts / shots
     xeb = (m_u - u_u) * (e_u - u_u) / ((e_u - u_u) ** 2)
+    # p-value of heavy output count, if method were actually 50/50 chance of guessing
     p_val = (1 - binom.cdf(sum_hog_counts - 1, shots, 1 / 2)) if sum_hog_counts > 0 else 1
 
     return {
@@ -99,9 +100,9 @@ def calc_stats(ideal_probs, counts, interval, shots):
         'seconds': interval,
         'xeb': xeb,
         'hog_prob': hog_prob,
-        'pass': (hog_prob >= 2 / 3),
+        'pass': hog_prob >= 2 / 3,
         'p-value': p_val,
-        'clops': ((n * shots) / interval),
+        'clops': (n * shots) / interval,
         'eplg': (1 - xeb) ** (1 / n) if xeb < 1 else 0
     }
 
