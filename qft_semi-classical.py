@@ -7,7 +7,7 @@ import time
 from pyqrack import QrackSimulator
 
 
-def qft(n, sim):
+def iqft(n, sim):
     if n == 0:
         return
     n -= 1
@@ -17,7 +17,20 @@ def qft(n, sim):
         for t in range(n):
             sim.mtrx([1, 0, 0, numpy.exp(math.pi/2**(n-t)*1j)], t)
 
+    iqft(n, sim)
+
+
+def qft(n, sim):
+    if n == 0:
+        return
+    n -= 1
+
     qft(n, sim)
+
+    for c in range(n):
+        sim.mcmtrx([c], [1, 0, 0, numpy.exp(-math.pi/2**(n-c)*1j)], n)
+    sim.h(n)
+    sim.m(n)
 
 
 def bench_qrack(n):
@@ -32,7 +45,7 @@ def bench_qrack(n):
     for i in lcv_range:
         qsim.u(i, random.uniform(0, 2 * math.pi), random.uniform(0, 2 * math.pi), random.uniform(0, 2 * math.pi))
 
-    qft(n, qsim)
+    iqft(n, qsim)
 
     end = n - 1
     for i in range(n // 2):
