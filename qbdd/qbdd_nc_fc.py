@@ -14,6 +14,8 @@ def bench_qrack(width, depth):
     start = time.perf_counter()
 
     sim = QrackSimulator(width, isBinaryDecisionTree=True)
+    # Turned on, but might be faster when off:
+    sim.set_reactive_separate(True)
 
     lcv_range = range(width)
     all_bits = list(lcv_range)
