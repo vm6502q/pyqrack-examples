@@ -9,7 +9,7 @@ from pyqrack import QrackSimulator
 
 def qft(n, sim):
     if n == 0:
-        return sim
+        return
     n -= 1
 
     sim.h(n)
