@@ -164,7 +164,7 @@ def bench_qrack(width, depth):
 
 def main():
     # Run the benchmarks
-    for i in range(1, 21):
+    for i in range(1, 26):
         print("Width=" + str(i) + ":")
         bench_qrack(i, i)
 
