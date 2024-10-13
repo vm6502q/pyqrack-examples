@@ -87,7 +87,7 @@ def nswap(sim, q1, q2):
 def bench_qrack(width, depth):
     # This is a "nearest-neighbor" coupler random circuit.
     experiment = QrackSimulator(width, isBinaryDecisionTree=True)
-    experiment.set_reactive_separation(True)
+    experiment.set_reactive_separate(True)
     control = QrackSimulator(width)
 
     lcv_range = range(width)
