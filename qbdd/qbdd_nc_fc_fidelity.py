@@ -12,8 +12,9 @@ from pyqrack import QrackSimulator, Pauli
 
 
 def bench_qrack(width, depth):
-    # This is a "nearest-neighbor" coupler random circuit.
+    # This is a fully-connected random circuit.
     experiment = QrackSimulator(width, isBinaryDecisionTree=True)
+    experiment.set_reactive_separation(True)
     control = QrackSimulator(width)
 
     lcv_range = range(width)
