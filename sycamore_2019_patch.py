@@ -3,8 +3,11 @@
 import math
 import os
 import random
+import statistics
 import sys
 import time
+
+from scipy.stats import binom
 
 from pyqrack import QrackSimulator, Pauli
 
@@ -41,14 +44,14 @@ def sqrt_w(sim, q):
     sim.mtrx(mtrx, q);
 
 
-def bench_qrack(depth):
+def bench_qrack(width, depth):
     # This is a "nearest-neighbor" coupler random circuit.
     start = time.perf_counter()
     
-    width = 54
-    dead_qubit = 3
+    dead_qubit = 3 if width == 54 else width
 
-    sim = QrackSimulator(width, isBinaryDecisionTree=True)
+    full_sim = QrackSimulator(width)
+    patch_sim = QrackSimulator(width)
 
     lcv_range = range(width)
     all_bits = list(lcv_range)
@@ -59,13 +62,15 @@ def bench_qrack(depth):
     one_bit_gates = [ sqrt_x, sqrt_y, sqrt_w ]
 
     row_len, col_len = factor_width(width)
+    patch_bound = row_len >> 1
 
     for d in range(depth):
         # Single-qubit gates
         if d == 0:
             for i in lcv_range:
                 g = random.choice(one_bit_gates)
-                g(sim, i)
+                g(full_sim, i)
+                g(patch_sim, i)
                 last_gates.append(g)
         else:
             # Don't repeat the same gate on the next layer.
@@ -73,7 +78,8 @@ def bench_qrack(depth):
                 temp_gates = one_bit_gates.copy()
                 temp_gates.remove(last_gates[i])
                 g = random.choice(one_bit_gates)
-                g(sim, i)
+                g(full_sim, i)
+                g(patch_sim, i)
                 last_gates[i] = g
 
         # Nearest-neighbor couplers:
@@ -110,28 +116,83 @@ def bench_qrack(depth):
                 if d == (depth - 1):
                     # For the last layer of couplers, the immediately next operation is measurement, and the phase
                     # effects make no observable difference.
-                    sim.swap(b1, b2)
+                    full_sim.swap(b1, b2)
 
                     continue
 
-                sim.fsim((3 * math.pi) / 2, math.pi / 6, b1, b2)
+                full_sim.fsim((3 * math.pi) / 2, math.pi / 6, b1, b2)
 
-    # Terminal measurement
-    sim.m_all()
+                # Duplicate if in patches:
+                if ((row < patch_bound) and (temp_row >= patch_bound)) or ((temp_row < patch_bound) and (row >= patch_bound)):
+                    continue
 
-    return time.perf_counter() - start
+                if d == (depth - 1):
+                    # For the last layer of couplers, the immediately next operation is measurement, and the phase
+                    # effects make no observable difference.
+                    patch_sim.swap(b1, b2)
+
+                    continue
+
+                patch_sim.fsim((3 * math.pi) / 2, math.pi / 6, b1, b2)
+
+    ideal_probs = full_sim.out_probs()
+    counts = patch_sim.measure_shots(all_bits, 1000000)
+
+    return (ideal_probs, counts, time.perf_counter() - start)
+
+
+def calc_stats(ideal_probs, counts, interval):
+    # For QV, we compare probabilities of (ideal) "heavy outputs."
+    # If the probability is above 2/3, the protocol certifies/passes the qubit width.
+    shots = 1000000
+    n_pow = len(ideal_probs)
+    n = int(round(math.log2(n_pow)))
+    threshold = statistics.median(ideal_probs)
+    u_u = statistics.mean(ideal_probs)
+    e_u = 0
+    m_u = 0
+    sum_hog_counts = 0
+    for b in range(n_pow):
+        if not b in counts:
+            continue
+
+        # XEB / EPLG
+        count = counts[b]
+        ideal = ideal_probs[b]
+        e_u = e_u + ideal ** 2
+        m_u = m_u + ideal * (count / shots)
+
+        # QV / HOG
+        if ideal > threshold:
+            sum_hog_counts = sum_hog_counts + count
+
+    hog_prob = sum_hog_counts / shots
+    xeb = (m_u - u_u) * (e_u - u_u) / ((e_u - u_u) ** 2)
+    # p-value of heavy output count, if method were actually 50/50 chance of guessing
+    p_val = (1 - binom.cdf(sum_hog_counts - 1, shots, 1 / 2)) if sum_hog_counts > 0 else 1
+
+    return {
+        'qubits': n,
+        'seconds': interval,
+        'xeb': xeb,
+        'hog_prob': hog_prob,
+        'pass': hog_prob >= 2 / 3,
+        'p-value': p_val,
+        'eplg': (1 - xeb) ** (1 / n) if xeb < 1 else 0
+    }
 
 
 def main():
-    if len(sys.argv) < 2:
-        raise RuntimeError('Usage: python3 qbdd_sycamore_2019.py [depth]')
+    if len(sys.argv) < 3:
+        raise RuntimeError('Usage: python3 sycamore_2019_patch.py [width] [depth]')
 
-    depth = int(sys.argv[1])
+    width = int(sys.argv[1])
+    depth = int(sys.argv[2])
 
     # Run the benchmarks
-    time_result = bench_qrack(depth)
-
-    print("Width=(54 - 1), Depth=" + str(depth) + ": " + str(time_result) + " seconds. (Fidelity is unknown.)")
+    result = bench_qrack(width, depth)
+    # Calc. and print the results
+    calc_stats(result[0], result[1], result[2])
 
     return 0
 
