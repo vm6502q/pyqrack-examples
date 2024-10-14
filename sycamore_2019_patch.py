@@ -1,4 +1,5 @@
-# Demonstrates the use of "Quantum Binary Decision Diagram" (QBDD) and QBDD rounding parameter (QBDDRP) with near-Clifford (nearest-neighbor)
+# How good are Google's own "patch circuits" as a direct XEB approximation to full Sycamore circuits?
+# (Are they better than the 2019 Sycamore hardware?)
 
 import math
 import os
