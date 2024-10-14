@@ -104,7 +104,7 @@ def calc_stats(ideal_probs, counts, interval, sim_interval, shots):
         'p-value': p_val,
         'clops': (n * shots) / interval,
         'sim_clops': (n * shots) / sim_interval,
-        'eplg': (1 - xeb) ** (1 / n) if xeb < 1 else 0
+        'eplg': (1 - (xeb ** (1 / depth))) if xeb < 1 else 0
     }
 
 

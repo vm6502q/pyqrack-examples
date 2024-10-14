@@ -172,7 +172,7 @@ def calc_stats(ideal_probs, patch_probs, interval, depth):
         'xeb': xeb,
         'hog_prob': hog_prob,
         'qv_pass': hog_prob >= 2 / 3,
-        'eplg': (1 - xeb) ** (1 / depth) if xeb < 1 else 0
+        'eplg':  (1 - (xeb ** (1 / depth))) if xeb < 1 else 0
     }
 
 
