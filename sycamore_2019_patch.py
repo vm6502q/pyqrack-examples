@@ -175,8 +175,9 @@ def calc_stats(ideal_probs, patch_probs, interval, depth):
         patch = patch_probs[b]
 
         # XEB / EPLG
-        denom += (ideal - u_u) ** 2
-        numer += (ideal - u_u) * (patch - u_u)
+        ideal_centered = (ideal - u_u)
+        denom += ideal_centered * ideal_centered
+        numer += ideal_centered * (patch - u_u)
 
         # QV / HOG
         if ideal > threshold:
