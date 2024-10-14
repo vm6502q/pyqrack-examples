@@ -14,7 +14,8 @@ from pyqrack import QrackSimulator, Pauli
 def bench_qrack(width, depth):
     # This is a fully-connected random circuit.
     experiment = QrackSimulator(width, isBinaryDecisionTree=True)
-    experiment.set_reactive_separate(True)
+    # Turned off, but might be faster when on:
+    # experiment.set_reactive_separate(True)
     control = QrackSimulator(width)
 
     lcv_range = range(width)

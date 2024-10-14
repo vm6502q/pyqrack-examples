@@ -100,7 +100,8 @@ def bench_qrack(width, depth):
     # This is a "nearest-neighbor" coupler random circuit.
     circ = QuantumCircuit(width)
     experiment = QrackSimulator(width, isBinaryDecisionTree=True)
-    experiment.set_reactive_separate(True)
+    # Turned off, but might be faster when on:
+    # experiment.set_reactive_separate(True)
     control = AerSimulator(method="statevector")
 
     lcv_range = range(width)
