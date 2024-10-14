@@ -148,21 +148,22 @@ def calc_stats(ideal_probs, patch_probs, interval):
     n = int(round(math.log2(n_pow)))
     threshold = statistics.median(ideal_probs)
     u_u = statistics.mean(ideal_probs)
-    e_u = 0
-    m_u = 0
+    numer = 0
+    denom = 0
     hog_prob = 0
     for b in range(n_pow):
-        # XEB / EPLG
         ideal = ideal_probs[b]
         patch = patch_probs[b]
-        e_u = e_u + ideal ** 2
-        m_u = m_u + ideal * patch
+
+        # XEB / EPLG
+        denom = denom + (ideal - u_u) ** 2
+        numer = numer + (ideal - u_u) * (patch - u_u)
 
         # QV / HOG
         if ideal > threshold:
             hog_prob = hog_prob + patch
 
-    xeb = (m_u - u_u) * (e_u - u_u) / ((e_u - u_u) ** 2)
+    xeb = numer / denom
 
     return {
         'qubits': n,
