@@ -1,4 +1,4 @@
-# How good are Google's own "patch circuits" as a direct XEB approximation to full Sycamore circuits?
+# How good are Google's own "patch circuits" and "elided circuits" as a direct XEB approximation to full Sycamore circuits?
 # (Are they better than the 2019 Sycamore hardware?)
 
 import math
@@ -123,10 +123,6 @@ def bench_qrack(width, depth):
 
                 full_sim.fsim((3 * math.pi) / 2, math.pi / 6, b1, b2)
 
-                # Duplicate if in patches:
-                if ((row < patch_bound) and (temp_row >= patch_bound)) or ((temp_row < patch_bound) and (row >= patch_bound)):
-                    continue
-
                 if d == (depth - 1):
                     # For the last layer of couplers, the immediately next operation is measurement, and the phase
                     # effects make no observable difference.
@@ -134,7 +130,12 @@ def bench_qrack(width, depth):
 
                     continue
 
-                patch_sim.fsim((3 * math.pi) / 2, math.pi / 6, b1, b2)
+                # Elide if across patches:
+                if ((row < patch_bound) and (temp_row >= patch_bound)) or ((temp_row < patch_bound) and (row >= patch_bound)):
+                    # This is our version of ("semi-classical") gate "elision":
+                    patch_sim.u(b2, 0, 0, patch_sim.prob(b1) * math.pi / 6)
+                else:
+                    patch_sim.fsim((3 * math.pi) / 2, math.pi / 6, b1, b2)
 
     ideal_probs = full_sim.out_probs()
     patch_probs = patch_sim.out_probs()

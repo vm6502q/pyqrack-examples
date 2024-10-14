@@ -11,8 +11,6 @@ import numpy as np
 from pyqrack import QrackSimulator
 
 
-
-
 def bench_qrack(width, depth):
     # This is a "nearest-neighbor" coupler random circuit.
     experiment = QrackSimulator(width, isBinaryDecisionTree=True)
