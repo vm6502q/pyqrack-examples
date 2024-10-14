@@ -141,7 +141,7 @@ def bench_qrack(width, depth):
     return (ideal_probs, patch_probs, time.perf_counter() - start)
 
 
-def calc_stats(ideal_probs, patch_probs, interval):
+def calc_stats(ideal_probs, patch_probs, interval, depth):
     # For QV, we compare probabilities of (ideal) "heavy outputs."
     # If the probability is above 2/3, the protocol certifies/passes the qubit width.
     n_pow = len(ideal_probs)
@@ -167,6 +167,7 @@ def calc_stats(ideal_probs, patch_probs, interval):
 
     return {
         'qubits': n,
+        'depth': depth,
         'seconds': interval,
         'xeb': xeb,
         'hog_prob': hog_prob,
@@ -184,7 +185,7 @@ def main():
     # Run the benchmarks
     result = bench_qrack(width, depth)
     # Calc. and print the results
-    print(calc_stats(result[0], result[1], result[2]))
+    print(calc_stats(result[0], result[1], result[2], depth))
 
     return 0
 
