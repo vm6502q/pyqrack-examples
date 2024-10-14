@@ -147,10 +147,10 @@ def bench_qrack(width, depth):
                     patch_sim.u(b2, prob1 * 2 * phase_fac, 0, 0)
                     # CZ(b1, b2)^-x
                     patch_sim.u(b2, 0, 0, -prob1 * phase_fac)
-                    # Inverse of T(b1)
-                    patch_sim.adjt(b1)
-                    # Inverse of T(b2)
-                    patch_sim.adjt(b2)
+                    # T(b1)
+                    patch_sim.t(b1)
+                    # T(b2)
+                    patch_sim.t(b2)
                 else:
                     patch_sim.fsim((3 * math.pi) / 2, math.pi / 6, b1, b2)
 
