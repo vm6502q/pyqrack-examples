@@ -192,7 +192,7 @@ def main():
     # Run the benchmarks
     result = bench_qrack(width, depth)
     # Calc. and print the results
-    calc_stats(result[0], result[1], result[2])
+    print(calc_stats(result[0], result[1], result[2]))
 
     return 0
 
