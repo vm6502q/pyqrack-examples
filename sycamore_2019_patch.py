@@ -136,49 +136,40 @@ def bench_qrack(width, depth):
                 patch_sim.fsim((3 * math.pi) / 2, math.pi / 6, b1, b2)
 
     ideal_probs = full_sim.out_probs()
-    counts = patch_sim.measure_shots(all_bits, 1000000)
+    patch_probs = patch_sim.out_probs()
 
-    return (ideal_probs, counts, time.perf_counter() - start)
+    return (ideal_probs, patch_probs, time.perf_counter() - start)
 
 
-def calc_stats(ideal_probs, counts, interval):
+def calc_stats(ideal_probs, patch_probs, interval):
     # For QV, we compare probabilities of (ideal) "heavy outputs."
     # If the probability is above 2/3, the protocol certifies/passes the qubit width.
-    shots = 1000000
     n_pow = len(ideal_probs)
     n = int(round(math.log2(n_pow)))
     threshold = statistics.median(ideal_probs)
     u_u = statistics.mean(ideal_probs)
     e_u = 0
     m_u = 0
-    sum_hog_counts = 0
+    hog_prob = 0
     for b in range(n_pow):
-        if not b in counts:
-            continue
-
         # XEB / EPLG
-        count = counts[b]
         ideal = ideal_probs[b]
+        patch = patch_probs[b]
         e_u = e_u + ideal ** 2
-        m_u = m_u + ideal * (count / shots)
+        m_u = m_u + ideal * patch
 
         # QV / HOG
         if ideal > threshold:
-            sum_hog_counts = sum_hog_counts + count
+            hog_prob = hog_prob + patch
 
-    hog_prob = sum_hog_counts / shots
     xeb = (m_u - u_u) * (e_u - u_u) / ((e_u - u_u) ** 2)
-    # p-value of heavy output count, if method were actually 50/50 chance of guessing
-    p_val = (1 - binom.cdf(sum_hog_counts - 1, shots, 1 / 2)) if sum_hog_counts > 0 else 1
 
     return {
         'qubits': n,
         'seconds': interval,
         'xeb': xeb,
         'hog_prob': hog_prob,
-        'pass': hog_prob >= 2 / 3,
-        'p-value': p_val,
-        'eplg': (1 - xeb) ** (1 / n) if xeb < 1 else 0
+        'qv_pass': hog_prob >= 2 / 3
     }
 
 
