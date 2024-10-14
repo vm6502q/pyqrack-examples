@@ -156,12 +156,12 @@ def calc_stats(ideal_probs, patch_probs, interval):
         patch = patch_probs[b]
 
         # XEB / EPLG
-        denom = denom + (ideal - u_u) ** 2
-        numer = numer + (ideal - u_u) * (patch - u_u)
+        denom += (ideal - u_u) ** 2
+        numer += (ideal - u_u) * (patch - u_u)
 
         # QV / HOG
         if ideal > threshold:
-            hog_prob = hog_prob + patch
+            hog_prob += patch
 
     xeb = numer / denom
 

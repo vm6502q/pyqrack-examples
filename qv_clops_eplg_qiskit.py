@@ -83,12 +83,12 @@ def calc_stats(ideal_probs, counts, interval, sim_interval, shots):
         ideal = ideal_probs[i]
 
         # XEB / EPLG
-        denom = denom + (ideal - u_u) ** 2
-        numer = numer + (ideal - u_u) * ((count / shots) - u_u)
+        denom += (ideal - u_u) ** 2
+        numer += (ideal - u_u) * ((count / shots) - u_u)
 
         # QV / HOG
         if ideal > threshold:
-            sum_hog_counts = sum_hog_counts + count
+            sum_hog_counts += count
 
     hog_prob = sum_hog_counts / shots
     xeb = numer / denom
