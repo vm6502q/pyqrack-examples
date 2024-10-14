@@ -11,6 +11,8 @@ import time
 
 import numpy as np
 
+import pandas as pd
+
 from pyqrack import QrackSimulator
 
 from scipy.stats import binom
@@ -63,23 +65,18 @@ def calc_stats(ideal_probs, patch_probs, interval, depth):
     # If the probability is above 2/3, the protocol certifies/passes the qubit width.
     n_pow = len(ideal_probs)
     n = int(round(math.log2(n_pow)))
-    threshold = statistics.median(ideal_probs)
-    u_u = statistics.mean(ideal_probs)
-    numer = 0
-    denom = 0
-    hog_prob = 0
-    for b in range(n_pow):
-        ideal = ideal_probs[b]
-        patch = patch_probs[b]
+    ideal_df = pd.DataFrame(ideal_probs)
+    patch_df = pd.DataFrame(patch_probs)
+    threshold = pd.median(ideal_probs)
+    u_u = pd.mean(ideal_probs)
 
-        # XEB / EPLG
-        ideal_centered = (ideal - u_u)
-        denom += ideal_centered * ideal_centered
-        numer += ideal_centered * (patch - u_u)
+    # XEB / EPLG
+    ideal_centered = ideal_df - u_u
+    denom = (ideal_centered * ideal_centered).sum()
+    numer = (ideal_centered * (patch - u_u)).sum()
 
-        # QV / HOG
-        if ideal > threshold:
-            hog_prob += patch
+    # QV / HOG
+    hog_prob = (patch >= threshold).sum()
 
     xeb = numer / denom
 

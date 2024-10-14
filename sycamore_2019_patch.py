@@ -8,6 +8,8 @@ import statistics
 import sys
 import time
 
+import pandas as pd
+
 from scipy.stats import binom
 
 from pyqrack import QrackSimulator, Pauli
@@ -147,10 +149,10 @@ def bench_qrack(width, depth):
                     patch_sim.u(b2, prob1 * 2 * phase_fac, 0, 0)
                     # CZ(b1, b2)^-x
                     patch_sim.u(b2, 0, 0, -prob1 * phase_fac)
-                    # Inverse of T(b1)
-                    patch_sim.adjt(b1)
-                    # Inverse of T(b2)
-                    patch_sim.adjt(b2)
+                    # T(b1)
+                    patch_sim.t(b1)
+                    # T(b2)
+                    patch_sim.t(b2)
                 else:
                     patch_sim.fsim((3 * math.pi) / 2, math.pi / 6, b1, b2)
 
@@ -165,23 +167,18 @@ def calc_stats(ideal_probs, patch_probs, interval, depth):
     # If the probability is above 2/3, the protocol certifies/passes the qubit width.
     n_pow = len(ideal_probs)
     n = int(round(math.log2(n_pow)))
-    threshold = statistics.median(ideal_probs)
-    u_u = statistics.mean(ideal_probs)
-    numer = 0
-    denom = 0
-    hog_prob = 0
-    for b in range(n_pow):
-        ideal = ideal_probs[b]
-        patch = patch_probs[b]
+    ideal_df = pd.DataFrame(ideal_probs)
+    patch_df = pd.DataFrame(patch_probs)
+    threshold = pd.median(ideal_probs)
+    u_u = pd.mean(ideal_probs)
 
-        # XEB / EPLG
-        ideal_centered = (ideal - u_u)
-        denom += ideal_centered * ideal_centered
-        numer += ideal_centered * (patch - u_u)
+    # XEB / EPLG
+    ideal_centered = ideal_df - u_u
+    denom = (ideal_centered * ideal_centered).sum()
+    numer = (ideal_centered * (patch - u_u)).sum()
 
-        # QV / HOG
-        if ideal > threshold:
-            hog_prob += patch
+    # QV / HOG
+    hog_prob = (patch >= threshold).sum()
 
     xeb = numer / denom
 
