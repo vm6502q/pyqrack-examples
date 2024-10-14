@@ -134,9 +134,6 @@ def bench_qrack(width, depth):
                 if ((row < patch_bound) and (temp_row >= patch_bound)) or ((temp_row < patch_bound) and (row >= patch_bound)):
                     # This is our version of ("semi-classical") gate "elision":
                     prob1 = patch_sim.prob(b1)
-                    prob2 = patch_sim.prob(b2)
-                    patch_sim.u(b1, abs(prob2 - prob1) * 2 * math.pi, 0, 0)
-                    patch_sim.u(b2, abs(prob1 - prob2) * 2 * math.pi, 0, 0)
                     patch_sim.u(b2, 0, 0, -prob1 * math.pi / 6)
                 else:
                     patch_sim.fsim((3 * math.pi) / 2, math.pi / 6, b1, b2)
