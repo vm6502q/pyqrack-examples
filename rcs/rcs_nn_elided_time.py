@@ -28,7 +28,7 @@ def factor_width(width):
 def cx(sim, q1, q2, bound):
     if ((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound)):
         prob1 = sim.prob(q1)
-        sim.u(q2, prob1 * 2 * math.pi, 0, 0)
+        sim.u(q2, prob1 * math.pi, 0, 0)
     else:
         sim.mcx([q1], q2)
 
@@ -36,7 +36,8 @@ def cx(sim, q1, q2, bound):
 def cy(sim, q1, q2, bound):
     if ((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound)):
         prob1 = sim.prob(q1)
-        sim.u(q2, prob1 * 2 * math.pi, 0, prob1 * math.pi)
+        sim.u(q2, 0, 0, prob1 * math.pi)
+        sim.u(q2, prob1 * math.pi, 0, 0)
     else:
         sim.mcy([q1], q2)
 
@@ -52,7 +53,7 @@ def cz(sim, q1, q2, bound):
 def acx(sim, q1, q2, bound):
     if ((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound)):
         prob1 = 1 - sim.prob(q1)
-        sim.u(q2, prob1 * 2 * math.pi, 0, 0)
+        sim.u(q2, prob1 * math.pi, 0, 0)
     else:
         sim.macx([q1], q2)
 
@@ -60,7 +61,7 @@ def acx(sim, q1, q2, bound):
 def acy(sim, q1, q2, bound):
     if ((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound)):
         prob1 = 1 - sim.prob(q1)
-        sim.u(q2, prob1 * 2 * math.pi, 0, prob1 * math.pi)
+        sim.u(q2, prob1 * math.pi, 0, prob1 * math.pi)
     else:
         sim.macy([q1], q2)
 
@@ -76,11 +77,11 @@ def acz(sim, q1, q2, bound):
 def swap(sim, q1, q2, bound):
     if ((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound)):
         prob1 = sim.prob(q1)
-        sim.u(q2, prob1 * 2 * math.pi, 0, 0)
+        sim.u(q2, prob1 * math.pi, 0, 0)
         prob2 = sim.prob(q2)
-        sim.u(q1, prob2 * 2 * math.pi, 0, 0)
+        sim.u(q1, prob2 * math.pi, 0, 0)
         prob1 = sim.prob(q1)
-        sim.u(q2, prob1 * 2 * math.pi, 0, 0)
+        sim.u(q2, prob1 * math.pi, 0, 0)
     else:
         sim.swap(q1, q2)
 
@@ -88,11 +89,11 @@ def swap(sim, q1, q2, bound):
 def iswap(sim, q1, q2, bound):
     if ((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound)):
         prob1 = sim.prob(q1)
-        sim.u(q2, prob1 * 2 * math.pi, 0, 0)
+        sim.u(q2, prob1 * math.pi, 0, 0)
         prob2 = sim.prob(q2)
-        sim.u(q1, prob2 * 2 * math.pi, 0, 0)
+        sim.u(q1, prob2 * math.pi, 0, 0)
         prob1 = sim.prob(q1)
-        sim.u(q2, prob1 * 2 * math.pi, 0, 0)
+        sim.u(q2, prob1 * math.pi, 0, 0)
         sim.u(q2, 0, 0, prob1 * math.pi)
         sim.s(q1)
         sim.s(q2)
@@ -106,11 +107,11 @@ def iiswap(sim, q1, q2, bound):
         sim.adjs(q2)
         prob1 = sim.prob(q1)
         sim.u(q2, 0, 0, -prob1 * math.pi)
-        sim.u(q2, prob1 * 2 * math.pi, 0, 0)
+        sim.u(q2, prob1 * math.pi, 0, 0)
         prob2 = sim.prob(q2)
-        sim.u(q1, prob2 * 2 * math.pi, 0, 0)
+        sim.u(q1, prob2 * math.pi, 0, 0)
         prob1 = sim.prob(q1)
-        sim.u(q2, prob1 * 2 * math.pi, 0, 0)
+        sim.u(q2, prob1 * math.pi, 0, 0)
     else:
         sim.adjiswap(q1, q2)
 
@@ -119,11 +120,11 @@ def pswap(sim, q1, q2, bound):
     if ((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound)):
         prob1 = sim.prob(q1)
         sim.u(q2, 0, 0, prob1 * math.pi)
-        sim.u(q2, prob1 * 2 * math.pi, 0, 0)
+        sim.u(q2, prob1 * math.pi, 0, 0)
         prob2 = sim.prob(q2)
-        sim.u(q1, prob2 * 2 * math.pi, 0, 0)
+        sim.u(q1, prob2 * math.pi, 0, 0)
         prob1 = sim.prob(q1)
-        sim.u(q2, prob1 * 2 * math.pi, 0, 0)
+        sim.u(q2, prob1 * math.pi, 0, 0)
     else:
         sim.mcz([q1], q2)
         sim.swap(q1, q2)
@@ -132,11 +133,11 @@ def pswap(sim, q1, q2, bound):
 def mswap(sim, q1, q2, bound):
     if ((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound)):
         prob1 = sim.prob(q1)
-        sim.u(q2, prob1 * 2 * math.pi, 0, 0)
+        sim.u(q2, prob1 * math.pi, 0, 0)
         prob2 = sim.prob(q2)
-        sim.u(q1, prob2 * 2 * math.pi, 0, 0)
+        sim.u(q1, prob2 * math.pi, 0, 0)
         prob1 = sim.prob(q1)
-        sim.u(q2, prob1 * 2 * math.pi, 0, 0)
+        sim.u(q2, prob1 * math.pi, 0, 0)
         sim.u(q2, 0, 0, prob1 * math.pi)
     else:
         sim.swap(q1, q2)
@@ -147,11 +148,11 @@ def nswap(sim, q1, q2, bound):
     if ((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound)):
         prob1 = sim.prob(q1)
         sim.u(q2, 0, 0, prob1 * math.pi)
-        sim.u(q2, prob1 * 2 * math.pi, 0, 0)
+        sim.u(q2, prob1 * math.pi, 0, 0)
         prob2 = sim.prob(q2)
-        sim.u(q1, prob2 * 2 * math.pi, 0, 0)
+        sim.u(q1, prob2 * math.pi, 0, 0)
         prob1 = sim.prob(q1)
-        sim.u(q2, prob1 * 2 * math.pi, 0, 0)
+        sim.u(q2, prob1 * math.pi, 0, 0)
         sim.u(q2, 0, 0, prob1 * math.pi)
     else:
         sim.mcz([q1], q2)
