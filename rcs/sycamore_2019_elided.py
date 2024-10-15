@@ -117,13 +117,15 @@ def bench_qrack(width, depth):
                     # This is our version of ("semi-classical") gate "elision":
                     # FSim controlled phase
                     prob1 = patch_sim.prob(b1)
-                    # patch_sim.u(b2, 0, 0, -prob1 * math.pi / 6)
+                    if prob1 > 0.5:
+                        patch_sim.u(b2, 0, 0, -math.pi / 6)
                     # Inverse of S(b1)
-                    # patch_sim.adjs(b1)
+                    patch_sim.adjs(b1)
                     # Inverse of S(b2)
-                    # patch_sim.adjs(b2)
+                    patch_sim.adjs(b2)
                     # CZ(b1, b2)^x
-                    # patch_sim.u(b2, 0, 0, -prob1 * math.pi)
+                    if prob1 > 0.5:
+                        patch_sim.z(b2)
                     # CNOT(b1, b2)^x
                     cx_shadow(patch_sim, -prob1, b2)
                     # CNOT(b2, b1)^x
