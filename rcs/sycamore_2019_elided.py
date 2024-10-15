@@ -127,7 +127,7 @@ def bench_qrack(width, depth):
                     prob1 = patch_sim.prob(b1)
                     cx_shadow(patch_sim, 3 * prob1 / 2, b2)
                     # CZ(b1, b2)^-x
-                    patch_sim.u(b2, 0, 0, -3 * prob1 * math.pi / 2)
+                    patch_sim.u(b2, 0, 0, prob1 * math.pi)
                     # T(b1)
                     patch_sim.t(b1)
                     # T(b2)
