@@ -118,10 +118,10 @@ def bench_qrack(width, depth):
                     # FSim controlled phase
                     prob1 = patch_sim.prob(b1)
                     patch_sim.u(b2, 0, 0, -prob1 * math.pi / 6)
-                    # Inverse of T(b1)
-                    patch_sim.adjt(b1)
-                    # Inverse of T(b2)
-                    patch_sim.adjt(b2)
+                    # Inverse of S(b1)
+                    patch_sim.adjs(b1)
+                    # Inverse of S(b2)
+                    patch_sim.adjs(b2)
                     # CZ(b1, b2)^x
                     patch_sim.u(b2, 0, 0, -prob1 * math.pi)
                     # CNOT(b1, b2)^x
