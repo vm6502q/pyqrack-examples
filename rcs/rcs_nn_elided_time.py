@@ -230,7 +230,7 @@ def bench_qrack(width, depth):
 
 def main():
     if len(sys.argv) < 3:
-        raise RuntimeError('Usage: python3 rcs_nn_elided.py [width] [depth]')
+        raise RuntimeError('Usage: python3 rcs_nn_elided_time.py [width] [depth]')
 
     width = int(sys.argv[1])
     depth = int(sys.argv[2])

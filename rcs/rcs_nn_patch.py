@@ -204,7 +204,7 @@ def calc_stats(ideal_probs, patch_probs, interval, depth):
 
 def main():
     if len(sys.argv) < 3:
-        raise RuntimeError('Usage: python3 rcs_nn_elided.py [width] [depth]')
+        raise RuntimeError('Usage: python3 rcs_nn_patch.py [width] [depth]')
 
     width = int(sys.argv[1])
     depth = int(sys.argv[2])

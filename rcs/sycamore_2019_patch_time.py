@@ -24,12 +24,6 @@ def factor_width(width):
     return (row_len, col_len)
 
 
-def cx_shadow(sim, c_prob, t):
-    sim.h(t)
-    sim.u(t, 0, 0, c_prob * math.pi)
-    sim.h(t)
-
-
 def sqrt_x(sim, q):
     ONE_PLUS_I_DIV_2 = 0.5 + 0.5j
     ONE_MINUS_I_DIV_2 = 0.5 - 0.5j
@@ -57,7 +51,6 @@ def bench_qrack(width, depth):
     
     dead_qubit = 3 if width == 54 else width
 
-    full_sim = QrackSimulator(width)
     patch_sim = QrackSimulator(width)
 
     patch_bound = (width + 1) >> 1
@@ -70,13 +63,13 @@ def bench_qrack(width, depth):
     one_bit_gates = [ sqrt_x, sqrt_y, sqrt_w ]
 
     row_len, col_len = factor_width(width)
+    patch_bound = (row_len + 1) >> 1
 
     for d in range(depth):
         # Single-qubit gates
         if d == 0:
             for i in lcv_range:
                 g = random.choice(one_bit_gates)
-                g(full_sim, i)
                 g(patch_sim, i)
                 last_gates.append(g)
         else:
@@ -85,7 +78,6 @@ def bench_qrack(width, depth):
                 temp_gates = one_bit_gates.copy()
                 temp_gates.remove(last_gates[i])
                 g = random.choice(one_bit_gates)
-                g(full_sim, i)
                 g(patch_sim, i)
                 last_gates[i] = g
 
@@ -110,86 +102,28 @@ def bench_qrack(width, depth):
                 if (b1 >= width) or (b2 >= width) or (b1 == dead_qubit) or (b2 == dead_qubit):
                     continue
 
-                full_sim.fsim((3 * math.pi) / 2, math.pi / 6, b1, b2)
-
-                # Elide if across patches:
                 if ((b1 < patch_bound) and (b2 >= patch_bound)) or ((b1 < patch_bound) and (b2 >= patch_bound)):
-                    # This is our version of ("semi-classical") gate "elision":
-                    # FSim controlled phase
-                    prob1 = patch_sim.prob(b1)
-                    patch_sim.u(b2, 0, 0, -prob1 * math.pi / 6)
-                    # CNOT(b1, b2)^x
-                    cx_shadow(patch_sim, -prob1 / 2, b2)
-                    # CNOT(b2, b1)^x
-                    prob2 = patch_sim.prob(b2)
-                    cx_shadow(patch_sim, -prob2 / 2, b1)
-                    # CNOT(b1, b2)^x
-                    prob1 = patch_sim.prob(b1)
-                    cx_shadow(patch_sim, -prob1 / 2, b2)
-                    # CZ(b1, b2)^-x
-                    patch_sim.u(b2, 0, 0, prob1 * math.pi / 2)
-                    # T(b1)
-                    patch_sim.t(b1)
-                    # T(b2)
-                    patch_sim.t(b2)
-                else:
-                    patch_sim.fsim((3 * math.pi) / 2, math.pi / 6, b1, b2)
+                    continue
 
-    ideal_probs = full_sim.out_probs()
-    del full_sim
-    patch_probs = patch_sim.out_probs()
-    del patch_sim
+                patch_sim.fsim((3 * math.pi) / 2, math.pi / 6, b1, b2)
 
-    return (ideal_probs, patch_probs, time.perf_counter() - start)
+    # Terminal measurement
+    patch_probs = patch_sim.m_all()
 
-
-def calc_stats(ideal_probs, patch_probs, interval, depth):
-    # For QV, we compare probabilities of (ideal) "heavy outputs."
-    # If the probability is above 2/3, the protocol certifies/passes the qubit width.
-    n_pow = len(ideal_probs)
-    n = int(round(math.log2(n_pow)))
-    threshold = statistics.median(ideal_probs)
-    u_u = statistics.mean(ideal_probs)
-    numer = 0
-    denom = 0
-    hog_prob = 0
-    for b in range(n_pow):
-        ideal = ideal_probs[b]
-        patch = patch_probs[b]
-
-        # XEB / EPLG
-        ideal_centered = (ideal - u_u)
-        denom += ideal_centered * ideal_centered
-        numer += ideal_centered * (patch - u_u)
-
-        # QV / HOG
-        if ideal > threshold:
-            hog_prob += patch
-
-    xeb = numer / denom
-
-    return {
-        'qubits': n,
-        'depth': depth,
-        'seconds': interval,
-        'xeb': xeb,
-        'hog_prob': hog_prob,
-        'qv_pass': hog_prob >= 2 / 3,
-        'eplg':  (1 - (xeb ** (1 / depth))) if xeb < 1 else 0
-    }
+    return time.perf_counter() - start
 
 
 def main():
     if len(sys.argv) < 3:
-        raise RuntimeError('Usage: python3 sycamore_2019_elided.py [width] [depth]')
+        raise RuntimeError('Usage: python3 sycamore_2019_patch.py [width] [depth]')
 
     width = int(sys.argv[1])
     depth = int(sys.argv[2])
 
-    # Run the benchmarks
+     # Run the benchmarks
     result = bench_qrack(width, depth)
     # Calc. and print the results
-    print(calc_stats(result[0], result[1], result[2], depth))
+    print("Width=" + str(width) + ", Depth=" + str(depth) + ", Seconds=" + str(result))
 
     return 0
 
