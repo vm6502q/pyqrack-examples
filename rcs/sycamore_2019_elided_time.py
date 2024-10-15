@@ -28,9 +28,30 @@ def factor_width(width):
     return (row_len, col_len)
 
 
-def cx_shadow(sim, c_prob, t):
-    if c_prob > (0.5 + epsilon):
-        sim.x(t)
+def cz_shadow(sim, q1, q2, anti = False):
+    prob1, prob2, prob_max, t = ct_pair_prob(sim, q1, q2)
+    if ((not anti) and (prob_max > (0.5 + epsilon))) or (anti and (prob_max < (0.5 - epsilon))):
+        sim.z(t)
+
+
+def cx_shadow(sim, c, t, anti = False):
+    sim.h(t)
+    cz_shadow(sim, c, t, anti)
+    sim.h(t)
+
+
+def ct_pair_prob(q1, q2):
+    r = [0] * 4
+
+    r[0] = sim.prob(q1)
+    r[1] = sim.prob(q2)
+    r[2] = r[0]
+    r[3] = q2
+    if r[0] < r[1]:
+        r[3] = q1
+        r[2] = r[1]
+
+    return r
 
 
 def sqrt_x(sim, q):
@@ -114,24 +135,22 @@ def bench_qrack(width, depth):
                 if ((b1 < patch_bound) and (b2 >= patch_bound)) or ((b2 < patch_bound) and (b1 >= patch_bound)):
                     # This is our version of ("semi-classical") gate "elision":
                     # FSim controlled phase
-                    prob1 = patch_sim.prob(b1)
-                    if prob1 > (0.5 + epsilon):
-                        patch_sim.u(b2, 0, 0, -math.pi / 6)
+                    prob1, prob2, prob_max, t = ct_pair_prob(patch_sim, b1, b2)
+                    if prob_max > (0.5 + epsilon):
+                        patch_sim.u(t, 0, 0, -math.pi / 6)
                     # Inverse of S(b1)
                     patch_sim.adjs(b1)
                     # Inverse of S(b2)
                     patch_sim.adjs(b2)
                     # CZ(b1, b2)^x
-                    if prob1 > (0.5 + epsilon):
-                        patch_sim.z(b2)
+                    if prob_max > (0.5 + epsilon):
+                        patch_sim.z(t)
                     # CNOT(b1, b2)^x
-                    cx_shadow(patch_sim, prob1, b2)
+                    cx_shadow(patch_sim, b1, b2)
                     # CNOT(b2, b1)^x
-                    prob2 = patch_sim.prob(b2)
-                    cx_shadow(patch_sim, prob2, b1)
+                    cx_shadow(patch_sim, b2, b1)
                     # CNOT(b1, b2)^x
-                    prob1 = patch_sim.prob(b1)
-                    cx_shadow(patch_sim, prob1, b2)
+                    cx_shadow(patch_sim, b1, b2)
                 else:
                     patch_sim.fsim(-math.pi / 2, math.pi / 6, b1, b2)
 
