@@ -130,10 +130,35 @@ def bench_qrack(width, depth):
 
                     continue
 
+                # Elide if across patches:
                 if ((row < patch_bound) and (temp_row >= patch_bound)) or ((temp_row < patch_bound) and (row >= patch_bound)):
-                    continue
-
-                patch_sim.fsim((3 * math.pi) / 2, math.pi / 6, b1, b2)
+                    # This is our version of ("semi-classical") gate "elision":
+                    phase_fac = (3 * math.pi) / 2
+                    # FSim controlled phase
+                    prob1 = patch_sim.prob(b1)
+                    patch_sim.u(b2, 0, 0, -prob1 * math.pi / 6)
+                    # CNOT(b1, b2)^x
+                    patch_sim.h(b2)
+                    patch_sim.u(b2, 0, 0, prob1 * phase_fac)
+                    patch_sim.h(b2)
+                    # CNOT(b2, b1)^x
+                    prob2 = patch_sim.prob(b2)
+                    patch_sim.h(b1)
+                    patch_sim.u(b1, 0, 0, prob2 * phase_fac)
+                    patch_sim.h(b1)
+                    # CNOT(b1, b2)^x
+                    prob1 = patch_sim.prob(b1)
+                    patch_sim.h(b2)
+                    patch_sim.u(b2, 0, 0, prob1 * phase_fac)
+                    patch_sim.h(b2)
+                    # CZ(b1, b2)^-x
+                    patch_sim.u(b2, 0, 0, -prob1 * phase_fac)
+                    # T(b1)
+                    patch_sim.t(b1)
+                    # T(b2)
+                    patch_sim.t(b2)
+                else:
+                    patch_sim.fsim((3 * math.pi) / 2, math.pi / 6, b1, b2)
 
     ideal_probs = full_sim.out_probs()
     patch_probs = patch_sim.out_probs()
