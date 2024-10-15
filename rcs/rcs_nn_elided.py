@@ -15,6 +15,9 @@ from scipy.stats import binom
 from pyqrack import QrackSimulator, Pauli
 
 
+epsilon = 2 ** -24
+
+
 def factor_width(width):
     row_len = math.floor(math.sqrt(width))
     while (((width // row_len) * row_len) != width):
@@ -27,14 +30,14 @@ def factor_width(width):
 
 
 def cx_shadow(sim, c_prob, t):
-    if c_prob > 0.5:
+    if c_prob > (0.5 + epsilon):
         sim.x(t)
 
 
 def cx(sim, q1, q2, patch, bound):
     if patch and (((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound))):
         prob1 = sim.prob(q1)
-        if prob1 > 0.5:
+        if prob1 > (0.5 + epsilon):
             sim.x(q2)
     else:
         sim.mcx([q1], q2)
@@ -43,7 +46,7 @@ def cx(sim, q1, q2, patch, bound):
 def cy(sim, q1, q2, patch, bound):
     if patch and (((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound))):
         prob1 = sim.prob(q1)
-        if prob1 > 0.5:
+        if prob1 > (0.5 + epsilon):
             sim.y(q2)
     else:
         sim.mcy([q1], q2)
@@ -52,7 +55,7 @@ def cy(sim, q1, q2, patch, bound):
 def cz(sim, q1, q2, patch, bound):
     if patch and (((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound))):
         prob1 = sim.prob(q1)
-        if prob1 > 0.5:
+        if prob1 > (0.5 + epsilon):
             sim.z(q2)
     else:
         sim.mcz([q1], q2)
@@ -61,7 +64,7 @@ def cz(sim, q1, q2, patch, bound):
 def acx(sim, q1, q2, patch, bound):
     if patch and (((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound))):
         prob1 = sim.prob(q1)
-        if prob1 < 0.5:
+        if prob1 < (0.5 - epsilon):
             sim.x(q2)
     else:
         sim.macx([q1], q2)
@@ -70,7 +73,7 @@ def acx(sim, q1, q2, patch, bound):
 def acy(sim, q1, q2, patch, bound):
     if patch and (((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound))):
         prob1 = sim.prob(q1)
-        if prob1 < 0.5:
+        if prob1 < (0.5 - epsilon):
             sim.y(q2)
     else:
         sim.macy([q1], q2)
@@ -79,7 +82,7 @@ def acy(sim, q1, q2, patch, bound):
 def acz(sim, q1, q2, patch, bound):
     if patch and (((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound))):
         prob1 = sim.prob(q1)
-        if prob1 < 0.5:
+        if prob1 < (0.5 - epsilon):
             sim.z(q2)
     else:
         sim.macz([q1], q2)
@@ -105,7 +108,7 @@ def iswap(sim, q1, q2, patch, bound):
         cx_shadow(sim, prob2, q1)
         prob1 = sim.prob(q1)
         cx_shadow(sim, prob1, q2)
-        if prob1 > 0.5:
+        if prob1 > (0.5 + epsilon):
             sim.z(q2)
         sim.s(q1)
         sim.s(q2)
@@ -118,7 +121,7 @@ def iiswap(sim, q1, q2, patch, bound):
         sim.adjs(q1)
         sim.adjs(q2)
         prob1 = sim.prob(q1)
-        if prob1 > 0.5:
+        if prob1 > (0.5 + epsilon):
             sim.z(q2)
         cx_shadow(sim, prob1, q2)
         prob2 = sim.prob(q2)
@@ -132,7 +135,7 @@ def iiswap(sim, q1, q2, patch, bound):
 def pswap(sim, q1, q2, patch, bound):
     if patch and (((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound))):
         prob1 = sim.prob(q1)
-        if prob1 > 0.5:
+        if prob1 > (0.5 + epsilon):
             sim.z(q2)
         cx_shadow(sim, prob1, q2)
         prob2 = sim.prob(q2)
@@ -152,7 +155,7 @@ def mswap(sim, q1, q2, patch, bound):
         cx_shadow(sim, prob2, q1)
         prob1 = sim.prob(q1)
         cx_shadow(sim, prob1, q2)
-        if prob1 > 0.5:
+        if prob1 > (0.5 + epsilon):
             sim.z(q2)
     else:
         sim.swap(q1, q2)
@@ -162,14 +165,14 @@ def mswap(sim, q1, q2, patch, bound):
 def nswap(sim, q1, q2, patch, bound):
     if patch and (((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound))):
         prob1 = sim.prob(q1)
-        if prob1 > 0.5:
+        if prob1 > (0.5 + epsilon):
             sim.z(q2)
         cx_shadow(sim, prob1, q2)
         prob2 = sim.prob(q2)
         cx_shadow(sim, prob2, q1)
         prob1 = sim.prob(q1)
         cx_shadow(sim, prob1, q2)
-        if prob1 > 0.5:
+        if prob1 > (0.5 + epsilon):
             sim.z(q2)
     else:
         sim.mcz([q1], q2)
