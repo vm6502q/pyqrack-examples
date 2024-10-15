@@ -122,13 +122,13 @@ def bench_qrack(width, depth):
                     if prob1 > 0.5:
                         patch_sim.z(b2)
                     # CNOT(b1, b2)^x
-                    cx_shadow(patch_sim, -prob1, b2)
+                    cx_shadow(patch_sim, prob1, b2)
                     # CNOT(b2, b1)^x
                     prob2 = patch_sim.prob(b2)
-                    cx_shadow(patch_sim, -prob2, b1)
+                    cx_shadow(patch_sim, prob2, b1)
                     # CNOT(b1, b2)^x
                     prob1 = patch_sim.prob(b1)
-                    cx_shadow(patch_sim, -prob1, b2)
+                    cx_shadow(patch_sim, prob1, b2)
                 else:
                     patch_sim.fsim(-math.pi / 2, math.pi / 6, b1, b2)
 
