@@ -46,14 +46,14 @@ def bench_qrack(width, depth):
             control.h(t)
             experiment.h(t)
             if (c < patch_size and t >= patch_size) or (t < patch_size and c >= patch_size):
-                # This is our version of ("semi-classical") gate "elision":
-                experiment.u(t, 0, 0, math.pi * experiment.prob(c))
-            else:
-                experiment.mcz([c], t)
+                continue
+            experiment.mcz([c], t)
             experiment.h(t)
 
     ideal_probs = control.out_probs()
+    del control
     patch_probs = experiment.out_probs()
+    del experiment
 
     return (ideal_probs, patch_probs, time.perf_counter() - start)
 

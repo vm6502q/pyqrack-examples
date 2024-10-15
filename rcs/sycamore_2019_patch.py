@@ -94,16 +94,6 @@ def bench_qrack(width, depth):
                 temp_row = temp_row + (1 if (gate & 2) else -1);
                 temp_col = temp_col + (1 if (gate & 1) else 0)
 
-                # Orbifolded:
-                # if temp_row < 0:
-                #     temp_row = temp_row + row_len
-                # if temp_col < 0:
-                #     temp_col = temp_col + col_len
-                # if temp_row >= row_len:
-                #     temp_row = temp_row - row_len
-                # if temp_col >= col_len:
-                #     temp_col = temp_col - col_len
-
                 # Bounded:
                 if (temp_row < 0) or (temp_col < 0) or (temp_row >= row_len) or (temp_col >= col_len):
                     continue
@@ -122,7 +112,9 @@ def bench_qrack(width, depth):
                 patch_sim.fsim((3 * math.pi) / 2, math.pi / 6, b1, b2)
 
     ideal_probs = full_sim.out_probs()
+    del full_sim
     patch_probs = patch_sim.out_probs()
+    del patch_sim
 
     return (ideal_probs, patch_probs, time.perf_counter() - start)
 
