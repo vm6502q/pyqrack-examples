@@ -54,6 +54,7 @@ def bench_qrack(width, depth):
     full_sim = QrackSimulator(width)
     patch_sim = QrackSimulator(width)
 
+    patch_bound = (width + 1) >> 1
     lcv_range = range(width)
     all_bits = list(lcv_range)
     last_gates = []
@@ -106,7 +107,7 @@ def bench_qrack(width, depth):
 
                 full_sim.fsim((3 * math.pi) / 2, math.pi / 6, b1, b2)
 
-                if ((row < patch_bound) and (temp_row >= patch_bound)) or ((temp_row < patch_bound) and (row >= patch_bound)):
+                if ((b1 <= patch_bound) and (b2 > patch_bound)) or ((b1 <= patch_bound) and (b2 > patch_bound)):
                     continue
 
                 patch_sim.fsim((3 * math.pi) / 2, math.pi / 6, b1, b2)
