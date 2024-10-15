@@ -26,7 +26,7 @@ def factor_width(width):
     return (row_len, col_len)
 
 def cx(sim, q1, q2, bound):
-    if ((q1 <= bound) and (q2 > bound)) or ((q2 <= bound) and (q1 > bound)):
+    if ((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound)):
         prob1 = sim.prob(q1)
         sim.u(q2, prob1 * 2 * math.pi, 0, 0)
     else:
@@ -34,7 +34,7 @@ def cx(sim, q1, q2, bound):
 
 
 def cy(sim, q1, q2, bound):
-    if ((q1 <= bound) and (q2 > bound)) or ((q2 <= bound) and (q1 > bound)):
+    if ((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound)):
         prob1 = sim.prob(q1)
         sim.u(q2, prob1 * 2 * math.pi, 0, prob1 * math.pi)
     else:
@@ -42,7 +42,7 @@ def cy(sim, q1, q2, bound):
 
 
 def cz(sim, q1, q2, bound):
-    if ((q1 <= bound) and (q2 > bound)) or ((q2 <= bound) and (q1 > bound)):
+    if ((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound)):
         prob1 = sim.prob(q1)
         sim.u(q2, 0, 0, prob1 * math.pi)
     else:
@@ -50,7 +50,7 @@ def cz(sim, q1, q2, bound):
 
 
 def acx(sim, q1, q2, bound):
-    if ((q1 <= bound) and (q2 > bound)) or ((q2 <= bound) and (q1 > bound)):
+    if ((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound)):
         prob1 = 1 - sim.prob(q1)
         sim.u(q2, prob1 * 2 * math.pi, 0, 0)
     else:
@@ -58,7 +58,7 @@ def acx(sim, q1, q2, bound):
 
 
 def acy(sim, q1, q2, bound):
-    if ((q1 <= bound) and (q2 > bound)) or ((q2 <= bound) and (q1 > bound)):
+    if ((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound)):
         prob1 = 1 - sim.prob(q1)
         sim.u(q2, prob1 * 2 * math.pi, 0, prob1 * math.pi)
     else:
@@ -66,7 +66,7 @@ def acy(sim, q1, q2, bound):
 
 
 def acz(sim, q1, q2, bound):
-    if ((q1 <= bound) and (q2 > bound)) or ((q2 <= bound) and (q1 > bound)):
+    if ((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound)):
         prob1 = 1 - sim.prob(q1)
         sim.u(q2, 0, 0, prob1 * math.pi)
     else:
@@ -74,7 +74,7 @@ def acz(sim, q1, q2, bound):
 
 
 def swap(sim, q1, q2, bound):
-    if ((q1 <= bound) and (q2 > bound)) or ((q2 <= bound) and (q1 > bound)):
+    if ((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound)):
         prob1 = sim.prob(q1)
         sim.u(q2, prob1 * 2 * math.pi, 0, 0)
         prob2 = sim.prob(q2)
@@ -86,7 +86,7 @@ def swap(sim, q1, q2, bound):
 
 
 def iswap(sim, q1, q2, bound):
-    if ((q1 <= bound) and (q2 > bound)) or ((q2 <= bound) and (q1 > bound)):
+    if ((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound)):
         prob1 = sim.prob(q1)
         sim.u(q2, prob1 * 2 * math.pi, 0, 0)
         prob2 = sim.prob(q2)
@@ -101,7 +101,7 @@ def iswap(sim, q1, q2, bound):
 
 
 def iiswap(sim, q1, q2, bound):
-    if ((q1 <= bound) and (q2 > bound)) or ((q2 <= bound) and (q1 > bound)):
+    if ((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound)):
         sim.adjs(q1)
         sim.adjs(q2)
         prob1 = sim.prob(q1)
@@ -116,7 +116,7 @@ def iiswap(sim, q1, q2, bound):
 
 
 def pswap(sim, q1, q2, bound):
-    if ((q1 <= bound) and (q2 > bound)) or ((q2 <= bound) and (q1 > bound)):
+    if ((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound)):
         prob1 = sim.prob(q1)
         sim.u(q2, 0, 0, prob1 * math.pi)
         sim.u(q2, prob1 * 2 * math.pi, 0, 0)
@@ -130,7 +130,7 @@ def pswap(sim, q1, q2, bound):
 
 
 def mswap(sim, q1, q2, bound):
-    if ((q1 <= bound) and (q2 > bound)) or ((q2 <= bound) and (q1 > bound)):
+    if ((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound)):
         prob1 = sim.prob(q1)
         sim.u(q2, prob1 * 2 * math.pi, 0, 0)
         prob2 = sim.prob(q2)
@@ -144,7 +144,7 @@ def mswap(sim, q1, q2, bound):
 
 
 def nswap(sim, q1, q2, bound):
-    if ((q1 <= bound) and (q2 > bound)) or ((q2 <= bound) and (q1 > bound)):
+    if ((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound)):
         prob1 = sim.prob(q1)
         sim.u(q2, 0, 0, prob1 * math.pi)
         sim.u(q2, prob1 * 2 * math.pi, 0, 0)

@@ -26,75 +26,75 @@ def factor_width(width):
     return (row_len, col_len)
 
 def cx(sim, q1, q2, bound):
-    if ((q1 <= bound) and (q2 > bound)) or ((q2 <= bound) and (q1 > bound)):
+    if ((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound)):
         continue
     sim.mcx([q1], q2)
 
 
 def cy(sim, q1, q2, bound):
-    if ((q1 <= bound) and (q2 > bound)) or ((q2 <= bound) and (q1 > bound)):
+    if ((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound)):
         continue
     sim.mcy([q1], q2)
 
 
 def cz(sim, q1, q2, bound):
-    if ((q1 <= bound) and (q2 > bound)) or ((q2 <= bound) and (q1 > bound)):
+    if ((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound)):
         continue
     sim.mcz([q1], q2)
 
 
 def acx(sim, q1, q2, bound):
-    if ((q1 <= bound) and (q2 > bound)) or ((q2 <= bound) and (q1 > bound)):
+    if ((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound)):
         continue
     sim.macx([q1], q2)
 
 
 def acy(sim, q1, q2, bound):
-    if ((q1 <= bound) and (q2 > bound)) or ((q2 <= bound) and (q1 > bound)):
+    if ((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound)):
         continue
     sim.macy([q1], q2)
 
 
 def acz(sim, q1, q2, bound):
-    if ((q1 <= bound) and (q2 > bound)) or ((q2 <= bound) and (q1 > bound)):
+    if ((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound)):
         continue
     sim.macz([q1], q2)
 
 
 def swap(sim, q1, q2, bound):
-    if ((q1 <= bound) and (q2 > bound)) or ((q2 <= bound) and (q1 > bound)):
+    if ((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound)):
         continue
     sim.swap(q1, q2)
 
 
 def iswap(sim, q1, q2, bound):
-    if ((q1 <= bound) and (q2 > bound)) or ((q2 <= bound) and (q1 > bound)):
+    if ((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound)):
         continue
     sim.iswap(q1, q2)
 
 
 def iiswap(sim, q1, q2, bound):
-    if ((q1 <= bound) and (q2 > bound)) or ((q2 <= bound) and (q1 > bound)):
+    if ((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound)):
         continue
     sim.adjiswap(q1, q2)
 
 
 def pswap(sim, q1, q2, bound):
-    if ((q1 <= bound) and (q2 > bound)) or ((q2 <= bound) and (q1 > bound)):
+    if ((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound)):
         continue
     sim.mcz([q1], q2)
     sim.swap(q1, q2)
 
 
 def mswap(sim, q1, q2, bound):
-    if ((q1 <= bound) and (q2 > bound)) or ((q2 <= bound) and (q1 > bound)):
+    if ((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound)):
         continue
     sim.swap(q1, q2)
     sim.mcz([q1], q2)
 
 
 def nswap(sim, q1, q2, bound):
-    if ((q1 <= bound) and (q2 > bound)) or ((q2 <= bound) and (q1 > bound)):
+    if ((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound)):
         continue
     sim.mcz([q1], q2)
     sim.swap(q1, q2)
