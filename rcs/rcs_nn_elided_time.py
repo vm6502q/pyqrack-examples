@@ -115,11 +115,11 @@ def iiswap(sim, q1, q2, bound):
         sim.adjs(q2)
         prob1 = sim.prob(q1)
         sim.u(q2, 0, 0, -prob1 * math.pi)
-        cx_shadow(sim, prob1, q2)
+        cx_shadow(sim, -prob1, q2)
         prob2 = sim.prob(q2)
-        cx_shadow(sim, prob2, q1)
+        cx_shadow(sim, -prob2, q1)
         prob1 = sim.prob(q1)
-        cx_shadow(sim, prob1, q2)
+        cx_shadow(sim, -prob1, q2)
     else:
         sim.adjiswap(q1, q2)
 

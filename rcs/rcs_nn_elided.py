@@ -97,11 +97,11 @@ def swap(sim, q1, q2, patch, bound):
 def iswap(sim, q1, q2, patch, bound):
     if patch and (((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound))):
         prob1 = sim.prob(q1)
-        cx_shadow(sim, prob1, q2)
+        cx_shadow(sim, -prob1, q2)
         prob2 = sim.prob(q2)
-        cx_shadow(sim, prob2, q1)
+        cx_shadow(sim, -prob2, q1)
         prob1 = sim.prob(q1)
-        cx_shadow(sim, prob1, q2)
+        cx_shadow(sim, -prob1, q2)
         sim.u(q2, 0, 0, prob1 * math.pi)
         sim.s(q1)
         sim.s(q2)
