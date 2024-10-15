@@ -121,12 +121,12 @@ def bench_qrack(width, depth):
                     # CNOT(b1, b2)^x
                     prob1 = patch_sim.prob(b1)
                     cx_shadow(patch_sim, -prob1, b2)
-                    # CZ(b1, b2)^-x
-                    patch_sim.u(b2, 0, 0, prob1 * math.pi)
-                    # T(b1)
-                    patch_sim.t(b1)
-                    # T(b2)
-                    patch_sim.t(b2)
+                    # CZ(b1, b2)^x
+                    patch_sim.u(b2, 0, 0, -prob1 * math.pi)
+                    # Inverse of T(b1)
+                    patch_sim.adjt(b1)
+                    # Inverse of T(b2)
+                    patch_sim.adjt(b2)
                 else:
                     patch_sim.fsim(-math.pi / 2, math.pi / 6, b1, b2)
 
