@@ -25,76 +25,52 @@ def factor_width(width):
     return (row_len, col_len)
 
 def cx(sim, q1, q2, patch, bound):
-    if patch and (((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound))):
-        return
     sim.mcx([q1], q2)
 
 
 def cy(sim, q1, q2, patch, bound):
-    if patch and (((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound))):
-        return
     sim.mcy([q1], q2)
 
 
 def cz(sim, q1, q2, patch, bound):
-    if patch and (((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound))):
-        return
     sim.mcz([q1], q2)
 
 
 def acx(sim, q1, q2, patch, bound):
-    if patch and (((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound))):
-        return
     sim.macx([q1], q2)
 
 
 def acy(sim, q1, q2, patch, bound):
-    if patch and (((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound))):
-        return
     sim.macy([q1], q2)
 
 
 def acz(sim, q1, q2, patch, bound):
-    if patch and (((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound))):
-        return
     sim.macz([q1], q2)
 
 
 def swap(sim, q1, q2, patch, bound):
-    if patch and (((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound))):
-        return
     sim.swap(q1, q2)
 
 
 def iswap(sim, q1, q2, patch, bound):
-    if patch and (((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound))):
-        return
     sim.iswap(q1, q2)
 
 
 def iiswap(sim, q1, q2, patch, bound):
-    if patch and (((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound))):
-        return
     sim.adjiswap(q1, q2)
 
 
 def pswap(sim, q1, q2, patch, bound):
-    if patch and (((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound))):
-        return
     sim.mcz([q1], q2)
     sim.swap(q1, q2)
 
 
 def mswap(sim, q1, q2, patch, bound):
-    if patch and (((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound))):
-        return
     sim.swap(q1, q2)
     sim.mcz([q1], q2)
 
 
 def nswap(sim, q1, q2, patch, bound):
-    if patch and (((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound))):
-        return
     sim.mcz([q1], q2)
     sim.swap(q1, q2)
     sim.mcz([q1], q2)
@@ -156,6 +132,10 @@ def bench_qrack(width, depth):
 
                 g = random.choice(two_bit_gates)
                 g(control, b1, b2, False, patch_bound)
+
+                if ((b1 < patch_bound) and (b2 >= patch_bound)) or ((b2 < patch_bound) and (b1 >= patch_bound)):
+                    continue
+
                 g(experiment, b1, b2, True, patch_bound)
 
     ideal_probs = control.out_probs()
