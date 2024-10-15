@@ -29,9 +29,8 @@ def factor_width(width):
 
 
 def cx_shadow(sim, c_prob, t):
-    sim.h(t)
-    sim.u(t, 0, 0, c_prob * math.pi)
-    sim.h(t)
+    if c_prob > (0.5 + epsilon):
+        sim.x(t)
 
 
 def sqrt_x(sim, q):
