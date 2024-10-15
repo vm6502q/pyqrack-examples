@@ -34,50 +34,56 @@ def cx_shadow(sim, c_prob, t):
 
 def cx(sim, q1, q2, bound):
     if ((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound)):
-        prob1 = sim.prob(q1)
-        cx_shadow(sim, prob1, q2)
+        # prob1 = sim.prob(q1)
+        # cx_shadow(sim, prob1, q2)
+        pass
     else:
         sim.mcx([q1], q2)
 
 
 def cy(sim, q1, q2, bound):
     if ((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound)):
-        prob1 = sim.prob(q1)
-        sim.u(q2, 0, 0, prob1 * math.pi)
-        cx_shadow(sim, prob1, q2)
+        # prob1 = sim.prob(q1)
+        # sim.u(q2, 0, 0, prob1 * math.pi)
+        # cx_shadow(sim, prob1, q2)
+        pass
     else:
         sim.mcy([q1], q2)
 
 
 def cz(sim, q1, q2, bound):
     if ((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound)):
-        prob1 = sim.prob(q1)
-        sim.u(q2, 0, 0, prob1 * math.pi)
+        # prob1 = sim.prob(q1)
+        # sim.u(q2, 0, 0, prob1 * math.pi)
+        pass
     else:
         sim.mcz([q1], q2)
 
 
 def acx(sim, q1, q2, bound):
     if ((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound)):
-        prob1 = 1 - sim.prob(q1)
-        cx_shadow(sim, prob1, q2)
+        # prob1 = 1 - sim.prob(q1)
+        # cx_shadow(sim, prob1, q2)
+        pass
     else:
         sim.macx([q1], q2)
 
 
 def acy(sim, q1, q2, bound):
     if ((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound)):
-        prob1 = 1 - sim.prob(q1)
-        sim.u(q2, 0, 0, prob1 * math.pi)
-        cx_shadow(sim, prob1, q2)
+        # prob1 = 1 - sim.prob(q1)
+        # sim.u(q2, 0, 0, prob1 * math.pi)
+        # cx_shadow(sim, prob1, q2)
+        pass
     else:
         sim.macy([q1], q2)
 
 
 def acz(sim, q1, q2, bound):
     if ((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound)):
-        prob1 = 1 - sim.prob(q1)
-        sim.u(q2, 0, 0, prob1 * math.pi)
+        # prob1 = 1 - sim.prob(q1)
+        # sim.u(q2, 0, 0, prob1 * math.pi)
+        pass
     else:
         sim.macz([q1], q2)
 
@@ -102,19 +108,19 @@ def iswap(sim, q1, q2, bound):
         cx_shadow(sim, prob2, q1)
         prob1 = sim.prob(q1)
         cx_shadow(sim, prob1, q2)
-        sim.u(q2, 0, 0, prob1 * math.pi)
-        sim.s(q1)
-        sim.s(q2)
+        # sim.u(q2, 0, 0, prob1 * math.pi)
+        # sim.s(q1)
+        # sim.s(q2)
     else:
         sim.iswap(q1, q2)
 
 
 def iiswap(sim, q1, q2, bound):
     if ((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound)):
-        sim.adjs(q1)
-        sim.adjs(q2)
+        # sim.adjs(q1)
+        # sim.adjs(q2)
         prob1 = sim.prob(q1)
-        sim.u(q2, 0, 0, -prob1 * math.pi)
+        # sim.u(q2, 0, 0, -prob1 * math.pi)
         cx_shadow(sim, -prob1, q2)
         prob2 = sim.prob(q2)
         cx_shadow(sim, -prob2, q1)
@@ -127,7 +133,7 @@ def iiswap(sim, q1, q2, bound):
 def pswap(sim, q1, q2, bound):
     if ((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound)):
         prob1 = sim.prob(q1)
-        sim.u(q2, 0, 0, prob1 * math.pi)
+        # sim.u(q2, 0, 0, prob1 * math.pi)
         cx_shadow(sim, prob1, q2)
         prob2 = sim.prob(q2)
         cx_shadow(sim, prob2, q1)
@@ -146,7 +152,7 @@ def mswap(sim, q1, q2, bound):
         cx_shadow(sim, prob2, q1)
         prob1 = sim.prob(q1)
         cx_shadow(sim, prob1, q2)
-        sim.u(q2, 0, 0, prob1 * math.pi)
+        # sim.u(q2, 0, 0, prob1 * math.pi)
     else:
         sim.swap(q1, q2)
         sim.mcz([q1], q2)
@@ -155,13 +161,13 @@ def mswap(sim, q1, q2, bound):
 def nswap(sim, q1, q2, bound):
     if ((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound)):
         prob1 = sim.prob(q1)
-        sim.u(q2, 0, 0, prob1 * math.pi)
+        # sim.u(q2, 0, 0, prob1 * math.pi)
         cx_shadow(sim, prob1, q2)
         prob2 = sim.prob(q2)
         cx_shadow(sim, prob2, q1)
         prob1 = sim.prob(q1)
         cx_shadow(sim, prob1, q2)
-        sim.u(q2, 0, 0, prob1 * math.pi)
+        # sim.u(q2, 0, 0, prob1 * math.pi)
     else:
         sim.mcz([q1], q2)
         sim.swap(q1, q2)
