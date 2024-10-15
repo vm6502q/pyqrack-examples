@@ -1,4 +1,4 @@
-# Demonstrates the use of "Quantum Binary Decision Diagram" (QBDD) and QBDD rounding parameter (QBDDRP) with near-Clifford (nearest-neighbor)
+# Orbifolded random circuit sampling
 
 import math
 import os
@@ -107,9 +107,14 @@ def bench_qrack(width, depth):
                 temp_row = temp_row + (1 if (gate & 2) else -1);
                 temp_col = temp_col + (1 if (gate & 1) else 0)
 
-                # Bounded:
-                if (temp_row < 0) or (temp_col < 0) or (temp_row >= row_len) or (temp_col >= col_len):
-                    continue
+                if temp_row < 0:
+                    temp_row = temp_row + row_len
+                if temp_col < 0:
+                    temp_col = temp_col + col_len
+                if temp_row >= row_len:
+                    temp_row = temp_row - row_len
+                if temp_col >= col_len:
+                    temp_col = temp_col - col_len
 
                 b1 = row * row_len + col
                 b2 = temp_row * row_len + temp_col
