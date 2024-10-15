@@ -110,7 +110,7 @@ def bench_qrack(width, depth):
                 if (b1 >= width) or (b2 >= width) or (b1 == dead_qubit) or (b2 == dead_qubit):
                     continue
 
-                full_sim.fsim((3 * math.pi) / 2, math.pi / 6, b1, b2)
+                full_sim.fsim(-math.pi / 2, math.pi / 6, b1, b2)
 
                 # Elide if across patches:
                 if ((b1 < patch_bound) and (b2 >= patch_bound)) or ((b2 < patch_bound) and (b1 >= patch_bound)):
@@ -119,21 +119,21 @@ def bench_qrack(width, depth):
                     prob1 = patch_sim.prob(b1)
                     patch_sim.u(b2, 0, 0, -prob1 * math.pi / 6)
                     # CNOT(b1, b2)^x
-                    cx_shadow(patch_sim, -prob1 / 2, b2)
+                    cx_shadow(patch_sim, -prob1, b2)
                     # CNOT(b2, b1)^x
                     prob2 = patch_sim.prob(b2)
-                    cx_shadow(patch_sim, -prob2 / 2, b1)
+                    cx_shadow(patch_sim, -prob2, b1)
                     # CNOT(b1, b2)^x
                     prob1 = patch_sim.prob(b1)
-                    cx_shadow(patch_sim, -prob1 / 2, b2)
+                    cx_shadow(patch_sim, -prob1, b2)
                     # CZ(b1, b2)^-x
-                    patch_sim.u(b2, 0, 0, prob1 * math.pi / 2)
+                    patch_sim.u(b2, 0, 0, prob1 * math.pi)
                     # T(b1)
                     patch_sim.t(b1)
                     # T(b2)
                     patch_sim.t(b2)
                 else:
-                    patch_sim.fsim((3 * math.pi) / 2, math.pi / 6, b1, b2)
+                    patch_sim.fsim(-math.pi / 2, math.pi / 6, b1, b2)
 
     ideal_probs = full_sim.out_probs()
     del full_sim

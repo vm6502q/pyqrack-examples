@@ -114,21 +114,21 @@ def bench_qrack(width, depth):
                     prob1 = patch_sim.prob(b1)
                     patch_sim.u(b2, 0, 0, -prob1 * math.pi / 6)
                     # CNOT(b1, b2)^x
-                    cx_shadow(patch_sim, -prob1 / 2, b2)
+                    cx_shadow(patch_sim, -prob1, b2)
                     # CNOT(b2, b1)^x
                     prob2 = patch_sim.prob(b2)
-                    cx_shadow(patch_sim, -prob2 / 2, b1)
+                    cx_shadow(patch_sim, -prob2, b1)
                     # CNOT(b1, b2)^x
                     prob1 = patch_sim.prob(b1)
-                    cx_shadow(patch_sim, -prob1 / 2, b2)
+                    cx_shadow(patch_sim, -prob1, b2)
                     # CZ(b1, b2)^-x
-                    patch_sim.u(b2, 0, 0, prob1 * math.pi / 2)
+                    patch_sim.u(b2, 0, 0, prob1 * math.pi)
                     # T(b1)
                     patch_sim.t(b1)
                     # T(b2)
                     patch_sim.t(b2)
                 else:
-                    patch_sim.fsim((3 * math.pi) / 2, math.pi / 6, b1, b2)
+                    patch_sim.fsim(-math.pi / 2, math.pi / 6, b1, b2)
 
     # Terminal measurement
     patch_probs = patch_sim.m_all()

@@ -105,7 +105,7 @@ def bench_qrack(width, depth):
                 if ((b1 < patch_bound) and (b2 >= patch_bound)) or ((b2 < patch_bound) and (b1 >= patch_bound)):
                     continue
 
-                patch_sim.fsim((3 * math.pi) / 2, math.pi / 6, b1, b2)
+                patch_sim.fsim(-math.pi / 2, math.pi / 6, b1, b2)
 
     # Terminal measurement
     patch_probs = patch_sim.m_all()
