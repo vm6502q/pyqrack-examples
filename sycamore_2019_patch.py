@@ -114,21 +114,7 @@ def bench_qrack(width, depth):
                 if (b1 >= width) or (b2 >= width) or (b1 == dead_qubit) or (b2 == dead_qubit):
                     continue
 
-                if d == (depth - 1):
-                    # For the last layer of couplers, the immediately next operation is measurement, and the phase
-                    # effects make no observable difference.
-                    full_sim.swap(b1, b2)
-
-                    continue
-
                 full_sim.fsim((3 * math.pi) / 2, math.pi / 6, b1, b2)
-
-                if d == (depth - 1):
-                    # For the last layer of couplers, the immediately next operation is measurement, and the phase
-                    # effects make no observable difference.
-                    patch_sim.swap(b1, b2)
-
-                    continue
 
                 if ((row < patch_bound) and (temp_row >= patch_bound)) or ((temp_row < patch_bound) and (row >= patch_bound)):
                     continue
