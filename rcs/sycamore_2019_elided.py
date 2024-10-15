@@ -24,6 +24,12 @@ def factor_width(width):
     return (row_len, col_len)
 
 
+def cx_shadow(sim, c_prob, t):
+    sim.h(t)
+    sim.u(t, 0, 0, c_prob * math.pi)
+    sim.h(t)
+
+
 def sqrt_x(sim, q):
     ONE_PLUS_I_DIV_2 = 0.5 + 0.5j
     ONE_MINUS_I_DIV_2 = 0.5 - 0.5j
@@ -109,20 +115,19 @@ def bench_qrack(width, depth):
                 # Elide if across patches:
                 if ((b1 <= patch_bound) and (b2 > patch_bound)) or ((b1 <= patch_bound) and (b2 >= patch_bound)):
                     # This is our version of ("semi-classical") gate "elision":
-                    phase_fac = (3 * math.pi) / 2
                     # FSim controlled phase
                     prob1 = patch_sim.prob(b1)
                     patch_sim.u(b2, 0, 0, -prob1 * math.pi / 6)
                     # CNOT(b1, b2)^x
-                    patch_sim.u(b2, prob1 * phase_fac, 0, math.pi)
+                    cx_shadow(patch_sim, 3 * prob1 / 2, b2)
                     # CNOT(b2, b1)^x
                     prob2 = patch_sim.prob(b2)
-                    patch_sim.u(b1, prob2 * phase_fac, 0, math.pi)
+                    cx_shadow(patch_sim, 3 * prob2 / 2, b1)
                     # CNOT(b1, b2)^x
                     prob1 = patch_sim.prob(b1)
-                    patch_sim.u(b2, prob1 * phase_fac, 0, math.pi)
+                    cx_shadow(patch_sim, 3 * prob1 / 2, b2)
                     # CZ(b1, b2)^-x
-                    patch_sim.u(b2, 0, 0, -prob1 * phase_fac)
+                    patch_sim.u(b2, 0, 0, -3 * prob1 * math.pi / 2)
                     # T(b1)
                     patch_sim.t(b1)
                     # T(b2)
