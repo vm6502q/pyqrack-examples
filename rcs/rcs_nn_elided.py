@@ -30,11 +30,6 @@ def factor_width(width):
     return (row_len, col_len)
 
 
-def cx_shadow(sim, c_prob, t):
-    if c_prob > (0.5 + epsilon):
-        sim.x(t)
-
-
 def ct_pair_prob(sim, q1, q2):
     r = [0] * 4
 

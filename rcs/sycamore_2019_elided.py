@@ -28,6 +28,20 @@ def factor_width(width):
     return (row_len, col_len)
 
 
+def ct_pair_prob(sim, q1, q2):
+    r = [0] * 4
+
+    r[0] = sim.prob(q1)
+    r[1] = sim.prob(q2)
+    r[2] = r[0]
+    r[3] = q2
+    if r[0] < r[1]:
+        r[3] = q1
+        r[2] = r[1]
+
+    return r
+
+
 def cz_shadow(sim, q1, q2, anti = False):
     prob1, prob2, prob_max, t = ct_pair_prob(sim, q1, q2)
     if ((not anti) and (prob_max > (0.5 + epsilon))) or (anti and (prob_max < (0.5 - epsilon))):
@@ -44,20 +58,6 @@ def swap_shadow(sim, q1, q2):
     cx_shadow(sim, q1, q2)
     cx_shadow(sim, q2, q1)
     cx_shadow(sim, q1, q2)
-
-
-def ct_pair_prob(sim, q1, q2):
-    r = [0] * 4
-
-    r[0] = sim.prob(q1)
-    r[1] = sim.prob(q2)
-    r[2] = r[0]
-    r[3] = q2
-    if r[0] < r[1]:
-        r[3] = q1
-        r[2] = r[1]
-
-    return r
 
 
 def sqrt_x(sim, q):
