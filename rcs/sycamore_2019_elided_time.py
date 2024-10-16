@@ -40,6 +40,12 @@ def cx_shadow(sim, c, t, anti = False):
     sim.h(t)
 
 
+def swap_shadow(sim, q1, q2):
+    cx_shadow(sim, q1, q2)
+    cx_shadow(sim, q2, q1)
+    cx_shadow(sim, q1, q2)
+
+
 def ct_pair_prob(q1, q2):
     r = [0] * 4
 
@@ -134,23 +140,21 @@ def bench_qrack(width, depth):
                 # Elide if across patches:
                 if ((b1 < patch_bound) and (b2 >= patch_bound)) or ((b2 < patch_bound) and (b1 >= patch_bound)):
                     # This is our version of ("semi-classical") gate "elision":
-                    # FSim controlled phase
-                    prob1, prob2, prob_max, t = ct_pair_prob(patch_sim, b1, b2)
-                    if prob_max > (0.5 + epsilon):
-                        patch_sim.u(t, 0, 0, -math.pi / 6)
+
                     # Inverse of S(b1)
                     patch_sim.adjs(b1)
                     # Inverse of S(b2)
                     patch_sim.adjs(b2)
-                    # CZ(b1, b2)^x
+
+                    prob1, prob2, prob_max, t = ct_pair_prob(patch_sim, b1, b2)
                     if prob_max > (0.5 + epsilon):
+                        # FSim controlled phase
+                        patch_sim.u(t, 0, 0, -math.pi / 6)
+                        # CZ(b1, b2)^x
                         patch_sim.z(t)
-                    # CNOT(b1, b2)^x
-                    cx_shadow(patch_sim, b1, b2)
-                    # CNOT(b2, b1)^x
-                    cx_shadow(patch_sim, b2, b1)
-                    # CNOT(b1, b2)^x
-                    cx_shadow(patch_sim, b1, b2)
+
+                    # SWAP(b1, b2)
+                    swap_shadow(patch_sim, b1, b2)
                 else:
                     patch_sim.fsim(-math.pi / 2, math.pi / 6, b1, b2)
 
