@@ -13,8 +13,8 @@ from scipy.stats import binom
 from pyqrack import QrackSimulator, Pauli
 
 
-# QBDD 16-bit precision can reach 2 ** -20 per gate (empirically)
-epsilon = 2 ** -20
+# sin(math.pi / 4) / 2
+epsilon = 0.353553390593273762
 
 
 def factor_width(width):
