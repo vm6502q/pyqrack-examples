@@ -61,6 +61,10 @@ def cy_shadow(sim, c, t, anti = False):
     cx_shadow(sim, c, t, anti)
     sim.s(t)
 
+def swap_shadow(sim, q1, q2):
+    cx_shadow(sim, q1, q2)
+    cx_shadow(sim, q2, q1)
+    cx_shadow(sim, q1, q2)
 
 def cx(sim, q1, q2, bound):
     if (((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound))):
@@ -106,18 +110,14 @@ def acz(sim, q1, q2, bound):
 
 def swap(sim, q1, q2, bound):
     if (((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound))):
-        cx_shadow(sim, q1, q2)
-        cx_shadow(sim, q2, q1)
-        cx_shadow(sim, q1, q2)
+        swap_shadow(sim, q1, q2)
     else:
         sim.swap(q1, q2)
 
 
 def iswap(sim, q1, q2, bound):
     if (((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound))):
-        cx_shadow(sim, q1, q2)
-        cx_shadow(sim, q2, q1)
-        cx_shadow(sim, q1, q2)
+        swap_shadow(sim, q1, q2)
         cz_shadow(sim, q1, q2)
         sim.s(q1)
         sim.s(q2)
@@ -130,21 +130,15 @@ def iiswap(sim, q1, q2, bound):
         sim.adjs(q1)
         sim.adjs(q2)
         cz_shadow(sim, q1, q2)
-        cx_shadow(sim, q1, q2)
-        cx_shadow(sim, q2, q1)
-        cx_shadow(sim, q1, q2)
+        swap_shadow(sim, q1, q2)
     else:
         sim.adjiswap(q1, q2)
 
 
 def pswap(sim, q1, q2, bound):
     if (((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound))):
-        prob1, prob2, prob_max, t = ct_pair_prob(sim, q1, q2)
-        if prob_max > (0.5 + epsilon):
-            sim.z(t)
-        cx_shadow(sim, q1, q2)
-        cx_shadow(sim, q2, q1)
-        cx_shadow(sim, q1, q2)
+        cz_shadow(sim, q1, q2)
+        swap_shadow(sim, q1, q2)
     else:
         sim.mcz([q1], q2)
         sim.swap(q1, q2)
@@ -152,12 +146,8 @@ def pswap(sim, q1, q2, bound):
 
 def mswap(sim, q1, q2, bound):
     if (((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound))):
-        cx_shadow(sim, q1, q2)
-        cx_shadow(sim, q2, q1)
-        cx_shadow(sim, q1, q2)
-        prob1, prob2, prob_max, t = ct_pair_prob(sim, q1, q2)
-        if prob_max > (0.5 + epsilon):
-            sim.z(t)
+        swap_shadow(sim, q1, q2)
+        cz_shadow(sim, q1, q2)
     else:
         sim.swap(q1, q2)
         sim.mcz([q1], q2)
@@ -165,15 +155,9 @@ def mswap(sim, q1, q2, bound):
 
 def nswap(sim, q1, q2, bound):
     if (((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound))):
-        prob1, prob2, prob_max, t = ct_pair_prob(sim, q1, q2)
-        if prob_max > (0.5 + epsilon):
-            sim.z(t)
-        cx_shadow(sim, q1, q2)
-        cx_shadow(sim, q2, q1)
-        cx_shadow(sim, q1, q2)
-        prob1, prob2, prob_max, t = ct_pair_prob(sim, q1, q2)
-        if prob_max > (0.5 + epsilon):
-            sim.z(t)
+        cz_shadow(sim, q1, q2)
+        swap_shadow(sim, q1, q2)
+        cz_shadow(sim, q1, q2)
     else:
         sim.mcz([q1], q2)
         sim.swap(q1, q2)
