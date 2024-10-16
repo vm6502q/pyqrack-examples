@@ -47,6 +47,7 @@ def cx_shadow(sim, c, t):
 
 
 def bench_qrack(width, depth):
+    start = time.perf_counter()
     patch_size = (width + 1) >> 1
     # This is a fully-connected random circuit.
     experiment = QrackSimulator(width)
@@ -74,7 +75,6 @@ def bench_qrack(width, depth):
             else:
                 experiment.mcx([c], t)
 
-    start = time.perf_counter()
     experiment.m_all()
     interval = time.perf_counter() - start
 
