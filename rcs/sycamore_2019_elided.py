@@ -146,20 +146,19 @@ def bench_qrack(width, depth):
                 if ((b1 < patch_bound) and (b2 >= patch_bound)) or ((b2 < patch_bound) and (b1 >= patch_bound)):
                     # This is our version of ("semi-classical") gate "elision":
 
-                    # Inverse of S(b1)
-                    patch_sim.adjs(b1)
-                    # Inverse of S(b2)
-                    patch_sim.adjs(b2)
-
                     prob1, prob2, prob_max, t = ct_pair_prob(patch_sim, b1, b2)
                     if prob_max > (0.5 + epsilon):
                         # FSim controlled phase
                         patch_sim.u(t, 0, 0, -math.pi / 6)
-                        # CZ(b1, b2)^x
-                        patch_sim.z(t)
 
                     # SWAP(b1, b2)
                     swap_shadow(patch_sim, b1, b2)
+                    # CZ(b1, b2)
+                    cz_shadow(patch_sim, b1, b2)
+                    # S(b1)
+                    patch_sim.s(b1)
+                    # S(b2)
+                    patch_sim.s(b2)
                 else:
                     patch_sim.fsim(-math.pi / 2, math.pi / 6, b1, b2)
 
