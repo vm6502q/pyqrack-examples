@@ -28,7 +28,7 @@ def factor_width(width):
     return (row_len, col_len)
 
 
-def ct_pair_prob(q1, q2):
+def ct_pair_prob(sim, q1, q2):
     r = [0] * 4
 
     r[0] = sim.prob(q1)
