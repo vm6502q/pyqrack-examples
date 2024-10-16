@@ -16,54 +16,21 @@ from pyqrack import QrackSimulator
 from scipy.stats import binom
 
 
-# sin(math.pi / 4) / 2
-epsilon = 0.353553390593273762
-
-
-def ct_pair_prob(sim, q1, q2):
-    r = [0] * 4
-
-    r[0] = sim.prob(q1)
-    r[1] = sim.prob(q2)
-    r[2] = r[0]
-    r[3] = q2
-    if r[0] < r[1]:
-        r[3] = q1
-        r[2] = r[1]
-
-    return r
-
-
-def cz_shadow(sim, q1, q2):
-    prob1, prob2, prob_max, t = ct_pair_prob(sim, q1, q2)
-    if prob_max > (0.5 + epsilon):
-        sim.z(t)
-
-
-def cx_shadow(sim, c, t):
-    sim.h(t)
-    cz_shadow(sim, c, t)
-    sim.h(t)
-
-
 def bench_qrack(width, depth):
     patch_size = (width + 1) >> 1
     # This is a fully-connected random circuit.
-    control = QrackSimulator(width)
     experiment = QrackSimulator(width)
 
     lcv_range = range(width)
     all_bits = list(lcv_range)
 
     for d in range(depth):
-        start = time.perf_counter()
         # Single-qubit gates
         for i in lcv_range:
             th = random.uniform(0, 2 * math.pi)
             ph = random.uniform(0, 2 * math.pi)
             lm = random.uniform(0, 2 * math.pi)
             experiment.u(i, th, ph, lm)
-            control.u(i, th, ph, lm)
 
         # 2-qubit couplers
         unused_bits = all_bits.copy()
@@ -71,21 +38,15 @@ def bench_qrack(width, depth):
         while len(unused_bits) > 1:
             c = unused_bits.pop()
             t = unused_bits.pop()
-            control.mcx([c], t)
             if (c < patch_size and t >= patch_size) or (t < patch_size and c >= patch_size):
-                # This is our version of ("semi-classical") gate "elision":
-                cx_shadow(experiment, c, t)
-            else:
-                experiment.mcx([c], t)
+                continue
+            experiment.mcx([c], t)
 
-    ideal_probs = control.out_probs()
-    del control
     start = time.perf_counter()
-    patch_probs = experiment.out_probs()
+    experiment.m_all()
     interval = time.perf_counter() - start
-    del experiment
 
-    return (ideal_probs, patch_probs, interval)
+    return interval
 
 
 def calc_stats(ideal_probs, patch_probs, interval, depth):

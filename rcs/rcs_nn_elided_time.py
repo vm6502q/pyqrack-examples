@@ -166,8 +166,6 @@ def nswap(sim, q1, q2, bound):
 
 def bench_qrack(width, depth):
     # This is a "nearest-neighbor" coupler random circuit.
-    start = time.perf_counter()
-
     experiment = QrackSimulator(width)
 
     patch_bound = (width + 1) >> 1
@@ -219,9 +217,11 @@ def bench_qrack(width, depth):
                 g(experiment, b1, b2, patch_bound)
 
     # Terminal measurement
+    start = time.perf_counter()
     experiment.m_all()
+    interval = time.perf_counter() - start
 
-    return time.perf_counter() - start
+    return interval
 
 
 def main():

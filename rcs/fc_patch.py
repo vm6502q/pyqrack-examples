@@ -26,7 +26,6 @@ def bench_qrack(width, depth):
     all_bits = list(lcv_range)
 
     for d in range(depth):
-        start = time.perf_counter()
         # Single-qubit gates
         for i in lcv_range:
             th = random.uniform(0, 2 * math.pi)
@@ -41,21 +40,19 @@ def bench_qrack(width, depth):
         while len(unused_bits) > 1:
             c = unused_bits.pop()
             t = unused_bits.pop()
-            control.h(t)
-            control.mcz([c], t)
-            control.h(t)
-            experiment.h(t)
+            control.mcx([c], t)
             if (c < patch_size and t >= patch_size) or (t < patch_size and c >= patch_size):
                 continue
-            experiment.mcz([c], t)
-            experiment.h(t)
+            experiment.mcx([c], t)
 
     ideal_probs = control.out_probs()
     del control
+    start = time.perf_counter()
     patch_probs = experiment.out_probs()
+    interval = time.perf_counter() - start
     del experiment
 
-    return (ideal_probs, patch_probs, time.perf_counter() - start)
+    return (ideal_probs, patch_probs, interval)
 
 
 def calc_stats(ideal_probs, patch_probs, interval, depth):
