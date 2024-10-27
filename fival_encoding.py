@@ -2,7 +2,7 @@
 # https://arxiv.org/abs/hep-th/9409150 adopts a definition of a "maximally-entangled" state
 # that relies on two qudits with the same (but otherwise arbitrary) dimensional cardinality.
 # If padded with 0-amplitude entries so that the new dimensionality of the modified state
-# has a cardinality that factors as only first powers of unique prime numbers, then the
+# has some cardinality that factors as only first powers of unique prime numbers, then the
 # Schmidt rank becomes 1, and the state appears separable in the "Fival encoding."
 
 import sys
