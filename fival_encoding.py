@@ -4,6 +4,12 @@
 # If padded with 0-amplitude entries so that the new dimensionality of the modified state
 # has some cardinality that factors as only first powers of unique prime numbers, then the
 # Schmidt rank becomes 1, and the state appears separable in the "Fival encoding."
+#
+# (The largest qudit in such a case might or might not be larger than the dimensionality of
+# the logical qubit space)
+#
+# Also see https://physics.stackexchange.com/questions/441949/if-the-dimension-of-a-space-is-prime-are-quantum-states-in-it-guaranteed-to-be
+# for context in under-appreciated basic considerations to product state factorizability.
 
 import sys
 import numpy as np
