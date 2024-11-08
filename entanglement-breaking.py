@@ -25,6 +25,10 @@ def calc_xeb(ideal_probs, split_probs):
     return numer / denom
 
 
+def calc_fidelity(ideal_ket, split_ket):
+    s = sum([x * y.conjugate() for x, y in zip(ideal_ket, split_ket)])
+    return (s * s.conjugate()).real
+
 def main():
     control = QrackSimulator(2)
     experiment = QrackSimulator(2, isTensorNetwork=False, isStabilizerHybrid=False)
@@ -39,7 +43,25 @@ def main():
     # Apply an entanglement-breaking channel
     experiment.separate([1])
 
-    # Cross entropy should be 50%
+    # L2 fidelity should be 50%:
+    ideal_ket = control.out_ket()
+    split_ket = experiment.out_ket()
+
+    for i in range(len(ideal_ket)):
+        print("<" + str(i) + "|ideal>: " + str(ideal_ket[i]))
+
+    print()
+
+    for i in range(len(ideal_ket)):
+        print("<" + str(i) + "|split>: " + str(split_ket[i]))
+
+    print()
+
+    print("Fidelity: " + str(calc_fidelity(ideal_ket, split_ket)))
+
+    print()
+
+    # Cross entropy should be 0
     ideal_probs = control.out_probs()
     split_probs = experiment.out_probs()
 
