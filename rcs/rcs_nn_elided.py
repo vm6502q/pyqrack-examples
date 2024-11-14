@@ -31,23 +31,25 @@ def factor_width(width):
 
 
 def ct_pair_prob(sim, q1, q2):
-    r = [0] * 4
+    p1 = sim.prob(q1)
+    p2 = sim.prob(q2)
+    p1Hi = p1 > p2
+    pHi = p1 if p1Hi else p2
+    pLo = p2 if p1Hi else p1
+    cState = abs(pHi - 0.5) > abs(pLo - 0.5)
+    t = q1 if p1Hi == cState else q2
 
-    r[0] = sim.prob(q1)
-    r[1] = sim.prob(q2)
-    r[2] = r[0]
-    r[3] = q2
-    if r[0] < r[1]:
-        r[3] = q1
-        r[2] = r[1]
-
-    return r
+    return cState, t
 
 
 def cz_shadow(sim, q1, q2, anti = False):
-    prob1, prob2, prob_max, t = ct_pair_prob(sim, q1, q2)
-    if ((not anti) and (prob_max > (0.5 + epsilon))) or (anti and (prob_max < (0.5 - epsilon))):
+    if (anti):
+        sim.x(q1)
+    cState, t = ct_pair_prob(sim, q1, q2)
+    if cState:
         sim.z(t)
+    if (anti):
+        sim.x(q1)
 
 
 def cx_shadow(sim, c, t, anti = False):

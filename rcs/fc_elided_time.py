@@ -16,27 +16,21 @@ from pyqrack import QrackSimulator
 from scipy.stats import binom
 
 
-# sin(math.pi / 4) / 2
-epsilon = 0.353553390593273762
-
-
 def ct_pair_prob(sim, q1, q2):
-    r = [0] * 4
+    p1 = sim.prob(q1)
+    p2 = sim.prob(q2)
+    p1Hi = p1 > p2
+    pHi = p1 if p1Hi else p2
+    pLo = p2 if p1Hi else p1
+    cState = abs(pHi - 0.5) > abs(pLo - 0.5)
+    t = q1 if p1Hi == cState else q2
 
-    r[0] = sim.prob(q1)
-    r[1] = sim.prob(q2)
-    r[2] = r[0]
-    r[3] = q2
-    if r[0] < r[1]:
-        r[3] = q1
-        r[2] = r[1]
-
-    return r
+    return cState, t
 
 
 def cz_shadow(sim, q1, q2):
-    prob1, prob2, prob_max, t = ct_pair_prob(sim, q1, q2)
-    if prob_max > (0.5 + epsilon):
+    cState, t = ct_pair_prob(sim, q1, q2)
+    if cState:
         sim.z(t)
 
 
