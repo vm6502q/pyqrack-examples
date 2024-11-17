@@ -82,8 +82,7 @@ def bench_qrack(width, depth, sdrp_samples):
         start = time.perf_counter()
         sdrp = 1 if sdrp_samples == 1 else ((sdrp_segments - i) / sdrp_segments)
 
-        sim = QrackSimulator(width, isTensorNetwork=False)
-        sim.set_reactive_separate(False)
+        sim = QrackSimulator(width)
         if sdrp > 0:
             sim.set_sdrp(sdrp)
 
