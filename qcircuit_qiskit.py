@@ -179,7 +179,7 @@ def bench_qrack(n):
     print(n, "qubits:")
     print(random_circuit(n, qcircuit), "gates dispatched to QrackCircuit")
     qcircuit.out_to_file("qcircuit_example.qc")
-    print(QrackCircuit.file_to_qiskit_circuit("qcircuit_example.qc").size(), "gates in optimized Qiskit circuit")
+    print(QrackCircuit.file_gate_count("qcircuit_example.qc"), "gates in optimized circuit")
     print()
 
 
