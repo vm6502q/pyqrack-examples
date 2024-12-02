@@ -4,7 +4,7 @@ import random
 import sys
 import time
 
-from pyqrack import QrackSimulator
+from pyqrack import QrackSimulator, Pauli
 
 
 def rand_1qb(sim, q):
@@ -50,12 +50,16 @@ def bench_qrack(n):
     sim = QrackSimulator(n, isStabilizerHybrid=True, isTensorNetwork=False, isSchmidtDecomposeMulti=False, isSchmidtDecompose=False, isOpenCL=False)
 
     # Run a near-Clifford circuit
-    random_circuit(n, 3, sim)
-    result = sim.prob_perm(list(range(n)), [False]*n)
+    random_circuit(n, n+1, sim)
 
+    sim.out_to_file("_qrack_tableau.qnc")
+    qrack_tableau = ""
+    with open("_qrack_tableau.qnc", "r") as file:
+        qrack_tableau = file.read()
+ 
     # fidelity = sim.get_unitary_fidelity()
 
-    return (time.perf_counter() - start, result)
+    return (time.perf_counter() - start, qrack_tableau)
 
 
 def main():
@@ -70,16 +74,18 @@ def main():
     if len(sys.argv) > 2:
         samples = int(sys.argv[2])
 
+    os.environ["QRACK_MAX_CPU_QB"]="-1"
+
     for n in range(1, max_qb + 1):
         width_results = []
 
         # Run the benchmarks
         for i in range(samples):
             width_results.append(bench_qrack(n))
+            print(width_results[-1][1])
 
         time_result = sum(r[0] for r in width_results) / samples
-        prob_result = sum(r[1] for r in width_results) / samples
-        print(n, ": ", time_result, " seconds, ", prob_result, " probability for |0...0> dimension")
+        print(n, ": ", time_result, " seconds, ")
 
     return 0
 
