@@ -32,34 +32,24 @@ def coupler(sim, q1, q2):
 
 
 def bench_qrack(width, depth):
-    # This is a fully-connected random circuit.
+    # This is a "fully-connected" coupler random circuit.
     circ = QuantumCircuit(width)
-    experiment = QrackSimulator(width, isBinaryDecisionTree=True)
-    # Turned off, but might be faster when on:
-    # experiment.set_reactive_separate(True)
-    control = AerSimulator(method="statevector")
 
     lcv_range = range(width)
     all_bits = list(lcv_range)
 
-    # Nearest-neighbor couplers:
-    gateSequence = [ 0, 3, 2, 1, 2, 1, 0, 3 ]
-    two_bit_gates = swap, pswap, mswap, nswap, iswap, iiswap, cx, cy, cz, acx, acy, acz
-
-    col_len = math.floor(math.sqrt(width))
-    while (((width // col_len) * col_len) != width):
-        col_len -= 1
-    row_len = width // col_len
-    if col_len == 1:
-        print("(Prime - skipped)")
-        return
+    gate_count = 0
 
     for d in range(depth):
-        experiment.reset_all()
-        start = time.perf_counter()
         # Single-qubit gates
         for i in lcv_range:
-            rand_u3(circ, i)
+            for _ in range(3):
+                # x-z-x Euler axes
+                circ.h(i)
+                circ.rz(random.uniform(0, 2 * math.pi), i)
+                gate_count += 2
+            circ.h(i)
+            gate_count += 1
 
         # 2-qubit couplers
         unused_bits = all_bits.copy()
@@ -67,13 +57,16 @@ def bench_qrack(width, depth):
         while len(unused_bits) > 1:
             c = unused_bits.pop()
             t = unused_bits.pop()
-            coupler(circ, c, t)
+            circ.h(t)
+            circ.cz(c, t)
+            circ.h(t)
+            gate_count += 3
 
-        gate_count = sum(dict(circ.count_ops()).values())
+        experiment = QrackSimulator(width, isBinaryDecisionTree=True)
+        control = AerSimulator(method="statevector")
 
-        experiment.run_qiskit_circuit(circ)
-
-        circ_aer = transpile(circ, backend=control)
+        experiment.run_qiskit_circuit(circ, shots=0)
+        circ_aer = circ.copy()
         circ_aer.save_statevector()
         job = control.run(circ_aer)
 
@@ -83,7 +76,7 @@ def bench_qrack(width, depth):
         overall_fidelity = np.abs(sum([np.conj(x) * y for x, y in zip(experiment_sv, control_sv)]))
         per_gate_fidelity = overall_fidelity ** (1 / gate_count)
 
-        print("Depth=" + str(d + 1) + ", overall fidelity=" + str(overall_fidelity) + ", per-gate fidelity avg.=" + str(per_gate_fidelity))
+        print("Depth=" + str(d + 1) + ", fidelity=" + str(overall_fidelity) + ", per-gate fidelity avg.=" + str(per_gate_fidelity))
 
 
 def main():
