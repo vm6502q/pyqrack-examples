@@ -4,7 +4,7 @@ import random
 import sys
 import time
 
-from pyqrack import QrackSimulator
+from pyqrack import Pauli, QrackSimulator
 
 
 def rand_1qb(sim, q):
