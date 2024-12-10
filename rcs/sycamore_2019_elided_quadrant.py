@@ -79,13 +79,13 @@ def sqrt_w(sim, q):
 def bench_qrack(width, depth):
     # This is a "nearest-neighbor" coupler random circuit.
     start = time.perf_counter()
-    
-    dead_qubit = 3 if width == 54 else width
 
     full_sim = QrackSimulator(width)
     patch_sim = QrackSimulator(width)
 
-    patch_bound = (width + 1) >> 1
+    row_len, col_len = factor_width(width)
+    row_bound = row_len >> 1
+    col_bound = col_len >> 1
     lcv_range = range(width)
     last_gates = []
 
@@ -131,13 +131,13 @@ def bench_qrack(width, depth):
                 b1 = row * row_len + col
                 b2 = temp_row * row_len + temp_col
 
-                if (b1 >= width) or (b2 >= width) or (b1 == dead_qubit) or (b2 == dead_qubit):
+                if (b1 >= width) or (b2 >= width):
                     continue
 
                 full_sim.fsim(-math.pi / 2, math.pi / 6, b1, b2)
 
                 # Elide if across patches:
-                if ((b1 < patch_bound) and (b2 >= patch_bound)) or ((b2 < patch_bound) and (b1 >= patch_bound)):
+                if ((row < row_bound) and (temp_row >= row_bound)) or ((temp_row < row_bound) and row >= row_bound) or ((col < col_bound) and (temp_col >= col_bound)) or ((temp_col < col_bound) and (col >= col_bound)):
                     # This is our version of ("semi-classical") gate "elision":
 
                     cState, t = ct_pair_prob(patch_sim, b1, b2)

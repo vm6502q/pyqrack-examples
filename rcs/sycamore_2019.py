@@ -2,15 +2,11 @@
 # (Are they better than the 2019 Sycamore hardware?)
 
 import math
-import os
 import random
-import statistics
 import sys
 import time
 
-from scipy.stats import binom
-
-from pyqrack import QrackSimulator, Pauli
+from pyqrack import QrackSimulator
 
 
 def factor_width(width):

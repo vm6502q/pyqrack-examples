@@ -2,6 +2,7 @@
 # (Are they better than the 2019 Sycamore hardware?)
 
 import math
+import os
 import random
 import statistics
 import sys
@@ -82,10 +83,11 @@ def bench_qrack(width, depth):
     
     dead_qubit = 3 if width == 54 else width
 
-    full_sim = QrackSimulator(width)
     patch_sim = QrackSimulator(width)
 
-    patch_bound = (width + 1) >> 1
+    row_len, col_len = factor_width(width)
+    row_bound = row_len >> 1
+    col_bound = col_len >> 1
     lcv_range = range(width)
     last_gates = []
 
@@ -100,7 +102,6 @@ def bench_qrack(width, depth):
         if d == 0:
             for i in lcv_range:
                 g = random.choice(one_bit_gates)
-                g(full_sim, i)
                 g(patch_sim, i)
                 last_gates.append(g)
         else:
@@ -109,7 +110,6 @@ def bench_qrack(width, depth):
                 temp_gates = one_bit_gates.copy()
                 temp_gates.remove(last_gates[i])
                 g = random.choice(one_bit_gates)
-                g(full_sim, i)
                 g(patch_sim, i)
                 last_gates[i] = g
 
@@ -134,10 +134,8 @@ def bench_qrack(width, depth):
                 if (b1 >= width) or (b2 >= width) or (b1 == dead_qubit) or (b2 == dead_qubit):
                     continue
 
-                full_sim.fsim(-math.pi / 2, math.pi / 6, b1, b2)
-
                 # Elide if across patches:
-                if ((b1 < patch_bound) and (b2 >= patch_bound)) or ((b2 < patch_bound) and (b1 >= patch_bound)):
+                if ((row < row_bound) and (temp_row >= row_bound)) or ((temp_row < row_bound) and row >= row_bound) or ((col < col_bound) and (temp_col >= col_bound)) or ((temp_col < col_bound) and (col >= col_bound)):
                     # This is our version of ("semi-classical") gate "elision":
 
                     cState, t = ct_pair_prob(patch_sim, b1, b2)
@@ -156,12 +154,10 @@ def bench_qrack(width, depth):
                 else:
                     patch_sim.fsim(-math.pi / 2, math.pi / 6, b1, b2)
 
-    ideal_probs = full_sim.out_probs()
-    del full_sim
-    patch_probs = patch_sim.out_probs()
-    del patch_sim
+    # Terminal measurement
+    patch_probs = patch_sim.m_all()
 
-    return (ideal_probs, patch_probs, time.perf_counter() - start)
+    return time.perf_counter() - start
 
 
 def calc_stats(ideal_probs, patch_probs, interval, depth):
@@ -207,10 +203,10 @@ def main():
     width = int(sys.argv[1])
     depth = int(sys.argv[2])
 
-    # Run the benchmarks
+     # Run the benchmarks
     result = bench_qrack(width, depth)
     # Calc. and print the results
-    print(calc_stats(result[0], result[1], result[2], depth))
+    print("Width=" + str(width) + ", Depth=" + str(depth) + ", Seconds=" + str(result))
 
     return 0
 
