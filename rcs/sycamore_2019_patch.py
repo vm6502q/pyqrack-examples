@@ -2,15 +2,12 @@
 # (Are they better than the 2019 Sycamore hardware?)
 
 import math
-import os
 import random
 import statistics
 import sys
 import time
 
-from scipy.stats import binom
-
-from pyqrack import QrackSimulator, Pauli
+from pyqrack import QrackSimulator
 
 
 def factor_width(width):
@@ -56,7 +53,6 @@ def bench_qrack(width, depth):
 
     patch_bound = (width + 1) >> 1
     lcv_range = range(width)
-    all_bits = list(lcv_range)
     last_gates = []
 
     # Nearest-neighbor couplers:

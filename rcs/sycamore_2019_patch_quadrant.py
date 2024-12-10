@@ -3,6 +3,7 @@
 
 import math
 import random
+import statistics
 import sys
 import time
 
@@ -47,11 +48,13 @@ def bench_qrack(width, depth):
     
     dead_qubit = 3 if width == 54 else width
 
+    full_sim = QrackSimulator(width)
     patch_sim = QrackSimulator(width)
 
-    patch_bound = (width + 1) >> 1
+    row_len, col_len = factor_width(width)
+    row_bound = row_len >> 1
+    col_bound = col_len >> 1
     lcv_range = range(width)
-    all_bits = list(lcv_range)
     last_gates = []
 
     # Nearest-neighbor couplers:
@@ -66,6 +69,7 @@ def bench_qrack(width, depth):
         if d == 0:
             for i in lcv_range:
                 g = random.choice(one_bit_gates)
+                g(full_sim, i)
                 g(patch_sim, i)
                 last_gates.append(g)
         else:
@@ -74,6 +78,7 @@ def bench_qrack(width, depth):
                 temp_gates = one_bit_gates.copy()
                 temp_gates.remove(last_gates[i])
                 g = random.choice(one_bit_gates)
+                g(full_sim, i)
                 g(patch_sim, i)
                 last_gates[i] = g
 
@@ -98,15 +103,55 @@ def bench_qrack(width, depth):
                 if (b1 >= width) or (b2 >= width) or (b1 == dead_qubit) or (b2 == dead_qubit):
                     continue
 
-                if ((b1 < patch_bound) and (b2 >= patch_bound)) or ((b2 < patch_bound) and (b1 >= patch_bound)):
+                full_sim.fsim(-math.pi / 2, math.pi / 6, b1, b2)
+
+                if ((row < row_bound) and (temp_row >= row_bound)) or ((temp_row < row_bound) and row >= row_bound) or ((col < col_bound) and (temp_col >= col_bound)) or ((temp_col < col_bound) and (col >= col_bound)):
                     continue
 
                 patch_sim.fsim(-math.pi / 2, math.pi / 6, b1, b2)
 
-    # Terminal measurement
-    patch_probs = patch_sim.m_all()
+    ideal_probs = full_sim.out_probs()
+    del full_sim
+    patch_probs = patch_sim.out_probs()
+    del patch_sim
 
-    return time.perf_counter() - start
+    return (ideal_probs, patch_probs, time.perf_counter() - start)
+
+
+def calc_stats(ideal_probs, patch_probs, interval, depth):
+    # For QV, we compare probabilities of (ideal) "heavy outputs."
+    # If the probability is above 2/3, the protocol certifies/passes the qubit width.
+    n_pow = len(ideal_probs)
+    n = int(round(math.log2(n_pow)))
+    threshold = statistics.median(ideal_probs)
+    u_u = statistics.mean(ideal_probs)
+    numer = 0
+    denom = 0
+    hog_prob = 0
+    for b in range(n_pow):
+        ideal = ideal_probs[b]
+        patch = patch_probs[b]
+
+        # XEB / EPLG
+        ideal_centered = (ideal - u_u)
+        denom += ideal_centered * ideal_centered
+        numer += ideal_centered * (patch - u_u)
+
+        # QV / HOG
+        if ideal > threshold:
+            hog_prob += patch
+
+    xeb = numer / denom
+
+    return {
+        'qubits': n,
+        'depth': depth,
+        'seconds': interval,
+        'xeb': xeb,
+        'hog_prob': hog_prob,
+        'qv_pass': hog_prob >= 2 / 3,
+        'eplg':  (1 - (xeb ** (1 / depth))) if xeb < 1 else 0
+    }
 
 
 def main():
@@ -116,10 +161,10 @@ def main():
     width = int(sys.argv[1])
     depth = int(sys.argv[2])
 
-     # Run the benchmarks
+    # Run the benchmarks
     result = bench_qrack(width, depth)
     # Calc. and print the results
-    print("Width=" + str(width) + ", Depth=" + str(depth) + ", Seconds=" + str(result))
+    print(calc_stats(result[0], result[1], result[2], depth))
 
     return 0
 
