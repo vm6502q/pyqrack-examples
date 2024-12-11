@@ -93,8 +93,6 @@ def bench_qrack(width, depth):
     gateSequence = [ 0, 3, 2, 1, 2, 1, 0, 3 ]
     one_bit_gates = [ sqrt_x, sqrt_y, sqrt_w ]
 
-    row_len, col_len = factor_width(width)
-
     for d in range(depth):
         # Single-qubit gates
         if d == 0:

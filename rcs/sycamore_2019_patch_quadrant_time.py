@@ -49,9 +49,10 @@ def bench_qrack(width, depth):
 
     patch_sim = QrackSimulator(width)
 
-    patch_bound = (width + 1) >> 1
+    row_len, col_len = factor_width(width)
+    row_bound = row_len >> 1
+    col_bound = col_len >> 1
     lcv_range = range(width)
-    all_bits = list(lcv_range)
     last_gates = []
 
     # Nearest-neighbor couplers:
@@ -98,7 +99,7 @@ def bench_qrack(width, depth):
                 if (b1 >= width) or (b2 >= width) or (b1 == dead_qubit) or (b2 == dead_qubit):
                     continue
 
-                if ((b1 < patch_bound) and (b2 >= patch_bound)) or ((b2 < patch_bound) and (b1 >= patch_bound)):
+                if ((row < row_bound) and (temp_row >= row_bound)) or ((temp_row < row_bound) and row >= row_bound) or ((col < col_bound) and (temp_col >= col_bound)) or ((temp_col < col_bound) and (col >= col_bound)):
                     continue
 
                 patch_sim.fsim(-math.pi / 2, math.pi / 6, b1, b2)
