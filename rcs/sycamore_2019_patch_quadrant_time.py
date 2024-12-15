@@ -51,7 +51,7 @@ def bench_qrack(width, depth):
 
     row_len, col_len = factor_width(width)
     row_bound = row_len >> 1
-    col_bound = col_len >> 1
+    col_bound = (col_len + 1) >> 1
     lcv_range = range(width)
     last_gates = []
 
