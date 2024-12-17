@@ -50,7 +50,6 @@ def bench_qrack(width, depth):
     full_sim = QrackSimulator(width)
 
     lcv_range = range(width)
-    all_bits = list(lcv_range)
     last_gates = []
 
     # Nearest-neighbor couplers:
