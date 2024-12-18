@@ -56,7 +56,7 @@ def bench_qrack(width, depth):
     # This is a "nearest-neighbor" coupler random circuit.
     circ = QuantumCircuit(width)
     control = AerSimulator(method="statevector")
-    shots = 1 << (width + 1)
+    shots = 1 << (width + 2)
     
     dead_qubit = 3 if width == 54 else width
 
