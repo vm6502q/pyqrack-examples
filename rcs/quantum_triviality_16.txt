@@ -1,0 +1,146 @@
+
+C:\Users\jerse\OneDrive\Documents\GitHub\pyqrack-examples\rcs>FOR /L %j IN (1 1 16) DO (call python sycamore_2019_patch_quadrant.py 16 %j ) 
+
+C:\Users\jerse\OneDrive\Documents\GitHub\pyqrack-examples\rcs>(call python sycamore_2019_patch_quadrant.py 16 1 ) 
+Device #0, Building JIT.
+Device #1, Building JIT.
+{'qubits': 16, 'depth': 1, 'seconds': 0.19262690000323346, 'xeb': -0.2986364246240935, 'hog_prob': 0.27192673387617106, 'qv_pass': False, 'eplg': 1.2986364246240936}
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) RaptorLake-S Mobile Graphics Controller
+
+C:\Users\jerse\OneDrive\Documents\GitHub\pyqrack-examples\rcs>(call python sycamore_2019_patch_quadrant.py 16 2 ) 
+Device #0, Building JIT.
+Device #1, Building JIT.
+{'qubits': 16, 'depth': 2, 'seconds': 0.18706979999842588, 'xeb': 0.2778417946431411, 'hog_prob': 0.7266667064013258, 'qv_pass': True, 'eplg': 0.4728929950729728}
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) RaptorLake-S Mobile Graphics Controller
+
+C:\Users\jerse\OneDrive\Documents\GitHub\pyqrack-examples\rcs>(call python sycamore_2019_patch_quadrant.py 16 3 ) 
+Device #0, Building JIT.
+Device #1, Building JIT.
+{'qubits': 16, 'depth': 3, 'seconds': 0.693656600000395, 'xeb': 0.07909950109884802, 'hog_prob': 0.5441984696727786, 'qv_pass': False, 'eplg': 0.5707358880076471}
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) RaptorLake-S Mobile Graphics Controller
+
+C:\Users\jerse\OneDrive\Documents\GitHub\pyqrack-examples\rcs>(call python sycamore_2019_patch_quadrant.py 16 4 ) 
+Device #0, Building JIT.
+Device #1, Building JIT.
+{'qubits': 16, 'depth': 4, 'seconds': 0.1735679000048549, 'xeb': 0.043395483749575796, 'hog_prob': 0.543832227166198, 'qv_pass': False, 'eplg': 0.543583713119141}
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) RaptorLake-S Mobile Graphics Controller
+
+C:\Users\jerse\OneDrive\Documents\GitHub\pyqrack-examples\rcs>(call python sycamore_2019_patch_quadrant.py 16 5 ) 
+Device #0, Building JIT.
+Device #1, Building JIT.
+{'qubits': 16, 'depth': 5, 'seconds': 0.7178862000000663, 'xeb': 0.06810276894013, 'hog_prob': 0.5284630223159112, 'qv_pass': False, 'eplg': 0.4157039451371285}
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) RaptorLake-S Mobile Graphics Controller
+
+C:\Users\jerse\OneDrive\Documents\GitHub\pyqrack-examples\rcs>(call python sycamore_2019_patch_quadrant.py 16 6 ) 
+Device #0, Building JIT.
+Device #1, Building JIT.
+{'qubits': 16, 'depth': 6, 'seconds': 0.7854822000008426, 'xeb': 0.05464566551746421, 'hog_prob': 0.5253684621640183, 'qv_pass': False, 'eplg': 0.38398310990150586}
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) RaptorLake-S Mobile Graphics Controller
+
+C:\Users\jerse\OneDrive\Documents\GitHub\pyqrack-examples\rcs>(call python sycamore_2019_patch_quadrant.py 16 7 ) 
+Device #0, Building JIT.
+Device #1, Building JIT.
+{'qubits': 16, 'depth': 7, 'seconds': 0.18788689999928465, 'xeb': 0.05054975671461766, 'hog_prob': 0.5261862351892246, 'qv_pass': False, 'eplg': 0.34714458602286813}
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) RaptorLake-S Mobile Graphics Controller
+
+C:\Users\jerse\OneDrive\Documents\GitHub\pyqrack-examples\rcs>(call python sycamore_2019_patch_quadrant.py 16 8 ) 
+Device #0, Building JIT.
+Device #1, Building JIT.
+{'qubits': 16, 'depth': 8, 'seconds': 0.7216198000023724, 'xeb': -0.010454801600433274, 'hog_prob': 0.4940457267535684, 'qv_pass': False, 'eplg': (0.4775679399766034-0.21639844468020575j)}
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) RaptorLake-S Mobile Graphics Controller
+
+C:\Users\jerse\OneDrive\Documents\GitHub\pyqrack-examples\rcs>(call python sycamore_2019_patch_quadrant.py 16 9 ) 
+Device #0, Building JIT.
+Device #1, Building JIT.
+{'qubits': 16, 'depth': 9, 'seconds': 0.2039645999975619, 'xeb': -0.001025863688230148, 'hog_prob': 0.4974195572945485, 'qv_pass': False, 'eplg': (0.5625940692581135-0.1592027390815507j)}
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) RaptorLake-S Mobile Graphics Controller
+
+C:\Users\jerse\OneDrive\Documents\GitHub\pyqrack-examples\rcs>(call python sycamore_2019_patch_quadrant.py 16 10 ) 
+Device #0, Building JIT.
+Device #1, Building JIT.
+{'qubits': 16, 'depth': 10, 'seconds': 0.7273210999992443, 'xeb': 0.00960892279944938, 'hog_prob': 0.5076237806572022, 'qv_pass': False, 'eplg': 0.3715547176180798}
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) RaptorLake-S Mobile Graphics Controller
+
+C:\Users\jerse\OneDrive\Documents\GitHub\pyqrack-examples\rcs>(call python sycamore_2019_patch_quadrant.py 16 11 ) 
+Device #0, Building JIT.
+Device #1, Building JIT.
+{'qubits': 16, 'depth': 11, 'seconds': 0.20372640000277897, 'xeb': -0.023049276583152683, 'hog_prob': 0.4959261585788845, 'qv_pass': False, 'eplg': (0.31892888412164566-0.19998052319698115j)}
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) RaptorLake-S Mobile Graphics Controller
+
+C:\Users\jerse\OneDrive\Documents\GitHub\pyqrack-examples\rcs>(call python sycamore_2019_patch_quadrant.py 16 12 ) 
+Device #0, Building JIT.
+Device #1, Building JIT.
+{'qubits': 16, 'depth': 12, 'seconds': 0.737351600000693, 'xeb': 0.016370737450728177, 'hog_prob': 0.499592528469324, 'qv_pass': False, 'eplg': 0.2901405739119518}
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) RaptorLake-S Mobile Graphics Controller
+
+C:\Users\jerse\OneDrive\Documents\GitHub\pyqrack-examples\rcs>(call python sycamore_2019_patch_quadrant.py 16 13 ) 
+Device #0, Building JIT.
+Device #1, Building JIT.
+{'qubits': 16, 'depth': 13, 'seconds': 0.7319419000050402, 'xeb': 0.01945261900747757, 'hog_prob': 0.5106787895398179, 'qv_pass': False, 'eplg': 0.261444852640795}
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) RaptorLake-S Mobile Graphics Controller
+
+C:\Users\jerse\OneDrive\Documents\GitHub\pyqrack-examples\rcs>(call python sycamore_2019_patch_quadrant.py 16 14 ) 
+Device #0, Building JIT.
+Device #1, Building JIT.
+{'qubits': 16, 'depth': 14, 'seconds': 0.8143239999990328, 'xeb': -0.007494220515560653, 'hog_prob': 0.5020994955459969, 'qv_pass': False, 'eplg': (0.31266691055125573-0.1568792923990971j)}
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) RaptorLake-S Mobile Graphics Controller
+
+C:\Users\jerse\OneDrive\Documents\GitHub\pyqrack-examples\rcs>(call python sycamore_2019_patch_quadrant.py 16 15 ) 
+Device #0, Building JIT.
+Device #1, Building JIT.
+{'qubits': 16, 'depth': 15, 'seconds': 0.3070201999944402, 'xeb': -0.00152286994758754, 'hog_prob': 0.5020991785090364, 'qv_pass': False, 'eplg': (0.36528039174141846-0.13491381755598744j)}
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) RaptorLake-S Mobile Graphics Controller
+
+C:\Users\jerse\OneDrive\Documents\GitHub\pyqrack-examples\rcs>(call python sycamore_2019_patch_quadrant.py 16 16 ) 
+Device #0, Building JIT.
+Device #1, Building JIT.
+{'qubits': 16, 'depth': 16, 'seconds': 0.7376451000018278, 'xeb': 8.51665646603734e-05, 'hog_prob': 0.4965054990262013, 'qv_pass': False, 'eplg': 0.44327359418924905}
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) RaptorLake-S Mobile Graphics Controller

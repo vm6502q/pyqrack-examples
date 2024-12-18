@@ -25,28 +25,22 @@ def factor_width(width):
 def ct_pair_prob(sim, q1, q2):
     p1 = sim.prob(q1)
     p2 = sim.prob(q2)
-    p1Hi = p1 > p2
-    pHi = p1 if p1Hi else p2
-    pLo = p2 if p1Hi else p1
-    cState = abs(pHi - 0.5) > abs(pLo - 0.5)
-    t = q1 if p1Hi == cState else q2
 
-    return cState, t
+    if p1 < p2:
+        return p2, q1
+
+    return p1, q2
 
 
-def cz_shadow(sim, q1, q2, anti = False):
-    if (anti):
-        sim.x(q1)
-    cState, t = ct_pair_prob(sim, q1, q2)
-    if cState:
+def cz_shadow(sim, q1, q2):
+    prob_max, t = ct_pair_prob(sim, q1, q2)
+    if prob_max > 0.5:
         sim.z(t)
-    if (anti):
-        sim.x(q1)
 
 
-def cx_shadow(sim, c, t, anti = False):
+def cx_shadow(sim, c, t):
     sim.h(t)
-    cz_shadow(sim, c, t, anti)
+    cz_shadow(sim, c, t)
     sim.h(t)
 
 
@@ -60,21 +54,21 @@ def sqrt_x(sim, q):
     ONE_PLUS_I_DIV_2 = 0.5 + 0.5j
     ONE_MINUS_I_DIV_2 = 0.5 - 0.5j
     mtrx = [ ONE_PLUS_I_DIV_2, ONE_MINUS_I_DIV_2, ONE_MINUS_I_DIV_2, ONE_PLUS_I_DIV_2 ]
-    sim.mtrx(mtrx, q);
+    sim.mtrx(mtrx, q)
 
 
 def sqrt_y(sim, q):
     ONE_PLUS_I_DIV_2 = 0.5 + 0.5j
     ONE_PLUS_I_DIV_2_NEG = -0.5 - 0.5j
     mtrx = [ ONE_PLUS_I_DIV_2, ONE_PLUS_I_DIV_2_NEG, ONE_PLUS_I_DIV_2, ONE_PLUS_I_DIV_2 ]
-    sim.mtrx(mtrx, q);
+    sim.mtrx(mtrx, q)
 
 def sqrt_w(sim, q):
-    diag = math.sqrt(0.5);
+    diag = math.sqrt(0.5)
     m01 = -0.5 - 0.5j
     m10 = 0.5 - 0.5j
     mtrx = [ diag, m01, m10, diag ]
-    sim.mtrx(mtrx, q);
+    sim.mtrx(mtrx, q)
 
 
 def bench_qrack(width, depth):
@@ -119,7 +113,7 @@ def bench_qrack(width, depth):
             for col in range(col_len):
                 temp_row = row
                 temp_col = col
-                temp_row = temp_row + (1 if (gate & 2) else -1);
+                temp_row = temp_row + (1 if (gate & 2) else -1)
                 temp_col = temp_col + (1 if (gate & 1) else 0)
 
                 # Bounded:
