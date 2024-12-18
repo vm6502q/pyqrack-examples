@@ -2,7 +2,6 @@
 
 import math
 import multiprocessing
-import os
 import random
 import sys
 import time
@@ -62,7 +61,7 @@ def main():
     
     # Run the benchmarks
     pool = multiprocessing.Pool(processes = multiprocessing.cpu_count())
-    result = pool.map(bench_qrack, [(width, depth)] * shots)
+    pool.map(bench_qrack, [(width, depth)] * shots)
     pool.close()
 
     return 0

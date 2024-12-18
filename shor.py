@@ -1,5 +1,3 @@
-
-
 import math
 import random
 import sys
@@ -11,9 +9,7 @@ try:
 except ImportError:
     from fractions import gcd
 
-from pyqrack import QrackSimulator, Pauli
-
-import os
+from pyqrack import QrackSimulator
 
 
 def cmul_native(sim, i, a, maxN, qo, qa):
@@ -42,13 +38,11 @@ def shor(to_factor):
         return
 
     qubitCount = math.ceil(math.log2(to_factor))
-    maxN = 1<<qubitCount
     sim = QrackSimulator(2 * qubitCount + 2)
 
     qo = [i for i in range(qubitCount)]
     qa = [(i + qubitCount) for i in range(qubitCount)]
     qi = 2 * qubitCount
-    qm = 2 * qubitCount + 1
 
     m_results = []
 

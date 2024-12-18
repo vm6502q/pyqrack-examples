@@ -1,7 +1,6 @@
 import math
 import random
 import sys
-import time
 
 from qiskit import QuantumCircuit
 from qiskit.providers.qrack import QasmSimulator
@@ -39,7 +38,6 @@ def bench_qrack(num_qubits, noise):
     reverse(num_qubits, circ)
     for i in range(num_qubits):
         circ.measure(i, i)
-    start = time.perf_counter()
 
     n_pow = 2**num_qubits
     noisy_result = QasmSimulator(shots=n_pow, noise=noise).run(circ).result().get_counts(circ)

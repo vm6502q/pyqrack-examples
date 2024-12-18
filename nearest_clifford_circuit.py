@@ -80,7 +80,7 @@ def main():
         width_results = []
 
         # Run the benchmarks
-        for i in range(samples):
+        for _ in range(samples):
             width_results.append(bench_qrack(n))
             print(width_results[-1][1])
 

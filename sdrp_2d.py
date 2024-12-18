@@ -68,7 +68,6 @@ def bench_qrack(width, depth, sdrp):
     sim.set_sdrp(sdrp)
 
     lcv_range = range(width)
-    all_bits = list(lcv_range)
 
     # Nearest-neighbor couplers:
     gateSequence = [ 0, 3, 2, 1, 2, 1, 0, 3 ]
@@ -120,7 +119,6 @@ def main():
 
     width = 36
     depth = 6
-    samples = 1
     if len(sys.argv) < 5:
         raise RuntimeError('Usage: python3 sdrp_2d.py [sdrp] [width] [depth] [trials]')
 
@@ -131,7 +129,7 @@ def main():
 
     # Run the benchmarks
     width_results = []
-    for i in range(trials):
+    for _ in range(trials):
         width_results.append(bench_qrack(width, depth, sdrp))
 
     print({

@@ -1,9 +1,6 @@
 # Example of a (Hadamard) quantum random walk
 
-import math
-import random
 import sys
-import time
 
 from pyqrack import QrackSimulator
 
@@ -34,6 +31,8 @@ def main():
     print("Expected position:", exp_pos)
     obs_pos = (sim.m_all() & ~(1 << coin_qubit)) - sign_power
     print("Observed position:", obs_pos)
+
+    return 0
 
 
 if __name__ == '__main__':

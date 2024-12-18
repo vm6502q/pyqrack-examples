@@ -14,11 +14,6 @@ def bench_qrack(n):
 
     sim = QrackSimulator(n, isSchmidtDecompose=False, isBinaryDecisionTree=True)
 
-    lcv_range = range(n)
-    all_bits = list(lcv_range)
-
-    single_count = 0
-    double_count = 0
     sim.h(0)
     for q in range(n - 1):
         sim.mcx([q], q + 1)

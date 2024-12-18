@@ -31,8 +31,6 @@ def bench_qrack(n):
     lcv_range = range(n)
     all_bits = list(lcv_range)
 
-    single_count = 0
-    double_count = 0
     noise_level = 0.01
     fidelity = 1.0
     for _ in lcv_range:
@@ -70,7 +68,7 @@ def main():
         width_results = []
         
         # Run the benchmarks
-        for i in range(samples):
+        for _ in range(samples):
             width_results.append(bench_qrack(n))
 
         time_result = sum(r[0] for r in width_results) / samples

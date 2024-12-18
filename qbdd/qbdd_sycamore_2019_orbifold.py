@@ -1,12 +1,11 @@
 # Demonstrates the use of "Quantum Binary Decision Diagram" (QBDD) and QBDD rounding parameter (QBDDRP) with near-Clifford (nearest-neighbor)
 
 import math
-import os
 import random
 import sys
 import time
 
-from pyqrack import QrackSimulator, Pauli
+from pyqrack import QrackSimulator
 
 
 def factor_width(width):
@@ -24,21 +23,21 @@ def sqrt_x(sim, q):
     ONE_PLUS_I_DIV_2 = 0.5 + 0.5j
     ONE_MINUS_I_DIV_2 = 0.5 - 0.5j
     mtrx = [ ONE_PLUS_I_DIV_2, ONE_MINUS_I_DIV_2, ONE_MINUS_I_DIV_2, ONE_PLUS_I_DIV_2 ]
-    sim.mtrx(mtrx, q);
+    sim.mtrx(mtrx, q)
 
 
 def sqrt_y(sim, q):
     ONE_PLUS_I_DIV_2 = 0.5 + 0.5j
     ONE_PLUS_I_DIV_2_NEG = -0.5 - 0.5j
     mtrx = [ ONE_PLUS_I_DIV_2, ONE_PLUS_I_DIV_2_NEG, ONE_PLUS_I_DIV_2, ONE_PLUS_I_DIV_2 ]
-    sim.mtrx(mtrx, q);
+    sim.mtrx(mtrx, q)
 
 def sqrt_w(sim, q):
-    diag = math.sqrt(0.5);
+    diag = math.sqrt(0.5)
     m01 = -0.5 - 0.5j
     m10 = 0.5 - 0.5j
     mtrx = [ diag, m01, m10, diag ]
-    sim.mtrx(mtrx, q);
+    sim.mtrx(mtrx, q)
 
 
 def bench_qrack(depth):
@@ -50,7 +49,6 @@ def bench_qrack(depth):
     sim = QrackSimulator(width, isBinaryDecisionTree=True)
 
     lcv_range = range(width)
-    all_bits = list(lcv_range)
 
     # Nearest-neighbor couplers:
     gateSequence = [ 0, 3, 2, 1, 2, 1, 0, 3 ]
@@ -83,7 +81,7 @@ def bench_qrack(depth):
             for col in range(col_len):
                 temp_row = row
                 temp_col = col
-                temp_row = temp_row + (1 if (gate & 2) else -1);
+                temp_row = temp_row + (1 if (gate & 2) else -1)
                 temp_col = temp_col + (1 if (gate & 1) else 0)
 
                 # Orbifolded:

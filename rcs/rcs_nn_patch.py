@@ -3,13 +3,10 @@
 # (Are they better than the 2019 Sycamore hardware?)
 
 import math
-import os
 import random
 import statistics
 import sys
 import time
-
-from scipy.stats import binom
 
 from pyqrack import QrackSimulator, Pauli
 
@@ -24,53 +21,53 @@ def factor_width(width):
 
     return (row_len, col_len)
 
-def cx(sim, q1, q2, patch, bound):
+def cx(sim, q1, q2):
     sim.mcx([q1], q2)
 
 
-def cy(sim, q1, q2, patch, bound):
+def cy(sim, q1, q2):
     sim.mcy([q1], q2)
 
 
-def cz(sim, q1, q2, patch, bound):
+def cz(sim, q1, q2):
     sim.mcz([q1], q2)
 
 
-def acx(sim, q1, q2, patch, bound):
+def acx(sim, q1, q2):
     sim.macx([q1], q2)
 
 
-def acy(sim, q1, q2, patch, bound):
+def acy(sim, q1, q2):
     sim.macy([q1], q2)
 
 
-def acz(sim, q1, q2, patch, bound):
+def acz(sim, q1, q2):
     sim.macz([q1], q2)
 
 
-def swap(sim, q1, q2, patch, bound):
+def swap(sim, q1, q2):
     sim.swap(q1, q2)
 
 
-def iswap(sim, q1, q2, patch, bound):
+def iswap(sim, q1, q2):
     sim.iswap(q1, q2)
 
 
-def iiswap(sim, q1, q2, patch, bound):
+def iiswap(sim, q1, q2):
     sim.adjiswap(q1, q2)
 
 
-def pswap(sim, q1, q2, patch, bound):
+def pswap(sim, q1, q2):
     sim.mcz([q1], q2)
     sim.swap(q1, q2)
 
 
-def mswap(sim, q1, q2, patch, bound):
+def mswap(sim, q1, q2):
     sim.swap(q1, q2)
     sim.mcz([q1], q2)
 
 
-def nswap(sim, q1, q2, patch, bound):
+def nswap(sim, q1, q2):
     sim.mcz([q1], q2)
     sim.swap(q1, q2)
     sim.mcz([q1], q2)
@@ -85,7 +82,6 @@ def bench_qrack(width, depth):
 
     patch_bound = (width + 1) >> 1
     lcv_range = range(width)
-    all_bits = list(lcv_range)
 
     # Nearest-neighbor couplers:
     gateSequence = [ 0, 3, 2, 1, 2, 1, 0, 3 ]
@@ -131,12 +127,12 @@ def bench_qrack(width, depth):
                     continue
 
                 g = random.choice(two_bit_gates)
-                g(control, b1, b2, False, patch_bound)
+                g(control, b1, b2)
 
                 if ((b1 < patch_bound) and (b2 >= patch_bound)) or ((b2 < patch_bound) and (b1 >= patch_bound)):
                     continue
 
-                g(experiment, b1, b2, True, patch_bound)
+                g(experiment, b1, b2)
 
     ideal_probs = control.out_probs()
     del control

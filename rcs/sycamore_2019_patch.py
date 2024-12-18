@@ -25,21 +25,21 @@ def sqrt_x(sim, q):
     ONE_PLUS_I_DIV_2 = 0.5 + 0.5j
     ONE_MINUS_I_DIV_2 = 0.5 - 0.5j
     mtrx = [ ONE_PLUS_I_DIV_2, ONE_MINUS_I_DIV_2, ONE_MINUS_I_DIV_2, ONE_PLUS_I_DIV_2 ]
-    sim.mtrx(mtrx, q);
+    sim.mtrx(mtrx, q)
 
 
 def sqrt_y(sim, q):
     ONE_PLUS_I_DIV_2 = 0.5 + 0.5j
     ONE_PLUS_I_DIV_2_NEG = -0.5 - 0.5j
     mtrx = [ ONE_PLUS_I_DIV_2, ONE_PLUS_I_DIV_2_NEG, ONE_PLUS_I_DIV_2, ONE_PLUS_I_DIV_2 ]
-    sim.mtrx(mtrx, q);
+    sim.mtrx(mtrx, q)
 
 def sqrt_w(sim, q):
-    diag = math.sqrt(0.5);
+    diag = math.sqrt(0.5)
     m01 = -0.5 - 0.5j
     m10 = 0.5 - 0.5j
     mtrx = [ diag, m01, m10, diag ]
-    sim.mtrx(mtrx, q);
+    sim.mtrx(mtrx, q)
 
 
 def bench_qrack(width, depth):
@@ -88,7 +88,7 @@ def bench_qrack(width, depth):
             for col in range(col_len):
                 temp_row = row
                 temp_col = col
-                temp_row = temp_row + (1 if (gate & 2) else -1);
+                temp_row = temp_row + (1 if (gate & 2) else -1)
                 temp_col = temp_col + (1 if (gate & 1) else 0)
 
                 # Bounded:

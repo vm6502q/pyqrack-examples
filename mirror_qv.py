@@ -14,8 +14,6 @@ def bench_qrack(n):
     lcv_range = range(n)
     all_bits = list(lcv_range)
     x_op = [0, 1, 1, 0]
-    gateSequence = [ 0, 3, 2, 1, 2, 1, 0, 3 ]
-    row_len = math.ceil(math.sqrt(n))
 
     for _ in lcv_range:
         # Single-qubit gates
@@ -23,8 +21,8 @@ def bench_qrack(n):
             th = random.uniform(0, 2 * math.pi)
             ph = random.uniform(0, 2 * math.pi)
             lm = random.uniform(0, 2 * math.pi)
-            cos0 = math.cos(th / 2);
-            sin0 = math.sin(th / 2);
+            cos0 = math.cos(th / 2)
+            sin0 = math.sin(th / 2)
             u_op = [
                 cos0 + 0j, sin0 * (-math.cos(lm) + -math.sin(lm) * 1j),
                 sin0 * (math.cos(ph) + math.sin(ph) * 1j), cos0 * (math.cos(ph + lm) + math.sin(ph + lm) * 1j)

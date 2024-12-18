@@ -3,17 +3,12 @@
 # (This is actually a different "elision" concept, but allow that it works.)
 
 import math
-import os
 import random
 import statistics
 import sys
 import time
 
-import numpy as np
-
 from pyqrack import QrackSimulator
-
-from scipy.stats import binom
 
 
 def bench_qrack(width, depth):

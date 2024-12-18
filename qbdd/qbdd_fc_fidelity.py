@@ -1,10 +1,8 @@
 # Demonstrates the use of "Quantum Binary Decision Diagram (QBDD) rounding parameter" ("QBDDRP")
 
 import math
-import os
 import random
 import sys
-import time
 
 import numpy as np
 
@@ -22,7 +20,6 @@ def bench_qrack(width, depth):
     gate_count = 0
 
     for d in range(depth):
-        start = time.perf_counter()
         # Single-qubit gates
         for i in lcv_range:
             th = random.uniform(0, 2 * math.pi)

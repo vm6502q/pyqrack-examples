@@ -2,7 +2,6 @@
 
 import math
 import multiprocessing
-import os
 import random
 import sys
 import time
@@ -83,7 +82,6 @@ def bench_qrack(width_depth):
     # sim.set_reactive_separate(True)
 
     lcv_range = range(width)
-    all_bits = list(lcv_range)
 
     # Nearest-neighbor couplers:
     gateSequence = [ 0, 3, 2, 1, 2, 1, 0, 3 ]
@@ -156,7 +154,7 @@ def main():
     
     # Run the benchmarks
     pool = multiprocessing.Pool(processes = multiprocessing.cpu_count())
-    result = pool.map(bench_qrack, [(width, depth)] * shots)
+    pool.map(bench_qrack, [(width, depth)] * shots)
     pool.close()
 
     return 0

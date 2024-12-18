@@ -3,40 +3,27 @@
 # (This is actually a different "elision" concept, but allow that it works.)
 
 import math
-import os
 import random
 import statistics
 import sys
 import time
 
-import numpy as np
-
 from pyqrack import QrackSimulator
-
-from scipy.stats import binom
-
-
-# sin(math.pi / 4) / 2
-epsilon = 0.353553390593273762
 
 
 def ct_pair_prob(sim, q1, q2):
-    r = [0] * 4
+    p1 = sim.prob(q1)
+    p2 = sim.prob(q2)
 
-    r[0] = sim.prob(q1)
-    r[1] = sim.prob(q2)
-    r[2] = r[0]
-    r[3] = q2
-    if r[0] < r[1]:
-        r[3] = q1
-        r[2] = r[1]
+    if p1 < p2:
+        return p2, q1
 
-    return r
+    return p1, q2
 
 
 def cz_shadow(sim, q1, q2):
-    prob1, prob2, prob_max, t = ct_pair_prob(sim, q1, q2)
-    if prob_max > (0.5 + epsilon):
+    prob_max, t = ct_pair_prob(sim, q1, q2)
+    if prob_max > 0.5:
         sim.z(t)
 
 

@@ -1,14 +1,12 @@
 # Validates the use of "Quantum Binary Decision Diagram" (QBDD) with light-cone (nearest-neighbor, orbifolded)
 
 import math
-import os
 import random
 import sys
-import time
 
 import numpy as np
 
-from pyqrack import QrackSimulator, Pauli
+from pyqrack import QrackSimulator
 
 from qiskit import QuantumCircuit
 from qiskit.compiler import transpile
@@ -105,7 +103,6 @@ def bench_qrack(width, depth):
     control = AerSimulator(method="statevector")
 
     lcv_range = range(width)
-    all_bits = list(lcv_range)
 
     # Nearest-neighbor couplers:
     gateSequence = [ 0, 3, 2, 1, 2, 1, 0, 3 ]
@@ -126,7 +123,6 @@ def bench_qrack(width, depth):
 
     for d in range(depth):
         experiment.reset_all()
-        start = time.perf_counter()
         # Single-qubit gates
         for i in lcv_range:
             rand_u3(circ, i)

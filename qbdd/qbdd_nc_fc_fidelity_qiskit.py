@@ -1,17 +1,14 @@
 # Demonstrates the use of "Quantum Binary Decision Diagram (QBDD) rounding parameter" ("QBDDRP")
 
 import math
-import os
 import random
 import sys
-import time
 
 import numpy as np
 
-from pyqrack import QrackSimulator, Pauli
+from pyqrack import QrackSimulator
 
 from qiskit import QuantumCircuit
-from qiskit.compiler import transpile
 from qiskit_aer.backends import AerSimulator
 
 

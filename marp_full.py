@@ -68,11 +68,6 @@ def bench_qrack(width, depth, sdrp_samples):
 
     two_bit_gates = swap, pswap, mswap, nswap, iswap, iiswap, cx, cy, cz, acx, acy, acz
 
-    col_len = math.floor(math.sqrt(width))
-    while (((width // col_len) * col_len) != width):
-        col_len -= 1
-    row_len = width // col_len
-
     sdrp_segments = sdrp_samples - 1
     for i in range(0, sdrp_samples):
         start = time.perf_counter()

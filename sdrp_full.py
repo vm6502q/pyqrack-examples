@@ -72,11 +72,6 @@ def bench_qrack(width, depth, sdrp):
 
     two_bit_gates = swap, pswap, mswap, nswap, iswap, iiswap, cx, cy, cz, acx, acy, acz
 
-    col_len = math.floor(math.sqrt(width))
-    while (((width // col_len) * col_len) != width):
-        col_len -= 1
-    row_len = width // col_len
-
     for _ in range(depth):
         # Single-qubit gates
         for i in lcv_range:
@@ -115,7 +110,7 @@ def main():
 
     # Run the benchmarks
     width_results = []
-    for i in range(trials):
+    for _ in range(trials):
         width_results.append(bench_qrack(width, depth, sdrp))
 
     print({

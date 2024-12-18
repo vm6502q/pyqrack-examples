@@ -54,8 +54,6 @@ def bench_qrack(n, sdrp = 0):
     all_bits = list(lcv_range)
     x_op = [0, 1, 1, 0]
 
-    single_count = 0
-    double_count = 0
     for _ in lcv_range:
         # Single-qubit gates
         for i in lcv_range:

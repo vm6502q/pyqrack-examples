@@ -59,7 +59,7 @@ def main():
         width_results = []
 
         # Run the benchmarks
-        for i in range(samples):
+        for _ in range(samples):
             width_results.append(bench_qrack(n))
 
         time_result = sum(width_results) / samples

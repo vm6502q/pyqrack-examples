@@ -203,7 +203,7 @@ def main():
 
     # Run the benchmarks
     results = []
-    for i in range(samples):
+    for _ in range(samples):
         results.append(bench_qrack(qubits, magic))
 
     r_magic = sum(r[0] for r in results) / samples

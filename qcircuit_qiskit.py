@@ -6,7 +6,7 @@ import time
 
 import numpy as np
 
-from pyqrack import QrackSimulator, QrackCircuit
+from pyqrack import QrackCircuit
 
 
 sqrt1_2 = 1 / math.sqrt(2)
@@ -187,11 +187,8 @@ def main():
     bench_qrack(1)
 
     max_qb = 10
-    samples = 1
     if len(sys.argv) > 1:
         max_qb = int(sys.argv[1])
-    if len(sys.argv) > 2:
-        samples = int(sys.argv[2])
 
     for n in range(1, max_qb + 1):
         bench_qrack(n)

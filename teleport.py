@@ -3,7 +3,6 @@
 import math
 import random
 import sys
-import time
 
 from pyqrack import QrackSimulator
 

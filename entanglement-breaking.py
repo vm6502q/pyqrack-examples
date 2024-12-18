@@ -9,8 +9,6 @@ from pyqrack import QrackSimulator
 
 def calc_xeb(ideal_probs, split_probs):
     n_pow = len(ideal_probs)
-    n = int(round(math.log2(n_pow)))
-    threshold = statistics.median(ideal_probs)
     u_u = statistics.mean(ideal_probs)
     numer = 0
     denom = 0
