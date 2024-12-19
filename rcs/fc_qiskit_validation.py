@@ -19,37 +19,6 @@ from qiskit.quantum_info import Statevector
 from qiskit.circuit.library import UnitaryGate
 
 
-def factor_width(width):
-    col_len = math.floor(math.sqrt(width))
-    while (((width // col_len) * col_len) != width):
-        col_len -= 1
-    row_len = width // col_len
-    if col_len == 1:
-        raise Exception("ERROR: Can't simulate prime number width!")
-
-    return (row_len, col_len)
-
-
-def sqrt_x(circ, q):
-    ONE_PLUS_I_DIV_2 = 0.5 + 0.5j
-    ONE_MINUS_I_DIV_2 = 0.5 - 0.5j
-    circ.append(UnitaryGate([ [ ONE_PLUS_I_DIV_2, ONE_MINUS_I_DIV_2 ], [ ONE_MINUS_I_DIV_2, ONE_PLUS_I_DIV_2 ] ]), [q])
-
-
-def sqrt_y(circ, q):
-    ONE_PLUS_I_DIV_2 = 0.5 + 0.5j
-    ONE_PLUS_I_DIV_2_NEG = -0.5 - 0.5j
-    circ.append(UnitaryGate([ [ ONE_PLUS_I_DIV_2, ONE_PLUS_I_DIV_2_NEG ], [ ONE_PLUS_I_DIV_2, ONE_PLUS_I_DIV_2 ] ]), [q])
-
-
-def sqrt_w(circ, q):
-    diag = math.sqrt(0.5)
-    m01 = -0.5 - 0.5j
-    m10 = 0.5 - 0.5j
-    circ.append(UnitaryGate([ [ diag, m01 ], [ m10, diag ] ]), [q])
-
-
-
 def bench_qrack(width, depth):
     # This is a "nearest-neighbor" coupler random circuit.
     circ = QuantumCircuit(width)
@@ -126,7 +95,7 @@ def calc_stats(ideal_probs, counts, depth, shots):
 
 def main():
     if len(sys.argv) < 3:
-        raise RuntimeError('Usage: python3 sycamore_2019.py [width] [depth]')
+        raise RuntimeError('Usage: python3 fc_qiskit_validation.py [width] [depth]')
 
     width = int(sys.argv[1])
     depth = int(sys.argv[2])

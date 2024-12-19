@@ -204,7 +204,7 @@ def main():
     width = int(sys.argv[1])
     depth = int(sys.argv[2])
 
-     # Run the benchmarks
+    # Run the benchmarks
     result = bench_qrack(width, depth)
     # Calc. and print the results
     print("Width=" + str(width) + ", Depth=" + str(depth) + ", Seconds=" + str(result))
