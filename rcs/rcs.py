@@ -28,11 +28,10 @@ def bench_qrack(n):
         while len(unused_bits) > 1:
             sim.mcx([unused_bits.pop()], unused_bits.pop())
 
-    fidelity = sim.get_unitary_fidelity()
     # Terminal measurement
     sim.m_all()
 
-    return (time.perf_counter() - start, fidelity)
+    return time.perf_counter() - start
 
 
 def main():
@@ -49,12 +48,11 @@ def main():
         width_results = []
         
         # Run the benchmarks
-        for i in range(samples):
+        for _ in range(samples):
             width_results.append(bench_qrack(n))
 
         time_result = sum(r[0] for r in width_results) / samples
-        fidelity_result = sum(r[1] for r in width_results) / samples
-        print(n, ": ", time_result, " seconds, ", fidelity_result, " out of 1.0 fidelity")
+        print(n, ": ", time_result, " seconds, ")
 
     return 0
 
