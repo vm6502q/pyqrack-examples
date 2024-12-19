@@ -99,7 +99,7 @@ def bench_qrack(width, depth):
 
     full_sim.m_all()
 
-    return (full_sim.get_unitary_fidelity(), time.perf_counter() - start)
+    return time.perf_counter() - start
 
 
 def main():
@@ -112,7 +112,7 @@ def main():
     # Run the benchmarks
     result = bench_qrack(width, depth)
     # Calc. and print the results
-    print("width: " + str(width) + ", depth: " + str(depth) + ", fidelity: " + str(result[0]) + ", seconds: " + str(result[1]))
+    print("width: " + str(width) + ", depth: " + str(depth) + ", seconds: " + str(result))
 
     return 0
 
