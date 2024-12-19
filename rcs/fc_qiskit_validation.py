@@ -16,7 +16,6 @@ from qiskit import QuantumCircuit
 from qiskit.compiler import transpile
 from qiskit_aer.backends import AerSimulator
 from qiskit.quantum_info import Statevector
-from qiskit.circuit.library import UnitaryGate
 
 
 def bench_qrack(width, depth):
