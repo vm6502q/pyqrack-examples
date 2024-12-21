@@ -127,7 +127,7 @@ def bench_qrack(width, depth):
                     continue
 
                 # Elide if across patches:
-                if ((row < row_bound) and (temp_row >= row_bound)) or ((temp_row < row_bound) and row >= row_bound) or ((col < col_bound) and (temp_col >= col_bound)) or ((temp_col < col_bound) and (col >= col_bound)):
+                if ((row < row_bound) and (temp_row >= row_bound)) or ((temp_row < row_bound) and (row >= row_bound)) or ((col < col_bound) and (temp_col >= col_bound)) or ((temp_col < col_bound) and (col >= col_bound)):
                     # This is our version of ("semi-classical") gate "elision":
 
                     cState, t = ct_pair_prob(patch_sim, b1, b2)
