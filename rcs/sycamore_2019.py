@@ -82,7 +82,7 @@ def bench_qrack(width, depth):
             for col in range(col_len):
                 temp_row = row
                 temp_col = col
-                temp_row = temp_row + (1 if (gate & 2) else -1);
+                temp_row = temp_row + (1 if (gate & 2) else -1)
                 temp_col = temp_col + (1 if (gate & 1) else 0)
 
                 # Bounded:
