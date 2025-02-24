@@ -25,7 +25,7 @@ def phase_root_n(sim, n, q):
     sim.mtrx([1, 0, 0, -1**(1.0 / (1<<(n - 1)))], q)
 
 
-def shor(to_factor):
+def shor(to_factor, shots):
     # Based on https://arxiv.org/abs/quant-ph/0205095
     start = time.perf_counter()
     base = random.randrange(2, to_factor)
@@ -52,45 +52,43 @@ def shor(to_factor):
         sim.h(qi)
         cmul_native(sim, qi, 1 << i, to_factor, qo, qa)
 
-        # We use the single control qubit "trick" referenced in Beauregard:
-        for j in range(len(m_results)):
-            if m_results[j]:
-                phase_root_n(sim, j + 2, qi)
+    sim.iqft(qo)
 
-        m_results.append(sim.m(qi))
-        if m_results[-1]:
-            sim.x(qi)
+    m_res = sim.measure_shots(qo, shots)
 
-    y = 0
-    for i in range(len(m_results)):
-        if m_results[i]:
-            y |= 1<<i
-    r = Fraction(y).limit_denominator(to_factor - 1).denominator
+    r = 0
+    isSuccess = False
+    for y, _ in m_res.items():
+        r = Fraction(y).limit_denominator(to_factor - 1).denominator
 
-    # try to determine the factors
-    if r % 2 != 0:
-        r *= 2
-    apowrhalf = pow(base, r >> 1, to_factor)
-    f1 = gcd(apowrhalf + 1, to_factor)
-    f2 = gcd(apowrhalf - 1, to_factor)
-    fmul = f1 * f2
-    if (not fmul == to_factor) and f1 * f2 > 1 and (to_factor // fmul) * fmul == to_factor:
-        f1, f2 = f1 * f2, to_factor // (f1 * f2)
-    if f1 * f2 == to_factor and f1 > 1 and f2 > 1:
-        print("Factors found : {} * {} = {}".format(f1, f2, to_factor))
-    else:
-        print("Failed: Found {} and {}".format(f1, f2))
+        # try to determine the factors
+        if r % 2 != 0:
+            r *= 2
+        apowrhalf = pow(base, r >> 1, to_factor)
+        f1 = gcd(apowrhalf + 1, to_factor)
+        f2 = gcd(apowrhalf - 1, to_factor)
+        fmul = f1 * f2
+        if (not fmul == to_factor) and f1 * f2 > 1 and (to_factor // fmul) * fmul == to_factor:
+            f1, f2 = f1 * f2, to_factor // (f1 * f2)
+        if f1 * f2 == to_factor and f1 > 1 and f2 > 1:
+            print("Factors found : {} * {} = {}".format(f1, f2, to_factor))
+            isSuccess = True
+            break
+
+    if not isSuccess:
+        print("Failed.")
 
     print("Time: " + str(time.perf_counter() - start) + "seconds")
 
 
 def main():
-    if len(sys.argv) < 2:
+    if len(sys.argv) < 3:
         raise RuntimeError('Usage: python3 qbdd_shor.py [to_factor]')
 
     to_factor = int(sys.argv[1])
+    shots = int(sys.argv[2])
 
-    shor(to_factor)
+    shor(to_factor, shots)
 
     return 0
 
