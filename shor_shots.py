@@ -43,8 +43,6 @@ def shor(to_factor, shots):
     qa = [(i + qubitCount) for i in range(qubitCount)]
     qi = 2 * qubitCount
 
-    m_results = []
-
     # Run the quantum subroutine.
     # First, set the multiplication output register to identity, 1.
     sim.x(qo[0])
