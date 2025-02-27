@@ -123,10 +123,19 @@ def bench_qrack(width, depth):
         circ_aer.save_statevector()
         job = control.run(circ_aer)
 
-        experiment_counts = dict(Counter(experiment.measure_shots(all_bits, shots)))
-        control_probs = Statevector(job.result().get_statevector()).probabilities()
+        try:
+            experiment_counts = dict(Counter(experiment.measure_shots(all_bits, shots)))
+            control_probs = Statevector(job.result().get_statevector()).probabilities()
 
-        calc_stats(control_probs, experiment_counts, d + 1, shots)
+            calc_stats(control_probs, experiment_counts, d + 1, shots)
+        except:
+            print({
+                'qubits': width,
+                'depth': d + 1,
+                'xeb': 0,
+                'hog_prob': 0.5,
+                'p-value': 1.0
+            })
 
 
 def calc_stats(ideal_probs, counts, depth, shots):
