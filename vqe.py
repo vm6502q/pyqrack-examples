@@ -10,8 +10,8 @@ from openfermion.transforms import jordan_wigner
 
 # Step 1: Define the molecule (H2, HeH+, BeH2)
 geometry = [('H', (0.0, 0.0, 0.0)), ('H', (0.0, 0.0, 0.74))]  # H2 Molecule
-# basis = 'sto-3g'  # Minimal Basis Set
-basis = '6-31g'  # Larger basis set
+basis = 'sto-3g'  # Minimal Basis Set
+# basis = '6-31g'  # Larger basis set
 multiplicity = 1
 charge = 0
 
@@ -77,3 +77,5 @@ for step in range(num_steps):
     print(f"Step {step+1}: Energy = {energy}")
 
 print("Optimized Ground State Energy:", energy)
+print("Optimal parameters:")
+print(theta)
