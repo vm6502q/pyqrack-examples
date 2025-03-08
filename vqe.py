@@ -59,6 +59,11 @@ def ansatz(params, wires):
         qml.RY(params[i], wires=i)
     for i in range(len(wires) - 1):
         qml.CNOT(wires=[i, i + 1])
+    # OPTIONAL: Second layer to ansatz
+    # for i in range(len(wires)):
+    #     qml.RY(params[len(wires) + i], wires=i)
+    # for i in range(len(wires) - 1):
+    #     qml.CNOT(wires=[i, i + 1])
 
 # Step 7: Cost Function for VQE (Expectation of Hamiltonian)
 @qml.qnode(dev)
@@ -67,9 +72,10 @@ def circuit(params):
     return qml.expval(hamiltonian)  # Scalar cost function
 
 # Step 8: Optimize the Energy
-opt = qml.AdamOptimizer(stepsize=0.05)
-theta = np.random.randn(n_qubits, requires_grad=True)  # Ensure trainable parameters
-num_steps = 100
+opt = qml.AdamOptimizer(stepsize=0.01)
+theta = np.random.randn(n_qubits, requires_grad=True)  # Single-layer ansatz
+# theta = np.random.randn(2 * n_qubits, requires_grad=True)  # Double-layer ansatz
+num_steps = 300
 
 for step in range(num_steps):
     theta = opt.step(circuit, theta)
