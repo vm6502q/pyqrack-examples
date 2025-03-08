@@ -8,16 +8,19 @@ import openfermion as of
 from openfermionpyscf import run_pyscf
 from openfermion.transforms import jordan_wigner
 
-# Step 1: Define the molecule (H2, HeH+, BeH2)
+# Step 1: Define the molecule (H2, HeH+, BeH2, OH+, H2O)
 geometry = [('H', (0.0, 0.0, 0.0)), ('H', (0.0, 0.0, 0.74))]  # H2 Molecule
 # geometry = [('He', (0.0, 0.0, 0.0)), ('H', (0.0, 0.0, 7.74))]  # HeH Molecule
 # geometry = [('H', (0.0, 0.0, -13.3)), ('Be', (0.0, 0.0, 0.0)), ('H', (0.0, 0.0, 13.3))]  # BeH2 Molecule
+# geometry = [('O', (0.0, 0.0, 0.0)), ('H', (0.0, 0.0, 9.6))]
+# geometry = [('O', (0.0000, 0.0000, 0.0000)), ('H', (0.7586, 0.0000, 0.5043)),  ('H', (-0.7586, 0.0000, 0.5043))]
 basis = 'sto-3g'  # Minimal Basis Set
 # basis = '6-31g'  # Larger basis set
 # basis = 'cc-pVDZ' # Even larger basis set!
-multiplicity = 1
-charge = 0  # For neutral molecules
-# charge = 1  # != 0 for ions
+multiplicity = 1 # singlet, closed shell, all electrons are paired (neutral molecules with full valence)
+# multiplicity = 2 # doublet, one unpaired electron (ex.: OH+ radical)
+# multiplicity = 3 # triplet, two unpaired electrons (ex.: O2)
+charge = 0  # Excess +/- elementary electric charge, beyond multiplicity
 
 # Step 2: Compute the Molecular Hamiltonian
 molecule = of.MolecularData(geometry, basis, multiplicity, charge)
@@ -84,10 +87,10 @@ def circuit(params):
     return qml.expval(hamiltonian)  # Scalar cost function
 
 # Step 8: Optimize the Energy
-opt = qml.AdamOptimizer(stepsize=0.05)
+opt = qml.AdamOptimizer(stepsize=0.1)
 theta = np.random.randn(n_qubits, requires_grad=True)  # Single-layer ansatz
 # theta = np.random.randn(2 * n_qubits, requires_grad=True)  # Double-layer ansatz
-num_steps = 100
+num_steps = 150
 
 for step in range(num_steps):
     theta = opt.step(circuit, theta)
