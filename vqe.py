@@ -50,18 +50,26 @@ for term, coefficient in qubit_hamiltonian.terms.items():
 hamiltonian = qml.Hamiltonian(coeffs, observables)
 
 # Step 5: Define Qrack Backend
-dev = qml.device("qrack.simulator", wires=n_qubits)  # Replace with "default.qubit" for CPU test
+dev = qml.device("qrack.simulator", wires=n_qubits, isTensorNetwork=False)  # Replace with "default.qubit" for CPU test
 
 # Step 6: Define a Simple Variational Ansatz
 def ansatz(params, wires):
     # qml.BasisState(np.array([0] * len(wires)), wires=wires)  # Initialize |000...0>
     for i in range(len(wires)):
-        qml.RY(params[i], wires=i)
+        qml.Hadamard(wires=i)
+        qml.RZ(params[i], wires=i)
+        qml.Hadamard(wires=i)
+        # The above is the near-Clifford equivalent of just RY:
+        # qml.RY(params[i], wires=i)
     for i in range(len(wires) - 1):
         qml.CNOT(wires=[i, i + 1])
     # OPTIONAL: Second layer to ansatz
     # for i in range(len(wires)):
-    #     qml.RY(params[len(wires) + i], wires=i)
+    #     qml.Hadamard(wires=i)
+    #     qml.RZ(params[len(wires) + i], wires=i)
+    #     qml.Hadamard(wires=i)
+    #     # The above is the near-Clifford equivalent of just RY:
+    #     # qml.RY(params[i], wires=i)
     # for i in range(len(wires) - 1):
     #     qml.CNOT(wires=[i, i + 1])
 
@@ -75,7 +83,7 @@ def circuit(params):
 opt = qml.AdamOptimizer(stepsize=0.01)
 theta = np.random.randn(n_qubits, requires_grad=True)  # Single-layer ansatz
 # theta = np.random.randn(2 * n_qubits, requires_grad=True)  # Double-layer ansatz
-num_steps = 300
+num_steps = 500
 
 for step in range(num_steps):
     theta = opt.step(circuit, theta)
