@@ -17,9 +17,9 @@ geometry = [('H', (0.0, 0.0, 0.0)), ('H', (0.0, 0.0, 0.74))]  # H2 Molecule
 basis = 'sto-3g'  # Minimal Basis Set
 # basis = '6-31g'  # Larger basis set
 # basis = 'cc-pVDZ' # Even larger basis set!
-multiplicity = 1 # singlet, closed shell, all electrons are paired (neutral molecules with full valence)
-# multiplicity = 2 # doublet, one unpaired electron (ex.: OH+ radical)
-# multiplicity = 3 # triplet, two unpaired electrons (ex.: O2)
+multiplicity = 1  # singlet, closed shell, all electrons are paired (neutral molecules with full valence)
+# multiplicity = 2  # doublet, one unpaired electron (ex.: OH+ radical)
+# multiplicity = 3  # triplet, two unpaired electrons (ex.: O2)
 charge = 0  # Excess +/- elementary electric charge, beyond multiplicity
 
 # Step 2: Compute the Molecular Hamiltonian
