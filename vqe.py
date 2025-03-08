@@ -69,7 +69,7 @@ def ansatz(params, wires):
     #     qml.RZ(params[len(wires) + i], wires=i)
     #     qml.Hadamard(wires=i)
     #     # The above is the near-Clifford equivalent of just RY:
-    #     # qml.RY(params[i], wires=i)
+    #     # qml.RY(params[len(wires) + i], wires=i)
     # for i in range(len(wires) - 1):
     #     qml.CNOT(wires=[i, i + 1])
 
