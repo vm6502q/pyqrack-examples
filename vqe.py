@@ -54,7 +54,7 @@ dev = qml.device("qrack.simulator", wires=n_qubits)  # Replace with "default.qub
 
 # Step 6: Define a Simple Variational Ansatz
 def ansatz(params, wires):
-    qml.BasisState(np.array([0] * len(wires)), wires=wires)  # Initialize |000...0>
+    # qml.BasisState(np.array([0] * len(wires)), wires=wires)  # Initialize |000...0>
     for i in range(len(wires)):
         qml.RY(params[i], wires=i)
     for i in range(len(wires) - 1):
@@ -77,5 +77,5 @@ for step in range(num_steps):
     print(f"Step {step+1}: Energy = {energy} Ha")
 
 print(f"Optimized Ground State Energy: {energy} Ha")
-print("Optimal parameters:")
+print("Optimized parameters:")
 print(theta)
