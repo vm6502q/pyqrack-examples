@@ -20,7 +20,7 @@ basis = 'sto-3g'  # Minimal Basis Set
 multiplicity = 1  # singlet, closed shell, all electrons are paired (neutral molecules with full valence)
 # multiplicity = 2  # doublet, one unpaired electron (ex.: OH+ radical)
 # multiplicity = 3  # triplet, two unpaired electrons (ex.: O2)
-charge = 0  # Excess +/- elementary electric charge, beyond multiplicity
+charge = 0  # Excess electrons, beyond multiplicity
 
 # Step 2: Compute the Molecular Hamiltonian
 molecule = of.MolecularData(geometry, basis, multiplicity, charge)
