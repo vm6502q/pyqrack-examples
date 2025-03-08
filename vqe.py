@@ -64,7 +64,7 @@ def ansatz(params, wires):
 @qml.qnode(dev)
 def circuit(params):
     ansatz(params, wires=range(n_qubits))
-    return qml.expval(hamiltonian)  # Now correctly outputs a scalar
+    return qml.expval(hamiltonian)  # Scalar cost function
 
 # Step 8: Optimize the Energy
 opt = qml.AdamOptimizer(stepsize=0.05)
