@@ -12,6 +12,7 @@ from openfermion.transforms import jordan_wigner
 geometry = [('H', (0.0, 0.0, 0.0)), ('H', (0.0, 0.0, 0.74))]  # H2 Molecule
 basis = 'sto-3g'  # Minimal Basis Set
 # basis = '6-31g'  # Larger basis set
+# basis = 'cc-pVDZ' # Even larger basis set!
 multiplicity = 1
 charge = 0
 
