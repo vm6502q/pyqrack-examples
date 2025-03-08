@@ -74,8 +74,8 @@ num_steps = 100
 for step in range(num_steps):
     theta = opt.step(circuit, theta)
     energy = circuit(theta)  # Compute energy at new parameters
-    print(f"Step {step+1}: Energy = {energy}")
+    print(f"Step {step+1}: Energy = {energy} Ha")
 
-print("Optimized Ground State Energy:", energy)
+print(f"Optimized Ground State Energy: {energy} Ha")
 print("Optimal parameters:")
 print(theta)
