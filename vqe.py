@@ -47,7 +47,7 @@ geometry = [('H', (0.0, 0.0, 0.0)), ('H', (0.0, 0.0, 0.74))]  # H2 Molecule
 
 # Oxygen (and lighter):
 
-# geometry = [('O', (0.0, 0.0, 0.0)), ('H', (0.0, 0.0, 9.6))]  # OH+ Radical
+# geometry = [('O', (0.0, 0.0, 0.0)), ('H', (0.0, 0.0, 9.6))]  # OH- Radical
 # geometry = [('O', (0.0000, 0.0000, 0.0000)), ('H', (0.7586, 0.0000, 0.5043)),  ('H', (-0.7586, 0.0000, 0.5043))]  # H2O Molecule
 # geometry = [('C', (0.0000, 0.0000, 0.0000)), ('O', (0.0000, 0.0000, 1.128))]  # CO Molecule
 # geometry = [('C', (0.0000, 0.0000, 0.0000)), ('O', (0.0000, 0.0000, 1.16)), ('O', (0.0000, 0.0000, -1.16))]  # CO2 Molecule
@@ -80,6 +80,23 @@ geometry = [('H', (0.0, 0.0, 0.0)), ('H', (0.0, 0.0, 0.74))]  # H2 Molecule
 #     ('H', (bond_length, 0.0, 0.0)),
 #     ('H', (-bond_length * np.cos(theta), bond_length * np.sin(theta), 0.0)),
 #     ('H', (-bond_length * np.cos(theta), -bond_length * np.sin(theta), 0.0))
+# ]
+
+# Carbonate ion (CO3--):
+# geometry = [
+#     ('C', (0.0000, 0.0000, 0.0000)),  # Carbon at center
+#     ('O', (1.2900, 0.0000, 0.0000)),  # Oxygen 1
+#     ('O', (-0.6450, 1.1180, 0.0000)),  # Oxygen 2
+#     ('O', (-0.6450, -1.1180, 0.0000))  # Oxygen 3
+# ]
+
+# Bicarbonate ion (HCO3-):
+# geometry = [
+#     ('C', (0.0000, 0.0000, 0.0000)),  # Carbon center
+#     ('O', (1.2200, 0.0000, 0.0000)),  # Oxygen (C=O)
+#     ('O', (-0.6100, 1.0550, 0.0000)),  # Oxygen (-O⁻)
+#     ('O', (-0.6100, -1.0550, 0.0000)),  # Oxygen (OH)
+#     ('H', (-1.2200, -1.0550, 0.0000))  # Hydrogen in OH group
 # ]
 
 # Sulfur chemistry:
@@ -140,6 +157,21 @@ geometry = [('H', (0.0, 0.0, 0.0)), ('H', (0.0, 0.0, 0.74))]  # H2 Molecule
 # Proper organic chemistry is beyond the scope of this script,
 # but we give a memorable token example of a carbon ring.
 
+# Diatomic halogens:
+
+# Fluorine gas (F2)
+# geometry = [('F', (0.0000, 0.0000, 0.0000)), ('F', (1.4200, 0.0000, 0.0000))]
+
+# Chlorine gas (Cl2)
+# geometry = [('Cl', (0.0000, 0.0000, 0.0000)), ('Cl', (1.9900, 0.0000, 0.0000))]
+
+# Silicon dioxide (quartz, sand, granite):
+# geometry = [
+#     ('Si', (0.0000, 0.0000, 0.0000)),  # Silicon at center
+#     ('O', (1.6200, 0.0000, 0.0000)),  # Oxygen 1
+#     ('O', (-1.6200, 0.0000, 0.0000))  # Oxygen 2
+# ]
+
 # Benzene (C6H6)
 
 # Define bond lengths (in angstroms, converted to script units)
@@ -174,7 +206,7 @@ basis = 'sto-3g'  # Minimal Basis Set
 # basis = '6-31g'  # Larger basis set
 # basis = 'cc-pVDZ' # Even larger basis set!
 multiplicity = 1  # singlet, closed shell, all electrons are paired (neutral molecules with full valence)
-# multiplicity = 2  # doublet, one unpaired electron (ex.: OH+ radical)
+# multiplicity = 2  # doublet, one unpaired electron (ex.: OH- radical)
 # multiplicity = 3  # triplet, two unpaired electrons (ex.: O2)
 charge = 0  # Excess +/- elementary charge, beyond multiplicity
 
