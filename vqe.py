@@ -18,6 +18,14 @@ from openfermion.transforms import jordan_wigner
 
 # Step 1: Define the molecule (Hydrogen, Helium, Lithium, Carbon, Nitrogen, Oxygen)
 
+basis = 'sto-3g'  # Minimal Basis Set
+# basis = '6-31g'  # Larger basis set
+# basis = 'cc-pVDZ' # Even larger basis set!
+multiplicity = 2  # singlet, closed shell, all electrons are paired (neutral molecules with full valence)
+# multiplicity = 2  # doublet, one unpaired electron (ex.: OH- radical)
+# multiplicity = 3  # triplet, two unpaired electrons (ex.: O2)
+charge = 0  # Excess +/- elementary charge, beyond multiplicity
+
 # Hydrogen (and lighter):
 
 geometry = [('H', (0.0, 0.0, 0.0)), ('H', (0.0, 0.0, 0.74))]  # H2 Molecule
@@ -208,15 +216,6 @@ geometry = [('H', (0.0, 0.0, 0.0)), ('H', (0.0, 0.0, 0.74))]  # H2 Molecule
 #     geometry.append(('H', (hydrogen_x, hydrogen_y, hydrogen_z)))
 
 # Now, `geometry` contains all 6 carbons and 6 hydrogens!
-
-
-basis = 'sto-3g'  # Minimal Basis Set
-# basis = '6-31g'  # Larger basis set
-# basis = 'cc-pVDZ' # Even larger basis set!
-multiplicity = 1  # singlet, closed shell, all electrons are paired (neutral molecules with full valence)
-# multiplicity = 2  # doublet, one unpaired electron (ex.: OH- radical)
-# multiplicity = 3  # triplet, two unpaired electrons (ex.: O2)
-charge = 0  # Excess +/- elementary charge, beyond multiplicity
 
 # Step 2: Compute the Molecular Hamiltonian
 molecule = of.MolecularData(geometry, basis, multiplicity, charge)
