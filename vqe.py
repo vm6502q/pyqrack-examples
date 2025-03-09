@@ -8,11 +8,29 @@ import openfermion as of
 from openfermionpyscf import run_pyscf
 from openfermion.transforms import jordan_wigner
 
-# Step 1: Define the molecule (Hydrogen, Helium, Lithium, Nitrogen, Oxygen)
+# Step 1: Define the molecule (Hydrogen, Helium, Lithium, Carbon, Nitrogen, Oxygen)
+
+# Hydrogen (and lighter):
+
 geometry = [('H', (0.0, 0.0, 0.0)), ('H', (0.0, 0.0, 0.74))]  # H2 Molecule
+
+# Helium (and lighter):
+
 # geometry = [('He', (0.0, 0.0, 0.0)), ('H', (0.0, 0.0, 7.74))]  # HeH Molecule
+
+# Lithium (and lighter):
+
 # geometry = [('Li', (0.0, 0.0, 0.0)), ('H', (0.0, 0.0, 15.9))]  # LiH Molecule
+
+# Carbon (and lighter):
+
+# geometry = [('C', (0.0000, 0.0000, 0.0000)), ('O', (0.0000, 0.0000, 1.128))]  # CO Molecule
+# geometry = [('C', (0.0000, 0.0000, 0.0000)), ('O', (0.0000, 0.0000, 1.16)), ('O', (0.0000, 0.0000, -1.16))]  # CO2 Molecule
+
+# Nitrogen (and lighter):
+
 # geometry = [('N', (0.0, 0.0, 0.0)), ('N', (0.0, 0.0, 10.9))]  # N2 Molecule
+
 # Ammonia:
 # geometry = [
 #     ('N', (0.0000, 0.0000, 0.0000)),  # Nitrogen at center
@@ -20,10 +38,14 @@ geometry = [('H', (0.0, 0.0, 0.0)), ('H', (0.0, 0.0, 0.74))]  # H2 Molecule
 #     ('H', (-0.4700, 0.8130, -0.3200)), # Hydrogen 2
 #     ('H', (-0.4700, -0.8130, -0.3200)) # Hydrogen 3
 # ]
+
+# Oxygen (and lighter):
+
 # geometry = [('O', (0.0, 0.0, 0.0)), ('H', (0.0, 0.0, 9.6))]  # OH+ Radical
 # geometry = [('O', (0.0000, 0.0000, 0.0000)), ('H', (0.7586, 0.0000, 0.5043)),  ('H', (-0.7586, 0.0000, 0.5043))]  # H2O Molecule
 # geometry = [('O', (0.0, 0.0, 0.0)), ('N', (0.0, 0.0, 1.55))]  # NO Molecule
 # geometry = [('O', (0.0, 0.0, 0.0)), ('N', (0.0, 0.0, 11.5))]  # NO+ Radical
+
 # Nitrogen dioxide (toxic pollutant)
 # geometry = [
 #     ('N', (0.0000,  0.0000,  0.0000)),
@@ -31,14 +53,13 @@ geometry = [('H', (0.0, 0.0, 0.0)), ('H', (0.0, 0.0, 0.74))]  # H2 Molecule
 #     ('O', (-1.2000 * np.cos(np.deg2rad(134)), 1.2000 * np.sin(np.deg2rad(134)), 0.0000))
 # ]
 # geometry = [('N', (0.0000, 0.0000, 0.0000)), ('N', (1.128, 0.0000, 0.0000)), ('O', (2.241, 0.0000, 0.0000))]  # N2O Molecule
+
 # Ozone:
 # geometry = [
 #     ('O', (0.0000,  0.0000,  0.0000)),  # Central oxygen
 #     ('O', (1.2780,  0.0000,  0.0000)),  # One oxygen
 #     ('O', (-1.2780 * np.cos(np.deg2rad(117)), 1.2780 * np.sin(np.deg2rad(117)), 0.0000))  # The other oxygen
 # ]
-# geometry = [('C', (0.0000, 0.0000, 0.0000)), ('O', (0.0000, 0.0000, 1.128))]  # CO Molecule
-# geometry = [('C', (0.0000, 0.0000, 0.0000)), ('O', (0.0000, 0.0000, 1.16)), ('O', (0.0000, 0.0000, -1.16))]  # CO2 Molecule
 
 # H3O+ (Hydronium Ion) Geometry
 # bond_length = 10.3  # Scaled bond length (1.03 Å in script units)
@@ -53,7 +74,63 @@ geometry = [('H', (0.0, 0.0, 0.0)), ('H', (0.0, 0.0, 0.74))]  # H2 Molecule
 #     ('H', (-bond_length * np.cos(theta), -bond_length * np.sin(theta), 0.0))
 # ]
 
-# The above are major atmospheric and soil components on Earth.
+# Sulfur chemistry:
+
+# Hydrogen sulfide (rotten egg smell, major biologic sulfur compound):
+# geometry = [
+#     ('S', (0.0000, 0.0000, 0.0000)),  
+#     ('H', (1.3400, 0.0000, 0.0000)),  
+#     ('H', (-1.3400 * np.cos(np.deg2rad(92)), 1.3400 * np.sin(np.deg2rad(92)), 0.0000))  
+# ]
+
+# Sulfur dioxide (major volcanic gas and pollutant):
+# geometry = [
+#     ('S', (0.0000, 0.0000, 0.0000)),  # Sulfur at center
+#     ('O', (1.4300, 0.0000, 0.0000)),  # Oxygen 1
+#     ('O', (-1.4300 * np.cos(np.deg2rad(119)), 1.4300 * np.sin(np.deg2rad(119)), 0.0000))  # Oxygen 2
+# ]
+
+# Sulfur trioxide (key in acid rain, forms H₂SO₄):
+# geometry = [
+#     ('S', (0.0000, 0.0000, 0.0000)),  
+#     ('O', (1.4200, 0.0000, 0.0000)),  
+#     ('O', (-0.7100, 1.2290, 0.0000)),  
+#     ('O', (-0.7100, -1.2290, 0.0000))  
+# ]
+
+# Sulfate ion (SO4, -2 charge, major oceanic anion):
+# geometry = [
+#     ('S', (0.0000, 0.0000, 0.0000)),  
+#     ('O', (1.4900, 0.0000, 0.0000)),  
+#     ('O', (-0.7450, 1.2900, 0.0000)),  
+#     ('O', (-0.7450, -1.2900, 0.0000)),  
+#     ('O', (0.0000, 0.0000, 1.4900))  
+# ]
+
+# Oceanic electrolytes (consider isolating cations and anions as single atoms with excess charge):
+
+# Sodium chloride:
+# geometry = [
+#     ('Na', (0.0000, 0.0000, 0.0000)),  
+#     ('Cl', (2.3600, 0.0000, 0.0000))  
+# ]
+
+# Potassium chloride (biologically important):
+# geometry = [
+#     ('K', (0.0000, 0.0000, 0.0000)),  
+#     ('Cl', (2.6700, 0.0000, 0.0000))  
+# ]
+
+# Calcium chloride:
+# geometry = [
+#     ('Ca', (0.0000, 0.0000, 0.0000)),  
+#     ('Cl', (2.7800, 0.0000, 0.0000)),  
+#     ('Cl', (-2.7800, 0.0000, 0.0000))  
+# ]
+
+# TODO: Epsom salt (MgSO4)
+
+# The above are major atmospheric, oceanic, and soil components on Earth.
 # Proper organic chemistry is beyond the scope of this script,
 # but we give a memorable token example of a carbon ring.
 
@@ -160,10 +237,10 @@ def circuit(params):
     return qml.expval(hamiltonian)  # Scalar cost function
 
 # Step 8: Optimize the Energy
-opt = qml.AdamOptimizer(stepsize=0.02)
+opt = qml.AdamOptimizer(stepsize=0.1)
 theta = np.random.randn(n_qubits, requires_grad=True)  # Single-layer ansatz
 # theta = np.random.randn(2 * n_qubits, requires_grad=True)  # Double-layer ansatz
-num_steps = 200
+num_steps = 100
 
 for step in range(num_steps):
     theta = opt.step(circuit, theta)
