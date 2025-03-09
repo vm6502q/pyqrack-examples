@@ -27,6 +27,15 @@ geometry = [('H', (0.0, 0.0, 0.0)), ('H', (0.0, 0.0, 0.74))]  # H2 Molecule
 # geometry = [('C', (0.0000, 0.0000, 0.0000)), ('O', (0.0000, 0.0000, 1.128))]  # CO Molecule
 # geometry = [('C', (0.0000, 0.0000, 0.0000)), ('O', (0.0000, 0.0000, 1.16)), ('O', (0.0000, 0.0000, -1.16))]  # CO2 Molecule
 
+# Methane (CH4):
+# geometry = [
+#     ('C', (0.0000, 0.0000, 0.0000)),  # Central carbon
+#     ('H', (1.0900, 0.0000, 0.0000)),  # Hydrogen 1
+#     ('H', (-0.3630, 1.0270, 0.0000)),  # Hydrogen 2
+#     ('H', (-0.3630, -0.5130, 0.8890)),  # Hydrogen 3
+#     ('H', (-0.3630, -0.5130, -0.8890))  # Hydrogen 4
+# ]
+
 # Nitrogen (and lighter):
 
 # geometry = [('N', (0.0, 0.0, 0.0)), ('N', (0.0, 0.0, 10.9))]  # N2 Molecule
@@ -98,7 +107,7 @@ geometry = [('H', (0.0, 0.0, 0.0)), ('H', (0.0, 0.0, 0.74))]  # H2 Molecule
 #     ('O', (-0.7100, -1.2290, 0.0000))  
 # ]
 
-# Sulfate ion (SO4, -2 charge, major oceanic anion):
+# Sulfate ion (SO4, -2 charge, major oceanic anion, ionically bonds to Mg++):
 # geometry = [
 #     ('S', (0.0000, 0.0000, 0.0000)),  
 #     ('O', (1.4900, 0.0000, 0.0000)),  
@@ -127,8 +136,6 @@ geometry = [('H', (0.0, 0.0, 0.0)), ('H', (0.0, 0.0, 0.74))]  # H2 Molecule
 #     ('Cl', (2.7800, 0.0000, 0.0000)),  
 #     ('Cl', (-2.7800, 0.0000, 0.0000))  
 # ]
-
-# TODO: Epsom salt (MgSO4)
 
 # The above are major atmospheric, oceanic, and soil components on Earth.
 # Proper organic chemistry is beyond the scope of this script,
