@@ -11,8 +11,15 @@ from openfermion.transforms import jordan_wigner
 # Step 1: Define the molecule (H2, HeH+, BeH2, OH+, H2O)
 geometry = [('H', (0.0, 0.0, 0.0)), ('H', (0.0, 0.0, 0.74))]  # H2 Molecule
 # geometry = [('He', (0.0, 0.0, 0.0)), ('H', (0.0, 0.0, 7.74))]  # HeH Molecule
-# geometry = [('Li', (0.0, 0.0, 0.0)), ('H', (0.0, 0.0, 15.9))]  #LiH Molecule
-# geometry = [('H', (0.0, 0.0, -13.3)), ('Be', (0.0, 0.0, 0.0)), ('H', (0.0, 0.0, 13.3))]  # BeH2 Molecule
+# geometry = [('Li', (0.0, 0.0, 0.0)), ('H', (0.0, 0.0, 15.9))]  # LiH Molecule
+# geometry = [('N', (0.0, 0.0, 0.0)), ('N', (0.0, 0.0, 10.9))]  # N2 Molecule
+# Ammonia:
+# geometry = [
+#     ('N', (0.0000, 0.0000, 0.0000)),  # Nitrogen at center
+#     ('H', (0.9400, 0.0000, -0.3200)),  # Hydrogen 1
+#     ('H', (-0.4700, 0.8130, -0.3200)), # Hydrogen 2
+#     ('H', (-0.4700, -0.8130, -0.3200)) # Hydrogen 3
+# ]
 # geometry = [('O', (0.0, 0.0, 0.0)), ('H', (0.0, 0.0, 9.6))]  # OH+ Radical
 # geometry = [('O', (0.0000, 0.0000, 0.0000)), ('H', (0.7586, 0.0000, 0.5043)),  ('H', (-0.7586, 0.0000, 0.5043))]  # H2O Molecule
 basis = 'sto-3g'  # Minimal Basis Set
@@ -21,7 +28,7 @@ basis = 'sto-3g'  # Minimal Basis Set
 multiplicity = 1  # singlet, closed shell, all electrons are paired (neutral molecules with full valence)
 # multiplicity = 2  # doublet, one unpaired electron (ex.: OH+ radical)
 # multiplicity = 3  # triplet, two unpaired electrons (ex.: O2)
-charge = 0  # Excess electrons, beyond multiplicity
+charge = 0  # Excess +/- elementary charge, beyond multiplicity
 
 # Step 2: Compute the Molecular Hamiltonian
 molecule = of.MolecularData(geometry, basis, multiplicity, charge)
