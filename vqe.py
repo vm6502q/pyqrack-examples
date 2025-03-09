@@ -22,6 +22,7 @@ geometry = [('H', (0.0, 0.0, 0.0)), ('H', (0.0, 0.0, 0.74))]  # H2 Molecule
 # ]
 # geometry = [('O', (0.0, 0.0, 0.0)), ('H', (0.0, 0.0, 9.6))]  # OH+ Radical
 # geometry = [('O', (0.0000, 0.0000, 0.0000)), ('H', (0.7586, 0.0000, 0.5043)),  ('H', (-0.7586, 0.0000, 0.5043))]  # H2O Molecule
+# geometry = [('O', (0.0, 0.0, 0.0)), ('N', (0.0, 0.0, 11.5))]  # NO+ Radical
 basis = 'sto-3g'  # Minimal Basis Set
 # basis = '6-31g'  # Larger basis set
 # basis = 'cc-pVDZ' # Even larger basis set!
@@ -95,10 +96,10 @@ def circuit(params):
     return qml.expval(hamiltonian)  # Scalar cost function
 
 # Step 8: Optimize the Energy
-opt = qml.AdamOptimizer(stepsize=0.01)
+opt = qml.AdamOptimizer(stepsize=0.02)
 theta = np.random.randn(n_qubits, requires_grad=True)  # Single-layer ansatz
 # theta = np.random.randn(2 * n_qubits, requires_grad=True)  # Double-layer ansatz
-num_steps = 400
+num_steps = 200
 
 for step in range(num_steps):
     theta = opt.step(circuit, theta)
