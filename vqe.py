@@ -8,7 +8,7 @@ import openfermion as of
 from openfermionpyscf import run_pyscf
 from openfermion.transforms import jordan_wigner
 
-# Step 1: Define the molecule (H2, HeH+, BeH2, OH+, H2O)
+# Step 1: Define the molecule (Hydrogen, Helium, Lithium, Nitrogen, Oxygen)
 geometry = [('H', (0.0, 0.0, 0.0)), ('H', (0.0, 0.0, 0.74))]  # H2 Molecule
 # geometry = [('He', (0.0, 0.0, 0.0)), ('H', (0.0, 0.0, 7.74))]  # HeH Molecule
 # geometry = [('Li', (0.0, 0.0, 0.0)), ('H', (0.0, 0.0, 15.9))]  # LiH Molecule
