@@ -53,6 +53,40 @@ geometry = [('H', (0.0, 0.0, 0.0)), ('H', (0.0, 0.0, 0.74))]  # H2 Molecule
 #     ('H', (-bond_length * np.cos(theta), -bond_length * np.sin(theta), 0.0))
 # ]
 
+# The above are major atmospheric and soil components on Earth.
+# Proper organic chemistry is beyond the scope of this script,
+# but we give a memorable token example of a carbon ring.
+
+# Benzene (C6H6)
+
+# Define bond lengths (in angstroms, converted to script units)
+# C_C = 13.9  # Carbon-carbon bond (1.39 Å)
+# C_H = 10.9  # Carbon-hydrogen bond (1.09 Å)
+
+# Angle of 120° between C-C bonds in the hexagonal ring
+# theta = np.deg2rad(120)
+
+# Define carbon positions (hexagonal ring)
+# geometry = [
+#     ('C', (C_C, 0.0, 0.0)),  # First carbon at x-axis
+#     ('C', (C_C * np.cos(theta), C_C * np.sin(theta), 0.0)),
+#     ('C', (-C_C * np.cos(theta), C_C * np.sin(theta), 0.0)),
+#     ('C', (-C_C, 0.0, 0.0)),
+#     ('C', (-C_C * np.cos(theta), -C_C * np.sin(theta), 0.0)),
+#     ('C', (C_C * np.cos(theta), -C_C * np.sin(theta), 0.0))
+# ]
+
+# Define hydrogen positions (bonded to carbons)
+# for i in range(6):
+#     x, y, z = geometry[i][1]  # Get carbon position
+#     hydrogen_x = x + (C_H * (x / C_C))  # Extend outward along C-C axis
+#     hydrogen_y = y + (C_H * (y / C_C))
+#     hydrogen_z = z  # Planar
+#     geometry.append(('H', (hydrogen_x, hydrogen_y, hydrogen_z)))
+
+# Now, `geometry` contains all 6 carbons and 6 hydrogens!
+
+
 basis = 'sto-3g'  # Minimal Basis Set
 # basis = '6-31g'  # Larger basis set
 # basis = 'cc-pVDZ' # Even larger basis set!
