@@ -153,10 +153,6 @@ geometry = [('H', (0.0, 0.0, 0.0)), ('H', (0.0, 0.0, 0.74))]  # H2 Molecule
 #     ('Cl', (-2.7800, 0.0000, 0.0000))  
 # ]
 
-# The above are major atmospheric, oceanic, and soil components on Earth.
-# Proper organic chemistry is beyond the scope of this script,
-# but we give a memorable token example of a carbon ring.
-
 # Diatomic halogens:
 
 # Fluorine gas (F2)
@@ -171,6 +167,10 @@ geometry = [('H', (0.0, 0.0, 0.0)), ('H', (0.0, 0.0, 0.74))]  # H2 Molecule
 #     ('O', (1.6200, 0.0000, 0.0000)),  # Oxygen 1
 #     ('O', (-1.6200, 0.0000, 0.0000))  # Oxygen 2
 # ]
+
+# The above are major atmospheric, oceanic, and soil components on Earth.
+# Proper organic chemistry is beyond the scope of this script,
+# but we give a memorable token example of a carbon ring.
 
 # Benzene (C6H6)
 
