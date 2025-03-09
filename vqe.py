@@ -24,9 +24,6 @@ geometry = [('H', (0.0, 0.0, 0.0)), ('H', (0.0, 0.0, 0.74))]  # H2 Molecule
 
 # Carbon (and lighter):
 
-# geometry = [('C', (0.0000, 0.0000, 0.0000)), ('O', (0.0000, 0.0000, 1.128))]  # CO Molecule
-# geometry = [('C', (0.0000, 0.0000, 0.0000)), ('O', (0.0000, 0.0000, 1.16)), ('O', (0.0000, 0.0000, -1.16))]  # CO2 Molecule
-
 # Methane (CH4):
 # geometry = [
 #     ('C', (0.0000, 0.0000, 0.0000)),  # Central carbon
@@ -52,6 +49,8 @@ geometry = [('H', (0.0, 0.0, 0.0)), ('H', (0.0, 0.0, 0.74))]  # H2 Molecule
 
 # geometry = [('O', (0.0, 0.0, 0.0)), ('H', (0.0, 0.0, 9.6))]  # OH+ Radical
 # geometry = [('O', (0.0000, 0.0000, 0.0000)), ('H', (0.7586, 0.0000, 0.5043)),  ('H', (-0.7586, 0.0000, 0.5043))]  # H2O Molecule
+# geometry = [('C', (0.0000, 0.0000, 0.0000)), ('O', (0.0000, 0.0000, 1.128))]  # CO Molecule
+# geometry = [('C', (0.0000, 0.0000, 0.0000)), ('O', (0.0000, 0.0000, 1.16)), ('O', (0.0000, 0.0000, -1.16))]  # CO2 Molecule
 # geometry = [('O', (0.0, 0.0, 0.0)), ('N', (0.0, 0.0, 1.55))]  # NO Molecule
 # geometry = [('O', (0.0, 0.0, 0.0)), ('N', (0.0, 0.0, 11.5))]  # NO+ Radical
 
@@ -70,7 +69,7 @@ geometry = [('H', (0.0, 0.0, 0.0)), ('H', (0.0, 0.0, 0.74))]  # H2 Molecule
 #     ('O', (-1.2780 * np.cos(np.deg2rad(117)), 1.2780 * np.sin(np.deg2rad(117)), 0.0000))  # The other oxygen
 # ]
 
-# H3O+ (Hydronium Ion) Geometry
+# H3O+ (Hydronium Ion):
 # bond_length = 10.3  # Scaled bond length (1.03 Å in script units)
 # bond_angle = 113.0  # Approximate bond angle of H3O+
 # Convert angles to radians
@@ -107,7 +106,7 @@ geometry = [('H', (0.0, 0.0, 0.0)), ('H', (0.0, 0.0, 0.74))]  # H2 Molecule
 #     ('O', (-0.7100, -1.2290, 0.0000))  
 # ]
 
-# Sulfate ion (SO4, -2 charge, major oceanic anion, ionically bonds to Mg++):
+# Sulfate ion (SO4--, major oceanic anion, ionically bonds to Mg++):
 # geometry = [
 #     ('S', (0.0000, 0.0000, 0.0000)),  
 #     ('O', (1.4900, 0.0000, 0.0000)),  
