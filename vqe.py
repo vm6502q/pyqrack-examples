@@ -40,6 +40,19 @@ geometry = [('H', (0.0, 0.0, 0.0)), ('H', (0.0, 0.0, 0.74))]  # H2 Molecule
 # geometry = [('C', (0.0000, 0.0000, 0.0000)), ('O', (0.0000, 0.0000, 1.128))]  # CO Molecule
 # geometry = [('C', (0.0000, 0.0000, 0.0000)), ('O', (0.0000, 0.0000, 1.16)), ('O', (0.0000, 0.0000, -1.16))]  # CO2 Molecule
 
+# H3O+ (Hydronium Ion) Geometry
+# bond_length = 10.3  # Scaled bond length (1.03 Å in script units)
+# bond_angle = 113.0  # Approximate bond angle of H3O+
+# Convert angles to radians
+# theta = np.deg2rad(bond_angle)
+# Final geometry list
+# geometry = [
+#     ('O', (0.0, 0.0, 0.0)),
+#     ('H', (bond_length, 0.0, 0.0)),
+#     ('H', (-bond_length * np.cos(theta), bond_length * np.sin(theta), 0.0)),
+#     ('H', (-bond_length * np.cos(theta), -bond_length * np.sin(theta), 0.0))
+# ]
+
 basis = 'sto-3g'  # Minimal Basis Set
 # basis = '6-31g'  # Larger basis set
 # basis = 'cc-pVDZ' # Even larger basis set!
