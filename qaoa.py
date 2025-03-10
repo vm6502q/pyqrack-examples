@@ -60,7 +60,7 @@ def objective(params):
 def optimize_qaoa(steps = 30, num_layers=2):
     params = np.random.uniform(0, np.pi, 2 * num_layers)
     opt = qml.AdagradOptimizer(stepsize=0.5)
-    for i in range(steps):
+    for _ in range(steps):
         params = opt.step(objective, params)
 
     return params  # Optimized parameters
