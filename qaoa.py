@@ -4,6 +4,13 @@
 import pennylane as qml
 from pennylane import numpy as np
 
+# Before running: Set environment variables
+# On command line or by .env file, you can set the following variables
+# QRACK_DISABLE_QUNIT_FIDELITY_GUARD=1: For large circuits, automatically "elide," for approximation
+# QRACK_NONCLIFFORD_ROUNDING_THRESHOLD=[0 to 1]: Sacrifices near-Clifford accuracy to reduce overhead
+# QRACK_QUNIT_SEPARABILITY_THRESHOLD=[0 to 1]: Rounds to separable states more aggressively
+# QRACK_QBDT_SEPARABILITY_THRESHOLD=[0 to 0.5]: Rounding for QBDD, if actually used
+
 # Define a simple 4-node graph for MAXCUT
 edges = [(0, 1), (0, 3), (1, 2), (2, 3)]
 # Number of qubits, also number of nodes
@@ -37,7 +44,13 @@ def cost_hamiltonian(gamma):
 # QAOA Mixer Hamiltonian
 def mixer_hamiltonian(beta):
     for qubit in range(num_qubits):
-        qml.RX(2 * beta, wires=qubit)
+        qml.S(wires=qubit)
+        qml.Hadamard(wires=qubit)
+        qml.RZ(2 * beta, wires=qubit)
+        qml.Hadamard(wires=qubit)
+        qml.adjoint(qml.S(wires=qubit))
+        # The above is the near-Clifford decomposition of RX:
+        # qml.RX(2 * beta, wires=qubit)
 
 # Define QAOA Circuit
 def qaoa_circuit(params):
