@@ -17,15 +17,15 @@ def bit_string_to_int(bit_string_sample):
     return int(2 ** np.arange(len(bit_string_sample)) @ bit_string_sample[::-1])
 
 def int_to_nodes(int_sample):
-    cut_edges = []
+    nodes = []
     i = 0
     while int_sample:
         if int_sample & 1:
-            cut_edges.append(edges[i])
+            nodes.append(i)
         int_sample = int_sample >> 1
         i = i + 1
 
-    return cut_edges
+    return nodes
 
 # QAOA Cost Hamiltonian (for MAXCUT)
 def cost_hamiltonian(gamma):
