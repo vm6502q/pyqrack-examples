@@ -3,11 +3,11 @@
 
 import pennylane as qml
 from pennylane import numpy as np
-import scipy.optimize
 
 # Define a simple 4-node graph for MAXCUT
-edges = [(0, 1), (1, 2), (2, 3), (3, 0)]  # Pentagon-like structure
-num_qubits = 4  # Number of nodes (also number of qubits)
+edges = [(0, 1), (0, 3), (1, 2), (2, 3)]
+# Number of qubits, also number of nodes
+num_qubits = len(edges)
 
 # Define Qrack as the backend
 dev = qml.device("qrack.simulator", wires=num_qubits)
@@ -20,7 +20,7 @@ def bitstring_to_int(bit_string_sample):
 def cost_hamiltonian(gamma):
     for edge in edges:
         qml.CNOT(wires=edge)
-        qml.RZ(2 * gamma, wires=edge[1])
+        qml.RZ(gamma, wires=edge[1])
         qml.CNOT(wires=edge)
 
 # QAOA Mixer Hamiltonian
@@ -51,18 +51,19 @@ def cost_function(params, return_samples=False):
         # sample bitstrings to obtain cuts
         return qml.sample()
 
-    return qml.expval(qml.sum(*(qml.PauliZ(edge[0]) @ qml.PauliZ(edge[1]) for edge in edges)))
+    return qml.expval(qml.sum(*(qml.PauliZ(n1) @ qml.PauliZ(n2) for n1, n2 in edges)))
 
 def objective(params):
     return -0.5 * (len(edges) - cost_function(params))
 
 # Classical optimizer
-def optimize_qaoa(num_layers=2):
-    np.random.seed(42)
-    init_params = np.random.uniform(0, np.pi, 2 * num_layers)
+def optimize_qaoa(steps = 30, num_layers=2):
+    params = np.random.uniform(0, np.pi, 2 * num_layers)
+    opt = qml.AdagradOptimizer(stepsize=0.5)
+    for i in range(steps):
+        params = opt.step(objective, params)
 
-    opt_result = scipy.optimize.minimize(objective, init_params, method="COBYLA")
-    return opt_result.x  # Optimized parameters
+    return params  # Optimized parameters
 
 # Run QAOA Optimization
 optimal_params = optimize_qaoa()
