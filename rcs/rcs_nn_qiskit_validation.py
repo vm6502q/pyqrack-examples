@@ -10,7 +10,7 @@ from collections import Counter
 
 from scipy.stats import binom
 
-from pyqrack import QrackSimulator, Pauli
+from pyqrack import QrackSimulator
 
 from qiskit import QuantumCircuit
 from qiskit.compiler import transpile
@@ -29,87 +29,70 @@ def factor_width(width):
     return (row_len, col_len)
 
 
-def cx(circ, sim, q1, q2):
-    circ.cx(q1, q2)
-    sim.mcx([q1], q2)
+def cx(sim, q1, q2):
+    sim.cx(q1, q2)
 
 
-def cy(circ, sim, q1, q2):
-    circ.cy(q1, q2)
-    sim.mcy([q1], q2)
+def cy(sim, q1, q2):
+    sim.cy(q1, q2)
 
 
-def cz(circ, sim, q1, q2):
-    circ.cz(q1, q2)
-    sim.mcz([q1], q2)
+def cz(sim, q1, q2):
+    sim.cz(q1, q2)
 
 
-def acx(circ, sim, q1, q2):
-    circ.x(q1)
-    circ.cx(q1, q2)
-    circ.x(q1)
-    sim.macx([q1], q2)
+def acx(sim, q1, q2):
+    sim.x(q1)
+    sim.cx(q1, q2)
+    sim.x(q1)
 
 
-def acy(circ, sim, q1, q2):
-    circ.x(q1)
-    circ.cy(q1, q2)
-    circ.x(q1)
-    sim.macy([q1], q2)
+def acy(sim, q1, q2):
+    sim.x(q1)
+    sim.cy(q1, q2)
+    sim.x(q1)
 
 
-def acz(circ, sim, q1, q2):
-    circ.x(q1)
-    circ.cz(q1, q2)
-    circ.x(q1)
-    sim.macz([q1], q2)
+def acz(sim, q1, q2):
+    sim.x(q1)
+    sim.cz(q1, q2)
+    sim.x(q1)
 
 
-def swap(circ, sim, q1, q2):
-    circ.swap(q1, q2)
+def swap(sim, q1, q2):
     sim.swap(q1, q2)
 
 
-def iswap(circ, sim, q1, q2):
-    circ.iswap(q1, q2)
+def iswap(sim, q1, q2):
     sim.iswap(q1, q2)
 
 
-def iiswap(circ, sim, q1, q2):
-    circ.iswap(q1, q2)
-    circ.iswap(q1, q2)
-    circ.iswap(q1, q2)
-    sim.adjiswap(q1, q2)
+def iiswap(sim, q1, q2):
+    sim.iswap(q1, q2)
+    sim.iswap(q1, q2)
+    sim.iswap(q1, q2)
 
 
-def pswap(circ, sim, q1, q2):
-    circ.cz(q1, q2)
-    circ.swap(q1, q2)
-    sim.mcz([q1], q2)
+def pswap(sim, q1, q2):
+    sim.cz(q1, q2)
     sim.swap(q1, q2)
 
 
-def mswap(circ, sim, q1, q2):
-    circ.swap(q1, q2)
-    circ.cz(q1, q2)
+def mswap(sim, q1, q2):
     sim.swap(q1, q2)
-    sim.mcz([q1], q2)
+    sim.cz(q1, q2)
 
 
-def nswap(circ, sim, q1, q2):
-    circ.cz(q1, q2)
-    circ.swap(q1, q2)
-    circ.cz(q1, q2)
-    sim.mcz([q1], q2)
+def nswap(sim, q1, q2):
+    sim.cz(q1, q2)
     sim.swap(q1, q2)
-    sim.mcz([q1], q2)
+    sim.cz(q1, q2)
 
 
 def bench_qrack(width, depth):
     # This is a "nearest-neighbor" coupler random circuit.
     circ = QuantumCircuit(width)
     control = AerSimulator(method="statevector")
-    experiment = QrackSimulator(width)
     shots = 1 << (width + 2)
 
     lcv_range = range(width)
@@ -124,22 +107,8 @@ def bench_qrack(width, depth):
     for d in range(depth):
         # Single-qubit gates
         for i in lcv_range:
-            th = random.uniform(0, 2 * math.pi)
-            ph = random.uniform(0, 2 * math.pi)
-            lm = random.uniform(0, 2 * math.pi)
-            # x-z-x Euler axes
             circ.h(i)
-            circ.rz(th, i)
-            circ.h(i)
-            circ.rz(ph, i)
-            circ.h(i)
-            circ.rz(lm, i)
-            experiment.h(i)
-            experiment.r(Pauli.PauliZ, th, i)
-            experiment.h(i)
-            experiment.r(Pauli.PauliZ, ph, i)
-            experiment.h(i)
-            experiment.r(Pauli.PauliZ, lm, i)
+            circ.rz(random.uniform(0, 2 * math.pi), i)
 
         # Nearest-neighbor couplers:
         ############################
@@ -168,9 +137,11 @@ def bench_qrack(width, depth):
                     continue
 
                 g = random.choice(two_bit_gates)
-                g(circ, experiment, b1, b2)
+                g(circ, b1, b2)
 
-        
+        experiment = QrackSimulator(width)
+        experiment.run_qiskit_circuit(circ)
+
         circ_aer = transpile(circ, backend=control)
         circ_aer.save_statevector()
         job = control.run(circ_aer)
