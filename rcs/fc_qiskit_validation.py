@@ -20,22 +20,16 @@ from qiskit.quantum_info import Statevector
 
 def bench_qrack(width, depth, trials):
     # This is a "nearest-neighbor" coupler random circuit.
-    circ = QuantumCircuit(width)
     control = AerSimulator(method="statevector")
     shots = 1 << (width + 2)
 
     lcv_range = range(width)
     all_bits = list(lcv_range)
 
-    results = [{
-        'qubits': width,
-        'depth': depth,
-        'xeb': 0,
-        'hog_prob': 0,
-        'p-value': 1
-    }] * depth
+    results = []
 
     for trial in range(trials):
+        circ = QuantumCircuit(width)
         for d in range(depth):
             # Single-qubit gates
             for i in lcv_range:
@@ -64,9 +58,12 @@ def bench_qrack(width, depth, trials):
 
             stats = calc_stats(control_probs, experiment_counts, d + 1, shots)
 
-            results[d]['xeb'] += stats['xeb']
-            results[d]['hog_prob'] += stats['hog_prob']
-            results[d]['p-value'] *= stats['p-value']
+            if trial == 0:
+                results.append(stats)
+            else:
+                results[d]['xeb'] += stats['xeb']
+                results[d]['hog_prob'] += stats['hog_prob']
+                results[d]['p-value'] *= stats['p-value']
 
             if trial == (trials - 1):
                 results[d]['xeb'] /= trials
