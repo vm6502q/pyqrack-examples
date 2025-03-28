@@ -18,7 +18,7 @@ from qiskit_aer.backends import AerSimulator
 from qiskit.quantum_info import Statevector
 
 
-def bench_qrack(width, depth, trials):
+def bench_qrack(width, depth):
     # This is a "nearest-neighbor" coupler random circuit.
     circ = QuantumCircuit(width)
     control = AerSimulator(method="statevector")
@@ -27,52 +27,33 @@ def bench_qrack(width, depth, trials):
     lcv_range = range(width)
     all_bits = list(lcv_range)
 
-    results = [{
-        'qubits': width,
-        'depth': depth,
-        'xeb': 0,
-        'hog_prob': 0,
-        'p-value': 1
-    }] * depth
+    for d in range(depth):
+        # Single-qubit gates
+        for i in lcv_range:
+            th = random.uniform(0, 2 * math.pi)
+            ph = random.uniform(0, 2 * math.pi)
+            lm = random.uniform(0, 2 * math.pi)
+            circ.u(th, ph, lm, i)
 
-    for trial in range(trials):
-        for d in range(depth):
-            # Single-qubit gates
-            for i in lcv_range:
-                th = random.uniform(0, 2 * math.pi)
-                ph = random.uniform(0, 2 * math.pi)
-                lm = random.uniform(0, 2 * math.pi)
-                circ.u(th, ph, lm, i)
+        # 2-qubit couplers
+        unused_bits = all_bits.copy()
+        random.shuffle(unused_bits)
+        while len(unused_bits) > 1:
+            c = unused_bits.pop()
+            t = unused_bits.pop()
+            circ.cx(c, t)
 
-            # 2-qubit couplers
-            unused_bits = all_bits.copy()
-            random.shuffle(unused_bits)
-            while len(unused_bits) > 1:
-                c = unused_bits.pop()
-                t = unused_bits.pop()
-                circ.cx(c, t)
+        experiment = QrackSimulator(width)
+        experiment.run_qiskit_circuit(circ)
 
-            experiment = QrackSimulator(width)
-            experiment.run_qiskit_circuit(circ)
+        circ_aer = transpile(circ, backend=control)
+        circ_aer.save_statevector()
+        job = control.run(circ_aer)
 
-            circ_aer = transpile(circ, backend=control)
-            circ_aer.save_statevector()
-            job = control.run(circ_aer)
+        experiment_counts = dict(Counter(experiment.measure_shots(all_bits, shots)))
+        control_probs = Statevector(job.result().get_statevector()).probabilities()
 
-            experiment_counts = dict(Counter(experiment.measure_shots(all_bits, shots)))
-            control_probs = Statevector(job.result().get_statevector()).probabilities()
-
-            stats = calc_stats(control_probs, experiment_counts, d + 1, shots)
-
-            results[d]['xeb'] += stats['xeb']
-            results[d]['hog_prob'] += stats['hog_prob']
-            results[d]['p-value'] *= stats['p-value']
-
-            if trial == (trials - 1):
-                results[d]['xeb'] /= trials
-                results[d]['hog_prob'] /= trials
-                results[d]['p-value'] = results[d]['p-value'] ** (1 / trials)
-                print(results[d])
+        calc_stats(control_probs, experiment_counts, d + 1, shots)
 
 
 def calc_stats(ideal_probs, counts, depth, shots):
@@ -102,27 +83,24 @@ def calc_stats(ideal_probs, counts, depth, shots):
     # p-value of heavy output count, if method were actually 50/50 chance of guessing
     p_val = (1 - binom.cdf(sum_hog_counts - 1, shots, 1 / 2)) if sum_hog_counts > 0 else 1
 
-    return {
+    print({
         'qubits': n,
         'depth': depth,
         'xeb': xeb,
         'hog_prob': hog_prob,
         'p-value': p_val
-    }
+    })
 
 
 def main():
     if len(sys.argv) < 3:
-        raise RuntimeError('Usage: python3 fc_qiskit_validation.py [width] [depth] [trials]')
+        raise RuntimeError('Usage: python3 fc_qiskit_validation.py [width] [depth]')
 
     width = int(sys.argv[1])
     depth = int(sys.argv[2])
-    trials = 1
-    if len(sys.argv) > 3:
-        trials = int(sys.argv[3])
 
     # Run the benchmarks
-    bench_qrack(width, depth, trials)
+    bench_qrack(width, depth)
 
     return 0
 
