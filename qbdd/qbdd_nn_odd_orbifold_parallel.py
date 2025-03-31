@@ -137,12 +137,6 @@ def main():
 
     width = int(sys.argv[1])
 
-    row_len, col_len = factor_width(width)
-    if ((row_len & 1) == 0) or ((col_len & 1) == 0):
-        print("Row count=" + str(row_len))
-        print("Column count=" + str(col_len))
-        raise Exception("ERROR: Orbifold boundary conditions will overflow unless [width] can be factored as closely to square as the product of 2 odd whole numbers.")
-
     depth = int(sys.argv[2])
     
     shots = int(sys.argv[3])

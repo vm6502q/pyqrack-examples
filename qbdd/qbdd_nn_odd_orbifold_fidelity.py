@@ -100,9 +100,6 @@ def bench_qrack(width, depth):
     if col_len == 1:
         print("(Prime - skipped)")
         return
-    if ((col_len & 1) == 0) or ((row_len & 1) == 0):
-        print("(Not odd-by-odd - skipped)")
-        return
 
     gate_count = 0
 
