@@ -1,4 +1,4 @@
-# Ising model Trotterization as interpreted by (OpenAI GPT) "Elara"
+# Ising model Trotterization as interpreted by (OpenAI GPT) Elara
 # You likely want to specify environment variable QRACK_QTENSORNETWORK_THRESHOLD_QB=1
 
 import sys
