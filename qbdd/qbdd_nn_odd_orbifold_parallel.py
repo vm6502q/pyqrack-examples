@@ -121,14 +121,16 @@ def bench_qrack(width_depth):
                 g = random.choice(two_bit_gates)
                 g(sim, b1, b2)
 
+    fidelity_est = sim.get_unitary_fidelity()
+
     # Terminal measurement
     sim.m_all()
     
     time_result = time.perf_counter() - start
 
-    print("Width=" + str(width) + ", Depth=" + str(depth) + ": " + str(time_result) + " seconds. (Fidelity is unknown.)")
+    print("Width=" + str(width) + ", Depth=" + str(depth) + ": " + str(time_result) + " seconds, " + str(fidelity_est) + " out of 1.0 worst-case first-principles fidelity estimate.")
 
-    return time_result
+    return time_result, fidelity_est
 
 
 def main():
