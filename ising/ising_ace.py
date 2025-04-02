@@ -70,8 +70,8 @@ def main():
     sim = QrackSimulator(n_qubits)
     start = time.perf_counter()
     sim.run_qiskit_circuit(qc, shots=0)
-    result = sim.m_all()
     fidelity = sim.get_unitary_fidelity()
+    result = sim.m_all()
     
     print("Trotter steps: " + str(depth) + ", seconds: " + str(time.perf_counter() - start) + ", worst-case first-principles L2 norm fidelity: " + str(fidelity) + ".")
     print("Result: " + str(result))
