@@ -1,5 +1,5 @@
 # Ising model Trotterization as interpreted by (OpenAI GPT) Elara
-# You likely want to specify environment variable QRACK_QTENSORNETWORK_THRESHOLD_QB=1
+# You likely want to specify environment variable QRACK_MAX_PAGING_QB=28
 
 import sys
 import time
