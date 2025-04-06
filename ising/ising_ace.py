@@ -73,7 +73,7 @@ def main():
     fidelity = sim.get_unitary_fidelity()
     result = sim.m_all()
     
-    print("Trotter steps: " + str(depth) + ", seconds: " + str(time.perf_counter() - start) + ", worst-case first-principles L2 norm fidelity: " + str(fidelity) + ".")
+    print("Trotter steps: " + str(depth) + ", seconds: " + str(time.perf_counter() - start) + ", conservative first-principles XEB estimate: " + str(fidelity) + ".")
     print("Result: " + str(result))
 
     return 0
