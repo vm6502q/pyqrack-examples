@@ -17,6 +17,16 @@ from qiskit.quantum_info import Statevector
 
 from pyqrack import QrackSimulator
 
+def factor_width(width):
+    col_len = math.floor(math.sqrt(width))
+    while (((width // col_len) * col_len) != width):
+        col_len -= 1
+    row_len = width // col_len
+    if col_len == 1:
+        raise Exception("ERROR: Can't simulate prime number width!")
+
+    return row_len, col_len
+
 def trotter_step(circ, qubits, lattice_shape, J, h, dt):
     n_rows, n_cols = lattice_shape
     
@@ -56,19 +66,23 @@ def trotter_step(circ, qubits, lattice_shape, J, h, dt):
     return circ
 
 
-def calc_stats(ideal_probs, counts, shots):
+def calc_stats(ideal_probs, counts, shots, depth, ace_fidelity_est):
     # For QV, we compare probabilities of (ideal) "heavy outputs."
     # If the probability is above 2/3, the protocol certifies/passes the qubit width.
     n_pow = len(ideal_probs)
     n = int(round(math.log2(n_pow)))
     threshold = statistics.median(ideal_probs)
     u_u = statistics.mean(ideal_probs)
+    diff_sqr = 0
     numer = 0
     denom = 0
     sum_hog_counts = 0
     for i in range(n_pow):
         count = counts[i] if i in counts else 0
         ideal = ideal_probs[i]
+
+        # L2 distance
+        diff_sqr += (ideal - (count / shots)) ** 2
 
         # XEB / EPLG
         denom += (ideal - u_u) ** 2
@@ -78,6 +92,7 @@ def calc_stats(ideal_probs, counts, shots):
         if ideal > threshold:
             sum_hog_counts += count
 
+    l2_similarity = diff_sqr ** (1/2)
     hog_prob = sum_hog_counts / shots
     xeb = numer / denom
     # p-value of heavy output count, if method were actually 50/50 chance of guessing
@@ -85,6 +100,9 @@ def calc_stats(ideal_probs, counts, shots):
 
     return {
         'qubits': n,
+        'depth': depth,
+        'ace_fidelity_est': ace_fidelity_est,
+        'l2_similarity': l2_similarity,
         'xeb': xeb,
         'hog_prob': hog_prob,
         'p-value': p_val
@@ -93,10 +111,13 @@ def calc_stats(ideal_probs, counts, shots):
 
 def main():
     depth = 1
+    width = 56
     if len(sys.argv) > 1:
         depth = int(sys.argv[1])
+    if len(sys.argv) > 2:
+        width = int(sys.argv[2])
 
-    n_rows, n_cols = 7, 8
+    n_rows, n_cols = factor_width(width)
     n_qubits = n_rows * n_cols
     J, h, dt = -1.0, 2.0, 0.25
     theta = -math.pi / 6
@@ -121,10 +142,8 @@ def main():
     job = control.run(qc)
     experiment_counts = dict(Counter(experiment.measure_shots(list(range(n_qubits)), shots)))
     control_probs = Statevector(job.result().get_statevector()).probabilities()
-    
-    print("Trotter steps: " + str(depth))
-    print("Estimated fidelity: " + str(experiment_fidelity))
-    print("Empirical results: " + str(calc_stats(control_probs, experiment_counts, shots)))
+
+    print(calc_stats(control_probs, experiment_counts, shots, depth, experiment_fidelity))
 
     return 0
 
