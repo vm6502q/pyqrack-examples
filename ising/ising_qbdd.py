@@ -53,11 +53,15 @@ def main():
     if len(sys.argv) > 1:
         depth = int(sys.argv[1])
 
-    n_rows, n_cols = 8, 7
+    n_rows, n_cols = 7, 8
     n_qubits = n_rows * n_cols
-    J, h, dt = 1.0, 1.0, 0.1
+    J, h, dt = -1.0, 2.0, 0.25
+    theta = -math.pi / 6
 
     qc = QuantumCircuit(n_qubits)
+
+    for q in range(n_qubits):
+        qc.ry(theta, q)
 
     for _ in range(depth):
         trotter_step(qc, list(range(n_qubits)), (n_rows, n_cols), J, h, dt)
