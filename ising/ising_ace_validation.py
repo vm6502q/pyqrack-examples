@@ -115,7 +115,7 @@ def calc_stats(ideal_probs, counts, shots, depth, ace_fidelity_est, hamming_n):
         'l2_similarity': l2_similarity,
         'xeb': xeb,
         'hog_prob': hog_prob,
-        'hamming_distance_n': hamming_n,
+        'hamming_distance_n': min(hamming_n, n_pow >> 1),
         'hamming_distance_set_avg': avg_hamming_distance,
         'hamming_distance_corresponding_avg': avg_corresponding_hamming_distance
     }
