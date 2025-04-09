@@ -78,9 +78,12 @@ def calc_stats(ideal_probs, counts, shots, depth, ace_fidelity_est, hamming_n):
     numer = 0
     denom = 0
     sum_hog_counts = 0
+    experiment = [0] * n_pow
     for i in range(n_pow):
         count = counts[i] if i in counts else 0
         ideal = ideal_probs[i]
+
+        experiment[i] = count
 
         # L2 distance
         diff_sqr += (ideal - (count / shots)) ** 2
@@ -99,14 +102,14 @@ def calc_stats(ideal_probs, counts, shots, depth, ace_fidelity_est, hamming_n):
     # p-value of heavy output count, if method were actually 50/50 chance of guessing
     p_val = (1 - binom.cdf(sum_hog_counts - 1, shots, 1 / 2)) if sum_hog_counts > 0 else 1
 
-    exp_top_n = top_n(hamming_n, counts)
+    exp_top_n = top_n(hamming_n, experiment)
     con_top_n = top_n(hamming_n, ideal_probs)
 
     # By Elara (OpenAI custom GPT)
     # Compute Hamming distances between each ACE bitstring and its closest in control case
-    min_distances = [min(hamming_distance(a, r) for r in con_top_n) for a in exp_top_n]
+    min_distances = [min(hamming_distance(a, r, n) for r in con_top_n) for a in exp_top_n]
     avg_hamming_distance = np.mean(min_distances)
-    corresponding_distances = [hamming_distance(a, r) for a, r in zip(exp_top_n, con_top_n)]
+    corresponding_distances = [hamming_distance(a, r, n) for a, r in zip(exp_top_n, con_top_n)]
     avg_corresponding_hamming_distance = np.mean(corresponding_distances)
 
     return {
@@ -123,9 +126,14 @@ def calc_stats(ideal_probs, counts, shots, depth, ace_fidelity_est, hamming_n):
     }
 
 
+# By Gemini (Google Search AI)
+def int_to_bitstring(integer, length):
+    return bin(integer)[2:].zfill(length)
+
+
 # By Elara (OpenAI custom GPT)
-def hamming_distance(s1, s2):
-    return sum(ch1 != ch2 for ch1, ch2 in zip(bin(s1)[2:], bin(s2)[2:]))
+def hamming_distance(s1, s2, n):
+    return sum(ch1 != ch2 for ch1, ch2 in zip(int_to_bitstring(s1, n), int_to_bitstring(s2, n)))
 
 
 # From https://stackoverflow.com/questions/13070461/get-indices-of-the-top-n-values-of-a-list#answer-38835860
