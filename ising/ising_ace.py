@@ -13,6 +13,18 @@ from qiskit.compiler import transpile
 
 from pyqrack import QrackSimulator
 
+
+def factor_width(width):
+    col_len = math.floor(math.sqrt(width))
+    while (((width // col_len) * col_len) != width):
+        col_len -= 1
+    row_len = width // col_len
+    if col_len == 1:
+        raise Exception("ERROR: Can't simulate prime number width!")
+
+    return row_len, col_len
+
+
 def trotter_step(circ, qubits, lattice_shape, J, h, dt):
     n_rows, n_cols = lattice_shape
     
@@ -53,11 +65,13 @@ def trotter_step(circ, qubits, lattice_shape, J, h, dt):
 
 def main():
     depth = 1
+    n_qubits = 56
     if len(sys.argv) > 1:
         depth = int(sys.argv[1])
+    if len(sys.argv) > 2:
+        n_qubits = int(sys.argv[2])
 
-    n_rows, n_cols = 7, 8
-    n_qubits = n_rows * n_cols
+    n_rows, n_cols = factor_width(n_qubits)
     J, h, dt = -1.0, 2.0, 0.25
     theta = -math.pi / 6
 

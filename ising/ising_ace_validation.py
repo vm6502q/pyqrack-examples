@@ -1,5 +1,5 @@
 # Ising model Trotterization as interpreted by (OpenAI GPT) Elara
-# You likely want to specify environment variable QRACK_MAX_PAGING_QB=28
+# Run ./experiment.sh
 
 import math
 import numpy as np
@@ -7,8 +7,6 @@ import statistics
 import sys
 
 from collections import Counter
-
-from scipy.stats import binom
 
 from qiskit import QuantumCircuit
 from qiskit.circuit.library import RZZGate, RXGate
@@ -99,8 +97,6 @@ def calc_stats(ideal_probs, counts, shots, depth, ace_fidelity_est, hamming_n):
     l2_similarity = diff_sqr ** (1/2)
     hog_prob = sum_hog_counts / shots
     xeb = numer / denom
-    # p-value of heavy output count, if method were actually 50/50 chance of guessing
-    p_val = (1 - binom.cdf(sum_hog_counts - 1, shots, 1 / 2)) if sum_hog_counts > 0 else 1
 
     exp_top_n = top_n(hamming_n, experiment)
     con_top_n = top_n(hamming_n, ideal_probs)
@@ -119,7 +115,6 @@ def calc_stats(ideal_probs, counts, shots, depth, ace_fidelity_est, hamming_n):
         'l2_similarity': l2_similarity,
         'xeb': xeb,
         'hog_prob': hog_prob,
-        'p-value': p_val,
         'hamming_distance_n': hamming_n,
         'hamming_distance_set_avg': avg_hamming_distance,
         'hamming_distance_corresponding_avg': avg_corresponding_hamming_distance
@@ -138,24 +133,24 @@ def hamming_distance(s1, s2, n):
 
 # From https://stackoverflow.com/questions/13070461/get-indices-of-the-top-n-values-of-a-list#answer-38835860
 def top_n(n, a):
-    if n > len(a):
-        n = len(a)
+    median_index = len(a) >> 1
+    if n > median_index:
+        n = median_index
     return np.argsort(a)[-n:]
 
 
 def main():
-    depth = 1
-    width = 56
-    hamming_n = 10
+    depth = 10
+    n_qubits = 56
+    hamming_n = 100
     if len(sys.argv) > 1:
         depth = int(sys.argv[1])
     if len(sys.argv) > 2:
-        width = int(sys.argv[2])
+        n_qubits = int(sys.argv[2])
     if len(sys.argv) > 3:
         hamming_n = int(sys.argv[3])
 
-    n_rows, n_cols = factor_width(width)
-    n_qubits = n_rows * n_cols
+    n_rows, n_cols = factor_width(n_qubits)
     J, h, dt = -1.0, 2.0, 0.25
     theta = -math.pi / 6
     shots = 1 << (n_qubits + 6)
