@@ -105,8 +105,6 @@ def calc_stats(ideal_probs, counts, shots, depth, ace_fidelity_est, hamming_n):
     # Compute Hamming distances between each ACE bitstring and its closest in control case
     min_distances = [min(hamming_distance(a, r, n) for r in con_top_n) for a in exp_top_n]
     avg_hamming_distance = np.mean(min_distances)
-    corresponding_distances = [hamming_distance(a, r, n) for a, r in zip(exp_top_n, con_top_n)]
-    avg_corresponding_hamming_distance = np.mean(corresponding_distances)
 
     return {
         'qubits': n,
@@ -117,7 +115,6 @@ def calc_stats(ideal_probs, counts, shots, depth, ace_fidelity_est, hamming_n):
         'hog_prob': hog_prob,
         'hamming_distance_n': min(hamming_n, n_pow >> 1),
         'hamming_distance_set_avg': avg_hamming_distance,
-        'hamming_distance_corresponding_avg': avg_corresponding_hamming_distance
     }
 
 
