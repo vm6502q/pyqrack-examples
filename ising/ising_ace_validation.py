@@ -2,6 +2,7 @@
 # You likely want to specify environment variable QRACK_MAX_PAGING_QB=28
 
 import math
+import numpy as np
 import statistics
 import sys
 
@@ -66,7 +67,7 @@ def trotter_step(circ, qubits, lattice_shape, J, h, dt):
     return circ
 
 
-def calc_stats(ideal_probs, counts, shots, depth, ace_fidelity_est):
+def calc_stats(ideal_probs, counts, shots, depth, ace_fidelity_est, average_hamming_distance, hamming_n):
     # For QV, we compare probabilities of (ideal) "heavy outputs."
     # If the probability is above 2/3, the protocol certifies/passes the qubit width.
     n_pow = len(ideal_probs)
@@ -105,17 +106,34 @@ def calc_stats(ideal_probs, counts, shots, depth, ace_fidelity_est):
         'l2_similarity': l2_similarity,
         'xeb': xeb,
         'hog_prob': hog_prob,
-        'p-value': p_val
+        'p-value': p_val,
+        'hamming_distance_avg': average_hamming_distance,
+        'hamming_distance_n': hamming_n
     }
+
+
+# By Elara (OpenAI custom GPT)
+def hamming_distance(s1, s2):
+    return sum(ch1 != ch2 for ch1, ch2 in zip(bin(s1)[2:], bin(s2)[2:]))
+
+
+# From https://stackoverflow.com/questions/13070461/get-indices-of-the-top-n-values-of-a-list#answer-38835860
+def top_n(n, a):
+    if n > len(a):
+        n = len(a)
+    return np.argsort(a)[-n:]
 
 
 def main():
     depth = 1
     width = 56
+    hamming_n = 10
     if len(sys.argv) > 1:
         depth = int(sys.argv[1])
     if len(sys.argv) > 2:
         width = int(sys.argv[2])
+    if len(sys.argv) > 3:
+        hamming_n = int(sys.argv[3])
 
     n_rows, n_cols = factor_width(width)
     n_qubits = n_rows * n_cols
@@ -143,7 +161,15 @@ def main():
     experiment_counts = dict(Counter(experiment.measure_shots(list(range(n_qubits)), shots)))
     control_probs = Statevector(job.result().get_statevector()).probabilities()
 
-    print(calc_stats(control_probs, experiment_counts, shots, depth, experiment_fidelity))
+    exp_top_n = top_n(hamming_n, experiment_counts)
+    con_top_n = top_n(hamming_n, control_probs)
+
+    # By Elara (OpenAI custom GPT)
+    # Compute Hamming distances between each ACE bitstring and its closest in control case
+    min_distances = [min(hamming_distance(a, r) for r in con_top_n) for a in exp_top_n]
+    average_hamming_distance = np.mean(min_distances)
+
+    print(calc_stats(control_probs, experiment_counts, shots, depth, experiment_fidelity, average_hamming_distance, hamming_n))
 
     return 0
 
