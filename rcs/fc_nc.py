@@ -34,7 +34,7 @@ def bench_qrack(width, depth):
             experiment.mcx([c], t)
 
     # Compare this case on single amplitudes:
-    experiment.prob_perm(0)
+    experiment.prob_perm(all_bits, [False] * len(all_bits))
 
     interval = time.perf_counter() - start
 
@@ -51,7 +51,7 @@ def main():
     # Run the benchmarks
     result = bench_qrack(width, depth)
     # Calc. and print the results
-    print("Width=" + str(width) + ", Depth=" + str(depth) + ", Seconds=" + str(result))
+    print("Width=" + str(width) + ", Depth=" + str(depth) + ", Seconds for amplitude |0> (exact)=" + str(result))
 
     return 0
 
