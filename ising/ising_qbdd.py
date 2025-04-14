@@ -68,7 +68,7 @@ def main():
     for _ in range(depth):
         trotter_step(qc, list(range(n_qubits)), (n_rows, n_cols), J, h, dt)
 
-    basis_gates = ["rz", "h", "x", "y", "z", "sx", "sxdg", "s", "sdg", "t", "tdg", "cx", "cy", "cz", "swap"]
+    basis_gates = ["rz", "h", "x", "y", "z", "sx", "sxdg", "s", "sdg", "t", "tdg", "cx", "cy", "cz", "swap", "iswap"]
     qc = transpile(qc, basis_gates=basis_gates)
 
     sim = QrackSimulator(n_qubits, isBinaryDecisionTree=True)
