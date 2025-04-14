@@ -33,10 +33,9 @@ def bench_qrack(width, depth, trials):
         for d in range(depth):
             # Single-qubit gates
             for i in lcv_range:
-                th = random.uniform(0, 2 * math.pi)
-                ph = random.uniform(0, 2 * math.pi)
-                lm = random.uniform(0, 2 * math.pi)
-                circ.u(th, ph, lm, i)
+                for _ in range(3):
+                    circ.h(i)
+                    circ.rz(random.uniform(0, 2 * math.pi), i)
 
             # 2-qubit couplers
             unused_bits = all_bits.copy()
