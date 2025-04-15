@@ -56,21 +56,14 @@ def bench_qrack(n):
 
                 circ.ucmtrx([b1], x_op, b2, 1)
 
-    # Dig into the (open source) code for yourself:
-    # Qrack does NOT have a special-case optimization
-    # when appending specifically the circuit inverse;
-    # it just simplifies to identity, gate-by-gate.
-    # (This is not necessarily true for every possible
-    # "mirror circuit," i.e. any circuit that
-    # simplifies to identity operator.)
+    shots = 100
     start = time.perf_counter()
     sim = QrackSimulator(n)
     circ.run(sim)
     circ.inverse().run(sim)
-    if sim.m_all() != 0:
-        raise Exception("Mirror circuit failed!")
+    results = sim.measure_shots(all_bits, shots)
     seconds = time.perf_counter() - start
-    fidelity = sim.get_unitary_fidelity()
+    fidelity = results.count(0) / shots
 
     return (seconds, fidelity)
 
