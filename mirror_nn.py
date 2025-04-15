@@ -8,6 +8,10 @@ import time
 from pyqrack import QrackSimulator, QrackCircuit
 
 
+def count_set_bits(n):
+        return bin(n).count('1')
+
+
 def bench_qrack(n):
     circ = QrackCircuit()
 
@@ -64,9 +68,9 @@ def bench_qrack(n):
     circ.inverse().run(sim)
     results = sim.measure_shots(all_bits, shots)
     seconds = time.perf_counter() - start
-    fidelity = results.count(0) / shots
+    hamming_distance = sum(count_set_bits(r) for r in results) / shots
 
-    return (seconds, fidelity)
+    return (seconds, hamming_distance)
 
 
 def main():
@@ -78,7 +82,7 @@ def main():
 
     print(n, "qubits,",
         results[0], "seconds,",
-        results[1], "fidelity"
+        results[1], "average Hamming distance"
     )
 
     return 0
