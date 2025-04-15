@@ -12,6 +12,7 @@ def bench_qrack(n):
     circ = QrackCircuit()
 
     lcv_range = range(n)
+    all_bits = list(lcv_range)
     x_op = [0, 1, 1, 0]
     gateSequence = [ 0, 3, 2, 1, 2, 1, 0, 3 ]
     row_len = math.ceil(math.sqrt(n))
