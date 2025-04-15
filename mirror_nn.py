@@ -65,12 +65,15 @@ def bench_qrack(n):
     start = time.perf_counter()
     sim = QrackSimulator(n)
     circ.run(sim)
+    midpoint = sim.measure_shots(all_bits, shots)
     circ.inverse().run(sim)
-    results = sim.measure_shots(all_bits, shots)
+    terminal = sim.measure_shots(all_bits, shots)
     seconds = time.perf_counter() - start
-    hamming_distance = sum(count_set_bits(r) for r in results) / shots
 
-    return (seconds, hamming_distance)
+    hamming_weight = sum(count_set_bits(r) for r in midpoint) / shots
+    hamming_distance = sum(count_set_bits(r) for r in terminal) / shots
+
+    return (seconds, hamming_weight, hamming_distance)
 
 
 def main():
@@ -82,7 +85,8 @@ def main():
 
     print(n, "qubits,",
         results[0], "seconds,",
-        results[1], "average Hamming distance"
+        results[1], "average mirror mid-point Hamming weight",
+        results[2], "average mirror terminal Hamming distance"
     )
 
     return 0
