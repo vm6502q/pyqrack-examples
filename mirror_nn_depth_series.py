@@ -3,12 +3,8 @@
 
 import math
 import random
-import statistics
 import sys
-
-from collections import Counter
-
-from scipy.stats import binom
+import time
 
 from pyqrack import QrackSimulator
 
@@ -96,13 +92,13 @@ def bench_qrack(width, depth, trials):
     shots = 100
     lcv_range = range(width)
     all_bits = list(lcv_range)
-    
+
     # Nearest-neighbor couplers:
     gateSequence = [ 0, 3, 2, 1, 2, 1, 0, 3 ]
     two_bit_gates = swap, pswap, mswap, nswap, iswap, iiswap, cx, cy, cz, acx, acy, acz
-    
+
     row_len, col_len = factor_width(width)
-    
+
     results = []
 
     for trial in range(trials):
@@ -147,7 +143,7 @@ def bench_qrack(width, depth, trials):
             midpoint = experiment.measure_shots(all_bits, shots)
             experiment.run_qiskit_circuit(circ.inverse())
             terminal = experiment.measure_shots(all_bits, shots)
-            
+
             hamming_weight = sum(count_set_bits(r) for r in midpoint) / shots
             hamming_distance = sum(count_set_bits(r) for r in terminal) / shots
 
