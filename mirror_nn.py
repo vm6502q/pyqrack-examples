@@ -24,6 +24,9 @@ def bench_qrack(n):
     for _ in lcv_range:
         # Single-qubit gates
         for i in lcv_range:
+            if random.randint(0, 1):
+                circ.mtrx([0, 1, 1, 0], i)
+
             th = random.uniform(0, 2 * math.pi)
             ph = random.uniform(0, 2 * math.pi)
             lm = random.uniform(0, 2 * math.pi)
