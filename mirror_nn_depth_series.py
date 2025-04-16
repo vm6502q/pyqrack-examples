@@ -157,12 +157,15 @@ def bench_qrack(width, depth, trials):
 
             # Uncompute the experiment
             experiment.run_qiskit_circuit(circ.inverse())
-
-            # Check whether the experiment is observably uncomputed.
+            # Uncompute state preparation
             for bit_index in range(width):
                 if (rand_perm >> bit_index) & 1:
                     experiment.x(bit_index)
+
+            # Check whether the experiment and state preparation
+            # ("...and measurement", SPAM) is observably uncomputed.
             terminal = experiment.measure_shots(all_bits, shots)
+
             # Experiment results
             hamming_weight = sum(count_set_bits(r) for r in midpoint) / shots
             # Validation

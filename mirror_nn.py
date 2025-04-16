@@ -138,15 +138,36 @@ def bench_qrack(width, depth, trials):
                     g = random.choice(two_bit_gates)
                     g(circ, b1, b2)
 
-        start = time.perf_counter()
-        experiment = QrackSimulator(width)
-        experiment.run_qiskit_circuit(circ)
-        midpoint = experiment.measure_shots(all_bits, shots)
-        experiment.run_qiskit_circuit(circ.inverse())
-        terminal = experiment.measure_shots(all_bits, shots)
-        seconds = time.perf_counter() - start
+        # Set isTensorNetwork=False to eliminate the possibility of
+        # gate cancellation between the two legs of the mirror circuit.
+        experiment = QrackSimulator(width, isTensorNetwork=False)
 
+        # To ensure no dependence on initial |0> state,
+        # initialize to a random permutation.
+        rand_perm = random.randint(0, n_perm - 1)
+        for bit_index in range(width):
+            if (rand_perm >> bit_index) & 1:
+                experiment.x(bit_index)
+
+        # Run the experiment.
+        experiment.run_qiskit_circuit(circ)
+        # Collect the experimental observable results.
+        midpoint = experiment.measure_shots(all_bits, shots)
+
+        # Uncompute the experiment
+        experiment.run_qiskit_circuit(circ.inverse())
+        # Uncompute state preparation
+        for bit_index in range(width):
+            if (rand_perm >> bit_index) & 1:
+                experiment.x(bit_index)
+
+        # Check whether the experiment and state preparation
+        # ("...and measurement", SPAM) is observably uncomputed.
+        terminal = experiment.measure_shots(all_bits, shots)
+
+        # Experiment results
         hamming_weight = sum(count_set_bits(r) for r in midpoint) / shots
+        # Validation
         hamming_distance = sum(count_set_bits(r) for r in terminal) / shots
 
         return seconds, hamming_weight, hamming_distance
