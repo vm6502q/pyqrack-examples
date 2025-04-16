@@ -138,7 +138,7 @@ def bench_qrack(width, depth, trials):
                     g = random.choice(two_bit_gates)
                     g(circ, b1, b2)
 
-            # Set isTensorNetwork=False to eliminate possibility of
+            # Set isTensorNetwork=False to eliminate the possibility of
             # gate cancellation between the two legs of the mirror circuit.
             experiment = QrackSimulator(width, isTensorNetwork=False)
             experiment.run_qiskit_circuit(circ)
