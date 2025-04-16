@@ -90,6 +90,7 @@ def nswap(sim, q1, q2):
 def bench_qrack(width, depth, trials):
     # This is a "nearest-neighbor" coupler random circuit.
     shots = 100
+    n_perm = 1 << width
     lcv_range = range(width)
     all_bits = list(lcv_range)
 
@@ -141,12 +142,30 @@ def bench_qrack(width, depth, trials):
             # Set isTensorNetwork=False to eliminate the possibility of
             # gate cancellation between the two legs of the mirror circuit.
             experiment = QrackSimulator(width, isTensorNetwork=False)
-            experiment.run_qiskit_circuit(circ)
-            midpoint = experiment.measure_shots(all_bits, shots)
-            experiment.run_qiskit_circuit(circ.inverse())
-            terminal = experiment.measure_shots(all_bits, shots)
 
+            # To ensure no dependence on initial |0> state,
+            # initialize to a random permutation.
+            rand_perm = random.randint(0, n_perm - 1)
+            for bit_index in range(width):
+                if (rand_perm >> bit_index) & 1:
+                    experiment.x(bit_index)
+
+            # Run the experiment.
+            experiment.run_qiskit_circuit(circ)
+            # Collect the experimental observable results.
+            midpoint = experiment.measure_shots(all_bits, shots)
+
+            # Uncompute the experiment
+            experiment.run_qiskit_circuit(circ.inverse())
+
+            # Check whether the experiment is observably uncomputed.
+            for bit_index in range(width):
+                if (rand_perm >> bit_index) & 1:
+                    experiment.x(bit_index)
+            terminal = experiment.measure_shots(all_bits, shots)
+            # Experiment results
             hamming_weight = sum(count_set_bits(r) for r in midpoint) / shots
+            # Validation
             hamming_distance = sum(count_set_bits(r) for r in terminal) / shots
 
             if trial == 0:
