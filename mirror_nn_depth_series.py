@@ -152,7 +152,7 @@ def bench_qrack(width, depth, trials):
             hamming_distance = sum(count_set_bits(r) for r in terminal) / shots
 
             if trial == 0:
-                results.append({ 'qubits': width, 'depth': d, 'midpoint_weight': hamming_weight, 'terminal_distance': hamming_distance })
+                results.append({ 'qubits': width, 'depth': d + 1, 'midpoint_weight': hamming_weight, 'terminal_distance': hamming_distance })
             else:
                 results[d]['midpoint_weight'] += hamming_weight
                 results[d]['terminal_distance'] += hamming_distance
