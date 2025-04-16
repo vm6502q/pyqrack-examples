@@ -63,7 +63,7 @@ def main():
 
     print(n, "qubits,",
         results[0], "seconds,",
-        results[1], "average mirror mid-point Hamming weight",
+        results[1], "average mirror mid-point Hamming weight,",
         results[2], "average mirror terminal Hamming distance"
     )
 
