@@ -88,7 +88,7 @@ def bench_qrack(width, depth, trials, is_obfuscated):
         # ("...and measurement", SPAM) is observably uncomputed.
         terminal = experiment.measure_shots(all_bits, shots)
 
-        backward_seconds = time.perf_counter() - (transpile_seconds + start)
+        backward_seconds = time.perf_counter() - (transpile_seconds + forward_seconds + start)
 
         # Experiment results
         hamming_weight = sum(count_set_bits(r) for r in midpoint) / shots

@@ -174,7 +174,7 @@ def bench_qrack(width, depth, trials, is_obfuscated):
         # Optionally "obfuscate" the circuit adjoint.
         adj_circ = (transpile(circ, optimization_level=3) if is_obfuscated else circ).inverse()
 
-        transpile_seconds = time.perf_counter() - (forward_seconds + start)
+        backward_seconds = time.perf_counter() - (transpile_seconds + forward_seconds + start)
 
         # Uncompute the experiment
         experiment.run_qiskit_circuit(adj_circ)
