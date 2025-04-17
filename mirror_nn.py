@@ -105,6 +105,7 @@ def bench_qrack(width, depth, trials, is_obfuscated):
         'depth': depth,
         'trials': trials,
         'forward_seconds_avg': 0,
+        'transpile_seconds_avg': 0,
         'backward_seconds_avg': 0,
         'fidelity_avg': 0,
         'midpoint_weight_avg': 0,
@@ -173,6 +174,8 @@ def bench_qrack(width, depth, trials, is_obfuscated):
         # Optionally "obfuscate" the circuit adjoint.
         adj_circ = (transpile(circ, optimization_level=3) if is_obfuscated else circ).inverse()
 
+        transpile_seconds = time.perf_counter() - (forward_seconds + start)
+
         # Uncompute the experiment
         experiment.run_qiskit_circuit(adj_circ)
         # Uncompute state preparation
@@ -184,7 +187,7 @@ def bench_qrack(width, depth, trials, is_obfuscated):
         # ("...and measurement", SPAM) is observably uncomputed.
         terminal = experiment.measure_shots(all_bits, shots)
 
-        backward_seconds = time.perf_counter() - (forward_seconds + start)
+        backward_seconds = time.perf_counter() - (transpile_seconds + start)
 
         # Experiment results
         hamming_weight = sum(count_set_bits(r) for r in midpoint) / shots
@@ -192,6 +195,7 @@ def bench_qrack(width, depth, trials, is_obfuscated):
         hamming_distance = sum(count_set_bits(r) for r in terminal) / shots
 
         results['forward_seconds_avg'] += forward_seconds
+        results['transpile_seconds_avg'] += transpile_seconds
         results['backward_seconds_avg'] += backward_seconds
         results['fidelity_avg'] += terminal.count(0) / shots
         results['midpoint_weight_avg'] += hamming_weight
@@ -199,6 +203,7 @@ def bench_qrack(width, depth, trials, is_obfuscated):
         results['hamming_fidelity_avg'] += (hamming_weight - hamming_distance) / hamming_weight
 
     results['forward_seconds_avg'] /= trials
+    results['transpile_seconds_avg'] /= trials
     results['backward_seconds_avg'] /= trials
     results['fidelity_avg'] /= trials
     results['midpoint_weight_avg'] /= trials
