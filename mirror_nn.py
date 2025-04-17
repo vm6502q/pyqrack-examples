@@ -87,7 +87,7 @@ def nswap(sim, q1, q2):
     sim.cz(q1, q2)
 
 
-def bench_qrack(width, depth, trials):
+def bench_qrack(width, depth, trials, is_obfuscated):
     # This is a "nearest-neighbor" coupler random circuit.
     shots = 100
     n_perm = 1 << width
@@ -104,7 +104,9 @@ def bench_qrack(width, depth, trials):
         'qubits': width,
         'depth': depth,
         'trials': trials,
-        'seconds_avg': 0,
+        'forward_seconds_avg': 0,
+        'backward_seconds_avg': 0,
+        'mirror_seconds_avg': 0,
         'midpoint_weight_avg': 0,
         'terminal_distance_avg': 0,
         'fidelity_avg': 0,
@@ -167,6 +169,8 @@ def bench_qrack(width, depth, trials):
         # Collect the experimental observable results.
         midpoint = experiment.measure_shots(all_bits, shots)
 
+        forward_seconds = time.perf_counter() - start
+
         # Optionally "obfuscate" the circuit adjoint.
         adj_circ = (transpile(circ, optimization_level=3) if is_obfuscated else circ).inverse()
 
@@ -181,20 +185,22 @@ def bench_qrack(width, depth, trials):
         # ("...and measurement", SPAM) is observably uncomputed.
         terminal = experiment.measure_shots(all_bits, shots)
 
-        seconds = time.perf_counter() - start
+        backward_seconds = time.perf_counter() - (forward_seconds + start)
 
         # Experiment results
         hamming_weight = sum(count_set_bits(r) for r in midpoint) / shots
         # Validation
         hamming_distance = sum(count_set_bits(r) for r in terminal) / shots
 
-        results['seconds_avg'] += seconds
+        results['forward_seconds_avg'] += forward_seconds
+        results['backward_seconds_avg'] += backward_seconds
         results['fidelity_avg'] += terminal.count(0) / shots
         results['midpoint_weight_avg'] += hamming_weight
         results['terminal_distance_avg'] += hamming_distance
         results['hamming_fidelity_avg'] += (hamming_weight - hamming_distance) / hamming_weight
 
-    results['seconds_avg'] /= trials
+    results['forward_seconds_avg'] /= trials
+    results['backward_seconds_avg'] /= trials
     results['fidelity_avg'] /= trials
     results['midpoint_weight_avg'] /= trials
     results['terminal_distance_avg'] /= trials
@@ -216,7 +222,7 @@ def main():
         trials = (sys.argv[4] not in ['False', '0'])
 
     # Run the benchmarks
-    print(bench_qrack(width, depth, trials))
+    print(bench_qrack(width, depth, trials, is_obfuscated))
 
     return 0
 
