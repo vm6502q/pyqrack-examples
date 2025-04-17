@@ -212,6 +212,7 @@ def main():
     width = int(sys.argv[1])
     depth = int(sys.argv[2])
     trials = 1
+    is_obfuscated = False
     if len(sys.argv) > 3:
         trials = int(sys.argv[3])
     if len(sys.argv) > 4:
