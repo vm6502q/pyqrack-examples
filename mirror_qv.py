@@ -17,10 +17,11 @@ def count_set_bits(n):
 def bench_qrack(width, depth, trials):
     # This is a "nearest-neighbor" coupler random circuit.
     shots = 100
+    n_perm = 1 << width
     lcv_range = range(width)
     all_bits = list(lcv_range)
 
-    results = { 'qubits': width, 'depth': depth, 'midpoint_weight': 0, 'terminal_distance': 0 }
+    results = { 'qubits': width, 'depth': depth, 'trials': trials, 'seconds_avg': 0, 'midpoint_weight_avg': 0, 'terminal_distance_avg': 0 }
 
     for trial in range(trials):
         circ = QuantumCircuit(width)
@@ -40,21 +41,48 @@ def bench_qrack(width, depth, trials):
                 circ.cx(c, t)
 
         start = time.perf_counter()
-        sim = QrackSimulator(width)
-        sim.run_qiskit_circuit(circ)
-        midpoint = sim.measure_shots(all_bits, shots)
-        sim.run_qiskit_circuit(circ.inverse())
-        terminal = sim.measure_shots(all_bits, shots)
+
+        # Set isTensorNetwork=False to eliminate the possibility of
+        # gate cancellation between the two legs of the mirror circuit.
+        experiment = QrackSimulator(width, isTensorNetwork=False)
+
+        # To ensure no dependence on initial |0> state,
+        # initialize to a random permutation.
+        rand_perm = random.randint(0, n_perm - 1)
+        for bit_index in range(width):
+            if (rand_perm >> bit_index) & 1:
+                experiment.x(bit_index)
+
+        # Run the experiment.
+        experiment.run_qiskit_circuit(circ)
+        # Collect the experimental observable results.
+        midpoint = experiment.measure_shots(all_bits, shots)
+
+        # Uncompute the experiment
+        experiment.run_qiskit_circuit(circ.inverse())
+        # Uncompute state preparation
+        for bit_index in range(width):
+            if (rand_perm >> bit_index) & 1:
+                experiment.x(bit_index)
+
+        # Check whether the experiment and state preparation
+        # ("...and measurement", SPAM) is observably uncomputed.
+        terminal = experiment.measure_shots(all_bits, shots)
+
         seconds = time.perf_counter() - start
 
+        # Experiment results
         hamming_weight = sum(count_set_bits(r) for r in midpoint) / shots
+        # Validation
         hamming_distance = sum(count_set_bits(r) for r in terminal) / shots
 
-        results['midpoint_weight'] += hamming_weight
-        results['terminal_distance'] += hamming_distance
+        results['seconds_avg'] += seconds
+        results['midpoint_weight_avg'] += hamming_weight
+        results['terminal_distance_avg'] += hamming_distance
 
-    results['midpoint_weight'] /= trials
-    results['terminal_distance'] /= trials
+    results['seconds_avg'] /= trials
+    results['midpoint_weight_avg'] /= trials
+    results['terminal_distance_avg'] /= trials
 
     return results
 

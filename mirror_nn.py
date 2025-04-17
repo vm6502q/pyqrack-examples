@@ -99,7 +99,7 @@ def bench_qrack(width, depth, trials):
 
     row_len, col_len = factor_width(width)
 
-    results = []
+    results = { 'qubits': width, 'depth': depth, 'trials': trials, 'seconds_avg': 0, 'midpoint_weight_avg': 0, 'terminal_distance_avg': 0 }
 
     for trial in range(trials):
         circ = QuantumCircuit(width)
@@ -138,6 +138,8 @@ def bench_qrack(width, depth, trials):
                     g = random.choice(two_bit_gates)
                     g(circ, b1, b2)
 
+        start = time.perf_counter()
+
         # Set isTensorNetwork=False to eliminate the possibility of
         # gate cancellation between the two legs of the mirror circuit.
         experiment = QrackSimulator(width, isTensorNetwork=False)
@@ -165,12 +167,22 @@ def bench_qrack(width, depth, trials):
         # ("...and measurement", SPAM) is observably uncomputed.
         terminal = experiment.measure_shots(all_bits, shots)
 
+        seconds = time.perf_counter() - start
+
         # Experiment results
         hamming_weight = sum(count_set_bits(r) for r in midpoint) / shots
         # Validation
         hamming_distance = sum(count_set_bits(r) for r in terminal) / shots
 
-        return seconds, hamming_weight, hamming_distance
+        results['seconds_avg'] += seconds
+        results['midpoint_weight_avg'] += hamming_weight
+        results['terminal_distance_avg'] += hamming_distance
+
+    results['seconds_avg'] /= trials
+    results['midpoint_weight_avg'] /= trials
+    results['terminal_distance_avg'] /= trials
+
+    return results
 
 def main():
     if len(sys.argv) < 3:
@@ -183,14 +195,7 @@ def main():
         trials = int(sys.argv[3])
 
     # Run the benchmarks
-    results = bench_qrack(width, depth, trials)
-
-    print(width, "qubits,",
-        depth, "depth,",
-        results[0], "seconds,",
-        results[1], "average mirror mid-point Hamming weight,",
-        results[2], "average mirror terminal Hamming distance"
-    )
+    print(bench_qrack(width, depth, trials))
 
     return 0
 
