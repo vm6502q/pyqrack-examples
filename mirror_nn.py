@@ -218,7 +218,7 @@ def main():
     if len(sys.argv) > 3:
         trials = int(sys.argv[3])
     if len(sys.argv) > 4:
-        trials = (sys.argv[4] not in ['False', '0'])
+        is_obfuscated = (sys.argv[4] not in ['False', '0'])
 
     # Run the benchmarks
     print(bench_qrack(width, depth, trials, is_obfuscated))
