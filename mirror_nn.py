@@ -9,7 +9,6 @@ import time
 from pyqrack import QrackSimulator
 
 from qiskit import QuantumCircuit
-from qiskit.compiler import transpile
 
 
 def factor_width(width):
