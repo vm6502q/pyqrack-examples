@@ -25,7 +25,13 @@ def bench_qrack(width, depth, trials, is_obfuscated):
     results = {
         'qubits': width,
         'depth': depth,
-        'trials': trials
+        'trials': trials,
+        'forward_seconds_avg': 0,
+        'backward_seconds_avg': 0,
+        'fidelity_avg': 0,
+        'midpoint_weight_avg': 0,
+        'terminal_distance_avg': 0,
+        'hamming_fidelity_avg': 0
     }
 
     for trial in range(trials):
