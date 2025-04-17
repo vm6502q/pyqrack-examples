@@ -99,7 +99,15 @@ def bench_qrack(width, depth, trials):
 
     row_len, col_len = factor_width(width)
 
-    results = { 'qubits': width, 'depth': depth, 'trials': trials, 'seconds_avg': 0, 'midpoint_weight_avg': 0, 'terminal_distance_avg': 0 }
+    results = {
+        'qubits': width,
+        'depth': depth,
+        'trials': trials,
+        'seconds_avg': 0,
+        'midpoint_weight_avg': 0,
+        'terminal_distance_avg': 0,
+        'fidelity_avg': 0
+    }
 
     for trial in range(trials):
         circ = QuantumCircuit(width)
@@ -176,10 +184,12 @@ def bench_qrack(width, depth, trials):
         hamming_distance = sum(count_set_bits(r) for r in terminal) / shots
 
         results['seconds_avg'] += seconds
+        results['fidelity_avg'] += terminal.count(0) / shots
         results['midpoint_weight_avg'] += hamming_weight
         results['terminal_distance_avg'] += hamming_distance
 
     results['seconds_avg'] /= trials
+    results['fidelity_avg'] /= trials
     results['midpoint_weight_avg'] /= trials
     results['terminal_distance_avg'] /= trials
 

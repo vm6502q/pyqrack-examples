@@ -9,7 +9,6 @@ import time
 from pyqrack import QrackSimulator
 
 from qiskit import QuantumCircuit
-from qiskit.compiler import transpile
 
 
 def factor_width(width):
@@ -142,7 +141,9 @@ def bench_qrack(width, depth, trials):
                     g = random.choice(two_bit_gates)
                     g(circ, b1, b2)
 
-            experiment = QrackSimulator(width)
+            start = time.perf_counter()
+
+            experiment = QrackSimulator(width, isTensorNetwork=False)
 
             # To ensure no dependence on initial |0> state,
             # initialize to a random permutation.
@@ -167,20 +168,34 @@ def bench_qrack(width, depth, trials):
             # ("...and measurement", SPAM) is observably uncomputed.
             terminal = experiment.measure_shots(all_bits, shots)
 
+            seconds = time.perf_counter() - start
+
             # Experiment results
             hamming_weight = sum(count_set_bits(r) for r in midpoint) / shots
             # Validation
             hamming_distance = sum(count_set_bits(r) for r in terminal) / shots
 
             if trial == 0:
-                results.append({ 'qubits': width, 'depth': d + 1, 'midpoint_weight': hamming_weight, 'terminal_distance': hamming_distance })
+                results.append({
+                    'qubits': width,
+                    'depth': d + 1,
+                    'trials': trials,
+                    'seconds_avg': seconds,
+                    'midpoint_weight_avg': hamming_weight,
+                    'terminal_distance_avg': hamming_distance,
+                    'fidelity_avg': terminal.count(0) / shots
+                })
             else:
-                results[d]['midpoint_weight'] += hamming_weight
-                results[d]['terminal_distance'] += hamming_distance
+                results[d]['seconds_avg'] += seconds
+                results[d]['fidelity_avg'] += terminal.count(0) / shots
+                results[d]['midpoint_weight_avg'] += hamming_weight
+                results[d]['terminal_distance_avg'] += hamming_distance
 
             if trial == (trials - 1):
-                results[d]['midpoint_weight'] /= trials
-                results[d]['terminal_distance'] /= trials
+                results[d]['seconds_avg'] /= trials
+                results[d]['fidelity_avg'] /= trials
+                results[d]['midpoint_weight_avg'] /= trials
+                results[d]['terminal_distance_avg'] /= trials
                 print(results[d])
 
 def main():
