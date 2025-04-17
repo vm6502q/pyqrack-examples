@@ -9,6 +9,7 @@ import time
 from pyqrack import QrackSimulator
 
 from qiskit import QuantumCircuit
+from qiskit.compiler import transpile
 
 
 def factor_width(width):
@@ -86,7 +87,7 @@ def nswap(sim, q1, q2):
     sim.cz(q1, q2)
 
 
-def bench_qrack(width, depth, trials):
+def bench_qrack(width, depth, trials, is_obfuscated):
     # This is a "nearest-neighbor" coupler random circuit.
     shots = 100
     n_perm = 1 << width
@@ -143,7 +144,7 @@ def bench_qrack(width, depth, trials):
 
             start = time.perf_counter()
 
-            experiment = QrackSimulator(width, isTensorNetwork=False)
+            experiment = QrackSimulator(width)
 
             # To ensure no dependence on initial |0> state,
             # initialize to a random permutation.
@@ -157,8 +158,11 @@ def bench_qrack(width, depth, trials):
             # Collect the experimental observable results.
             midpoint = experiment.measure_shots(all_bits, shots)
 
+            # Optionally "obfuscate" the circuit adjoint.
+            adj_circ = (transpile(circ, optimization_level=3) if is_obfuscated else circ).inverse()
+
             # Uncompute the experiment
-            experiment.run_qiskit_circuit(circ.inverse())
+            experiment.run_qiskit_circuit(adj_circ)
             # Uncompute state preparation
             for bit_index in range(width):
                 if (rand_perm >> bit_index) & 1:
@@ -183,33 +187,38 @@ def bench_qrack(width, depth, trials):
                     'seconds_avg': seconds,
                     'midpoint_weight_avg': hamming_weight,
                     'terminal_distance_avg': hamming_distance,
-                    'fidelity_avg': terminal.count(0) / shots
+                    'fidelity_avg': terminal.count(0) / shots,
+                    'hamming_fidelity_avg': (hamming_weight - hamming_distance) / hamming_weight
                 })
             else:
                 results[d]['seconds_avg'] += seconds
                 results[d]['fidelity_avg'] += terminal.count(0) / shots
                 results[d]['midpoint_weight_avg'] += hamming_weight
                 results[d]['terminal_distance_avg'] += hamming_distance
+                results[d]['hamming_fidelity_avg'] += (hamming_weight - hamming_distance) / hamming_weight
 
             if trial == (trials - 1):
                 results[d]['seconds_avg'] /= trials
                 results[d]['fidelity_avg'] /= trials
                 results[d]['midpoint_weight_avg'] /= trials
                 results[d]['terminal_distance_avg'] /= trials
+                results[d]['hamming_fidelity_avg'] /= trials
                 print(results[d])
 
 def main():
     if len(sys.argv) < 3:
-        raise RuntimeError('Usage: python3 mirror_nn_depth_series.py [width] [depth] [trials]')
+        raise RuntimeError('Usage: python3 mirror_nn_depth_series.py [width] [depth] [trials] [is_obfuscated]')
 
     width = int(sys.argv[1])
     depth = int(sys.argv[2])
     trials = 1
     if len(sys.argv) > 3:
         trials = int(sys.argv[3])
+    if len(sys.argv) > 4:
+        is_obfuscated = (sys.argv[4] not in ['False', '0'])
 
     # Run the benchmarks
-    bench_qrack(width, depth, trials)
+    bench_qrack(width, depth, trials, is_obfuscated)
 
     return 0
 
