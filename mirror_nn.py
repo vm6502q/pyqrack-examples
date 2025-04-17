@@ -174,7 +174,7 @@ def bench_qrack(width, depth, trials, is_obfuscated):
         # Optionally "obfuscate" the circuit adjoint.
         adj_circ = (transpile(circ, optimization_level=3) if is_obfuscated else circ).inverse()
 
-        backward_seconds = time.perf_counter() - (transpile_seconds + forward_seconds + start)
+        transpile_seconds = time.perf_counter() - (forward_seconds + start)
 
         # Uncompute the experiment
         experiment.run_qiskit_circuit(adj_circ)
@@ -187,7 +187,7 @@ def bench_qrack(width, depth, trials, is_obfuscated):
         # ("...and measurement", SPAM) is observably uncomputed.
         terminal = experiment.measure_shots(all_bits, shots)
 
-        backward_seconds = time.perf_counter() - (transpile_seconds + start)
+        backward_seconds = time.perf_counter() - (transpile_seconds + forward_seconds + start)
 
         # Experiment results
         hamming_weight = sum(count_set_bits(r) for r in midpoint) / shots
