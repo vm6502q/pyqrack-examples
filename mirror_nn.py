@@ -90,6 +90,7 @@ def nswap(sim, q1, q2):
 def bench_qrack(width, depth, trials):
     # This is a "nearest-neighbor" coupler random circuit.
     shots = 100
+    n_perm = 1 << width
     lcv_range = range(width)
     all_bits = list(lcv_range)
 
@@ -186,7 +187,7 @@ def main():
     results = bench_qrack(width, depth, trials)
 
     print(width, "qubits,",
-        depth, "depth,"
+        depth, "depth,",
         results[0], "seconds,",
         results[1], "average mirror mid-point Hamming weight,",
         results[2], "average mirror terminal Hamming distance"
