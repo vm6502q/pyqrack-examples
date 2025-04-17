@@ -42,9 +42,7 @@ def bench_qrack(width, depth, trials):
 
         start = time.perf_counter()
 
-        # Set isTensorNetwork=False to eliminate the possibility of
-        # gate cancellation between the two legs of the mirror circuit.
-        experiment = QrackSimulator(width, isTensorNetwork=False)
+        experiment = QrackSimulator(width)
 
         # To ensure no dependence on initial |0> state,
         # initialize to a random permutation.
