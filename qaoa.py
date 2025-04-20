@@ -44,13 +44,7 @@ def cost_hamiltonian(gamma):
 # QAOA Mixer Hamiltonian
 def mixer_hamiltonian(beta):
     for qubit in range(num_qubits):
-        qml.S(wires=qubit)
-        qml.Hadamard(wires=qubit)
-        qml.RZ(2 * beta, wires=qubit)
-        qml.Hadamard(wires=qubit)
-        qml.adjoint(qml.S(wires=qubit))
-        # The above is the near-Clifford decomposition of RX:
-        # qml.RX(2 * beta, wires=qubit)
+        qml.RX(2 * beta, wires=qubit)
 
 # Define QAOA Circuit
 def qaoa_circuit(params):
@@ -82,12 +76,29 @@ def objective(params):
 
 # Classical optimizer
 def optimize_qaoa(steps=30, num_layers=2):
-    params = np.random.uniform(0, np.pi, num_layers << 1)
+    params = np.random.uniform(0, 2 * np.pi, num_layers << 1)
     opt = qml.AdagradOptimizer(stepsize=0.5)
     for _ in range(steps):
         params = opt.step(objective, params)
 
     return params  # Optimized parameters
+
+# From Gemini (Google search)
+def top_n_indices(arr, n):
+    """
+    Returns the indices of the top n largest elements in an array.
+
+    Args:
+        arr (np.ndarray): The input array.
+        n (int): The number of top elements to retrieve.
+
+    Returns:
+        np.ndarray: An array of indices corresponding to the top n elements.
+    """
+    flat = arr.flatten()
+    indices = np.argpartition(flat, -n)[-n:]
+    indices = indices[np.argsort(-flat[indices])]
+    return np.unravel_index(indices, arr.shape)[0]
 
 # Run QAOA Optimization
 optimal_params = optimize_qaoa()
@@ -98,8 +109,13 @@ sampled_ints = [bit_string_to_int(string) for string in bitstrings]
 # Count frequency of each bit string
 counts = np.bincount(np.array(sampled_ints))
 # Most frequent bit string is the optimal solution
-optimal_solution = np.argmax(counts)
+optimal_solutions = top_n_indices(counts, 5)
+print(optimal_solutions)
+# Sorted weights
+weights = sorted(counts, reverse=True)
 
-print(f"Optimal Parameters: {optimal_params}")
-print(f"Optimal MAXCUT bit string: {optimal_solution}")
-print(f"Optimal MAXCUT edges: {int_to_nodes(optimal_solution)}")
+for i in range(len(optimal_solutions)):
+    solution = optimal_solutions[i]
+    print(f"Weight: {weights[i]}")
+    print(f"MAXCUT bit string: {solution}")
+    print(f"MAXCUT edges: {int_to_nodes(solution)}")
