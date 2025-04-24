@@ -1,6 +1,7 @@
 # Ising model Trotterization as interpreted by (OpenAI GPT) Elara
 # You likely want to specify environment variable QRACK_QTENSORNETWORK_THRESHOLD_QB=1
 
+import math
 import sys
 import time
 
@@ -9,6 +10,16 @@ from qiskit.circuit.library import RZZGate, RXGate
 from qiskit.compiler import transpile
 
 from pyqrack import QrackSimulator
+
+def factor_width(width):
+    col_len = math.floor(math.sqrt(width))
+    while (((width // col_len) * col_len) != width):
+        col_len -= 1
+    row_len = width // col_len
+    if col_len == 1:
+        raise Exception("ERROR: Can't simulate prime number width!")
+
+    return row_len, col_len
 
 def trotter_step(circ, qubits, lattice_shape, J, h, dt):
     n_rows, n_cols = lattice_shape
