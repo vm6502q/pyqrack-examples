@@ -89,10 +89,9 @@ def main():
     sim = QrackSimulator(n_qubits)
     start = time.perf_counter()
     sim.run_qiskit_circuit(qc, shots=0)
-    fidelity = sim.get_unitary_fidelity()
     result = sim.m_all()
     
-    print("Trotter steps: " + str(depth) + ", seconds: " + str(time.perf_counter() - start) + ", conservative first-principles XEB estimate: " + str(fidelity) + ".")
+    print("Trotter steps: " + str(depth) + ", seconds: " + str(time.perf_counter() - start) + ".")
     print("Result: " + str(result))
 
     return 0
