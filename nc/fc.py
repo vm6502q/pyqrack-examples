@@ -15,7 +15,9 @@ def bench_qrack(width, depth):
 
     start = time.perf_counter()
 
-    experiment = QrackSimulator(width, isOpenCL=False, isSchmidtDecompose=False)
+    experiment = QrackSimulator(width, isOpenCL=False, isSchmidtDecompose=False, isStabilizerHybrid=True)
+    # Round to nearest Clifford circuit
+    experiment.set_ncrp(1.0)
 
     for d in range(depth):
         # Single-qubit gates

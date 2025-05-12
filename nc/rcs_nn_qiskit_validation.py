@@ -160,7 +160,9 @@ def bench_qrack(n_qubits, depth, hamming_n):
                 g = random.choice(two_bit_gates)
                 g(qc, b1, b2)
 
-        experiment = QrackSimulator(n_qubits, isOpenCL=False, isSchmidtDecompose=False)
+        experiment = QrackSimulator(n_qubits, isOpenCL=False, isSchmidtDecompose=False, isStabilizerHybrid=True)
+        # Round to nearest Clifford circuit
+        experiment.set_ncrp(1.0)
         control = AerSimulator(method="statevector")
         experiment.run_qiskit_circuit(qc, shots=0)
         experiment_fidelity = experiment.get_unitary_fidelity()
