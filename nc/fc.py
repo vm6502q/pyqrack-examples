@@ -15,7 +15,7 @@ def bench_qrack(width, depth):
 
     start = time.perf_counter()
 
-    experiment = QrackSimulator(width, isOpenCL=False, isSchmidtDecompose=False, isStabilizerHybrid=True)
+    experiment = QrackSimulator(width, isStabilizerHybrid=True)
     # Round to nearest Clifford circuit
     experiment.set_ncrp(1.0)
 
@@ -34,9 +34,9 @@ def bench_qrack(width, depth):
             t = unused_bits.pop()
             experiment.mcx([c], t)
 
-        samples = experiment.measure_shots(all_bits, 1)
+    samples = experiment.measure_shots(all_bits, 1)
 
-        print({ 'qubits': width, 'depth': d+1, 'seconds': time.perf_counter() - start })
+    print({ 'qubits': width, 'depth': d+1, 'seconds': time.perf_counter() - start })
 
 
 def main():
