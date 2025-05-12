@@ -62,7 +62,7 @@ def bench_qrack(n_qubits, depth, hamming_n):
             t = unused_bits.pop()
             qc.cx(c, t)
 
-        experiment = QrackSimulator(n_qubits, isOpenCL=False)
+        experiment = QrackSimulator(n_qubits, isOpenCL=False, isSchmidtDecompose=False)
         control = AerSimulator(method="statevector")
         experiment.run_qiskit_circuit(qc, shots=0)
         experiment_fidelity = experiment.get_unitary_fidelity()

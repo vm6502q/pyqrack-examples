@@ -160,7 +160,7 @@ def bench_qrack(n_qubits, depth, hamming_n):
                 g = random.choice(two_bit_gates)
                 g(qc, b1, b2)
 
-        experiment = QrackSimulator(n_qubits, isOpenCL=False)
+        experiment = QrackSimulator(n_qubits, isOpenCL=False, isSchmidtDecompose=False)
         control = AerSimulator(method="statevector")
         experiment.run_qiskit_circuit(qc, shots=0)
         experiment_fidelity = experiment.get_unitary_fidelity()
