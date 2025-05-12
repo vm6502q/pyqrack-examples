@@ -62,7 +62,7 @@ def bench_qrack(n_qubits, depth, hamming_n):
             t = unused_bits.pop()
             qc.cx(c, t)
 
-        experiment = QrackSimulator(n_qubits, isSchmidtDecompose=False, isStabilizerHybrid=True)
+        experiment = QrackSimulator(n_qubits, isTensorNetwork=False, isSchmidtDecompose=False, isStabilizerHybrid=True)
         # Round to nearest Clifford circuit
         experiment.set_ncrp(1.0)
         control = AerSimulator(method="statevector")
