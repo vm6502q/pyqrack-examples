@@ -51,7 +51,7 @@ def bench_qrack(n_qubits, hamming_n):
         # Single-qubit gates
         for i in lcv_range:
             # Single-qubit gates
-            for i in range(3):
+            for _ in range(3):
                 qc.h(i)
                 s_count = random.randint(0, 3)
                 if s_count & 1:
@@ -74,17 +74,16 @@ def bench_qrack(n_qubits, hamming_n):
         experiment.set_ncrp(1.0)
         control = AerSimulator(method="statevector")
         experiment.run_qiskit_circuit(qc, shots=0)
-        experiment_fidelity = experiment.get_unitary_fidelity()
         aer_qc = qc.copy()
         aer_qc.save_statevector()
         job = control.run(aer_qc)
         experiment_counts = dict(Counter(experiment.measure_shots(list(range(n_qubits)), shots)))
         control_probs = Statevector(job.result().get_statevector()).probabilities()
 
-        print(calc_stats(control_probs, experiment_counts, shots, d+1, experiment_fidelity, hamming_n))
+        print(calc_stats(control_probs, experiment_counts, shots, d+1, hamming_n))
 
 
-def calc_stats(ideal_probs, counts, shots, depth, ace_fidelity_est, hamming_n):
+def calc_stats(ideal_probs, counts, shots, depth, hamming_n):
     # For QV, we compare probabilities of (ideal) "heavy outputs."
     # If the probability is above 2/3, the protocol certifies/passes the qubit width.
     n_pow = len(ideal_probs)
@@ -128,7 +127,6 @@ def calc_stats(ideal_probs, counts, shots, depth, ace_fidelity_est, hamming_n):
     return {
         'qubits': n,
         'depth': depth,
-        'ace_fidelity_est': ace_fidelity_est,
         'l2_similarity': l2_similarity,
         'xeb': xeb,
         'hog_prob': hog_prob,
