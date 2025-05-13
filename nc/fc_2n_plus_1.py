@@ -12,7 +12,7 @@ from pyqrack import QrackSimulator, Pauli
 def bench_qrack(width):
     lcv_range = range(width)
     all_bits = list(lcv_range)
-    t_prob = (width + 1) / (width * width * 3)
+    t_prob = (2 * width + 1) / (width * width * 3)
 
     start = time.perf_counter()
 

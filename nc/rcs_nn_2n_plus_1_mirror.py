@@ -102,9 +102,10 @@ def nswap(sim, q1, q2):
 
 def bench_qrack(width):
     # This is a "nearest-neighbor" coupler random circuit.
+    shots = 100
     lcv_range = range(width)
     all_bits = list(lcv_range)
-    t_prob = (width + 1) / (width * width * 3)
+    t_prob = (2 * width + 1) / (width * width * 3)
     
     # Nearest-neighbor couplers:
     gateSequence = [ 0, 3, 2, 1, 2, 1, 0, 3 ]
@@ -117,7 +118,6 @@ def bench_qrack(width):
     for d in range(width):
         # Single-qubit gates
         for i in lcv_range:
-            # Single-qubit gates
             for i in range(3):
                 circ.h(i)
                 s_count = random.randint(0, 3)
@@ -161,15 +161,21 @@ def bench_qrack(width):
         # Round to nearest Clifford circuit
         experiment.set_ncrp(1.0)
         experiment.run_qiskit_circuit(circ)
+        experiment.run_qiskit_circuit(circ.inverse())
 
-        samples = experiment.measure_shots(all_bits, 1)
+        samples = experiment.measure_shots(all_bits, shots)
+        
+        hamming_weight = 0
+        for sample in samples:
+            hamming_weight += hamming_distance(0, sample, width)
+        hamming_weight /= shots
 
-        print({ 'qubits': width, 'depth': d+1, 'seconds': time.perf_counter() - start })
+        print({ 'qubits': width, 'depth': d+1, 'seconds': time.perf_counter() - start, "avg_hamming_distance": hamming_weight })
 
 
 def main():
     if len(sys.argv) < 2:
-        raise RuntimeError('Usage: python3 fc_qiskit_validation.py [width]')
+        raise RuntimeError('Usage: python3 fc_qiskit_validation.py [width] [depth] [trials]')
 
     width = int(sys.argv[1])
 
