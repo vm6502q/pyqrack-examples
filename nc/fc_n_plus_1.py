@@ -41,9 +41,9 @@ def bench_qrack(width):
             t = unused_bits.pop()
             experiment.mcx([c], t)
 
-    samples = experiment.measure_shots(all_bits, 1)
+        samples = experiment.measure_shots(all_bits, 1)
 
-    print({ 'qubits': width, 'depth': d+1, 'seconds': time.perf_counter() - start })
+        print({ 'qubits': width, 'depth': d+1, 'seconds': time.perf_counter() - start })
 
 
 def main():
