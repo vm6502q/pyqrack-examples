@@ -39,7 +39,7 @@ def top_n(n, a):
 def bench_qrack(n_qubits, hamming_n):
     # This is a "fully-connected" coupler random circuit.
     t_prob = (n_qubits + 1) / (n_qubits * n_qubits * 3)
-    shots = 1000
+    shots = hamming_n << 2
 
     lcv_range = range(n_qubits)
     all_bits = list(lcv_range)

@@ -39,7 +39,7 @@ def top_n(n, a):
 def bench_qrack(n_qubits, depth, hamming_n):
     # This is a "nearest-neighbor" coupler random circuit.
     control = AerSimulator(method="statevector")
-    shots = 1000
+    shots = hamming_n << 2
 
     lcv_range = range(n_qubits)
     all_bits = list(lcv_range)
