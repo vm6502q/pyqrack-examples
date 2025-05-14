@@ -178,7 +178,7 @@ def bench_qrack(n_qubits, hamming_n):
                 g(qc, b1, b2)
 
         for r in range(11):
-            ncrp = r / 10
+            ncrp = (10 - r) / 10
             experiment = QrackSimulator(n_qubits, isTensorNetwork=False, isSchmidtDecompose=False, isStabilizerHybrid=True)
             # Round closer to a Clifford circuit
             if ncrp > 0:
