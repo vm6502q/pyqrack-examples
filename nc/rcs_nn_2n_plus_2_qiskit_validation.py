@@ -198,7 +198,7 @@ def bench_qrack(n_qubits, hamming_n):
 
             print(calc_stats(control_probs, experiment_counts, shots, d+1, ncrp, hamming_n))
 
-            if (stop - start) > (1.5 * min_time):
+            if (stop - start) > (2 * min_time):
                 # This has become too costly to try lower rounding parameters:
                 break
 
