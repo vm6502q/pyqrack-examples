@@ -65,7 +65,7 @@ def bench_qrack(n_qubits, hamming_n):
                 if random.random() < t_prob:
                     angle = random.uniform(0, math.pi / 2)
                     qc.rz(angle, i)
-                    if angle >= math.pi / 4:
+                    if angle >= (math.pi / 4):
                         qs.s(i)
 
         # 2-qubit couplers

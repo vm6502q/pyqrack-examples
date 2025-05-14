@@ -58,7 +58,7 @@ def bench_qrack(width):
         
         experiment = QrackSimulator(width, isTensorNetwork=False, isSchmidtDecompose=False, isStabilizerHybrid=True)
         # Round to nearest Clifford circuit
-        experiment.set_ncrp(1.0)
+        experiment.set_ncrp(2.0)
         experiment.run_qiskit_circuit(circ)
         experiment.run_qiskit_circuit(circ.inverse())
 
