@@ -9,7 +9,7 @@ import time
 
 from pyqrack import QrackSimulator, Pauli
 
-def bench_qrack(n_qubits):
+def bench_qrack(n_qubits, ncrp):
     # This is a "fully-connected" coupler random circuit.
     lcv_range = range(n_qubits)
     all_bits = list(lcv_range)
@@ -27,7 +27,7 @@ def bench_qrack(n_qubits):
 
     experiment = QrackSimulator(n_qubits, isTensorNetwork=False, isSchmidtDecompose=False, isStabilizerHybrid=True)
     # Round to nearest Clifford circuit
-    experiment.set_ncrp(2.0)
+    experiment.set_ncrp(ncrp)
 
     qc = QuantumCircuit(n_qubits)
     gate_count = 0
@@ -55,17 +55,20 @@ def bench_qrack(n_qubits):
 
         samples = experiment.measure_shots(all_bits, 1)
 
-        print({ 'qubits': n_qubits, 'depth': d+1, 'seconds': time.perf_counter() - start })
+        print({ 'qubits': n_qubits, 'ncrp': ncrp, 'depth': d+1, 'seconds': time.perf_counter() - start })
 
 
 def main():
     if len(sys.argv) < 2:
-        raise RuntimeError('Usage: python3 fc.py [width]')
+        raise RuntimeError('Usage: python3 fc_2n_plus_2.py [width] [ncrp]')
 
     n_qubits = int(sys.argv[1])
+    ncrp = 2.0
+    if len(sys.argv) > 2:
+        ncrp = float(sys.argv[2])
 
     # Run the benchmarks
-    bench_qrack(n_qubits)
+    bench_qrack(n_qubits, ncrp)
 
     return 0
 

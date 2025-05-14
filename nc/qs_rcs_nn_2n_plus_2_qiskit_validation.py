@@ -252,7 +252,7 @@ def calc_stats(ideal_probs, counts, shots, depth, hamming_n):
 
 def main():
     if len(sys.argv) < 2:
-        raise RuntimeError('Usage: python3 fc_qiskit_validation.py [width] [hamming_n]')
+        raise RuntimeError('Usage: python3 qs_rcs_nn_2n_plus_2_fc_qiskit_validation.py [width] [hamming_n]')
 
     n_qubits = 56
     hamming_n = 2048

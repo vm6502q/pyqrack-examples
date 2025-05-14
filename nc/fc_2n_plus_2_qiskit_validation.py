@@ -36,7 +36,7 @@ def top_n(n, a):
     return np.argsort(a)[-n:]
 
 
-def bench_qrack(n_qubits, hamming_n):
+def bench_qrack(n_qubits, ncrp, hamming_n):
     # This is a "fully-connected" coupler random circuit.
     shots = hamming_n << 2
     lcv_range = range(n_qubits)
@@ -78,7 +78,7 @@ def bench_qrack(n_qubits, hamming_n):
 
         experiment = QrackSimulator(n_qubits, isTensorNetwork=False, isSchmidtDecompose=False, isStabilizerHybrid=True)
         # Round to nearest Clifford circuit
-        experiment.set_ncrp(2.0)
+        experiment.set_ncrp(ncrp)
         control = AerSimulator(method="statevector")
         experiment.run_qiskit_circuit(qc, shots=0)
         aer_qc = qc.copy()
@@ -87,10 +87,10 @@ def bench_qrack(n_qubits, hamming_n):
         experiment_counts = dict(Counter(experiment.measure_shots(list(range(n_qubits)), shots)))
         control_probs = Statevector(job.result().get_statevector()).probabilities()
 
-        print(calc_stats(control_probs, experiment_counts, shots, d+1, hamming_n))
+        print(calc_stats(control_probs, experiment_counts, shots, d+1, ncrp, hamming_n))
 
 
-def calc_stats(ideal_probs, counts, shots, depth, hamming_n):
+def calc_stats(ideal_probs, counts, shots, depth, ncrp, hamming_n):
     # For QV, we compare probabilities of (ideal) "heavy outputs."
     # If the probability is above 2/3, the protocol certifies/passes the qubit width.
     n_pow = len(ideal_probs)
@@ -133,6 +133,7 @@ def calc_stats(ideal_probs, counts, shots, depth, hamming_n):
 
     return {
         'qubits': n,
+        'ncrp': ncrp,
         'depth': depth,
         'l2_similarity': l2_similarity,
         'xeb': xeb,
@@ -144,17 +145,18 @@ def calc_stats(ideal_probs, counts, shots, depth, hamming_n):
 
 def main():
     if len(sys.argv) < 2:
-        raise RuntimeError('Usage: python3 fc_qiskit_validation.py [width] [hamming_n]')
+        raise RuntimeError('Usage: python3 fc_2n_plus_2_qiskit_validation.py [width] [ncrp] [hamming_n]')
 
-    n_qubits = 56
+    n_qubits = n_qubits = int(sys.argv[1])
+    ncrp = 2.0
     hamming_n = 2048
-    if len(sys.argv) > 1:
-        n_qubits = int(sys.argv[1])
     if len(sys.argv) > 2:
-        hamming_n = int(sys.argv[2])
+        ncrp = float(sys.argv[2])
+    if len(sys.argv) > 3:
+        hamming_n = int(sys.argv[3])
 
     # Run the benchmarks
-    bench_qrack(n_qubits, hamming_n)
+    bench_qrack(n_qubits, ncrp, hamming_n)
 
     return 0
 

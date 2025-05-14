@@ -94,7 +94,7 @@ def bench_qrack(n_qubits, hamming_n):
         experiment_counts = dict(Counter(experiment.measure_shots(list(range(n_qubits)), shots)))
         control_probs = Statevector(job.result().get_statevector()).probabilities()
 
-        print(calc_stats(control_probs, experiment_counts, shots, d+1, hamming_n))
+        print(calc_stats(control_probs, experiment_counts, shots, d+1, ncrp, hamming_n))
 
 
 def calc_stats(ideal_probs, counts, shots, depth, hamming_n):
@@ -151,7 +151,7 @@ def calc_stats(ideal_probs, counts, shots, depth, hamming_n):
 
 def main():
     if len(sys.argv) < 2:
-        raise RuntimeError('Usage: python3 fc_qiskit_validation.py [width] [hamming_n]')
+        raise RuntimeError('Usage: python3 qs_fc_2n_plus_2_qiskit_validation.py [width] [hamming_n]')
 
     n_qubits = 56
     hamming_n = 2048

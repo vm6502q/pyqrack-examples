@@ -100,7 +100,7 @@ def nswap(sim, q1, q2):
     sim.cz(q1, q2)
 
 
-def bench_qrack(width):
+def bench_qrack(width, ncrp):
     # This is a "nearest-neighbor" coupler random circuit.
     lcv_range = range(n_qubits)
     all_bits = list(lcv_range)
@@ -168,22 +168,25 @@ def bench_qrack(width):
 
         experiment = QrackSimulator(width, isTensorNetwork=False, isSchmidtDecompose=False, isStabilizerHybrid=True)
         # Round to nearest Clifford circuit
-        experiment.set_ncrp(2.0)
+        experiment.set_ncrp(ncrp)
         experiment.run_qiskit_circuit(circ)
 
         samples = experiment.measure_shots(all_bits, 1)
 
-        print({ 'qubits': width, 'depth': d+1, 'seconds': time.perf_counter() - start })
+        print({ 'qubits': n_qubits, 'ncrp': ncrp, 'depth': d+1, 'seconds': time.perf_counter() - start })
 
 
 def main():
     if len(sys.argv) < 2:
-        raise RuntimeError('Usage: python3 fc_qiskit_validation.py [width]')
+        raise RuntimeError('Usage: python3 rcs_nn_2n_plus_2.py [width] [ncrp]')
 
-    width = int(sys.argv[1])
+    n_qubits = int(sys.argv[1])
+    ncrp = 2.0
+    if len(sys.argv) > 2:
+        ncrp = float(sys.argv[2])
 
     # Run the benchmarks
-    bench_qrack(width)
+    bench_qrack(n_qubits, ncrp)
 
     return 0
 
