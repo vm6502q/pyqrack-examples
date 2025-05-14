@@ -36,7 +36,7 @@ def top_n(n, a):
     return np.argsort(a)[-n:]
 
 
-def bench_qrack(n_qubits, ncrp, hamming_n):
+def bench_qrack(n_qubits, hamming_n):
     # This is a "fully-connected" coupler random circuit.
     shots = hamming_n << 2
     lcv_range = range(n_qubits)
@@ -76,18 +76,21 @@ def bench_qrack(n_qubits, ncrp, hamming_n):
             t = unused_bits.pop()
             qc.cx(c, t)
 
-        experiment = QrackSimulator(n_qubits, isTensorNetwork=False, isSchmidtDecompose=False, isStabilizerHybrid=True)
-        # Round to nearest Clifford circuit
-        experiment.set_ncrp(ncrp)
-        control = AerSimulator(method="statevector")
-        experiment.run_qiskit_circuit(qc, shots=0)
-        aer_qc = qc.copy()
-        aer_qc.save_statevector()
-        job = control.run(aer_qc)
-        experiment_counts = dict(Counter(experiment.measure_shots(list(range(n_qubits)), shots)))
-        control_probs = Statevector(job.result().get_statevector()).probabilities()
+        for r in range(11):
+            ncrp = r / 10
+            experiment = QrackSimulator(n_qubits, isTensorNetwork=False, isSchmidtDecompose=False, isStabilizerHybrid=True)
+            # Round closer to a Clifford circuit
+            if ncrp > 0:
+                experiment.set_ncrp(ncrp)
+            control = AerSimulator(method="statevector")
+            experiment.run_qiskit_circuit(qc, shots=0)
+            aer_qc = qc.copy()
+            aer_qc.save_statevector()
+            job = control.run(aer_qc)
+            experiment_counts = dict(Counter(experiment.measure_shots(list(range(n_qubits)), shots)))
+            control_probs = Statevector(job.result().get_statevector()).probabilities()
 
-        print(calc_stats(control_probs, experiment_counts, shots, d+1, ncrp, hamming_n))
+            print(calc_stats(control_probs, experiment_counts, shots, d+1, ncrp, hamming_n))
 
 
 def calc_stats(ideal_probs, counts, shots, depth, ncrp, hamming_n):
@@ -145,18 +148,15 @@ def calc_stats(ideal_probs, counts, shots, depth, ncrp, hamming_n):
 
 def main():
     if len(sys.argv) < 2:
-        raise RuntimeError('Usage: python3 fc_2n_plus_2_qiskit_validation.py [width] [ncrp] [hamming_n]')
+        raise RuntimeError('Usage: python3 fc_2n_plus_2_qiskit_validation.py [width] [hamming_n]')
 
     n_qubits = n_qubits = int(sys.argv[1])
-    ncrp = 2.0
     hamming_n = 2048
     if len(sys.argv) > 2:
-        ncrp = float(sys.argv[2])
-    if len(sys.argv) > 3:
-        hamming_n = int(sys.argv[3])
+        hamming_n = int(sys.argv[2])
 
     # Run the benchmarks
-    bench_qrack(n_qubits, ncrp, hamming_n)
+    bench_qrack(n_qubits, hamming_n)
 
     return 0
 
