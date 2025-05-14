@@ -199,7 +199,7 @@ def bench_qrack(n_qubits, hamming_n):
             results = calc_stats(control_probs, experiment_counts, shots, d+1, ncrp, hamming_n)
             print(results)
 
-            if ((stop - start) > (2 * min_time)) or ((d > 0) and ((results['l2_similarity'] >= 1.0) or (results['xeb'] > 1.0) or (results['hog_prob'] >= 1.0))):
+            if ((stop - start) > (2 * min_time)) or ((d > 0) and ((results['l2_similarity'] >= 1.0) or (results['xeb'] > 1.0))):
                 # This has become too costly to try lower rounding parameters:
                 break
 
