@@ -5,6 +5,7 @@ import math
 import random
 import statistics
 import sys
+import time
 
 from collections import Counter
 
@@ -76,6 +77,7 @@ def bench_qrack(n_qubits, hamming_n):
             t = unused_bits.pop()
             qc.cx(c, t)
 
+        min_time = 0
         for r in range(11):
             ncrp = (10 - r) / 10
             experiment = QrackSimulator(n_qubits, isTensorNetwork=False, isSchmidtDecompose=False, isStabilizerHybrid=True)
@@ -83,14 +85,22 @@ def bench_qrack(n_qubits, hamming_n):
             if ncrp > 0:
                 experiment.set_ncrp(ncrp)
             control = AerSimulator(method="statevector")
+            start = time.perf_counter()
             experiment.run_qiskit_circuit(qc, shots=0)
+            experiment_counts = dict(Counter(experiment.measure_shots(list(range(n_qubits)), shots)))
+            stop = time.perf_counter()
+            if r == 0:
+                min_time = stop - start
             aer_qc = qc.copy()
             aer_qc.save_statevector()
             job = control.run(aer_qc)
-            experiment_counts = dict(Counter(experiment.measure_shots(list(range(n_qubits)), shots)))
             control_probs = Statevector(job.result().get_statevector()).probabilities()
 
             print(calc_stats(control_probs, experiment_counts, shots, d+1, ncrp, hamming_n))
+
+            if (stop - start) > (2 * min_time):
+                # This has become too costly to try lower rounding parameters:
+                break
 
 
 def calc_stats(ideal_probs, counts, shots, depth, ncrp, hamming_n):
