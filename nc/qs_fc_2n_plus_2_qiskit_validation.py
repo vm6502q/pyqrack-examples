@@ -38,16 +38,22 @@ def top_n(n, a):
 
 def bench_qrack(n_qubits, hamming_n):
     # This is a "fully-connected" coupler random circuit.
-    t_prob = ((n_qubits + 1) << 1) / (n_qubits * n_qubits * 3)
     shots = hamming_n << 2
-
     lcv_range = range(n_qubits)
     all_bits = list(lcv_range)
 
-    results = []
+    rz_count = (n_qubits + 1) << 1
+    rz_opportunities =  n_qubits * n_qubits * 3
+    rz_positions = []
+    while len(rz_positions) < rz_count:
+        rz_position = random.randint(0, rz_opportunities - 1)
+        if rz_position in rz_positions:
+            continue
+        rz_positions.append(rz_position)
 
     qc = QuantumCircuit(n_qubits)
     qs = QuantumCircuit(n_qubits)
+    gate_count = 0
     for d in range(n_qubits):
         # Single-qubit gates
         for i in lcv_range:
@@ -62,11 +68,12 @@ def bench_qrack(n_qubits, hamming_n):
                 if s_count & 2:
                     qc.s(i)
                     qs.s(i)
-                if random.random() < t_prob:
+                if gate_count in rz_positions:
                     angle = random.uniform(0, math.pi / 2)
                     qc.rz(angle, i)
                     if angle >= (math.pi / 4):
                         qs.s(i)
+                gate_count = gate_count + 1
 
         # 2-qubit couplers
         unused_bits = all_bits.copy()

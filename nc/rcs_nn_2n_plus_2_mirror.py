@@ -103,30 +103,40 @@ def nswap(sim, q1, q2):
 def bench_qrack(width):
     # This is a "nearest-neighbor" coupler random circuit.
     shots = 100
-    lcv_range = range(width)
+    lcv_range = range(n_qubits)
     all_bits = list(lcv_range)
-    t_prob = ((width + 1) << 1) / (width * width * 3)
-    
+
+    rz_count = (n_qubits + 1) << 1
+    rz_opportunities =  n_qubits * n_qubits * 3
+    rz_positions = []
+    while len(rz_positions) < rz_count:
+        rz_position = random.randint(0, rz_opportunities - 1)
+        if rz_position in rz_positions:
+            continue
+        rz_positions.append(rz_position)
+
     # Nearest-neighbor couplers:
     gateSequence = [ 0, 3, 2, 1, 2, 1, 0, 3 ]
     two_bit_gates = swap, pswap, mswap, nswap, iswap, iiswap, cx, cy, cz, acx, acy, acz
-    
-    row_len, col_len = factor_width(width)
+    row_len, col_len = factor_width(n_qubits)
 
-    circ = QuantumCircuit(width)
+    qc = QuantumCircuit(width)
+    gate_count = 0
     start = time.perf_counter()
     for d in range(width):
         # Single-qubit gates
         for i in lcv_range:
+            # Single-qubit gates
             for i in range(3):
-                circ.h(i)
+                qc.h(i)
                 s_count = random.randint(0, 3)
                 if s_count & 1:
-                    circ.z(i)
+                    qc.z(i)
                 if s_count & 2:
-                    circ.s(i)
-                if random.random() < t_prob:
-                    circ.rz(random.uniform(0, math.pi / 2), i)
+                    qc.s(i)
+                if gate_count in rz_positions:
+                    qc.rz(random.uniform(0, math.pi / 2), i)
+                gate_count = gate_count + 1
 
         # Nearest-neighbor couplers:
         ############################

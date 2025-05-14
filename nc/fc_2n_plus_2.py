@@ -9,18 +9,29 @@ import time
 
 from pyqrack import QrackSimulator, Pauli
 
-def bench_qrack(width):
-    lcv_range = range(width)
+def bench_qrack(n_qubits):
+    # This is a "fully-connected" coupler random circuit.
+    lcv_range = range(n_qubits)
     all_bits = list(lcv_range)
-    t_prob = ((width + 1) << 1) / (width * width * 3)
+
+    rz_count = (n_qubits + 1) << 1
+    rz_opportunities =  n_qubits * n_qubits * 3
+    rz_positions = []
+    while len(rz_positions) < rz_count:
+        rz_position = random.randint(0, rz_opportunities - 1)
+        if rz_position in rz_positions:
+            continue
+        rz_positions.append(rz_position)
 
     start = time.perf_counter()
 
-    experiment = QrackSimulator(width, isTensorNetwork=False, isSchmidtDecompose=False, isStabilizerHybrid=True)
+    experiment = QrackSimulator(n_qubits, isTensorNetwork=False, isSchmidtDecompose=False, isStabilizerHybrid=True)
     # Round to nearest Clifford circuit
     experiment.set_ncrp(2.0)
 
-    for d in range(width):
+    qc = QuantumCircuit(n_qubits)
+    gate_count = 0
+    for d in range(n_qubits):
         # Single-qubit gates
         for i in lcv_range:
             for _ in range(3):
@@ -30,8 +41,9 @@ def bench_qrack(width):
                     experiment.z(i)
                 if s_count & 2:
                     experiment.s(i)
-                if random.random() < t_prob:
+                if gate_count in rz_positions:
                     experiment.r(Pauli.PauliZ, random.uniform(0, math.pi / 2), i)
+                gate_count = gate_count + 1
 
         # 2-qubit couplers
         unused_bits = all_bits.copy()
@@ -43,17 +55,17 @@ def bench_qrack(width):
 
         samples = experiment.measure_shots(all_bits, 1)
 
-        print({ 'qubits': width, 'depth': d+1, 'seconds': time.perf_counter() - start })
+        print({ 'qubits': n_qubits, 'depth': d+1, 'seconds': time.perf_counter() - start })
 
 
 def main():
     if len(sys.argv) < 2:
         raise RuntimeError('Usage: python3 fc.py [width]')
 
-    width = int(sys.argv[1])
+    n_qubits = int(sys.argv[1])
 
     # Run the benchmarks
-    bench_qrack(width)
+    bench_qrack(n_qubits)
 
     return 0
 
