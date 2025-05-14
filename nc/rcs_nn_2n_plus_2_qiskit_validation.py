@@ -18,6 +18,17 @@ from qiskit_aer.backends import AerSimulator
 from qiskit.quantum_info import Statevector
 
 
+def factor_width(width):
+    col_len = math.floor(math.sqrt(width))
+    while (((width // col_len) * col_len) != width):
+        col_len -= 1
+    row_len = width // col_len
+    if col_len == 1:
+        raise Exception("ERROR: Can't simulate prime number width!")
+
+    return (row_len, col_len)
+
+
 # By Gemini (Google Search AI)
 def int_to_bitstring(integer, length):
     return bin(integer)[2:].zfill(length)
@@ -36,21 +47,88 @@ def top_n(n, a):
     return np.argsort(a)[-n:]
 
 
+def cx(sim, q1, q2):
+    sim.cx(q1, q2)
+
+
+def cy(sim, q1, q2):
+    sim.cy(q1, q2)
+
+
+def cz(sim, q1, q2):
+    sim.cz(q1, q2)
+
+
+def acx(sim, q1, q2):
+    sim.x(q1)
+    sim.cx(q1, q2)
+    sim.x(q1)
+
+
+def acy(sim, q1, q2):
+    sim.x(q1)
+    sim.cy(q1, q2)
+    sim.x(q1)
+
+
+def acz(sim, q1, q2):
+    sim.x(q1)
+    sim.cz(q1, q2)
+    sim.x(q1)
+
+
+def swap(sim, q1, q2):
+    sim.swap(q1, q2)
+
+
+def iswap(sim, q1, q2):
+    sim.swap(q1, q2)
+    sim.cz(q1, q2)
+    sim.s(q1)
+    sim.s(q2)
+
+
+def iiswap(sim, q1, q2):
+    sim.s(q2)
+    sim.s(q1)
+    sim.cz(q1, q2)
+    sim.swap(q1, q2)
+
+
+def pswap(sim, q1, q2):
+    sim.cz(q1, q2)
+    sim.swap(q1, q2)
+
+
+def mswap(sim, q1, q2):
+    sim.swap(q1, q2)
+    sim.cz(q1, q2)
+
+
+def nswap(sim, q1, q2):
+    sim.cz(q1, q2)
+    sim.swap(q1, q2)
+    sim.cz(q1, q2)
+
+
 def bench_qrack(n_qubits, hamming_n):
-    # This is a "fully-connected" coupler random circuit.
-    t_prob = (2 * n_qubits + 1) / (n_qubits * n_qubits * 3)
+    # This is a "nearest-neighbor" coupler random circuit.
+    t_prob = ((n_qubits << 1) + 2) / (n_qubits * n_qubits * 3)
     shots = hamming_n << 2
 
     lcv_range = range(n_qubits)
     all_bits = list(lcv_range)
-
-    results = []
+    
+    # Nearest-neighbor couplers:
+    gateSequence = [ 0, 3, 2, 1, 2, 1, 0, 3 ]
+    two_bit_gates = swap, pswap, mswap, nswap, iswap, iiswap, cx, cy, cz, acx, acy, acz
+    
+    row_len, col_len = factor_width(n_qubits)
 
     qc = QuantumCircuit(n_qubits)
     for d in range(n_qubits):
         # Single-qubit gates
-        for i in lcv_range:
-            # Single-qubit gates
+        for i in range(n_qubits):
             for _ in range(3):
                 qc.h(i)
                 s_count = random.randint(0, 3)
@@ -61,13 +139,34 @@ def bench_qrack(n_qubits, hamming_n):
                 if random.random() < t_prob:
                     qc.rz(random.uniform(0, math.pi / 2), i)
 
-        # 2-qubit couplers
-        unused_bits = all_bits.copy()
-        random.shuffle(unused_bits)
-        while len(unused_bits) > 1:
-            c = unused_bits.pop()
-            t = unused_bits.pop()
-            qc.cx(c, t)
+        # Nearest-neighbor couplers:
+        ############################
+        gate = gateSequence.pop(0)
+        gateSequence.append(gate)
+        for row in range(1, row_len, 2):
+            for col in range(col_len):
+                temp_row = row
+                temp_col = col
+                temp_row = temp_row + (1 if (gate & 2) else -1);
+                temp_col = temp_col + (1 if (gate & 1) else 0)
+
+                if temp_row < 0:
+                    temp_row = temp_row + row_len
+                if temp_col < 0:
+                    temp_col = temp_col + col_len
+                if temp_row >= row_len:
+                    temp_row = temp_row - row_len
+                if temp_col >= col_len:
+                    temp_col = temp_col - col_len
+
+                b1 = row * row_len + col
+                b2 = temp_row * row_len + temp_col
+
+                if (b1 >= n_qubits) or (b2 >= n_qubits):
+                    continue
+
+                g = random.choice(two_bit_gates)
+                g(qc, b1, b2)
 
         experiment = QrackSimulator(n_qubits, isTensorNetwork=False, isSchmidtDecompose=False, isStabilizerHybrid=True)
         # Round to nearest Clifford circuit

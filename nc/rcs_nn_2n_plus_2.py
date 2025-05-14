@@ -104,7 +104,7 @@ def bench_qrack(width):
     # This is a "nearest-neighbor" coupler random circuit.
     lcv_range = range(width)
     all_bits = list(lcv_range)
-    t_prob = (2 * width + 1) / (width * width * 3)
+    t_prob = ((width << 1) + 2) / (width * width * 3)
     
     # Nearest-neighbor couplers:
     gateSequence = [ 0, 3, 2, 1, 2, 1, 0, 3 ]

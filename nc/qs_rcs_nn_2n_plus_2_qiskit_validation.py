@@ -10,7 +10,7 @@ from collections import Counter
 
 import numpy as np
 
-from pyqrack import QrackSimulator
+from pyqrack import QrackStabilizer
 
 from qiskit import QuantumCircuit
 from qiskit.compiler import transpile
@@ -113,7 +113,7 @@ def nswap(sim, q1, q2):
 
 def bench_qrack(n_qubits, hamming_n):
     # This is a "nearest-neighbor" coupler random circuit.
-    t_prob = (2 * n_qubits + 1) / (n_qubits * n_qubits * 3)
+    t_prob = ((n_qubits << 1) + 2) / (n_qubits * n_qubits * 3)
     shots = hamming_n << 2
 
     lcv_range = range(n_qubits)
@@ -126,18 +126,25 @@ def bench_qrack(n_qubits, hamming_n):
     row_len, col_len = factor_width(n_qubits)
 
     qc = QuantumCircuit(n_qubits)
+    qs = QuantumCircuit(n_qubits)
     for d in range(n_qubits):
         # Single-qubit gates
         for i in range(n_qubits):
             for _ in range(3):
                 qc.h(i)
+                qs.h(i)
                 s_count = random.randint(0, 3)
                 if s_count & 1:
                     qc.z(i)
+                    qs.z(i)
                 if s_count & 2:
                     qc.s(i)
+                    qs.s(i)
                 if random.random() < t_prob:
-                    qc.rz(random.uniform(0, math.pi / 2), i)
+                    angle = random.uniform(0, math.pi / 2)
+                    qc.rz(angle, i)
+                    if angle >= math.pi / 4:
+                        qs.s(i)
 
         # Nearest-neighbor couplers:
         ############################
@@ -167,12 +174,12 @@ def bench_qrack(n_qubits, hamming_n):
 
                 g = random.choice(two_bit_gates)
                 g(qc, b1, b2)
+                g(qs, b1, b2)
 
-        experiment = QrackSimulator(n_qubits, isTensorNetwork=False, isSchmidtDecompose=False, isStabilizerHybrid=True)
         # Round to nearest Clifford circuit
-        experiment.set_ncrp(1.0)
+        experiment = QrackStabilizer(n_qubits)
         control = AerSimulator(method="statevector")
-        experiment.run_qiskit_circuit(qc, shots=0)
+        experiment.run_qiskit_circuit(qs, shots=0)
         aer_qc = qc.copy()
         aer_qc.save_statevector()
         job = control.run(aer_qc)
