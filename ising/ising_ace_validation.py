@@ -150,7 +150,7 @@ def main():
     n_rows, n_cols = factor_width(n_qubits)
     J, h, dt = -1.0, 2.0, 0.25
     theta = -math.pi / 6
-    shots = 1 << (n_qubits + 6)
+    shots = 1 << (n_qubits + 2)
 
     qc = QuantumCircuit(n_qubits)
 
@@ -160,7 +160,7 @@ def main():
     for _ in range(depth):
         trotter_step(qc, list(range(n_qubits)), (n_rows, n_cols), J, h, dt)
 
-    basis_gates = ["rx", "ry", "rz", "u", "cu", "cx", "cy", "cz", "cp", "swap", "iswap"]
+    basis_gates = ["rx", "ry", "rz", "h", "x", "y", "z", "sx", "sxdg", "s", "sdg", "t", "tdg", "cx", "cy", "cz", "swap", "iswap"]
     qc = transpile(qc, basis_gates=basis_gates)
 
     experiment = QrackSimulator(n_qubits)
