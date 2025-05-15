@@ -1,4 +1,8 @@
 # See "Error mitigation increases the effective quantum volume of quantum computers," https://arxiv.org/abs/2203.05489
+#
+# Mitiq is under the GPL 3.0.
+# Hence, this example, as the entire work-in-itself, must be considered to be under GPL 3.0.
+# See https://www.gnu.org/licenses/gpl-3.0.txt for details.
 
 import math
 import random
