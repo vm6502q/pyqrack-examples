@@ -86,15 +86,16 @@ def bench_qrack(n_qubits, hamming_n):
 
         # Round to nearest Clifford circuit
         experiment = QrackStabilizer(n_qubits)
-        control = AerSimulator(method="statevector")
         experiment.run_qiskit_circuit(qs, shots=0)
+        experiment_counts = dict(Counter(experiment.measure_shots(list(range(n_qubits)), shots)))
+
         aer_qc = qc.copy()
         aer_qc.save_statevector()
+        control = AerSimulator(method="statevector")
         job = control.run(aer_qc)
-        experiment_counts = dict(Counter(experiment.measure_shots(list(range(n_qubits)), shots)))
         control_probs = Statevector(job.result().get_statevector()).probabilities()
 
-        print(calc_stats(control_probs, experiment_counts, shots, d+1, ncrp, hamming_n))
+        print(calc_stats(control_probs, experiment_counts, shots, d+1, hamming_n))
 
 
 def calc_stats(ideal_probs, counts, shots, depth, hamming_n):
@@ -126,7 +127,7 @@ def calc_stats(ideal_probs, counts, shots, depth, hamming_n):
         if ideal > threshold:
             sum_hog_counts += count
 
-    l2_similarity = diff_sqr ** (1/2)
+    l2_similarity = 1 - diff_sqr ** (1/2)
     hog_prob = sum_hog_counts / shots
     xeb = numer / denom
 

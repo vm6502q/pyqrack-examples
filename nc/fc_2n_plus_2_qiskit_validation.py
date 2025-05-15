@@ -84,15 +84,16 @@ def bench_qrack(n_qubits, hamming_n):
             # Round closer to a Clifford circuit
             if ncrp > 0:
                 experiment.set_ncrp(ncrp)
-            control = AerSimulator(method="statevector")
             start = time.perf_counter()
             experiment.run_qiskit_circuit(qc, shots=0)
             experiment_counts = dict(Counter(experiment.measure_shots(list(range(n_qubits)), shots)))
             stop = time.perf_counter()
             if r == 0:
                 min_time = stop - start
+
             aer_qc = qc.copy()
             aer_qc.save_statevector()
+            control = AerSimulator(method="statevector")
             job = control.run(aer_qc)
             control_probs = Statevector(job.result().get_statevector()).probabilities()
 
