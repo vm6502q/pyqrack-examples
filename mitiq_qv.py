@@ -151,7 +151,7 @@ def main():
     max_scale = 2
     factory = RichardsonFactory(scale_factors=[(1 + (max_scale - 1) * x / scale_count) for x in range(0, scale_count)])
 
-    mitigated_fidelity = zne.execute_with_zne(circ, execute, scale_noise=fold_global, factory=factory)
+    mitigated_fidelity = expit(zne.execute_with_zne(circ, execute, scale_noise=fold_global, factory=factory))
 
     print({ 'width': width, 'depth': depth, 'mitigated_fidelity': mitigated_fidelity })
 
