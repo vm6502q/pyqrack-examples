@@ -94,7 +94,7 @@ def calc_stats(ideal_probs, counts, shots, depth, ace_fidelity_est, hamming_n):
         if ideal > threshold:
             sum_hog_counts += count
 
-    l2_similarity = diff_sqr ** (1/2)
+    l2_similarity = 1 - diff_sqr ** (1/2)
     hog_prob = sum_hog_counts / shots
     xeb = numer / denom
 
