@@ -32,14 +32,14 @@ def main():
     experiment = QrackSimulator(2, isTensorNetwork=False, isStabilizerHybrid=False)
 
     # Prepare a Bell pair.
-    control.h(1)
-    control.mcx([1], 2)
+    control.h(0)
+    control.mcx([0], 1)
 
-    experiment.h(1)
-    experiment.mcx([1], 2)
+    experiment.h(0)
+    experiment.mcx([0], 1)
 
     # Apply an entanglement-breaking channel
-    experiment.separate([1])
+    experiment.separate([0])
 
     # L2 fidelity should be 50%:
     ideal_ket = control.out_ket()
