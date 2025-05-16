@@ -97,7 +97,7 @@ def logit(x):
     # but precision caps out between 36 and 37:
     if 5e-17 > (1 - x):
         return 37
-    # For the negative limit, the precisions caps out
+    # For the negative limit, the precision caps out
     # between -37 and -38
     elif x < 1e-17:
         return -38
@@ -109,7 +109,7 @@ def expit(x):
     # but precision caps out between 36 and 37:
     if x >= 37:
         return 1.0
-    # For the negative limit, the precisions caps out
+    # For the negative limit, the precision caps out
     # between -37 and -38
     elif x <= -38:
         return 0.0
