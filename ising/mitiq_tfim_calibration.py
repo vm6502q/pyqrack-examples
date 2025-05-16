@@ -17,11 +17,54 @@ from collections import Counter
 from pyqrack import QrackSimulator
 
 from qiskit import QuantumCircuit
+from qiskit.compiler import transpile
+from qiskit_aer.backends import AerSimulator
+from qiskit.quantum_info import Statevector
 from qiskit.circuit.library import RZZGate, RXGate
 
 from mitiq import zne
 from mitiq.zne.scaling.folding import fold_global
 from mitiq.zne.inference import RichardsonFactory
+
+
+def calc_stats(ideal_probs, counts, shots):
+    # For QV, we compare probabilities of (ideal) "heavy outputs."
+    # If the probability is above 2/3, the protocol certifies/passes the qubit width.
+    n_pow = len(ideal_probs)
+    n = int(round(math.log2(n_pow)))
+    threshold = statistics.median(ideal_probs)
+    u_u = statistics.mean(ideal_probs)
+    diff_sqr = 0
+    numer = 0
+    denom = 0
+    sum_hog_counts = 0
+    experiment = [0] * n_pow
+    for i in range(n_pow):
+        count = counts[i] if i in counts else 0
+        ideal = ideal_probs[i]
+
+        experiment[i] = count
+
+        # L2 distance
+        diff_sqr += (ideal - (count / shots)) ** 2
+
+        # XEB / EPLG
+        denom += (ideal - u_u) ** 2
+        numer += (ideal - u_u) * ((count / shots) - u_u)
+
+        # QV / HOG
+        if ideal > threshold:
+            sum_hog_counts += count
+
+    l2_similarity = 1 - diff_sqr ** (1/2)
+    hog_prob = sum_hog_counts / shots
+    xeb = numer / denom
+
+    return {
+        'l2_similarity': l2_similarity,
+        'xeb': xeb,
+        'hog_prob': hog_prob,
+    }
 
 
 def factor_width(width):
@@ -112,13 +155,20 @@ def execute(circ):
     experiment = QrackSimulator(qc.width())
     experiment.run_qiskit_circuit(qc)
 
-    magnetization = 0
-    for qubit in all_bits:
-        z_exp = 1 - 2 * experiment.prob(qubit)
-        magnetization += z_exp
-    magnetization /= circ.width()
+    control = AerSimulator(method="statevector")
+    circ_aer = transpile(qc, backend=control)
+    circ_aer.save_statevector()
+    job = control.run(circ_aer)
 
-    return logit((magnetization + 1) / 2)
+    experiment_counts = dict(Counter(experiment.measure_shots(all_bits, shots)))
+    control_probs = Statevector(job.result().get_statevector()).probabilities()
+
+    stats = calc_stats(control_probs, experiment_counts, shots)
+
+    # So as not to exceed floor at 0.0 and ceiling at 1.0, (assuming 0 < p < 1,)
+    # we mitigate its logit function value (https://en.wikipedia.org/wiki/Logit)
+    # return logit(stats['hog_prob'])
+    return logit(stats['l2_similarity'])
 
 
 def main():
@@ -139,9 +189,9 @@ def main():
     max_scale = 5
     factory = RichardsonFactory(scale_factors=[(1 + (max_scale - 1) * x / scale_count) for x in range(0, scale_count)])
 
-    magnetization = 2 * expit(zne.execute_with_zne(circ, execute, scale_noise=fold_global, factory=factory)) - 1
+    mitigated_fidelity = expit(zne.execute_with_zne(circ, execute, scale_noise=fold_global, factory=factory))
 
-    print({ 'width': n_qubits, 'depth': depth, 'magnetization': magnetization })
+    print({ 'width': n_qubits, 'depth': depth, 'mitigated_fidelity': mitigated_fidelity })
 
     return 0
 
