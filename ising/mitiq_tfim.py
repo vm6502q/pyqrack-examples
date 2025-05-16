@@ -21,7 +21,7 @@ from qiskit.circuit.library import RZZGate, RXGate
 
 from mitiq import zne
 from mitiq.zne.scaling.folding import fold_global
-from mitiq.zne.inference import RichardsonFactory
+from mitiq.zne.inference import LinearFactory
 
 
 def factor_width(width):
@@ -137,7 +137,7 @@ def main():
 
     scale_count = 10
     max_scale = 5
-    factory = RichardsonFactory(scale_factors=[(1 + (max_scale - 1) * x / scale_count) for x in range(0, scale_count)])
+    factory = LinearFactory(scale_factors=[(1 + (max_scale - 1) * x / scale_count) for x in range(0, scale_count)])
 
     magnetization = 2 * expit(zne.execute_with_zne(circ, execute, scale_noise=fold_global, factory=factory)) - 1
 
