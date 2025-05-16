@@ -24,7 +24,7 @@ from qiskit.circuit.library import RZZGate, RXGate
 
 from mitiq import zne
 from mitiq.zne.scaling.folding import fold_global
-from mitiq.zne.inference import LinearFactory
+from mitiq.zne.inference import RichardsonFactory
 
 
 def calc_stats(ideal_probs, counts, shots):
@@ -167,9 +167,8 @@ def execute(circ):
 
     # So as not to exceed floor at 0.0 and ceiling at 1.0, (assuming 0 < p < 1,)
     # we mitigate its logit function value (https://en.wikipedia.org/wiki/Logit)
-    return logit(stats['hog_prob'])
-    # return logit(stats['xeb'])
-    # return logit(stats['l2_similarity'])
+    # return logit(stats['hog_prob'])
+    return logit(stats['l2_similarity'])
 
 
 def main():
@@ -187,8 +186,8 @@ def main():
         trotter_step(circ, list(range(n_qubits)), (n_rows, n_cols), J, h, dt)
 
     scale_count = 10
-    max_scale = 2
-    factory = LinearFactory(scale_factors=[(1 + (max_scale - 1) * x / scale_count) for x in range(0, scale_count)])
+    max_scale = 5
+    factory = RichardsonFactory(scale_factors=[(1 + (max_scale - 1) * x / scale_count) for x in range(0, scale_count)])
 
     mitigated_fidelity = expit(zne.execute_with_zne(circ, execute, scale_noise=fold_global, factory=factory))
 
