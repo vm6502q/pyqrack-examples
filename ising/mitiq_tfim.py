@@ -20,10 +20,11 @@ from qiskit import QuantumCircuit
 from qiskit.compiler import transpile
 from qiskit_aer.backends import AerSimulator
 from qiskit.quantum_info import Statevector
+from qiskit.circuit.library import RZZGate, RXGate
 
 from mitiq import zne
 from mitiq.zne.scaling.folding import fold_global
-from mitiq.zne.inference import RichardsonFactory
+from mitiq.zne.inference import LinearFactory
 
 
 def calc_stats(ideal_probs, counts, shots):
@@ -66,29 +67,52 @@ def calc_stats(ideal_probs, counts, shots):
     }
 
 
-def random_circuit(width, depth):
-    # This is a "nearest-neighbor" coupler random circuit.
-    control = AerSimulator(method="statevector")
-    shots = 1 << (width + 2)
+def factor_width(width):
+    col_len = math.floor(math.sqrt(width))
+    while (((width // col_len) * col_len) != width):
+        col_len -= 1
+    row_len = width // col_len
+    if col_len == 1:
+        raise Exception("ERROR: Can't simulate prime number width!")
 
-    lcv_range = range(width)
-    all_bits = list(lcv_range)
+    return row_len, col_len
 
-    circ = QuantumCircuit(width)
-    for d in range(depth):
-        # Single-qubit gates
-        for i in lcv_range:
-            for _ in range(3):
-                circ.h(i)
-                circ.rz(random.uniform(0, 2 * math.pi), i)
 
-        # 2-qubit couplers
-        unused_bits = all_bits.copy()
-        random.shuffle(unused_bits)
-        while len(unused_bits) > 1:
-            c = unused_bits.pop()
-            t = unused_bits.pop()
-            circ.cx(c, t)
+def trotter_step(circ, qubits, lattice_shape, J, h, dt):
+    n_rows, n_cols = lattice_shape
+    
+    # First half of transverse field term
+    for q in qubits:
+        circ.rx(h * dt / 2, q)
+
+    # Layered RZZ interactions (simulate 2D nearest-neighbor coupling)
+    def add_rzz_pairs(pairs):
+        for q1, q2 in pairs:
+            circ.append(RZZGate(2 * J * dt), [q1, q2])
+
+    # Layer 1: horizontal pairs (even rows)
+    horiz_pairs = [(r * n_cols + c, r * n_cols + (c + 1) % n_cols)
+                   for r in range(n_rows) for c in range(0, n_cols - 1, 2)]
+    add_rzz_pairs(horiz_pairs)
+
+    # Layer 2: horizontal pairs (odd rows)
+    horiz_pairs = [(r * n_cols + c, r * n_cols + (c + 1) % n_cols)
+                   for r in range(n_rows) for c in range(1, n_cols - 1, 2)]
+    add_rzz_pairs(horiz_pairs)
+
+    # Layer 3: vertical pairs (even columns)
+    vert_pairs = [(r * n_cols + c, ((r + 1) % n_rows) * n_cols + c)
+                  for r in range(0, n_rows - 1, 2) for c in range(n_cols)]
+    add_rzz_pairs(vert_pairs)
+
+    # Layer 4: vertical pairs (odd columns)
+    vert_pairs = [(r * n_cols + c, ((r + 1) % n_rows) * n_cols + c)
+                  for r in range(1, n_rows - 1, 2) for c in range(n_cols)]
+    add_rzz_pairs(vert_pairs)
+
+    # Second half of transverse field term
+    for q in qubits:
+        circ.rx(h * dt / 2, q)
 
     return circ
 
@@ -121,12 +145,18 @@ def execute(circ):
 
     shots = 1 << (circ.width() + 2)
     all_bits = list(range(circ.width()))
-    
-    experiment = QrackSimulator(circ.width())
-    experiment.run_qiskit_circuit(circ)
+
+    qc = QuantumCircuit(circ.width())
+    theta = -math.pi / 6
+    for q in range(circ.width()):
+        qc.ry(theta, q)
+    qc.compose(circ, all_bits, inplace=True)
+
+    experiment = QrackSimulator(qc.width())
+    experiment.run_qiskit_circuit(qc)
 
     control = AerSimulator(method="statevector")
-    circ_aer = transpile(circ, backend=control)
+    circ_aer = transpile(qc, backend=control)
     circ_aer.save_statevector()
     job = control.run(circ_aer)
 
@@ -146,18 +176,23 @@ def main():
     if len(sys.argv) < 3:
         raise RuntimeError('Usage: python3 fc.py [width] [depth]')
 
-    width = int(sys.argv[1])
+    n_qubits = int(sys.argv[1])
     depth = int(sys.argv[2])
+    
+    n_rows, n_cols = factor_width(n_qubits)
+    J, h, dt = -1.0, 2.0, 0.25
 
-    circ = random_circuit(width, depth)
+    circ = QuantumCircuit(n_qubits)
+    for _ in range(depth):
+        trotter_step(circ, list(range(n_qubits)), (n_rows, n_cols), J, h, dt)
 
     scale_count = 10
     max_scale = 2
-    factory = RichardsonFactory(scale_factors=[(1 + (max_scale - 1) * x / scale_count) for x in range(0, scale_count)])
+    factory = LinearFactory(scale_factors=[(1 + (max_scale - 1) * x / scale_count) for x in range(0, scale_count)])
 
     mitigated_fidelity = expit(zne.execute_with_zne(circ, execute, scale_noise=fold_global, factory=factory))
 
-    print({ 'width': width, 'depth': depth, 'mitigated_fidelity': mitigated_fidelity })
+    print({ 'width': n_qubits, 'depth': depth, 'mitigated_fidelity': mitigated_fidelity })
 
     return 0
 
