@@ -173,7 +173,7 @@ def execute(circ):
 
 def main():
     if len(sys.argv) < 3:
-        raise RuntimeError('Usage: python3 fc.py [width] [depth]')
+        raise RuntimeError('Usage: python3 mitiq_tfim_calibration.py [width] [depth]')
 
     n_qubits = int(sys.argv[1])
     depth = int(sys.argv[2])

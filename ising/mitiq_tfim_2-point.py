@@ -97,7 +97,7 @@ def expit(x):
     return 1 / (1 + np.exp(-x))
 
 
-def execute(circ):
+def execute(circ, qubit1, qubit2):
     """Returns the mirror circuit expectation value for unsigned integer overall bit string."""
 
     shots = 1 << (circ.width() + 2)
@@ -112,21 +112,19 @@ def execute(circ):
     experiment = QrackSimulator(qc.width())
     experiment.run_qiskit_circuit(qc)
 
-    magnetization = 0
-    for qubit in all_bits:
-        z_exp = 1 - 2 * experiment.prob(qubit)
-        magnetization += z_exp
-    magnetization /= circ.width()
+    exp_val = experiment.prob_perm([qubit1, qubit2], [False, False])
 
-    return logit((magnetization + 1) / 2)
+    return logit(exp_val)
 
 
 def main():
-    if len(sys.argv) < 3:
-        raise RuntimeError('Usage: python3 mitiq_tfim.py [width] [depth]')
+    if len(sys.argv) < 5:
+        raise RuntimeError('Usage: python3 mitiq_tfim_2-point.py [width] [depth] [qubit1] [qubit2]')
 
     n_qubits = int(sys.argv[1])
     depth = int(sys.argv[2])
+    qubit1 = int(sys.argv[3])
+    qubit2 = int(sys.argv[4])
     
     n_rows, n_cols = factor_width(n_qubits)
     J, h, dt = -1.0, 2.0, 0.25
@@ -134,14 +132,17 @@ def main():
     circ = QuantumCircuit(n_qubits)
     for _ in range(depth):
         trotter_step(circ, list(range(n_qubits)), (n_rows, n_cols), J, h, dt)
+    
+    def executor(circ):
+        return execute(circ, qubit1, qubit2)
 
     scale_count = 10
     max_scale = 5
     factory = LinearFactory(scale_factors=[(1 + (max_scale - 1) * x / scale_count) for x in range(0, scale_count)])
 
-    magnetization = 2 * expit(zne.execute_with_zne(circ, execute, scale_noise=fold_global, factory=factory)) - 1
+    two_point = 2 * expit(zne.execute_with_zne(circ, executor, scale_noise=fold_global, factory=factory)) - 1
 
-    print({ 'width': n_qubits, 'depth': depth, 'magnetization': magnetization })
+    print({ 'width': n_qubits, 'depth': depth, 'two-point': two_point })
 
     return 0
 
