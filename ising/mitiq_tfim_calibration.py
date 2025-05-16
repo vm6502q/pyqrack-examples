@@ -143,7 +143,7 @@ def expit(x):
 def execute(circ):
     """Returns the mirror circuit expectation value for unsigned integer overall bit string."""
 
-    shots = 1 << (circ.width() + 2)
+    shots = 1 << (circ.width() + 4)
     all_bits = list(range(circ.width()))
 
     qc = QuantumCircuit(circ.width())
@@ -186,7 +186,7 @@ def main():
         trotter_step(circ, list(range(n_qubits)), (n_rows, n_cols), J, h, dt)
 
     scale_count = 9
-    max_scale = 3
+    max_scale = 5
     factory = LinearFactory(scale_factors=[(1 + (max_scale - 1) * x / scale_count) for x in range(0, scale_count)])
 
     mitigated_fidelity = expit(zne.execute_with_zne(circ, execute, scale_noise=fold_global, factory=factory))
