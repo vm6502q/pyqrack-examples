@@ -84,11 +84,14 @@ def execute(circ):
     experiment = QrackSimulator(circ.width())
     experiment.run_qiskit_circuit(circ)
 
-    result = experiment.prob_perm(all_bits, [False] * circ.width())
+    # We might be surprised if Haar-random magnetization is nontrivial.
+    magnetization = 0
+    for qubit in all_bits:
+        z_exp = 1 - 2 * experiment.prob(qubit)
+        magnetization += z_exp
+    magnetization /= circ.width()
 
-    # So as not to exceed floor at 0.0 and ceiling at 1.0, (assuming 0 < p < 1,)
-    # we mitigate its logit function value (https://en.wikipedia.org/wiki/Logit)
-    return logit(result)
+    return logit((magnetization + 1) / 2)
 
 
 def main():
@@ -104,9 +107,9 @@ def main():
     max_scale = 5
     factory = LinearFactory(scale_factors=[(1 + (max_scale - 1) * x / scale_count) for x in range(0, scale_count)])
 
-    mitigated_fidelity = expit(zne.execute_with_zne(circ, execute, scale_noise=fold_global, factory=factory))
+    magnetiization = expit(zne.execute_with_zne(circ, execute, scale_noise=fold_global, factory=factory))
 
-    print({ 'width': width, 'depth': depth, 'mitigated_fidelity': mitigated_fidelity })
+    print({ 'width': width, 'depth': depth, 'magnetiization': magnetiization })
 
     return 0
 
