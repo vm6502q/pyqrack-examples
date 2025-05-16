@@ -136,8 +136,8 @@ def main():
     def executor(circ):
         return execute(circ, qubit1, qubit2)
 
-    scale_count = 10
-    max_scale = 5
+    scale_count = 9
+    max_scale = 3
     factory = LinearFactory(scale_factors=[(1 + (max_scale - 1) * x / scale_count) for x in range(0, scale_count)])
 
     two_point = 2 * expit(zne.execute_with_zne(circ, executor, scale_noise=fold_global, factory=factory)) - 1

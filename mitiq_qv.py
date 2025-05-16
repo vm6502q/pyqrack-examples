@@ -150,7 +150,7 @@ def main():
 
     circ = random_circuit(width, depth)
 
-    scale_count = 10
+    scale_count = 9
     max_scale = 5
     factory = LinearFactory(scale_factors=[(1 + (max_scale - 1) * x / scale_count) for x in range(0, scale_count)])
 
