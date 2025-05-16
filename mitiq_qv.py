@@ -138,7 +138,6 @@ def execute(circ):
     # So as not to exceed floor at 0.0 and ceiling at 1.0, (assuming 0 < p < 1,)
     # we mitigate its logit function value (https://en.wikipedia.org/wiki/Logit)
     # return logit(stats['hog_prob'])
-    # return logit(stats['xeb'])
     return logit(stats['l2_similarity'])
 
 
