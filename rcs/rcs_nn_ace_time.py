@@ -72,8 +72,8 @@ def unpack(lq, reverse = False):
     return [3 * lq + 2, 3 * lq + 1, 3 * lq] if reverse else [3 * lq, 3 * lq + 1, 3 * lq + 2]
 
 
-def encode(sim, lq, hq):
-    if lq & 1:
+def encode(sim, lq, hq, reverse = False):
+    if (not (lq & 1)) == reverse:
        cx_shadow(sim, hq[0], hq[1])
        sim.mcx([hq[1]], hq[2])
     else:
@@ -81,8 +81,8 @@ def encode(sim, lq, hq):
        cx_shadow(sim, hq[1], hq[2])
 
 
-def decode(sim, lq, hq):
-    if lq & 1:
+def decode(sim, lq, hq, reverse = False):
+    if (not (lq & 1)) == reverse:
        sim.mcx([hq[1]], hq[2])
        cx_shadow(sim, hq[0], hq[1])
     else:
@@ -115,11 +115,11 @@ def cpauli(sim, lq1, lq2, anti, pauli):
     if (lq2 == (lq1 + 1)) or (lq1 == (lq2 + 1)):
         hq1 = unpack(lq1, True)
         hq2 = unpack(lq2, False)
-        decode(sim, lq1, hq1)
-        decode(sim, lq2, hq2)
+        decode(sim, lq1, hq1, True)
+        decode(sim, lq2, hq2, False)
         gate([hq1[0]], hq2[0])
-        encode(sim, lq2, hq2)
-        encode(sim, lq1, hq1)
+        encode(sim, lq2, hq2, False)
+        encode(sim, lq1, hq1, True)
     else:
         hq1 = unpack(lq1)
         hq2 = unpack(lq2)
