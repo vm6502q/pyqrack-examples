@@ -241,10 +241,12 @@ def bench_qrack(width, depth):
             u(experiment, -g[0], -g[2], -g[1], g[3])
 
     # Terminal measurement
+    shots = 100
     experiment_samples = experiment.measure_shots(all_bits, shots)
     seconds = time.perf_counter() - start
     
     mirror_fidelity = 0
+    hamming_weight = 0
     for sample in experiment_samples:
         success = True
         for _ in range(width):
@@ -255,11 +257,13 @@ def bench_qrack(width, depth):
                 sample >>= 1
             if bit_count > 1:
                 success = False
-                break
+                hamming_weight += 1
         if success:
             mirror_fidelity += 1
+    mirror_fidelity /= shots
+    hamming_weight /= shots
 
-    return seconds, mirror_fidelity
+    return seconds, mirror_fidelity, hamming_weight
 
 
 def main():
@@ -270,10 +274,10 @@ def main():
     depth = int(sys.argv[2])
 
     # Run the benchmarks
-    seconds, mirror_fidelity = bench_qrack(width, depth)
+    seconds, mirror_fidelity, hamming_weight = bench_qrack(width, depth)
 
     # Print the results
-    print({ 'width': width,  'depth': depth, 'seconds': seconds, 'mirror_fidelity': mirror_fidelity })
+    print({ 'width': width,  'depth': depth, 'seconds': seconds, 'mirror_fidelity': mirror_fidelity, 'hamming_weight': hamming_weight })
 
     return 0
 
