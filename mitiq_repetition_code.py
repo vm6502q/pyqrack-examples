@@ -95,7 +95,7 @@ def main():
 
         expectation = 2 * expit(zne.execute_with_zne(circ, executor, scale_noise=fold_global, factory=factory)) - 1
 
-        print({ 'width': width, 'angle' : angle, 'expectation': expectation })
+        print({ 'width': width, 'angle' : radians, 'expectation': expectation })
 
     return 0
 
