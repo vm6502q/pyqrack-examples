@@ -64,13 +64,11 @@ def execute(circ, radians):
     all_bits = list(range(circ.width()))
 
     experiment = QrackSimulator(circ.width())
-    # Create state and act code
     experiment.run_qiskit_circuit(circ)
-    # Map back to |0>
-    experiment.run_qiskit_circuit(circ.inverse())
 
     magnetization = 0
     for qubit in all_bits:
+        experiment.r(Pauli.PauliY, -radians, 0)
         exp = 1 - 2 * experiment.prob(qubit)
         magnetization += exp
     magnetization /= circ.width()
