@@ -242,7 +242,7 @@ def bench_qrack(width, depth):
 
     # Terminal measurement
     shots = 100
-    experiment_samples = experiment.measure_shots(all_bits, shots)
+    experiment_samples = experiment.measure_shots(list(range(len(width))), shots)
     seconds = time.perf_counter() - start
     
     mirror_fidelity = 0
