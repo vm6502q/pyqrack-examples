@@ -26,6 +26,16 @@ from mitiq.zne.scaling.folding import fold_global
 from mitiq.zne.inference import LinearFactory
 
 
+# By Gemini (Google Search AI)
+def int_to_bitstring(integer, length):
+    return bin(integer)[2:].zfill(length)
+
+
+# By Elara (OpenAI custom GPT)
+def hamming_distance(s1, s2, n):
+    return sum(ch1 != ch2 for ch1, ch2 in zip(int_to_bitstring(s1, n), int_to_bitstring(s2, n)))
+
+
 def random_circuit(width, depth):
     # This is a "nearest-neighbor" coupler random circuit.
     control = AerSimulator(method="statevector")
@@ -107,9 +117,9 @@ def main():
     max_scale = 5
     factory = LinearFactory(scale_factors=[(1 + (max_scale - 1) * x / scale_count) for x in range(0, scale_count)])
 
-    magnetization = 2 * expit(zne.execute_with_zne(circ, execute, scale_noise=fold_global, factory=factory)) + 1
+    hamming_weight = expit(zne.execute_with_zne(circ, execute, scale_noise=fold_global, factory=factory)) * width
 
-    print({ 'width': width, 'depth': depth, 'magnetization': magnetization })
+    print({ 'width': width, 'depth': depth, 'hamming_weight': hamming_weight })
 
     return 0
 
