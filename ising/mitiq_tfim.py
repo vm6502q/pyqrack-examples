@@ -98,8 +98,6 @@ def expit(x):
 
 
 def execute(circ):
-    """Returns the mirror circuit expectation value for unsigned integer overall bit string."""
-
     shots = 1 << (circ.width() + 2)
     all_bits = list(range(circ.width()))
 

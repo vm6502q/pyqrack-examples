@@ -26,46 +26,6 @@ from mitiq.zne.scaling.folding import fold_global
 from mitiq.zne.inference import LinearFactory
 
 
-def calc_stats(ideal_probs, counts, shots):
-    # For QV, we compare probabilities of (ideal) "heavy outputs."
-    # If the probability is above 2/3, the protocol certifies/passes the qubit width.
-    n_pow = len(ideal_probs)
-    n = int(round(math.log2(n_pow)))
-    threshold = statistics.median(ideal_probs)
-    u_u = statistics.mean(ideal_probs)
-    diff_sqr = 0
-    numer = 0
-    denom = 0
-    sum_hog_counts = 0
-    experiment = [0] * n_pow
-    for i in range(n_pow):
-        count = counts[i] if i in counts else 0
-        ideal = ideal_probs[i]
-
-        experiment[i] = count
-
-        # L2 distance
-        diff_sqr += (ideal - (count / shots)) ** 2
-
-        # XEB / EPLG
-        denom += (ideal - u_u) ** 2
-        numer += (ideal - u_u) * ((count / shots) - u_u)
-
-        # QV / HOG
-        if ideal > threshold:
-            sum_hog_counts += count
-
-    l2_similarity = 1 - diff_sqr ** (1/2)
-    hog_prob = sum_hog_counts / shots
-    xeb = numer / denom
-
-    return {
-        'l2_similarity': l2_similarity,
-        'xeb': xeb,
-        'hog_prob': hog_prob,
-    }
-
-
 def random_circuit(width, depth):
     # This is a "nearest-neighbor" coupler random circuit.
     control = AerSimulator(method="statevector")
@@ -117,26 +77,21 @@ def expit(x):
 
 
 def execute(circ):
-    shots = 1 << (circ.width() + 2)
+    shot_count = 1024
+
     all_bits = list(range(circ.width()))
     
     experiment = QrackSimulator(circ.width())
     experiment.run_qiskit_circuit(circ)
+    shots = experiment.measure_shots(all_bits, shot_count)
 
-    control = AerSimulator(method="statevector")
-    circ_aer = transpile(circ, backend=control)
-    circ_aer.save_statevector()
-    job = control.run(circ_aer)
+    # We might be surprised if Haar-random magnetization is nontrivial.
+    hamming_weight = 0
+    for shot in shots:
+        hamming_weight += hamming_distance(0, shot, circ.width())
+    hamming_weight /= shot_count
 
-    experiment_counts = dict(Counter(experiment.measure_shots(all_bits, shots)))
-    control_probs = Statevector(job.result().get_statevector()).probabilities()
-
-    stats = calc_stats(control_probs, experiment_counts, shots)
-
-    # So as not to exceed floor at 0.0 and ceiling at 1.0, (assuming 0 < p < 1,)
-    # we mitigate its logit function value (https://en.wikipedia.org/wiki/Logit)
-    # return logit(stats['hog_prob'])
-    return logit(stats['l2_similarity'])
+    return logit(hamming_weight / circ.width())
 
 
 def main():
@@ -152,9 +107,9 @@ def main():
     max_scale = 5
     factory = LinearFactory(scale_factors=[(1 + (max_scale - 1) * x / scale_count) for x in range(0, scale_count)])
 
-    mitigated_fidelity = expit(zne.execute_with_zne(circ, execute, scale_noise=fold_global, factory=factory))
+    magnetiization = 2 * expit(zne.execute_with_zne(circ, execute, scale_noise=fold_global, factory=factory)) + 1
 
-    print({ 'width': width, 'depth': depth, 'mitigated_fidelity': mitigated_fidelity })
+    print({ 'width': width, 'depth': depth, 'magnetiization': magnetiization })
 
     return 0
 

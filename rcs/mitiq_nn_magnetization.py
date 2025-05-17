@@ -173,8 +173,6 @@ def expit(x):
 
 
 def execute(circ):
-    """Returns the mirror circuit expectation value for unsigned integer overall bit string."""
-
     all_bits = list(range(circ.width()))
     
     experiment = QrackSimulator(circ.width())
