@@ -72,60 +72,56 @@ def unpack(lq, reverse = False):
     return [3 * lq + 2, 3 * lq + 1, 3 * lq] if reverse else [3 * lq, 3 * lq + 1, 3 * lq + 2]
 
 
-def encode(sim, lq, hq, reverse = False):
-    if (not (lq & 1)) == reverse:
-       cx_shadow(sim, hq[0], hq[1])
-       sim.mcx([hq[1]], hq[2])
+def encode(sim, hq, reverse = True)
+    if reverse:
+        cx_shadow(sim, hq[0], hq[1])
+        sim.mcx([hq[1]], hq[2])
     else:
-       sim.mcx([hq[0]], hq[1])
-       cx_shadow(sim, hq[1], hq[2])
+        sim.mcx([hq[0]], hq[1])
+        cx_shadow(sim, hq[1], hq[2])
 
 
-def decode(sim, lq, hq, reverse = False):
-    if (not (lq & 1)) == reverse:
-       sim.mcx([hq[1]], hq[2])
-       cx_shadow(sim, hq[0], hq[1])
+def decode(sim, hq, reverse):
+    if reverse:
+        sim.mcx([hq[1]], hq[2])
+        cx_shadow(sim, hq[0], hq[1])
     else:
-       cx_shadow(sim, hq[1], hq[2])
-       sim.mcx([hq[0]], hq[1])
-
+        cx_shadow(sim, hq[1], hq[2])
+        sim.mcx([hq[0]], hq[1])
 
 def u(sim, th, ph, lm, lq):
     hq = unpack(lq)
-    decode(sim, lq, hq)
+    decode(sim, hq)
     sim.u(hq[0], th, ph, lm)
-    encode(sim, lq, hq)
+    encode(sim, hq)
 
 
 def cpauli(sim, lq1, lq2, anti, pauli):
     gate = None
     shadow = None
     if pauli == Pauli.PauliX:
-        gate = sim.mcx
-        shadow = anti_cx_shadow if anti else cx_shadow
+        gate = sim.macx if anti else sim.mcx
     elif pauli == Pauli.PauliY:
-        gate = sim.mcy
-        shadow = anti_cy_shadow if anti else cy_shadow
+        gate = sim.macy if anti else sim.mcy
     elif pauli == Pauli.PauliZ:
-        gate = sim.mcz
-        shadow = anti_cz_shadow if anti else cz_shadow
+        gate = sim.macz if anti else sim.mcz
     else:
         return
 
     if (lq2 == (lq1 + 1)) or (lq1 == (lq2 + 1)):
         hq1 = unpack(lq1, True)
         hq2 = unpack(lq2, False)
-        decode(sim, lq1, hq1, True)
-        decode(sim, lq2, hq2, False)
+        decode(sim, hq1, True)
+        decode(sim, hq2, False)
         gate([hq1[0]], hq2[0])
-        encode(sim, lq2, hq2, False)
-        encode(sim, lq1, hq1, True)
+        encode(sim, hq2, False)
+        encode(sim, hq1, True)
     else:
         hq1 = unpack(lq1)
         hq2 = unpack(lq2)
-        gate([hq1[0]], hq2[0])
-        shadow(sim, hq1[1], hq2[1])
-        gate([hq1[2]], hq2[2])
+        gate(sim, hq1[0], hq2[0])
+        gate(sim, hq1[1], hq2[1])
+        gate(sim, hq1[2], hq2[2])
 
 
 def cx(sim, lq1, lq2):
@@ -226,10 +222,10 @@ def bench_qrack(width, depth):
                 g(experiment, b1, b2)
 
     # Terminal measurement
-    m_all(experiment)
-    interval = time.perf_counter() - start
+    sample = m_all(experiment)
+    seconds = time.perf_counter() - start
 
-    return interval
+    return seconds, sample
 
 
 def main():
@@ -240,9 +236,10 @@ def main():
     depth = int(sys.argv[2])
 
     # Run the benchmarks
-    result = bench_qrack(width, depth)
-    # Calc. and print the results
-    print("Width=" + str(width) + ", Depth=" + str(depth) + ", Seconds=" + str(result))
+    seconds, sample = bench_qrack(width, depth)
+
+    # Print the results
+    print({ 'width': width,  'depth': depth, 'seconds': seconds, 'sample': sample })
 
     return 0
 
