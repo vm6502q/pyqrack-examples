@@ -164,7 +164,7 @@ def m(sim, lq):
 
 def m_all(sim):
     result = 0
-    for lq in range(sim.get_qubit_count() / 3):
+    for lq in range(sim.num_qubits() / 3):
         result <<= 1
         if m(lq):
             result |= 1
