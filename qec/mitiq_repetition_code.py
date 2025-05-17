@@ -14,7 +14,7 @@ import numpy as np
 
 from collections import Counter
 
-from pyqrack import QrackSimulator, Pauli
+from pyqrack import QrackSimulator
 
 from qiskit import QuantumCircuit
 
@@ -26,7 +26,7 @@ from mitiq.zne.inference import LinearFactory
 def code(width, radians):
     qc = QuantumCircuit(width)
 
-    # State is |+>
+    # State preparation
     qc.ry(radians, 0)
 
     # Encode logical state across all qubits
@@ -34,6 +34,20 @@ def code(width, radians):
         qc.cx(0, i)
 
     return qc
+
+
+def reverse_code(width, radians):
+    qc = QuantumCircuit(width)
+
+    # Decode logical state across all qubits (in a different order)
+    for i in range(width - 1):
+        qc.cx(width - 1, i)
+
+    # State preparation
+    qc.ry(-radians, 0)
+
+    return qc
+
 
 def logit(x):
     # Theoretically, these limit points are "infinite,"
@@ -65,10 +79,10 @@ def execute(circ, radians):
 
     experiment = QrackSimulator(circ.width())
     experiment.run_qiskit_circuit(circ)
+    experiment.run_qiskit_circuit(reverse_code(circ.width(), radians))
 
     magnetization = 0
     for qubit in all_bits:
-        experiment.r(Pauli.PauliY, -radians, 0)
         exp = 1 - 2 * experiment.prob(qubit)
         magnetization += exp
     magnetization /= circ.width()
