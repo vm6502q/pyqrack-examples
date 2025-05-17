@@ -98,7 +98,6 @@ def u(sim, th, ph, lm, lq):
 
 def cpauli(sim, lq1, lq2, anti, pauli):
     gate = None
-    shadow = None
     if pauli == Pauli.PauliX:
         gate = sim.macx if anti else sim.mcx
     elif pauli == Pauli.PauliY:
@@ -164,9 +163,9 @@ def m(sim, lq):
 
 def m_all(sim):
     result = 0
-    for lq in range(sim.num_qubits() / 3):
+    for lq in range(sim.num_qubits() // 3):
         result <<= 1
-        if m(lq):
+        if m(sim, lq):
             result |= 1
 
     return result
