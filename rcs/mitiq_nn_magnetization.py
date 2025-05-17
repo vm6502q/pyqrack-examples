@@ -203,7 +203,7 @@ def main():
     max_scale = 5
     factory = LinearFactory(scale_factors=[(1 + (max_scale - 1) * x / scale_count) for x in range(0, scale_count)])
 
-    magnetization = expit(zne.execute_with_zne(circ, execute, scale_noise=fold_global, factory=factory))
+    magnetization = 2 * expit(zne.execute_with_zne(circ, execute, scale_noise=fold_global, factory=factory)) - 1
 
     print({ 'width': width, 'depth': depth, 'magnetization': magnetization })
 
