@@ -44,7 +44,7 @@ def reverse_code(width, radians):
         qc.cx(width - 1, i)
 
     # State preparation
-    qc.ry(-radians, 0)
+    qc.ry(-radians, width - 1)
 
     return qc
 
