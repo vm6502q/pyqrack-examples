@@ -150,13 +150,15 @@ def acz(sim, lq1, lq2):
 def m(sim, lq):
     hq = unpack(lq)
     syndrome = 0
+    bits = []
     for q in hq:
-        if sim.m(q):
+        bits.append(sim.m(q))
+        if bits[-1]:
             syndrome += 1
     result = True if (syndrome > 1) else False
-    for q in hq:
-        if sim.m(q) != result:
-            sim.x(q)
+    for i in range(len(hq)): 
+        if bits[i] != result:
+            sim.x(hq[i])
 
     return result
 
