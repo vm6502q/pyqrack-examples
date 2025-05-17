@@ -89,10 +89,25 @@ def decode(sim, hq, reverse = False):
         cx_shadow(sim, hq[1], hq[2])
         sim.mcx([hq[0]], hq[1])
 
+
 def u(sim, th, ph, lm, lq):
     hq = unpack(lq)
     decode(sim, hq)
     sim.u(hq[0], th, ph, lm)
+    encode(sim, hq)
+
+
+def s(sim, lq):
+    hq = unpack(lq)
+    decode(sim, hq)
+    sim.s(hq[0])
+    encode(sim, hq)
+
+
+def adjs(sim, lq):
+    hq = unpack(lq)
+    decode(sim, hq)
+    sim.adjs(hq[0])
     encode(sim, hq)
 
 
@@ -145,6 +160,26 @@ def acy(sim, lq1, lq2):
 
 def acz(sim, lq1, lq2):
     cpauli(sim, lq1, lq2, True, Pauli.PauliZ)
+
+
+def swap(sim, lq1, lq2):
+    cx(sim, lq1, lq2)
+    cx(sim, lq2, lq1)
+    cx(sim, lq1, lq2)
+
+
+def iswap(sim, lq1, lq2):
+    swap(sim, lq1, lq2)
+    cz(sim, lq1, lq2)
+    s(sim, lq1)
+    s(sim, lq2)
+
+
+def adjiswap(sim, lq1, lq2):
+    adjs(sim, lq2)
+    adjs(sim, lq1)
+    cz(sim, lq1, lq2)
+    swap(sim, lq1, lq2)
 
 
 def m(sim, lq):
