@@ -11,18 +11,18 @@ import time
 from pyqrack import QrackAceBackend
 
 
-def factor_width(width):
-    row_len = math.floor(math.sqrt(width))
-    while (((width // row_len) * row_len) != width):
-        row_len -= 1
-    col_len = width // row_len
-    if row_len == 1:
+def factor_width(width, reverse=False):
+    col_len = math.floor(math.sqrt(width))
+    while (((width // col_len) * col_len) != width):
+        col_len -= 1
+    if col_len == 1:
         raise Exception("ERROR: Can't simulate prime number width!")
+    row_len = width // col_len
 
-    return (row_len, col_len)
+    return (col_len, row_len) if reverse else (row_len, col_len)
 
 
-def bench_qrack(width, depth):
+def bench_qrack(width, depth, reverse):
     # This is a "nearest-neighbor" coupler random circuit.
     start = time.perf_counter()
     experiment = QrackAceBackend(width)
@@ -33,7 +33,7 @@ def bench_qrack(width, depth):
     gateSequence = [ 0, 3, 2, 1, 2, 1, 0, 3 ]
     two_bit_gates = experiment.cx, experiment.cy, experiment.cz, experiment.acx, experiment.acy, experiment.acz
 
-    row_len, col_len = factor_width(width)
+    row_len, col_len = factor_width(width, reverse)
 
     for _ in range(depth):
         # Single-qubit gates
@@ -81,13 +81,16 @@ def bench_qrack(width, depth):
 
 def main():
     if len(sys.argv) < 3:
-        raise RuntimeError('Usage: python3 rcs_nn_elided_time.py [width] [depth]')
+        raise RuntimeError('Usage: python3 rcs_nn_ace_time.py [width] [depth] [reverse row/column]')
 
     width = int(sys.argv[1])
     depth = int(sys.argv[2])
+    reverse = False
+    if len(sys.argv) > 3:
+        reverse = sys.argv[3] not in ['0', 'False']
 
     # Run the benchmarks
-    seconds, sample = bench_qrack(width, depth)
+    seconds, sample = bench_qrack(width, depth, reverse)
 
     # Print the results
     print({ 'width': width,  'depth': depth, 'seconds': seconds, 'sample': sample })
