@@ -97,14 +97,10 @@ def bench_qrack(width, depth):
     for sample in experiment_samples:
         success = True
         for _ in range(width):
-            bit_count = 0
-            for _ in range(3):
-                if sample & 1:
-                    bit_count += 1
-                sample >>= 1
-            if bit_count > 1:
+            if sample & 1:
                 success = False
                 hamming_weight += 1
+            sample >>= 1
         if success:
             mirror_fidelity += 1
     mirror_fidelity /= shots
