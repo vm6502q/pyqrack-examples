@@ -92,7 +92,7 @@ def execute(circ, radians):
 
 def main():
     if len(sys.argv) < 2:
-        raise RuntimeError('Usage: python3 fc.py [width]')
+        raise RuntimeError('Usage: python3 mitiq_repetition_code.py [width]')
 
     width = int(sys.argv[1])
 
