@@ -55,13 +55,13 @@ def bench_qrack(width, depth, reverse):
                 temp_col = temp_col + (1 if (gate & 1) else 0)
 
                 if temp_row < 0:
-                    temp_row = temp_row + row_len
+                    continue
                 if temp_col < 0:
-                    temp_col = temp_col + col_len
+                    continue
                 if temp_row >= row_len:
-                    temp_row = temp_row - row_len
+                    continue
                 if temp_col >= col_len:
-                    temp_col = temp_col - col_len
+                    continue
 
                 b1 = row * row_len + col
                 b2 = temp_row * row_len + temp_col
