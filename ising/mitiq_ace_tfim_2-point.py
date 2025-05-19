@@ -14,7 +14,7 @@ import numpy as np
 
 from collections import Counter
 
-from pyqrack import QrackSimulator
+from pyqrack import QrackAceBackend
 
 from qiskit import QuantumCircuit
 from qiskit.circuit.library import RZZGate, RXGate
@@ -107,7 +107,7 @@ def execute(circ, qubit1, qubit2):
         qc.ry(theta, q)
     qc.compose(circ, all_bits, inplace=True)
 
-    experiment = QrackSimulator(qc.width())
+    experiment = QrackAceBackend(qc.width())
     experiment.run_qiskit_circuit(qc)
     experiment_samples = experiment.measure_shots(all_bits, shots)
     
