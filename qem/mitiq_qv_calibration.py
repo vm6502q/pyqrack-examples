@@ -68,7 +68,6 @@ def calc_stats(ideal_probs, counts, shots):
 
 def random_circuit(width, depth):
     # This is a "nearest-neighbor" coupler random circuit.
-    control = AerSimulator(method="statevector")
     shots = 1 << (width + 2)
 
     lcv_range = range(width)
