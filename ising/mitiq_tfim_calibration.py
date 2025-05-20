@@ -165,8 +165,8 @@ def execute(circ):
 
     # So as not to exceed floor at 0.0 and ceiling at 1.0, (assuming 0 < p < 1,)
     # we mitigate its logit function value (https://en.wikipedia.org/wiki/Logit)
-    return logit(stats['hog_prob'])
-    # return logit(stats['l2_similarity'])
+    # return logit(stats['hog_prob'])
+    return logit(stats['l2_similarity'])
 
 
 def main():
@@ -187,9 +187,9 @@ def main():
     max_scale = 5
     factory = LinearFactory(scale_factors=[(1 + (max_scale - 1) * x / scale_count) for x in range(0, scale_count)])
 
-    mitigated_hog_prob = expit(zne.execute_with_zne(circ, execute, scale_noise=fold_global, factory=factory))
+    mitigated_l2_similarity = expit(zne.execute_with_zne(circ, execute, scale_noise=fold_global, factory=factory))
 
-    print({ 'width': n_qubits, 'depth': depth, 'mitigated_hog_prob': mitigated_hog_prob  })
+    print({ 'width': n_qubits, 'depth': depth, 'mitigated_l2_similarity': mitigated_l2_similarity  })
 
     return 0
 
