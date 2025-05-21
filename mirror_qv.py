@@ -149,7 +149,11 @@ def bench_qrack(width, depth, trials, is_obfuscated):
         forward_seconds = time.perf_counter() - start
 
         # Optionally "obfuscate" the circuit adjoint.
-        adj_circ = (transpile(circ, optimization_level=3) if is_obfuscated else circ).inverse()
+        if is_obfuscated:
+            adj_circ = transpile(circ, optimization_level=3)
+            adj_circ = transpile(circ, optimization_level=3, basis_gates=['u', 'x', 'y', 'z', 's', 'sdg', 't', 'tdg', 'cx', 'cy', 'cz', 'cp', 'swap', 'iswap']).inverse()
+        else:
+            adj_circ = circ.inverse()
 
         transpile_seconds = time.perf_counter() - (forward_seconds + start)
 
