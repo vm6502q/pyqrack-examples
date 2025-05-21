@@ -14,16 +14,98 @@ import numpy as np
 
 from collections import Counter
 
-from pyqrack import QrackSimulator
+from pyqrack import QrackAceBackend
 
 from qiskit import QuantumCircuit
-from qiskit.compiler import transpile
 from qiskit_aer.backends import AerSimulator
 from qiskit.quantum_info import Statevector
 
 from mitiq import zne
 from mitiq.zne.scaling.folding import fold_global
 from mitiq.zne.inference import LinearFactory
+
+
+# By Gemini (Google Search AI)
+def int_to_bitstring(integer, length):
+    return bin(integer)[2:].zfill(length)
+
+
+# By Elara (OpenAI custom GPT)
+def hamming_distance(s1, s2, n):
+    return sum(
+        ch1 != ch2 for ch1, ch2 in zip(int_to_bitstring(s1, n), int_to_bitstring(s2, n))
+    )
+
+
+def factor_width(width):
+    col_len = math.floor(math.sqrt(width))
+    while ((width // col_len) * col_len) != width:
+        col_len -= 1
+    row_len = width // col_len
+    if col_len == 1:
+        raise Exception("ERROR: Can't simulate prime number width!")
+
+    return (row_len, col_len)
+
+
+def cx(sim, q1, q2):
+    sim.cx(q1, q2)
+
+
+def cy(sim, q1, q2):
+    sim.cy(q1, q2)
+
+
+def cz(sim, q1, q2):
+    sim.cz(q1, q2)
+
+
+def acx(sim, q1, q2):
+    sim.x(q1)
+    sim.cx(q1, q2)
+    sim.x(q1)
+
+
+def acy(sim, q1, q2):
+    sim.x(q1)
+    sim.cy(q1, q2)
+    sim.x(q1)
+
+
+def acz(sim, q1, q2):
+    sim.x(q1)
+    sim.cz(q1, q2)
+    sim.x(q1)
+
+
+def swap(sim, q1, q2):
+    sim.swap(q1, q2)
+
+
+def iswap(sim, q1, q2):
+    sim.iswap(q1, q2)
+
+
+def iiswap(sim, q1, q2):
+    sim.iswap(q1, q2)
+    sim.iswap(q1, q2)
+    sim.iswap(q1, q2)
+
+
+def pswap(sim, q1, q2):
+    sim.cz(q1, q2)
+    sim.swap(q1, q2)
+
+
+def mswap(sim, q1, q2):
+    sim.swap(q1, q2)
+    sim.cz(q1, q2)
+
+
+def nswap(sim, q1, q2):
+    sim.cz(q1, q2)
+    sim.swap(q1, q2)
+    sim.cz(q1, q2)
 
 
 def random_circuit(width, depth):
@@ -77,19 +159,22 @@ def expit(x):
 
 
 def execute(circ):
+    shot_count = 1024
+
     all_bits = list(range(circ.width()))
 
-    experiment = QrackSimulator(circ.width())
+    experiment = QrackAceBackend(circ.width())
     experiment.run_qiskit_circuit(circ)
+    experiment.run_qiskit_circuit(circ.inverse())
+    shots = experiment.measure_shots(all_bits, shot_count)
 
     # We might be surprised if Haar-random magnetization is nontrivial.
-    magnetization = 0
-    for qubit in all_bits:
-        z_exp = 1 - 2 * experiment.prob(qubit)
-        magnetization += z_exp
-    magnetization /= circ.width()
+    hamming_weight = 0
+    for shot in shots:
+        hamming_weight += hamming_distance(0, shot, circ.width())
+    hamming_weight /= shot_count
 
-    return logit((magnetization + 1) / 2)
+    return logit(hamming_weight / circ.width())
 
 
 def main():
@@ -109,17 +194,11 @@ def main():
         ]
     )
 
-    magnetization = (
-        2
-        * expit(
-            zne.execute_with_zne(
-                circ, execute, scale_noise=fold_global, factory=factory
-            )
-        )
-        - 1
+    hamming_weight = width * expit(
+        zne.execute_with_zne(circ, execute, scale_noise=fold_global, factory=factory)
     )
 
-    print({"width": width, "depth": depth, "magnetization": magnetization})
+    print({"width": width, "depth": depth, "hamming_weight": hamming_weight})
 
     return 0
 

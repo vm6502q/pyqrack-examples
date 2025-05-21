@@ -39,8 +39,7 @@ def hamming_distance(s1, s2, n):
 
 
 def random_circuit(width, depth):
-    # This is a "nearest-neighbor" coupler random circuit.
-    control = AerSimulator(method="statevector")
+    # This is a "fully-connected" coupler random circuit.
     shots = 1 << (width + 2)
 
     lcv_range = range(width)
