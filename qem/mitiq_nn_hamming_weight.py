@@ -33,12 +33,14 @@ def int_to_bitstring(integer, length):
 
 # By Elara (OpenAI custom GPT)
 def hamming_distance(s1, s2, n):
-    return sum(ch1 != ch2 for ch1, ch2 in zip(int_to_bitstring(s1, n), int_to_bitstring(s2, n)))
+    return sum(
+        ch1 != ch2 for ch1, ch2 in zip(int_to_bitstring(s1, n), int_to_bitstring(s2, n))
+    )
 
-    
+
 def factor_width(width):
     col_len = math.floor(math.sqrt(width))
-    while (((width // col_len) * col_len) != width):
+    while ((width // col_len) * col_len) != width:
         col_len -= 1
     row_len = width // col_len
     if col_len == 1:
@@ -111,21 +113,22 @@ def random_circuit(width, depth):
     # This is a "nearest-neighbor" coupler random circuit.
     lcv_range = range(width)
     all_bits = list(lcv_range)
-    
+
     # Nearest-neighbor couplers:
-    gateSequence = [ 0, 3, 2, 1, 2, 1, 0, 3 ]
+    gateSequence = [0, 3, 2, 1, 2, 1, 0, 3]
     two_bit_gates = swap, pswap, mswap, nswap, iswap, iiswap, cx, cy, cz, acx, acy, acz
-    
+
     row_len, col_len = factor_width(width)
-    
+
     results = []
 
     circ = QuantumCircuit(width)
     for d in range(depth):
         # Single-qubit gates
         for i in lcv_range:
-            circ.h(i)
-            circ.rz(random.uniform(0, 2 * math.pi), i)
+            for _ in range(3):
+                circ.h(i)
+                circ.rz(random.uniform(0, 2 * math.pi), i)
 
         # Nearest-neighbor couplers:
         ############################
@@ -135,7 +138,7 @@ def random_circuit(width, depth):
             for col in range(col_len):
                 temp_row = row
                 temp_col = col
-                temp_row = temp_row + (1 if (gate & 2) else -1);
+                temp_row = temp_row + (1 if (gate & 2) else -1)
                 temp_col = temp_col + (1 if (gate & 1) else 0)
 
                 if temp_row < 0:
@@ -157,6 +160,7 @@ def random_circuit(width, depth):
                 g(circ, b1, b2)
 
     return circ
+
 
 def logit(x):
     # Theoretically, these limit points are "infinite,"
@@ -186,7 +190,7 @@ def execute(circ):
     shot_count = 1024
 
     all_bits = list(range(circ.width()))
-    
+
     experiment = QrackSimulator(circ.width())
     experiment.run_qiskit_circuit(circ)
     shots = experiment.measure_shots(all_bits, shot_count)
@@ -202,7 +206,7 @@ def execute(circ):
 
 def main():
     if len(sys.argv) < 3:
-        raise RuntimeError('Usage: python3 fc.py [width] [depth]')
+        raise RuntimeError("Usage: python3 fc.py [width] [depth]")
 
     width = int(sys.argv[1])
     depth = int(sys.argv[2])
@@ -211,14 +215,20 @@ def main():
 
     scale_count = 9
     max_scale = 5
-    factory = LinearFactory(scale_factors=[(1 + (max_scale - 1) * x / scale_count) for x in range(0, scale_count)])
+    factory = LinearFactory(
+        scale_factors=[
+            (1 + (max_scale - 1) * x / scale_count) for x in range(0, scale_count)
+        ]
+    )
 
-    hamming_weight = width * expit(zne.execute_with_zne(circ, execute, scale_noise=fold_global, factory=factory))
+    hamming_weight = width * expit(
+        zne.execute_with_zne(circ, execute, scale_noise=fold_global, factory=factory)
+    )
 
-    print({ 'width': width, 'depth': depth, 'hamming_weight': hamming_weight })
+    print({"width": width, "depth": depth, "hamming_weight": hamming_weight})
 
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

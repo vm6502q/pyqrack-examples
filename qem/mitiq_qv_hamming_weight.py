@@ -33,7 +33,9 @@ def int_to_bitstring(integer, length):
 
 # By Elara (OpenAI custom GPT)
 def hamming_distance(s1, s2, n):
-    return sum(ch1 != ch2 for ch1, ch2 in zip(int_to_bitstring(s1, n), int_to_bitstring(s2, n)))
+    return sum(
+        ch1 != ch2 for ch1, ch2 in zip(int_to_bitstring(s1, n), int_to_bitstring(s2, n))
+    )
 
 
 def random_circuit(width, depth):
@@ -61,6 +63,7 @@ def random_circuit(width, depth):
             circ.cx(c, t)
 
     return circ
+
 
 def logit(x):
     # Theoretically, these limit points are "infinite,"
@@ -90,7 +93,7 @@ def execute(circ):
     shot_count = 1024
 
     all_bits = list(range(circ.width()))
-    
+
     experiment = QrackSimulator(circ.width())
     experiment.run_qiskit_circuit(circ)
     shots = experiment.measure_shots(all_bits, shot_count)
@@ -106,7 +109,7 @@ def execute(circ):
 
 def main():
     if len(sys.argv) < 3:
-        raise RuntimeError('Usage: python3 fc.py [width] [depth]')
+        raise RuntimeError("Usage: python3 fc.py [width] [depth]")
 
     width = int(sys.argv[1])
     depth = int(sys.argv[2])
@@ -115,14 +118,25 @@ def main():
 
     scale_count = 9
     max_scale = 5
-    factory = LinearFactory(scale_factors=[(1 + (max_scale - 1) * x / scale_count) for x in range(0, scale_count)])
+    factory = LinearFactory(
+        scale_factors=[
+            (1 + (max_scale - 1) * x / scale_count) for x in range(0, scale_count)
+        ]
+    )
 
-    hamming_weight = expit(zne.execute_with_zne(circ, execute, scale_noise=fold_global, factory=factory)) * width
+    hamming_weight = (
+        expit(
+            zne.execute_with_zne(
+                circ, execute, scale_noise=fold_global, factory=factory
+            )
+        )
+        * width
+    )
 
-    print({ 'width': width, 'depth': depth, 'hamming_weight': hamming_weight })
+    print({"width": width, "depth": depth, "hamming_weight": hamming_weight})
 
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

@@ -55,14 +55,14 @@ def calc_stats(ideal_probs, counts, shots):
         if ideal > threshold:
             sum_hog_counts += count
 
-    l2_similarity = 1 - diff_sqr ** (1/2)
+    l2_similarity = 1 - diff_sqr ** (1 / 2)
     hog_prob = sum_hog_counts / shots
     xeb = numer / denom
 
     return {
-        'l2_similarity': l2_similarity,
-        'xeb': xeb,
-        'hog_prob': hog_prob,
+        "l2_similarity": l2_similarity,
+        "xeb": xeb,
+        "hog_prob": hog_prob,
     }
 
 
@@ -91,6 +91,7 @@ def random_circuit(width, depth):
 
     return circ
 
+
 def logit(x):
     # Theoretically, these limit points are "infinite,"
     # but precision caps out between 36 and 37:
@@ -118,7 +119,7 @@ def expit(x):
 def execute(circ):
     shots = 1 << (circ.width() + 2)
     all_bits = list(range(circ.width()))
-    
+
     experiment = QrackSimulator(circ.width())
     experiment.run_qiskit_circuit(circ)
 
@@ -135,12 +136,12 @@ def execute(circ):
     # So as not to exceed floor at 0.0 and ceiling at 1.0, (assuming 0 < p < 1,)
     # we mitigate its logit function value (https://en.wikipedia.org/wiki/Logit)
     # return logit(stats['hog_prob'])
-    return logit(stats['l2_similarity'])
+    return logit(stats["l2_similarity"])
 
 
 def main():
     if len(sys.argv) < 3:
-        raise RuntimeError('Usage: python3 fc.py [width] [depth]')
+        raise RuntimeError("Usage: python3 fc.py [width] [depth]")
 
     width = int(sys.argv[1])
     depth = int(sys.argv[2])
@@ -149,14 +150,20 @@ def main():
 
     scale_count = 9
     max_scale = 5
-    factory = LinearFactory(scale_factors=[(1 + (max_scale - 1) * x / scale_count) for x in range(0, scale_count)])
+    factory = LinearFactory(
+        scale_factors=[
+            (1 + (max_scale - 1) * x / scale_count) for x in range(0, scale_count)
+        ]
+    )
 
-    mitigated_fidelity = expit(zne.execute_with_zne(circ, execute, scale_noise=fold_global, factory=factory))
+    mitigated_fidelity = expit(
+        zne.execute_with_zne(circ, execute, scale_noise=fold_global, factory=factory)
+    )
 
-    print({ 'width': width, 'depth': depth, 'mitigated_fidelity': mitigated_fidelity })
+    print({"width": width, "depth": depth, "mitigated_fidelity": mitigated_fidelity})
 
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())
