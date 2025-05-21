@@ -14,7 +14,7 @@ import numpy as np
 
 from collections import Counter
 
-from pyqrack import QrackSimulator
+from pyqrack import QrackAceBackend
 
 from qiskit import QuantumCircuit
 from qiskit.compiler import transpile
@@ -150,7 +150,7 @@ def execute(circ):
         qc.ry(theta, q)
     qc.compose(circ, all_bits, inplace=True)
 
-    experiment = QrackSimulator(qc.width())
+    experiment = QrackAceBackend(qc.width())
     experiment.run_qiskit_circuit(qc)
 
     control = AerSimulator(method="statevector")
