@@ -1,16 +1,20 @@
-# Orbifolded random circuit sampling
-# How good are Google's own "elided circuits" as a direct XEB approximation to full Sycamore circuits?
-# (Are they better than the 2019 Sycamore hardware?)
-# (This is actually a different "elision" concept, but allow that it works.)
+# See "Error mitigation increases the effective quantum volume of quantum computers," https://arxiv.org/abs/2203.05489
+#
+# Mitiq is under the GPL 3.0.
+# Hence, this example, as the entire work-in-itself, must be considered to be under GPL 3.0.
+# See https://www.gnu.org/licenses/gpl-3.0.txt for details.
 
 import math
 import random
+import statistics
 import sys
 import time
 
 import numpy as np
 
-from pyqrack import QrackAceBackend
+from collections import Counter
+
+from pyqrack import QrackSimulator
 
 from qiskit import QuantumCircuit
 from qiskit.compiler import transpile
@@ -22,39 +26,25 @@ from mitiq.zne.scaling.folding import fold_global
 from mitiq.zne.inference import LinearFactory
 
 
-def factor_width(width, reverse=False):
+# By Gemini (Google Search AI)
+def int_to_bitstring(integer, length):
+    return bin(integer)[2:].zfill(length)
+
+
+# By Elara (OpenAI custom GPT)
+def hamming_distance(s1, s2, n):
+    return sum(ch1 != ch2 for ch1, ch2 in zip(int_to_bitstring(s1, n), int_to_bitstring(s2, n)))
+
+    
+def factor_width(width):
     col_len = math.floor(math.sqrt(width))
     while (((width // col_len) * col_len) != width):
         col_len -= 1
+    row_len = width // col_len
     if col_len == 1:
         raise Exception("ERROR: Can't simulate prime number width!")
-    row_len = width // col_len
 
-    return (col_len, row_len) if reverse else (row_len, col_len)
-
-
-def logit(x):
-    # Theoretically, these limit points are "infinite,"
-    # but precision caps out between 36 and 37:
-    if 5e-17 > (1 - x):
-        return 37
-    # For the negative limit, the precision caps out
-    # between -37 and -38
-    elif x < 1e-17:
-        return -38
-    return max(-38, min(37, np.log(x / (1 - x))))
-
-
-def expit(x):
-    # Theoretically, these limit points are "infinite,"
-    # but precision caps out between 36 and 37:
-    if x >= 37:
-        return 1.0
-    # For the negative limit, the precision caps out
-    # between -37 and -38
-    elif x <= -38:
-        return 0.0
-    return 1 / (1 + np.exp(-x))
+    return (row_len, col_len)
 
 
 def cx(sim, q1, q2):
@@ -87,16 +77,46 @@ def acz(sim, q1, q2):
     sim.x(q1)
 
 
-def random_circuit(width, depth, reverse):
+def swap(sim, q1, q2):
+    sim.swap(q1, q2)
+
+
+def iswap(sim, q1, q2):
+    sim.iswap(q1, q2)
+
+
+def iiswap(sim, q1, q2):
+    sim.iswap(q1, q2)
+    sim.iswap(q1, q2)
+    sim.iswap(q1, q2)
+
+
+def pswap(sim, q1, q2):
+    sim.cz(q1, q2)
+    sim.swap(q1, q2)
+
+
+def mswap(sim, q1, q2):
+    sim.swap(q1, q2)
+    sim.cz(q1, q2)
+
+
+def nswap(sim, q1, q2):
+    sim.cz(q1, q2)
+    sim.swap(q1, q2)
+    sim.cz(q1, q2)
+
+
+def random_circuit(width, depth):
     # This is a "nearest-neighbor" coupler random circuit.
     lcv_range = range(width)
     all_bits = list(lcv_range)
     
     # Nearest-neighbor couplers:
     gateSequence = [ 0, 3, 2, 1, 2, 1, 0, 3 ]
-    two_bit_gates = cx, cy, cz, acx, acy, acz
+    two_bit_gates = swap, pswap, mswap, nswap, iswap, iiswap, cx, cy, cz, acx, acy, acz
     
-    row_len, col_len = factor_width(width, reverse)
+    row_len, col_len = factor_width(width)
     
     results = []
 
@@ -138,52 +158,63 @@ def random_circuit(width, depth, reverse):
 
     return circ
 
+def logit(x):
+    # Theoretically, these limit points are "infinite,"
+    # but precision caps out between 36 and 37:
+    if 5e-17 > (1 - x):
+        return 37
+    # For the negative limit, the precision caps out
+    # between -37 and -38
+    elif x < 1e-17:
+        return -38
+    return max(-38, min(37, np.log(x / (1 - x))))
+
+
+def expit(x):
+    # Theoretically, these limit points are "infinite,"
+    # but precision caps out between 36 and 37:
+    if x >= 37:
+        return 1.0
+    # For the negative limit, the precision caps out
+    # between -37 and -38
+    elif x <= -38:
+        return 0.0
+    return 1 / (1 + np.exp(-x))
+
 
 def execute(circ):
-    all_bits = list(range(circ.width()))
+    shot_count = 1024
 
-    experiment = QrackAceBackend(circ.width())
+    all_bits = list(range(circ.width()))
+    
+    experiment = QrackSimulator(circ.width())
     experiment.run_qiskit_circuit(circ)
     experiment.run_qiskit_circuit(circ.inverse())
+    shots = experiment.measure_shots(all_bits, shot_count)
 
-    # Terminal measurement
-    shots = 1000
-    experiment_samples = experiment.measure_shots(all_bits, shots)
-    
-    mirror_fidelity = 0
+    # We might be surprised if Haar-random magnetization is nontrivial.
     hamming_weight = 0
-    for sample in experiment_samples:
-        success = True
-        for _ in range(circ.width()):
-            if sample & 1:
-                success = False
-                hamming_weight += 1
-            sample >>= 1
-        if success:
-            mirror_fidelity += 1
-    mirror_fidelity /= shots
-    hamming_weight /= shots
+    for shot in shots:
+        hamming_weight += hamming_distance(0, shot, circ.width())
+    hamming_weight /= shot_count
 
     return logit(hamming_weight / circ.width())
 
 
 def main():
     if len(sys.argv) < 3:
-        raise RuntimeError('Usage: python3 mitiq_rcs_nn_ace_mirror.py [width] [depth]')
+        raise RuntimeError('Usage: python3 fc.py [width] [depth]')
 
     width = int(sys.argv[1])
     depth = int(sys.argv[2])
-    reverse = False
-    if len(sys.argv) > 3:
-        reverse = sys.argv[3] not in ['0', 'False']
 
-    circ = random_circuit(width, depth, reverse)
+    circ = random_circuit(width, depth)
 
     scale_count = 9
     max_scale = 5
     factory = LinearFactory(scale_factors=[(1 + (max_scale - 1) * x / scale_count) for x in range(0, scale_count)])
 
-    hamming_weight = expit(zne.execute_with_zne(circ, execute, scale_noise=fold_global, factory=factory)) * width
+    hamming_weight = width * expit(zne.execute_with_zne(circ, execute, scale_noise=fold_global, factory=factory))
 
     print({ 'width': width, 'depth': depth, 'hamming_weight': hamming_weight })
 
