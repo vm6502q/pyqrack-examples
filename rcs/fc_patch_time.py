@@ -14,11 +14,12 @@ from pyqrack import QrackSimulator
 def bench_qrack(width, depth):
     patch_size = (width + 1) >> 1
     # This is a fully-connected random circuit.
+    control = QrackSimulator(width)
     experiment = QrackSimulator(width)
 
     lcv_range = range(width)
     all_bits = list(lcv_range)
-
+    
     for d in range(depth):
         # Single-qubit gates
         for i in lcv_range:
@@ -37,11 +38,14 @@ def bench_qrack(width, depth):
                 continue
             experiment.mcx([c], t)
 
+    ideal_probs = control.out_probs()
+    del control
     start = time.perf_counter()
-    experiment.m_all()
+    patch_probs = experiment.out_probs()
     interval = time.perf_counter() - start
+    del experiment
 
-    return interval
+    return (ideal_probs, patch_probs, interval)
 
 
 def calc_stats(ideal_probs, patch_probs, interval, depth):
