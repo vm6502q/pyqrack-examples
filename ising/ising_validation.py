@@ -14,18 +14,17 @@ from qiskit.compiler import transpile
 from qiskit_aer.backends import AerSimulator
 from qiskit.quantum_info import Statevector
 
-from pyqrack import QrackAceBackend
+from pyqrack import QrackSimulator
 
-def factor_width(width, reverse=False):
+def factor_width(width):
     col_len = math.floor(math.sqrt(width))
     while (((width // col_len) * col_len) != width):
         col_len -= 1
+    row_len = width // col_len
     if col_len == 1:
         raise Exception("ERROR: Can't simulate prime number width!")
-    row_len = width // col_len
 
-    return (col_len, row_len) if reverse else (row_len, col_len)
-
+    return row_len, col_len
 
 def trotter_step(circ, qubits, lattice_shape, J, h, dt):
     n_rows, n_cols = lattice_shape
@@ -66,7 +65,7 @@ def trotter_step(circ, qubits, lattice_shape, J, h, dt):
     return circ
 
 
-def calc_stats(ideal_probs, counts, shots, depth, hamming_n):
+def calc_stats(ideal_probs, counts, shots, depth, ace_fidelity_est, hamming_n):
     # For QV, we compare probabilities of (ideal) "heavy outputs."
     # If the probability is above 2/3, the protocol certifies/passes the qubit width.
     n_pow = len(ideal_probs)
@@ -110,6 +109,7 @@ def calc_stats(ideal_probs, counts, shots, depth, hamming_n):
     return {
         'qubits': n,
         'depth': depth,
+        'ace_fidelity_est': ace_fidelity_est,
         'l2_similarity': l2_similarity,
         'xeb': xeb,
         'hog_prob': hog_prob,
@@ -137,20 +137,17 @@ def top_n(n, a):
 
 
 def main():
-    depth = 10
     n_qubits = 56
+    depth = 10
     hamming_n = 100
-    reverse = False
     if len(sys.argv) > 1:
-        depth = int(sys.argv[1])
+        n_qubits = int(sys.argv[1])
     if len(sys.argv) > 2:
-        n_qubits = int(sys.argv[2])
+        depth = int(sys.argv[2])
     if len(sys.argv) > 3:
         hamming_n = int(sys.argv[3])
-    if len(sys.argv) > 4:
-        reverse = sys.argv[4] not in ['0', 'False']
 
-    n_rows, n_cols = factor_width(n_qubits, reverse)
+    n_rows, n_cols = factor_width(n_qubits)
     J, h, dt = -1.0, 2.0, 0.25
     theta = -math.pi / 6
     shots = 1 << (n_qubits + 2)
@@ -163,18 +160,19 @@ def main():
     for _ in range(depth):
         trotter_step(qc, list(range(n_qubits)), (n_rows, n_cols), J, h, dt)
 
-    basis_gates = ["rx", "ry", "rz", "h", "x", "y", "z", "s", "sdg", "t", "tdg", "cx", "cy", "cz", "swap", "iswap"]
+    basis_gates = ["u", "rx", "ry", "rz", "h", "x", "y", "z", "sx", "sxdg", "s", "sdg", "t", "tdg", "cx", "cy", "cz", "cp", "swap", "iswap"]
     qc = transpile(qc, basis_gates=basis_gates)
 
-    experiment = QrackAceBackend(n_qubits)
+    experiment = QrackSimulator(n_qubits)
     control = AerSimulator(method="statevector")
-    experiment.run_qiskit_circuit(qc, shots=0)
+    experiment.run_qiskit_circuit(qc)
+    experiment_fidelity = experiment.get_unitary_fidelity()
     qc.save_statevector()
     job = control.run(qc)
     experiment_counts = dict(Counter(experiment.measure_shots(list(range(n_qubits)), shots)))
     control_probs = Statevector(job.result().get_statevector()).probabilities()
 
-    print(calc_stats(control_probs, experiment_counts, shots, depth, hamming_n))
+    print(calc_stats(control_probs, experiment_counts, shots, depth, experiment_fidelity, hamming_n))
 
     return 0
 

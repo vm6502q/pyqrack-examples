@@ -11,18 +11,18 @@ from qiskit import QuantumCircuit
 from qiskit.circuit.library import RZZGate, RXGate
 from qiskit.compiler import transpile
 
-from pyqrack import QrackAceBackend
+from pyqrack import QrackSimulator
 
 
-def factor_width(width, reverse=False):
+def factor_width(width):
     col_len = math.floor(math.sqrt(width))
     while (((width // col_len) * col_len) != width):
         col_len -= 1
+    row_len = width // col_len
     if col_len == 1:
         raise Exception("ERROR: Can't simulate prime number width!")
-    row_len = width // col_len
 
-    return (col_len, row_len) if reverse else (row_len, col_len)
+    return row_len, col_len
 
 
 def trotter_step(circ, qubits, lattice_shape, J, h, dt):
@@ -66,15 +66,12 @@ def trotter_step(circ, qubits, lattice_shape, J, h, dt):
 def main():
     depth = 1
     n_qubits = 56
-    reverse = False
     if len(sys.argv) > 1:
         depth = int(sys.argv[1])
     if len(sys.argv) > 2:
         n_qubits = int(sys.argv[2])
-    if len(sys.argv) > 4:
-        reverse = sys.argv[4] not in ['0', 'False']
 
-    n_rows, n_cols = factor_width(n_qubits, reverse)
+    n_rows, n_cols = factor_width(n_qubits)
     J, h, dt = -1.0, 2.0, 0.25
     theta = -math.pi / 6
 
@@ -86,10 +83,10 @@ def main():
     for _ in range(depth):
         trotter_step(qc, list(range(n_qubits)), (n_rows, n_cols), J, h, dt)
 
-    basis_gates = ["rx", "ry", "rz", "h", "x", "y", "z", "s", "sdg", "t", "tdg", "cx", "cy", "cz", "swap", "iswap"]
+    basis_gates = ["rx", "ry", "rz", "h", "x", "y", "z", "sx", "sxdg", "s", "sdg", "t", "tdg", "cx", "cy", "cz", "swap", "iswap"]
     qc = transpile(qc, basis_gates=basis_gates)
 
-    sim = QrackAceBackend(n_qubits)
+    sim = QrackSimulator(n_qubits)
     start = time.perf_counter()
     sim.run_qiskit_circuit(qc, shots=0)
     result = sim.m_all()

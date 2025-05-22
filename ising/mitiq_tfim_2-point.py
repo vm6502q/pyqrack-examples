@@ -21,7 +21,7 @@ from qiskit.circuit.library import RZZGate, RXGate
 
 from mitiq import zne
 from mitiq.zne.scaling.folding import fold_global
-from mitiq.zne.inference import LinearFactory
+from mitiq.zne.inference import RichardsonFactory
 
 
 def factor_width(width):
@@ -138,13 +138,14 @@ def main():
     circ = QuantumCircuit(n_qubits)
     for _ in range(depth):
         trotter_step(circ, list(range(n_qubits)), (n_rows, n_cols), J, h, dt)
+    circ = transpile(circ, optimization_level=2, basis_gates=['u', 'x', 'y', 'z', 's', 'sdg', 't', 'tdg', 'cx', 'cy', 'cz', 'cp', 'swap', 'iswap'])
     
     def executor(circ):
         return execute(circ, qubit1, qubit2)
 
-    scale_count = 9
-    max_scale = 5
-    factory = LinearFactory(scale_factors=[(1 + (max_scale - 1) * x / scale_count) for x in range(0, scale_count)])
+    scale_count = 5
+    max_scale = 11
+    factory = RichardsonFactory(scale_factors=[(1 + (max_scale - 1) * x / scale_count) for x in range(0, scale_count)])
 
     two_point = 2 * expit(zne.execute_with_zne(circ, executor, scale_noise=fold_global, factory=factory)) - 1
 
