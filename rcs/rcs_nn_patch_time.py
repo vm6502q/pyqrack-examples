@@ -81,6 +81,7 @@ def bench_qrack(width, depth):
     # This is a "nearest-neighbor" coupler random circuit.
     start = time.perf_counter()
 
+    bound = (width + 1) >> 1
     experiment = QrackSimulator(width)
 
     patch_bound = (width + 1) >> 1
@@ -100,7 +101,6 @@ def bench_qrack(width, depth):
             ph = random.uniform(0, 2 * math.pi)
             lm = random.uniform(0, 2 * math.pi)
             experiment.u(i, th, ph, lm)
-            control.u(i, th, ph, lm)
 
         # Nearest-neighbor couplers:
         ############################
@@ -128,7 +128,7 @@ def bench_qrack(width, depth):
                 if (b1 >= width) or (b2 >= width):
                     continue
 
-                if ((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound)):
+                if ((b1 < bound) and (b2 >= bound)) or ((b2 < bound) and (b1 >= bound)):
                     continue
 
                 g = random.choice(two_bit_gates)
