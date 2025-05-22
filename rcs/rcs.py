@@ -8,16 +8,17 @@ import time
 from pyqrack import QrackSimulator
 
 
-def bench_qrack(n):
+def bench_qrack(n, depth):
     # This is basically a "quantum volume" (random) circuit.
     start = time.perf_counter()
 
     sim = QrackSimulator(n)
 
     lcv_range = range(n)
+    d_range = range(depth)
     all_bits = list(lcv_range)
 
-    for _ in lcv_range:
+    for _ in d_range:
         # Single-qubit gates
         for i in lcv_range:
             sim.u(i, random.uniform(0, 2 * math.pi), random.uniform(0, 2 * math.pi), random.uniform(0, 2 * math.pi))
@@ -35,24 +36,16 @@ def bench_qrack(n):
 
 
 def main():
-    bench_qrack(1)
+    if len(sys.argv) < 3:
+        raise RuntimeError('Usage: python3 rcs.py [width] [depth]')
 
-    max_qb = 24
-    samples = 1
-    if len(sys.argv) > 1:
-        max_qb = int(sys.argv[1])
-    if len(sys.argv) > 2:
-        samples = int(sys.argv[2])
+    width = int(sys.argv[1])
+    depth = int(sys.argv[2])
 
-    for n in range(1, max_qb + 1):
-        width_results = []
-        
-        # Run the benchmarks
-        for _ in range(samples):
-            width_results.append(bench_qrack(n))
-
-        time_result = sum(r[0] for r in width_results) / samples
-        print(n, ": ", time_result, " seconds, ")
+    # Run the benchmarks
+    result = bench_qrack(width, depth)
+    # Calc. and print the results
+    print("Width=" + str(width) + ", Depth=" + str(depth) + ", Seconds=" + str(result))
 
     return 0
 
