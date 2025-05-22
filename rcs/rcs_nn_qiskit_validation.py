@@ -113,8 +113,7 @@ def bench_qrack(width, depth, trials):
                 th = random.uniform(0, 2 * math.pi)
                 ph = random.uniform(0, 2 * math.pi)
                 lm = random.uniform(0, 2 * math.pi)
-                experiment.u(th, ph, lm, i)
-                control.u(th, ph, lm, i)
+                circ.u(th, ph, lm, i)
 
             # Nearest-neighbor couplers:
             ############################
