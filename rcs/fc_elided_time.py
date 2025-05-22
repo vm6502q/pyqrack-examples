@@ -47,7 +47,7 @@ def bench_qrack(width, depth):
             th = random.uniform(0, 2 * math.pi)
             ph = random.uniform(0, 2 * math.pi)
             lm = random.uniform(0, 2 * math.pi)
-            experiment.u(th, ph, lm, i)
+            experiment.u(i, th, ph, lm)
 
         # 2-qubit couplers
         unused_bits = all_bits.copy()
