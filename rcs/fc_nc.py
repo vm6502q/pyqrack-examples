@@ -15,7 +15,7 @@ def bench_qrack(width, depth):
 
     start = time.perf_counter()
 
-    experiment = QrackSimulator(width, isSchmidtDecompose=False)
+    experiment = QrackSimulator(width, isSchmidtDecompose=False, isStabilizerHybrid=True)
 
     for _ in range(depth):
         # Single-qubit gates

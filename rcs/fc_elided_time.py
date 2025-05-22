@@ -7,7 +7,7 @@ import random
 import sys
 import time
 
-from pyqrack import QrackSimulator, Pauli
+from pyqrack import QrackSimulator
 
 
 def ct_pair_prob(sim, q1, q2):
@@ -44,9 +44,10 @@ def bench_qrack(width, depth):
     for d in range(depth):
         # Single-qubit gates
         for i in lcv_range:
-            for _ in range(3):
-                experiment.h(i)
-                experiment.r(Pauli.PauliZ, random.uniform(0, 2 * math.pi), i)
+            th = random.uniform(0, 2 * math.pi)
+            ph = random.uniform(0, 2 * math.pi)
+            lm = random.uniform(0, 2 * math.pi)
+            experiment.u(th, ph, lm, i)
 
         # 2-qubit couplers
         unused_bits = all_bits.copy()

@@ -5,7 +5,7 @@ import random
 import sys
 import time
 
-from pyqrack import QrackSimulator, Pauli
+from pyqrack import QrackSimulator
 
 
 def factor_width(width):
@@ -89,10 +89,7 @@ def bench_qrack(width, depth):
     for _ in range(depth):
         # Single-qubit gates
         for i in lcv_range:
-            for _ in range(3):
-                # x-z-x Euler axes
-                sim.h(i)
-                sim.r(Pauli.PauliZ, random.uniform(0, 2 * math.pi), i)
+            sim.u(i, random.uniform(0, 2 * math.pi), random.uniform(0, 2 * math.pi), random.uniform(0, 2 * math.pi))
 
         # Nearest-neighbor couplers:
         ############################
