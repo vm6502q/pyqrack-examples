@@ -122,6 +122,7 @@ def bench_qrack(n_qubits, hamming_n):
     shots = hamming_n << 2
     lcv_range = range(n_qubits)
     all_bits = list(lcv_range)
+    control = AerSimulator(method="statevector")
 
     rz_count = (n_qubits + 1) << 1
     rz_opportunities =  n_qubits * n_qubits * 3
@@ -193,7 +194,6 @@ def bench_qrack(n_qubits, hamming_n):
 
             aer_qc = qc.copy()
             aer_qc.save_statevector()
-            control = AerSimulator(method="statevector")
             job = control.run(aer_qc)
             control_probs = Statevector(job.result().get_statevector()).probabilities()
 
@@ -201,7 +201,7 @@ def bench_qrack(n_qubits, hamming_n):
             print(results)
 
             if ((stop - start) > (2 * min_time)) or ((d > 0) and ((results['l2_similarity'] >= 1.0) or (results['xeb'] >= 1.0))):
-                # This has become too costly to try lower rounding parameters:
+                # This has become too costly (or too accurate) to try lower rounding parameters:
                 break
 
 
