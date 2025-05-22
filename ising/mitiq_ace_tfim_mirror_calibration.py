@@ -12,11 +12,10 @@ import time
 
 import numpy as np
 
-from collections import Counter
-
 from pyqrack import QrackAceBackend
 
 from qiskit import QuantumCircuit
+from qiskit.compiler import transpile
 from qiskit.circuit.library import RZZGate, RXGate
 
 from mitiq import zne
@@ -97,8 +96,8 @@ def expit(x):
     return 1 / (1 + np.exp(-x))
 
 
-def execute(circ, qubit1, qubit2):
-    shots = 1024
+def execute(circ):
+    shots = 100
     all_bits = list(range(circ.width()))
 
     qc = QuantumCircuit(circ.width())
@@ -109,28 +108,28 @@ def execute(circ, qubit1, qubit2):
 
     experiment = QrackAceBackend(qc.width())
     experiment.run_qiskit_circuit(qc)
+    experiment.run_qiskit_circuit(qc.inverse())
     experiment_samples = experiment.measure_shots(all_bits, shots)
-    
-    b1 = 1 << qubit1
-    b2 = 2 << qubit2
-    exp_val = 0
+
+    hamming_weight = 0
     for sample in experiment_samples:
         for _ in range(circ.width()):
-            exp_val += 1 if (sample & b1) == (sample & b2) else -1
+            if sample & 1:
+                hamming_weight += 1
             sample >>= 1
-    exp_val /= shots * circ.width()
+    hamming_weight /= shots
 
-    return logit(exp_val)
+    # So as not to exceed floor at 0.0 and ceiling at 1.0, (assuming 0 < p < 1,)
+    # we mitigate its logit function value (https://en.wikipedia.org/wiki/Logit)
+    return logit(hamming_weight / circ.width())
 
 
 def main():
-    if len(sys.argv) < 5:
-        raise RuntimeError('Usage: python3 mitiq_tfim_2-point.py [width] [depth] [qubit1] [qubit2]')
+    if len(sys.argv) < 3:
+        raise RuntimeError('Usage: python3 mitiq_tfim_calibration.py [width] [depth]')
 
     n_qubits = int(sys.argv[1])
     depth = int(sys.argv[2])
-    qubit1 = int(sys.argv[3])
-    qubit2 = int(sys.argv[4])
     
     n_rows, n_cols = factor_width(n_qubits)
     J, h, dt = -1.0, 2.0, 0.25
@@ -140,17 +139,14 @@ def main():
         trotter_step(circ, list(range(n_qubits)), (n_rows, n_cols), J, h, dt)
     basis_gates = ["u", "rx", "ry", "rz", "h", "x", "y", "z", "s", "sdg", "t", "tdg", "cx", "cy", "cz", "swap", "iswap"]
     circ = transpile(circ, optimization_level=3, basis_gates=basis_gates)
-    
-    def executor(circ):
-        return execute(circ, qubit1, qubit2)
 
     scale_count = 4
     max_scale = 4
     factory = LinearFactory(scale_factors=[(1 + (max_scale - 1) * x / scale_count) for x in range(0, scale_count)])
 
-    two_point = 2 * expit(zne.execute_with_zne(circ, executor, scale_noise=fold_global, factory=factory)) - 1
+    mitigated_hamming_weight = expit(zne.execute_with_zne(circ, execute, scale_noise=fold_global, factory=factory)) * n_qubits
 
-    print({ 'width': n_qubits, 'depth': depth, 'two-point': two_point })
+    print({ 'width': n_qubits, 'depth': depth, 'mitigated_hamming_weight': mitigated_hamming_weight  })
 
     return 0
 

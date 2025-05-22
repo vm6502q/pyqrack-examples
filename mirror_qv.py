@@ -24,7 +24,7 @@ def factor_width(width):
 
 
 def count_set_bits(n):
-        return bin(n).count('1')
+    return bin(n).count('1')
 
 
 def cx(sim, q1, q2):

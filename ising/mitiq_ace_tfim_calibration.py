@@ -24,7 +24,7 @@ from qiskit.circuit.library import RZZGate, RXGate
 
 from mitiq import zne
 from mitiq.zne.scaling.folding import fold_global
-from mitiq.zne.inference import RichardsonFactory
+from mitiq.zne.inference import LinearFactory
 
 
 def calc_stats(ideal_probs, counts, shots):
@@ -184,9 +184,9 @@ def main():
     basis_gates = ["u", "rx", "ry", "rz", "h", "x", "y", "z", "s", "sdg", "t", "tdg", "cx", "cy", "cz", "swap", "iswap"]
     circ = transpile(circ, optimization_level=3, basis_gates=basis_gates)
 
-    scale_count = 5
-    max_scale = 9
-    factory = RichardsonFactory(scale_factors=[(1 + (max_scale - 1) * x / scale_count) for x in range(0, scale_count)])
+    scale_count = 4
+    max_scale = 4
+    factory = LinearFactory(scale_factors=[(1 + (max_scale - 1) * x / scale_count) for x in range(0, scale_count)])
 
     mitigated_l2_similarity = expit(zne.execute_with_zne(circ, execute, scale_noise=fold_global, factory=factory))
 
