@@ -82,7 +82,7 @@ def main():
     n_qubits = 56
     depth = 10
     reverse = False
-    shots = 4096
+    shots = 8192
     if len(sys.argv) > 1:
         n_qubits = int(sys.argv[1])
     if len(sys.argv) > 2:
@@ -150,6 +150,8 @@ def main():
 
         print(results[-1])
 
+    ylim = ((min(magnetizations) * 100) // 10) / 10
+
     # Plotting (contributed by Elara, an OpenAI custom GPT)
     plt.figure(figsize=(14, 14))
     plt.plot(depths, magnetizations, marker='o', linestyle='-')
@@ -158,7 +160,7 @@ def main():
     plt.ylabel("Magnetization")
     plt.grid(True)
     plt.xticks(depths)
-    plt.ylim(0.5, 1.0)  # Adjusting y-axis for clearer resolution
+    plt.ylim(ylim, 1.0)  # Adjusting y-axis for clearer resolution
     plt.show()
 
     return 0
