@@ -118,12 +118,14 @@ def main():
         "swap",
         "iswap",
     ]
-    qc = transpile(qc, basis_gates=basis_gates)
 
+    start = time.perf_counter()
+    qc = transpile(qc, basis_gates=basis_gates)
     experiment = QrackAceBackend(n_qubits)
     start = time.perf_counter()
     experiment.run_qiskit_circuit(qc)
     experiment_samples = experiment.measure_shots(list(range(n_qubits)), shots)
+    seconds = time.perf_counter() - start
 
     magnetization = 0
     for sample in experiment_samples:
@@ -132,7 +134,7 @@ def main():
             sample >>= 1
     magnetization /= shots * n_qubits
 
-    print({"width": n_qubits, "depth": depth, "magnetization": magnetization})
+    print({"width": n_qubits, "depth": depth, "magnetization": magnetization, 'seconds': seconds})
 
     return 0
 
