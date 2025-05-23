@@ -9,6 +9,7 @@ import time
 
 from pyqrack import QrackSimulator
 
+
 def bench_qrack(width, depth):
     lcv_range = range(width)
     all_bits = list(lcv_range)
@@ -43,7 +44,7 @@ def bench_qrack(width, depth):
 
 def main():
     if len(sys.argv) < 3:
-        raise RuntimeError('Usage: python3 fc.py [width] [depth]')
+        raise RuntimeError("Usage: python3 fc.py [width] [depth]")
 
     width = int(sys.argv[1])
     depth = int(sys.argv[2])
@@ -56,5 +57,5 @@ def main():
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

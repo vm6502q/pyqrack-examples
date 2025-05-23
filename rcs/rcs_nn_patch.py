@@ -13,13 +13,14 @@ from pyqrack import QrackSimulator
 
 def factor_width(width):
     row_len = math.floor(math.sqrt(width))
-    while (((width // row_len) * row_len) != width):
+    while ((width // row_len) * row_len) != width:
         row_len -= 1
     col_len = width // row_len
     if row_len == 1:
         raise Exception("ERROR: Can't simulate prime number width!")
 
     return (row_len, col_len)
+
 
 def cx(sim, q1, q2):
     sim.mcx([q1], q2)
@@ -84,7 +85,7 @@ def bench_qrack(width, depth):
     lcv_range = range(width)
 
     # Nearest-neighbor couplers:
-    gateSequence = [ 0, 3, 2, 1, 2, 1, 0, 3 ]
+    gateSequence = [0, 3, 2, 1, 2, 1, 0, 3]
     two_bit_gates = swap, pswap, mswap, nswap, iswap, iiswap, cx, cy, cz, acx, acy, acz
 
     row_len, col_len = factor_width(width)
@@ -106,7 +107,7 @@ def bench_qrack(width, depth):
             for col in range(col_len):
                 temp_row = row
                 temp_col = col
-                temp_row = temp_row + (1 if (gate & 2) else -1);
+                temp_row = temp_row + (1 if (gate & 2) else -1)
                 temp_col = temp_col + (1 if (gate & 1) else 0)
 
                 if temp_row < 0:
@@ -127,7 +128,9 @@ def bench_qrack(width, depth):
                 g = random.choice(two_bit_gates)
                 g(control, b1, b2)
 
-                if ((b1 < patch_bound) and (b2 >= patch_bound)) or ((b2 < patch_bound) and (b1 >= patch_bound)):
+                if ((b1 < patch_bound) and (b2 >= patch_bound)) or (
+                    (b2 < patch_bound) and (b1 >= patch_bound)
+                ):
                     continue
 
                 g(experiment, b1, b2)
@@ -155,7 +158,7 @@ def calc_stats(ideal_probs, patch_probs, interval, depth):
         patch = patch_probs[b]
 
         # XEB / EPLG
-        ideal_centered = (ideal - u_u)
+        ideal_centered = ideal - u_u
         denom += ideal_centered * ideal_centered
         numer += ideal_centered * (patch - u_u)
 
@@ -166,19 +169,19 @@ def calc_stats(ideal_probs, patch_probs, interval, depth):
     xeb = numer / denom
 
     return {
-        'qubits': n,
-        'depth': depth,
-        'seconds': interval,
-        'xeb': xeb,
-        'hog_prob': hog_prob,
-        'qv_pass': hog_prob >= 2 / 3,
-        'eplg':  (1 - (xeb ** (1 / depth))) if xeb < 1 else 0
+        "qubits": n,
+        "depth": depth,
+        "seconds": interval,
+        "xeb": xeb,
+        "hog_prob": hog_prob,
+        "qv_pass": hog_prob >= 2 / 3,
+        "eplg": (1 - (xeb ** (1 / depth))) if xeb < 1 else 0,
     }
 
 
 def main():
     if len(sys.argv) < 3:
-        raise RuntimeError('Usage: python3 rcs_nn_patch.py [width] [depth]')
+        raise RuntimeError("Usage: python3 rcs_nn_patch.py [width] [depth]")
 
     width = int(sys.argv[1])
     depth = int(sys.argv[2])
@@ -191,5 +194,5 @@ def main():
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

@@ -16,7 +16,7 @@ from pyqrack import QrackAceBackend
 
 def factor_width(width, reverse=False):
     col_len = math.floor(math.sqrt(width))
-    while (((width // col_len) * col_len) != width):
+    while ((width // col_len) * col_len) != width:
         col_len -= 1
     if col_len == 1:
         raise Exception("ERROR: Can't simulate prime number width!")
@@ -27,7 +27,7 @@ def factor_width(width, reverse=False):
 
 def trotter_step(circ, qubits, lattice_shape, J, h, dt):
     n_rows, n_cols = lattice_shape
-    
+
     # First half of transverse field term
     for q in qubits:
         circ.rx(h * dt / 2, q)
@@ -38,23 +38,35 @@ def trotter_step(circ, qubits, lattice_shape, J, h, dt):
             circ.append(RZZGate(2 * J * dt), [q1, q2])
 
     # Layer 1: horizontal pairs (even rows)
-    horiz_pairs = [(r * n_cols + c, r * n_cols + (c + 1) % n_cols)
-                   for r in range(n_rows) for c in range(0, n_cols - 1, 2)]
+    horiz_pairs = [
+        (r * n_cols + c, r * n_cols + (c + 1) % n_cols)
+        for r in range(n_rows)
+        for c in range(0, n_cols - 1, 2)
+    ]
     add_rzz_pairs(horiz_pairs)
 
     # Layer 2: horizontal pairs (odd rows)
-    horiz_pairs = [(r * n_cols + c, r * n_cols + (c + 1) % n_cols)
-                   for r in range(n_rows) for c in range(1, n_cols - 1, 2)]
+    horiz_pairs = [
+        (r * n_cols + c, r * n_cols + (c + 1) % n_cols)
+        for r in range(n_rows)
+        for c in range(1, n_cols - 1, 2)
+    ]
     add_rzz_pairs(horiz_pairs)
 
     # Layer 3: vertical pairs (even columns)
-    vert_pairs = [(r * n_cols + c, ((r + 1) % n_rows) * n_cols + c)
-                  for r in range(0, n_rows - 1, 2) for c in range(n_cols)]
+    vert_pairs = [
+        (r * n_cols + c, ((r + 1) % n_rows) * n_cols + c)
+        for r in range(0, n_rows - 1, 2)
+        for c in range(n_cols)
+    ]
     add_rzz_pairs(vert_pairs)
 
     # Layer 4: vertical pairs (odd columns)
-    vert_pairs = [(r * n_cols + c, ((r + 1) % n_rows) * n_cols + c)
-                  for r in range(1, n_rows - 1, 2) for c in range(n_cols)]
+    vert_pairs = [
+        (r * n_cols + c, ((r + 1) % n_rows) * n_cols + c)
+        for r in range(1, n_rows - 1, 2)
+        for c in range(n_cols)
+    ]
     add_rzz_pairs(vert_pairs)
 
     # Second half of transverse field term
@@ -63,16 +75,18 @@ def trotter_step(circ, qubits, lattice_shape, J, h, dt):
 
     return circ
 
+
 def main():
-    depth = 1
     n_qubits = 56
+    depth = 10
     reverse = False
+    shots = 1024
     if len(sys.argv) > 1:
-        depth = int(sys.argv[1])
+        n_qubits = int(sys.argv[1])
     if len(sys.argv) > 2:
-        n_qubits = int(sys.argv[2])
-    if len(sys.argv) > 4:
-        reverse = sys.argv[4] not in ['0', 'False']
+        depth = int(sys.argv[2])
+    if len(sys.argv) > 3:
+        reverse = sys.argv[3] not in ["0", "False"]
 
     n_rows, n_cols = factor_width(n_qubits, reverse)
     J, h, dt = -1.0, 2.0, 0.25
@@ -86,19 +100,42 @@ def main():
     for _ in range(depth):
         trotter_step(qc, list(range(n_qubits)), (n_rows, n_cols), J, h, dt)
 
-    basis_gates = ["rx", "ry", "rz", "h", "x", "y", "z", "s", "sdg", "t", "tdg", "cx", "cy", "cz", "swap", "iswap"]
+    basis_gates = [
+        "rx",
+        "ry",
+        "rz",
+        "h",
+        "x",
+        "y",
+        "z",
+        "s",
+        "sdg",
+        "t",
+        "tdg",
+        "cx",
+        "cy",
+        "cz",
+        "swap",
+        "iswap",
+    ]
     qc = transpile(qc, basis_gates=basis_gates)
 
-    sim = QrackAceBackend(n_qubits)
+    experiment = QrackAceBackend(n_qubits)
     start = time.perf_counter()
-    sim.run_qiskit_circuit(qc, shots=0)
-    result = sim.m_all()
-    
-    print("Trotter steps: " + str(depth) + ", seconds: " + str(time.perf_counter() - start) + ".")
-    print("Result: " + str(result))
+    experiment.run_qiskit_circuit(qc)
+    experiment_samples = experiment.measure_shots(list(range(n_qubits)), shots)
+
+    magnetization = 0
+    for sample in experiment_samples:
+        for _ in range(n_qubits):
+            magnetization += -1 if (sample & 1) else 1
+            sample >>= 1
+    magnetization /= shots * n_qubits
+
+    print({"width": n_qubits, "depth": depth, "magnetization": magnetization})
 
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

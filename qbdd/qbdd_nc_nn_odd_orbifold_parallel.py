@@ -11,13 +11,14 @@ from pyqrack import QrackSimulator, Pauli
 
 def factor_width(width):
     col_len = math.floor(math.sqrt(width))
-    while (((width // col_len) * col_len) != width):
+    while ((width // col_len) * col_len) != width:
         col_len -= 1
     row_len = width // col_len
     if col_len == 1:
         raise Exception("ERROR: Can't simulate prime number width!")
 
     return (row_len, col_len)
+
 
 def cx(sim, q1, q2):
     sim.mcx([q1], q2)
@@ -84,7 +85,7 @@ def bench_qrack(width_depth):
     lcv_range = range(width)
 
     # Nearest-neighbor couplers:
-    gateSequence = [ 0, 3, 2, 1, 2, 1, 0, 3 ]
+    gateSequence = [0, 3, 2, 1, 2, 1, 0, 3]
     two_bit_gates = swap, pswap, mswap, nswap, iswap, iiswap, cx, cy, cz, acx, acy, acz
 
     row_len, col_len = factor_width(width)
@@ -105,7 +106,7 @@ def bench_qrack(width_depth):
             for col in range(col_len):
                 temp_row = row
                 temp_col = col
-                temp_row = temp_row + (1 if (gate & 2) else -1);
+                temp_row = temp_row + (1 if (gate & 2) else -1)
                 temp_col = temp_col + (1 if (gate & 1) else 0)
 
                 if temp_row < 0:
@@ -130,31 +131,43 @@ def bench_qrack(width_depth):
 
     # Terminal measurement
     sim.m_all()
-    
+
     time_result = time.perf_counter() - start
 
-    print("Width=" + str(width) + ", Depth=" + str(depth) + ": " + str(time_result) + " seconds, " + str(fidelity_est) + " out of 1.0 worst-case first-principles fidelity estimate.")
+    print(
+        "Width="
+        + str(width)
+        + ", Depth="
+        + str(depth)
+        + ": "
+        + str(time_result)
+        + " seconds, "
+        + str(fidelity_est)
+        + " out of 1.0 worst-case first-principles fidelity estimate."
+    )
 
     return time_result, fidelity_est
 
 
 def main():
     if len(sys.argv) < 4:
-        raise RuntimeError('Usage: python3 qbdd_nc_nn_odd_orbifold_parallel.py [width] [depth] [shots]')
+        raise RuntimeError(
+            "Usage: python3 qbdd_nc_nn_odd_orbifold_parallel.py [width] [depth] [shots]"
+        )
 
     width = int(sys.argv[1])
 
     depth = int(sys.argv[2])
-    
+
     shots = int(sys.argv[3])
-    
+
     # Run the benchmarks
-    pool = multiprocessing.Pool(processes = multiprocessing.cpu_count())
+    pool = multiprocessing.Pool(processes=multiprocessing.cpu_count())
     pool.map(bench_qrack, [(width, depth)] * shots)
     pool.close()
 
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

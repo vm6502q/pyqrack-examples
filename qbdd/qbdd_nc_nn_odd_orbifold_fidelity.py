@@ -11,13 +11,14 @@ from pyqrack import QrackSimulator, Pauli
 
 def factor_width(width):
     col_len = math.floor(math.sqrt(width))
-    while (((width // col_len) * col_len) != width):
+    while ((width // col_len) * col_len) != width:
         col_len -= 1
     row_len = width // col_len
     if col_len == 1:
         raise Exception("ERROR: Can't simulate prime number width!")
 
     return (row_len, col_len)
+
 
 def cx(sim, q1, q2):
     sim.mcx([q1], q2)
@@ -82,6 +83,7 @@ def nswap(sim, q1, q2):
     sim.mcz([q1], q2)
     return 3
 
+
 def bench_qrack(width, depth):
     # This is a "nearest-neighbor" coupler random circuit.
     experiment = QrackSimulator(width, isBinaryDecisionTree=True)
@@ -92,11 +94,11 @@ def bench_qrack(width, depth):
     lcv_range = range(width)
 
     # Nearest-neighbor couplers:
-    gateSequence = [ 0, 3, 2, 1, 2, 1, 0, 3 ]
+    gateSequence = [0, 3, 2, 1, 2, 1, 0, 3]
     two_bit_gates = swap, pswap, mswap, nswap, iswap, iiswap, cx, cy, cz, acx, acy, acz
 
     col_len = math.floor(math.sqrt(width))
-    while (((width // col_len) * col_len) != width):
+    while ((width // col_len) * col_len) != width:
         col_len -= 1
     row_len = width // col_len
     if col_len == 1:
@@ -125,7 +127,7 @@ def bench_qrack(width, depth):
             for col in range(col_len):
                 temp_row = row
                 temp_col = col
-                temp_row = temp_row + (1 if (gate & 2) else -1);
+                temp_row = temp_row + (1 if (gate & 2) else -1)
                 temp_col = temp_col + (1 if (gate & 1) else 0)
 
                 if temp_row < 0:
@@ -150,10 +152,19 @@ def bench_qrack(width, depth):
         experiment_sv = experiment.out_ket()
         control_sv = control.out_ket()
 
-        overall_fidelity = np.abs(sum([np.conj(x) * y for x, y in zip(experiment_sv, control_sv)]))
+        overall_fidelity = np.abs(
+            sum([np.conj(x) * y for x, y in zip(experiment_sv, control_sv)])
+        )
         per_gate_fidelity = overall_fidelity ** (1 / gate_count)
 
-        print("Depth=" + str(d + 1) + ", overall fidelity=" + str(overall_fidelity) + ", per-gate fidelity avg.=" + str(per_gate_fidelity))
+        print(
+            "Depth="
+            + str(d + 1)
+            + ", overall fidelity="
+            + str(overall_fidelity)
+            + ", per-gate fidelity avg.="
+            + str(per_gate_fidelity)
+        )
 
 
 def main():
@@ -165,5 +176,5 @@ def main():
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

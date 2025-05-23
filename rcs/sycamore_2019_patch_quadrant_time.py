@@ -11,7 +11,7 @@ from pyqrack import QrackSimulator
 
 def factor_width(width):
     col_len = math.floor(math.sqrt(width))
-    while (((width // col_len) * col_len) != width):
+    while ((width // col_len) * col_len) != width:
         col_len -= 1
     row_len = width // col_len
     if col_len == 1:
@@ -23,28 +23,29 @@ def factor_width(width):
 def sqrt_x(sim, q):
     ONE_PLUS_I_DIV_2 = 0.5 + 0.5j
     ONE_MINUS_I_DIV_2 = 0.5 - 0.5j
-    mtrx = [ ONE_PLUS_I_DIV_2, ONE_MINUS_I_DIV_2, ONE_MINUS_I_DIV_2, ONE_PLUS_I_DIV_2 ]
+    mtrx = [ONE_PLUS_I_DIV_2, ONE_MINUS_I_DIV_2, ONE_MINUS_I_DIV_2, ONE_PLUS_I_DIV_2]
     sim.mtrx(mtrx, q)
 
 
 def sqrt_y(sim, q):
     ONE_PLUS_I_DIV_2 = 0.5 + 0.5j
     ONE_PLUS_I_DIV_2_NEG = -0.5 - 0.5j
-    mtrx = [ ONE_PLUS_I_DIV_2, ONE_PLUS_I_DIV_2_NEG, ONE_PLUS_I_DIV_2, ONE_PLUS_I_DIV_2 ]
+    mtrx = [ONE_PLUS_I_DIV_2, ONE_PLUS_I_DIV_2_NEG, ONE_PLUS_I_DIV_2, ONE_PLUS_I_DIV_2]
     sim.mtrx(mtrx, q)
+
 
 def sqrt_w(sim, q):
     diag = math.sqrt(0.5)
     m01 = -0.5 - 0.5j
     m10 = 0.5 - 0.5j
-    mtrx = [ diag, m01, m10, diag ]
+    mtrx = [diag, m01, m10, diag]
     sim.mtrx(mtrx, q)
 
 
 def bench_qrack(width, depth):
     # This is a "nearest-neighbor" coupler random circuit.
     start = time.perf_counter()
-    
+
     dead_qubit = 3 if width == 54 else width
 
     patch_sim = QrackSimulator(width)
@@ -56,8 +57,8 @@ def bench_qrack(width, depth):
     last_gates = []
 
     # Nearest-neighbor couplers:
-    gateSequence = [ 0, 3, 2, 1, 2, 1, 0, 3 ]
-    one_bit_gates = [ sqrt_x, sqrt_y, sqrt_w ]
+    gateSequence = [0, 3, 2, 1, 2, 1, 0, 3]
+    one_bit_gates = [sqrt_x, sqrt_y, sqrt_w]
 
     row_len, col_len = factor_width(width)
     patch_bound = (row_len + 1) >> 1
@@ -90,16 +91,31 @@ def bench_qrack(width, depth):
                 temp_col = temp_col + (1 if (gate & 1) else 0)
 
                 # Bounded:
-                if (temp_row < 0) or (temp_col < 0) or (temp_row >= row_len) or (temp_col >= col_len):
+                if (
+                    (temp_row < 0)
+                    or (temp_col < 0)
+                    or (temp_row >= row_len)
+                    or (temp_col >= col_len)
+                ):
                     continue
 
                 b1 = row * row_len + col
                 b2 = temp_row * row_len + temp_col
 
-                if (b1 >= width) or (b2 >= width) or (b1 == dead_qubit) or (b2 == dead_qubit):
+                if (
+                    (b1 >= width)
+                    or (b2 >= width)
+                    or (b1 == dead_qubit)
+                    or (b2 == dead_qubit)
+                ):
                     continue
 
-                if ((row < row_bound) and (temp_row >= row_bound)) or ((temp_row < row_bound) and row >= row_bound) or ((col < col_bound) and (temp_col >= col_bound)) or ((temp_col < col_bound) and (col >= col_bound)):
+                if (
+                    ((row < row_bound) and (temp_row >= row_bound))
+                    or ((temp_row < row_bound) and row >= row_bound)
+                    or ((col < col_bound) and (temp_col >= col_bound))
+                    or ((temp_col < col_bound) and (col >= col_bound))
+                ):
                     continue
 
                 patch_sim.fsim(-math.pi / 2, math.pi / 6, b1, b2)
@@ -112,12 +128,12 @@ def bench_qrack(width, depth):
 
 def main():
     if len(sys.argv) < 3:
-        raise RuntimeError('Usage: python3 sycamore_2019_patch.py [width] [depth]')
+        raise RuntimeError("Usage: python3 sycamore_2019_patch.py [width] [depth]")
 
     width = int(sys.argv[1])
     depth = int(sys.argv[2])
 
-     # Run the benchmarks
+    # Run the benchmarks
     result = bench_qrack(width, depth)
     # Calc. and print the results
     print("Width=" + str(width) + ", Depth=" + str(depth) + ", Seconds=" + str(result))
@@ -125,5 +141,5 @@ def main():
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

@@ -11,6 +11,7 @@ from pyqrack import QrackSimulator, QrackCircuit
 
 import threading, pynvml
 
+
 # See https://discuss.pytorch.org/t/measuring-peak-memory-usage-tracemalloc-for-pytorch/34067/6
 # for GPU memory usage monitoring
 def gpu_mem_used(id):
@@ -40,11 +41,12 @@ def peak_monitor_func():
 
     while True:
         nvml_peak = max(gpu_mem_used(0), nvml_peak)
-        if not peak_monitoring: break
-        time.sleep(0.1) # 0.1sec
+        if not peak_monitoring:
+            break
+        time.sleep(0.1)  # 0.1sec
 
 
-def bench_qrack(n, sdrp = 0):
+def bench_qrack(n, sdrp=0):
     global nvml_peak, peak_monitoring
 
     # This is a "quantum volume" (random) circuit.
@@ -60,11 +62,13 @@ def bench_qrack(n, sdrp = 0):
             th = random.uniform(0, 2 * math.pi)
             ph = random.uniform(0, 2 * math.pi)
             lm = random.uniform(0, 2 * math.pi)
-            cos0 = math.cos(th / 2);
-            sin0 = math.sin(th / 2);
+            cos0 = math.cos(th / 2)
+            sin0 = math.sin(th / 2)
             u_op = [
-                cos0 + 0j, sin0 * (-math.cos(lm) + -math.sin(lm) * 1j),
-                sin0 * (math.cos(ph) + math.sin(ph) * 1j), cos0 * (math.cos(ph + lm) + math.sin(ph + lm) * 1j)
+                cos0 + 0j,
+                sin0 * (-math.cos(lm) + -math.sin(lm) * 1j),
+                sin0 * (math.cos(ph) + math.sin(ph) * 1j),
+                cos0 * (math.cos(ph + lm) + math.sin(ph + lm) * 1j),
             ]
             circ.mtrx(u_op, i)
 
@@ -101,7 +105,14 @@ def bench_qrack(n, sdrp = 0):
     fidelity = sim.get_unitary_fidelity()
     approx_probs = [(x * (x.conjugate())).real for x in sim.out_ket()]
 
-    return (ideal_probs, approx_probs, interval, fidelity, (traced_memory_end[1] - traced_memory_start[0]) / 1024, (nvml_peak - nvml_after) / (1024 * 1024))
+    return (
+        ideal_probs,
+        approx_probs,
+        interval,
+        fidelity,
+        (traced_memory_end[1] - traced_memory_start[0]) / 1024,
+        (nvml_peak - nvml_after) / (1024 * 1024),
+    )
 
 
 def main():
@@ -130,19 +141,21 @@ def main():
         if ideal_probs[i] > threshold:
             sum_prob = sum_prob + approx_probs[i]
 
-    print({
-        'qubits': n,
-        'sdrp': sdrp,
-        'seconds': interval,
-        'fidelity': fidelity,
-        'hog_prob': sum_prob,
-        'pass': (sum_prob >= 2 / 3),
-        'peak_cpu_mb': memory_cpu,
-        'peak_gpu_mb': memory_gpu
-    })
+    print(
+        {
+            "qubits": n,
+            "sdrp": sdrp,
+            "seconds": interval,
+            "fidelity": fidelity,
+            "hog_prob": sum_prob,
+            "pass": (sum_prob >= 2 / 3),
+            "peak_cpu_mb": memory_cpu,
+            "peak_gpu_mb": memory_gpu,
+        }
+    )
 
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

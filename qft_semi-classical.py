@@ -15,7 +15,7 @@ def iqft(n, sim):
     sim.h(n)
     if sim.m(n):
         for t in range(n):
-            sim.mtrx([1, 0, 0, numpy.exp(math.pi/2**(n-t)*1j)], t)
+            sim.mtrx([1, 0, 0, numpy.exp(math.pi / 2 ** (n - t) * 1j)], t)
 
     iqft(n, sim)
 
@@ -28,7 +28,7 @@ def qft(n, sim):
     qft(n, sim)
 
     for c in range(n):
-        sim.mcmtrx([c], [1, 0, 0, numpy.exp(-math.pi/2**(n-c)*1j)], n)
+        sim.mcmtrx([c], [1, 0, 0, numpy.exp(-math.pi / 2 ** (n - c) * 1j)], n)
     sim.h(n)
     sim.m(n)
 
@@ -43,7 +43,12 @@ def bench_qrack(n):
 
     # Single-qubit gates
     for i in lcv_range:
-        qsim.u(i, random.uniform(0, 2 * math.pi), random.uniform(0, 2 * math.pi), random.uniform(0, 2 * math.pi))
+        qsim.u(
+            i,
+            random.uniform(0, 2 * math.pi),
+            random.uniform(0, 2 * math.pi),
+            random.uniform(0, 2 * math.pi),
+        )
 
     iqft(n, qsim)
 
@@ -77,5 +82,5 @@ def main():
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

@@ -19,9 +19,11 @@ num_qubits = len(edges)
 # Define Qrack as the backend
 dev = qml.device("qrack.simulator", wires=num_qubits)
 
+
 # Output formatting
 def bit_string_to_int(bit_string_sample):
     return int(2 ** np.arange(len(bit_string_sample)) @ bit_string_sample[::-1])
+
 
 def int_to_nodes(int_sample):
     nodes = []
@@ -34,6 +36,7 @@ def int_to_nodes(int_sample):
 
     return nodes
 
+
 # QAOA Cost Hamiltonian (for MAXCUT)
 def cost_hamiltonian(gamma):
     for edge in edges:
@@ -41,10 +44,12 @@ def cost_hamiltonian(gamma):
         qml.RZ(gamma, wires=edge[1])
         qml.CNOT(wires=edge)
 
+
 # QAOA Mixer Hamiltonian
 def mixer_hamiltonian(beta):
     for qubit in range(num_qubits):
         qml.RX(2 * beta, wires=qubit)
+
 
 # Define QAOA Circuit
 def qaoa_circuit(params):
@@ -60,6 +65,7 @@ def qaoa_circuit(params):
         cost_hamiltonian(gammas[i])
         mixer_hamiltonian(betas[i])
 
+
 # Define expectation value (cost function)
 @qml.qnode(dev)
 def cost_function(params, return_samples=False):
@@ -71,8 +77,10 @@ def cost_function(params, return_samples=False):
 
     return qml.expval(qml.sum(*(qml.PauliZ(n1) @ qml.PauliZ(n2) for n1, n2 in edges)))
 
+
 def objective(params):
     return -0.5 * (len(edges) - cost_function(params))
+
 
 # Classical optimizer
 def optimize_qaoa(steps=30, num_layers=2):
@@ -82,6 +90,7 @@ def optimize_qaoa(steps=30, num_layers=2):
         params = opt.step(objective, params)
 
     return params  # Optimized parameters
+
 
 # From Gemini (Google search)
 def top_n_indices(arr, n):
@@ -100,9 +109,10 @@ def top_n_indices(arr, n):
     indices = indices[np.argsort(-flat[indices])]
     return np.unravel_index(indices, arr.shape)[0]
 
+
 # Run QAOA Optimization
 optimal_params = optimize_qaoa()
-# Sample 100 bit strings 
+# Sample 100 bit strings
 bitstrings = cost_function(optimal_params, return_samples=True, shots=100)
 # Convert the samples bit strings to integers
 sampled_ints = [bit_string_to_int(string) for string in bitstrings]

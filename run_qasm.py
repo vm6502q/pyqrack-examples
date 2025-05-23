@@ -13,6 +13,7 @@ from pyqrack import QrackSimulator, QrackCircuit
 
 from qiskit import QuantumCircuit
 
+
 # See https://discuss.pytorch.org/t/measuring-peak-memory-usage-tracemalloc-for-pytorch/34067/6
 # for GPU memory usage monitoring
 def gpu_mem_used(id):
@@ -42,8 +43,9 @@ def peak_monitor_func():
 
     while True:
         nvml_peak = max(gpu_mem_used(0), nvml_peak)
-        if not peak_monitoring: break
-        time.sleep(0.1) # 0.1sec
+        if not peak_monitoring:
+            break
+        time.sleep(0.1)  # 0.1sec
 
 
 def bench_qrack(file, sdrp):
@@ -52,7 +54,7 @@ def bench_qrack(file, sdrp):
     circ = QuantumCircuit.from_qasm_file(file)
     n = circ.num_qubits
     circ = QrackCircuit.in_from_qiskit_circuit(circ)
-    
+
     tracemalloc.start()
     traced_memory_start = tracemalloc.get_traced_memory()
     peak_monitoring = False
@@ -74,7 +76,13 @@ def bench_qrack(file, sdrp):
     peak_monitor_stop()
     tracemalloc.stop()
 
-    return (n, interval, fidelity, (traced_memory_end[1] - traced_memory_start[0]) / 1024, (nvml_peak - nvml_after) / (1024 * 1024))
+    return (
+        n,
+        interval,
+        fidelity,
+        (traced_memory_end[1] - traced_memory_start[0]) / 1024,
+        (nvml_peak - nvml_after) / (1024 * 1024),
+    )
 
 
 def main():
@@ -93,15 +101,23 @@ def main():
     memory_cpu = results[3]
     memory_gpu = results[4]
 
-    print(n, "qubits,", sdrp, "SDRP:",
-        interval, "seconds,",
-        fidelity, "fidelity,",
-        memory_cpu, "MB heap memory peak",
-        memory_gpu, "MB GPU memory peak"
+    print(
+        n,
+        "qubits,",
+        sdrp,
+        "SDRP:",
+        interval,
+        "seconds,",
+        fidelity,
+        "fidelity,",
+        memory_cpu,
+        "MB heap memory peak",
+        memory_gpu,
+        "MB GPU memory peak",
     )
 
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

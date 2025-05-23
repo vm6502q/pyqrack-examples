@@ -21,7 +21,12 @@ def bench_qrack(n, depth):
     for _ in d_range:
         # Single-qubit gates
         for i in lcv_range:
-            sim.u(i, random.uniform(0, 2 * math.pi), random.uniform(0, 2 * math.pi), random.uniform(0, 2 * math.pi))
+            sim.u(
+                i,
+                random.uniform(0, 2 * math.pi),
+                random.uniform(0, 2 * math.pi),
+                random.uniform(0, 2 * math.pi),
+            )
 
         # 2-qubit couplers
         unused_bits = all_bits.copy()
@@ -37,7 +42,7 @@ def bench_qrack(n, depth):
 
 def main():
     if len(sys.argv) < 3:
-        raise RuntimeError('Usage: python3 rcs.py [width] [depth]')
+        raise RuntimeError("Usage: python3 rcs.py [width] [depth]")
 
     width = int(sys.argv[1])
     depth = int(sys.argv[2])
@@ -50,5 +55,5 @@ def main():
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

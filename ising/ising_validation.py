@@ -16,9 +16,10 @@ from qiskit.quantum_info import Statevector
 
 from pyqrack import QrackSimulator
 
+
 def factor_width(width):
     col_len = math.floor(math.sqrt(width))
-    while (((width // col_len) * col_len) != width):
+    while ((width // col_len) * col_len) != width:
         col_len -= 1
     row_len = width // col_len
     if col_len == 1:
@@ -26,9 +27,10 @@ def factor_width(width):
 
     return row_len, col_len
 
+
 def trotter_step(circ, qubits, lattice_shape, J, h, dt):
     n_rows, n_cols = lattice_shape
-    
+
     # First half of transverse field term
     for q in qubits:
         circ.rx(h * dt / 2, q)
@@ -39,23 +41,35 @@ def trotter_step(circ, qubits, lattice_shape, J, h, dt):
             circ.append(RZZGate(2 * J * dt), [q1, q2])
 
     # Layer 1: horizontal pairs (even rows)
-    horiz_pairs = [(r * n_cols + c, r * n_cols + (c + 1) % n_cols)
-                   for r in range(n_rows) for c in range(0, n_cols - 1, 2)]
+    horiz_pairs = [
+        (r * n_cols + c, r * n_cols + (c + 1) % n_cols)
+        for r in range(n_rows)
+        for c in range(0, n_cols - 1, 2)
+    ]
     add_rzz_pairs(horiz_pairs)
 
     # Layer 2: horizontal pairs (odd rows)
-    horiz_pairs = [(r * n_cols + c, r * n_cols + (c + 1) % n_cols)
-                   for r in range(n_rows) for c in range(1, n_cols - 1, 2)]
+    horiz_pairs = [
+        (r * n_cols + c, r * n_cols + (c + 1) % n_cols)
+        for r in range(n_rows)
+        for c in range(1, n_cols - 1, 2)
+    ]
     add_rzz_pairs(horiz_pairs)
 
     # Layer 3: vertical pairs (even columns)
-    vert_pairs = [(r * n_cols + c, ((r + 1) % n_rows) * n_cols + c)
-                  for r in range(0, n_rows - 1, 2) for c in range(n_cols)]
+    vert_pairs = [
+        (r * n_cols + c, ((r + 1) % n_rows) * n_cols + c)
+        for r in range(0, n_rows - 1, 2)
+        for c in range(n_cols)
+    ]
     add_rzz_pairs(vert_pairs)
 
     # Layer 4: vertical pairs (odd columns)
-    vert_pairs = [(r * n_cols + c, ((r + 1) % n_rows) * n_cols + c)
-                  for r in range(1, n_rows - 1, 2) for c in range(n_cols)]
+    vert_pairs = [
+        (r * n_cols + c, ((r + 1) % n_rows) * n_cols + c)
+        for r in range(1, n_rows - 1, 2)
+        for c in range(n_cols)
+    ]
     add_rzz_pairs(vert_pairs)
 
     # Second half of transverse field term
@@ -94,7 +108,7 @@ def calc_stats(ideal_probs, counts, shots, depth, ace_fidelity_est, hamming_n):
         if ideal > threshold:
             sum_hog_counts += count
 
-    l2_similarity = 1 - diff_sqr ** (1/2)
+    l2_similarity = 1 - diff_sqr ** (1 / 2)
     hog_prob = sum_hog_counts / shots
     xeb = numer / denom
 
@@ -103,18 +117,20 @@ def calc_stats(ideal_probs, counts, shots, depth, ace_fidelity_est, hamming_n):
 
     # By Elara (OpenAI custom GPT)
     # Compute Hamming distances between each ACE bitstring and its closest in control case
-    min_distances = [min(hamming_distance(a, r, n) for r in con_top_n) for a in exp_top_n]
+    min_distances = [
+        min(hamming_distance(a, r, n) for r in con_top_n) for a in exp_top_n
+    ]
     avg_hamming_distance = np.mean(min_distances)
 
     return {
-        'qubits': n,
-        'depth': depth,
-        'ace_fidelity_est': ace_fidelity_est,
-        'l2_similarity': l2_similarity,
-        'xeb': xeb,
-        'hog_prob': hog_prob,
-        'hamming_distance_n': min(hamming_n, n_pow >> 1),
-        'hamming_distance_set_avg': avg_hamming_distance,
+        "qubits": n,
+        "depth": depth,
+        "ace_fidelity_est": ace_fidelity_est,
+        "l2_similarity": l2_similarity,
+        "xeb": xeb,
+        "hog_prob": hog_prob,
+        "hamming_distance_n": min(hamming_n, n_pow >> 1),
+        "hamming_distance_set_avg": avg_hamming_distance,
     }
 
 
@@ -125,7 +141,9 @@ def int_to_bitstring(integer, length):
 
 # By Elara (OpenAI custom GPT)
 def hamming_distance(s1, s2, n):
-    return sum(ch1 != ch2 for ch1, ch2 in zip(int_to_bitstring(s1, n), int_to_bitstring(s2, n)))
+    return sum(
+        ch1 != ch2 for ch1, ch2 in zip(int_to_bitstring(s1, n), int_to_bitstring(s2, n))
+    )
 
 
 # From https://stackoverflow.com/questions/13070461/get-indices-of-the-top-n-values-of-a-list#answer-38835860
@@ -160,7 +178,28 @@ def main():
     for _ in range(depth):
         trotter_step(qc, list(range(n_qubits)), (n_rows, n_cols), J, h, dt)
 
-    basis_gates = ["u", "rx", "ry", "rz", "h", "x", "y", "z", "sx", "sxdg", "s", "sdg", "t", "tdg", "cx", "cy", "cz", "cp", "swap", "iswap"]
+    basis_gates = [
+        "u",
+        "rx",
+        "ry",
+        "rz",
+        "h",
+        "x",
+        "y",
+        "z",
+        "sx",
+        "sxdg",
+        "s",
+        "sdg",
+        "t",
+        "tdg",
+        "cx",
+        "cy",
+        "cz",
+        "cp",
+        "swap",
+        "iswap",
+    ]
     qc = transpile(qc, basis_gates=basis_gates)
 
     experiment = QrackSimulator(n_qubits)
@@ -169,13 +208,24 @@ def main():
     experiment_fidelity = experiment.get_unitary_fidelity()
     qc.save_statevector()
     job = control.run(qc)
-    experiment_counts = dict(Counter(experiment.measure_shots(list(range(n_qubits)), shots)))
+    experiment_counts = dict(
+        Counter(experiment.measure_shots(list(range(n_qubits)), shots))
+    )
     control_probs = Statevector(job.result().get_statevector()).probabilities()
 
-    print(calc_stats(control_probs, experiment_counts, shots, depth, experiment_fidelity, hamming_n))
+    print(
+        calc_stats(
+            control_probs,
+            experiment_counts,
+            shots,
+            depth,
+            experiment_fidelity,
+            hamming_n,
+        )
+    )
 
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

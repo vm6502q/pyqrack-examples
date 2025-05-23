@@ -59,7 +59,9 @@ def bench_qrack(width, depth):
             c = unused_bits.pop()
             t = unused_bits.pop()
             control.mcx([c], t)
-            if (c < patch_size and t >= patch_size) or (t < patch_size and c >= patch_size):
+            if (c < patch_size and t >= patch_size) or (
+                t < patch_size and c >= patch_size
+            ):
                 # This is our version of ("semi-classical") gate "elision":
                 cx_shadow(experiment, c, t)
             else:
@@ -90,7 +92,7 @@ def calc_stats(ideal_probs, patch_probs, interval, depth):
         patch = patch_probs[b]
 
         # XEB / EPLG
-        ideal_centered = (ideal - u_u)
+        ideal_centered = ideal - u_u
         denom += ideal_centered * ideal_centered
         numer += ideal_centered * (patch - u_u)
 
@@ -101,19 +103,19 @@ def calc_stats(ideal_probs, patch_probs, interval, depth):
     xeb = numer / denom
 
     return {
-        'qubits': n,
-        'depth': depth,
-        'seconds': interval,
-        'xeb': xeb,
-        'hog_prob': hog_prob,
-        'qv_pass': hog_prob >= 2 / 3,
-        'eplg':  (1 - (xeb ** (1 / depth))) if xeb < 1 else 0
+        "qubits": n,
+        "depth": depth,
+        "seconds": interval,
+        "xeb": xeb,
+        "hog_prob": hog_prob,
+        "qv_pass": hog_prob >= 2 / 3,
+        "eplg": (1 - (xeb ** (1 / depth))) if xeb < 1 else 0,
     }
 
 
 def main():
     if len(sys.argv) < 3:
-        raise RuntimeError('Usage: python3 sycamore_2019_patch.py [width] [depth]')
+        raise RuntimeError("Usage: python3 sycamore_2019_patch.py [width] [depth]")
 
     width = int(sys.argv[1])
     depth = int(sys.argv[2])
@@ -126,5 +128,5 @@ def main():
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

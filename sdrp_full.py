@@ -75,7 +75,12 @@ def bench_qrack(width, depth, sdrp):
     for _ in range(depth):
         # Single-qubit gates
         for i in lcv_range:
-            sim.u(i, random.uniform(0, 2 * math.pi), random.uniform(0, 2 * math.pi), random.uniform(0, 2 * math.pi))
+            sim.u(
+                i,
+                random.uniform(0, 2 * math.pi),
+                random.uniform(0, 2 * math.pi),
+                random.uniform(0, 2 * math.pi),
+            )
 
         # 2-qubit couplers
         unused_bits = all_bits.copy()
@@ -101,7 +106,9 @@ def main():
     depth = 6
     trials = 1
     if len(sys.argv) < 5:
-        raise RuntimeError('Usage: python3 sdrp_full.py [sdrp] [width] [depth] [trials]')
+        raise RuntimeError(
+            "Usage: python3 sdrp_full.py [sdrp] [width] [depth] [trials]"
+        )
 
     sdrp = float(sys.argv[1])
     width = int(sys.argv[2])
@@ -113,17 +120,19 @@ def main():
     for _ in range(trials):
         width_results.append(bench_qrack(width, depth, sdrp))
 
-    print({
-        'sdrp': sdrp,
-        'width': width,
-        'depth': depth,
-        'trials': trials,
-        'time': sum(r[0] for r in width_results) / trials,
-        'fidelity': sum(r[1] for r in width_results) / trials
-    })
+    print(
+        {
+            "sdrp": sdrp,
+            "width": width,
+            "depth": depth,
+            "trials": trials,
+            "time": sum(r[0] for r in width_results) / trials,
+            "fidelity": sum(r[1] for r in width_results) / trials,
+        }
+    )
 
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

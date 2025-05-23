@@ -26,7 +26,9 @@ def int_to_bitstring(integer, length):
 
 # By Elara (OpenAI custom GPT)
 def hamming_distance(s1, s2, n):
-    return sum(ch1 != ch2 for ch1, ch2 in zip(int_to_bitstring(s1, n), int_to_bitstring(s2, n)))
+    return sum(
+        ch1 != ch2 for ch1, ch2 in zip(int_to_bitstring(s1, n), int_to_bitstring(s2, n))
+    )
 
 
 # From https://stackoverflow.com/questions/13070461/get-indices-of-the-top-n-values-of-a-list#answer-38835860
@@ -45,7 +47,7 @@ def bench_qrack(n_qubits, hamming_n):
     control = AerSimulator(method="statevector")
 
     rz_count = (n_qubits + 1) << 1
-    rz_opportunities =  n_qubits * n_qubits * 3
+    rz_opportunities = n_qubits * n_qubits * 3
     rz_positions = []
     while len(rz_positions) < rz_count:
         rz_position = random.randint(0, rz_opportunities - 1)
@@ -81,13 +83,20 @@ def bench_qrack(n_qubits, hamming_n):
         min_time = 0
         for r in range(11):
             ncrp = (10 - r) / 10
-            experiment = QrackSimulator(n_qubits, isTensorNetwork=False, isSchmidtDecompose=False, isStabilizerHybrid=True)
+            experiment = QrackSimulator(
+                n_qubits,
+                isTensorNetwork=False,
+                isSchmidtDecompose=False,
+                isStabilizerHybrid=True,
+            )
             # Round closer to a Clifford circuit
             if ncrp > 0:
                 experiment.set_ncrp(ncrp)
             start = time.perf_counter()
             experiment.run_qiskit_circuit(qc, shots=0)
-            experiment_counts = dict(Counter(experiment.measure_shots(list(range(n_qubits)), shots)))
+            experiment_counts = dict(
+                Counter(experiment.measure_shots(list(range(n_qubits)), shots))
+            )
             stop = time.perf_counter()
             if r == 0:
                 min_time = stop - start
@@ -97,10 +106,15 @@ def bench_qrack(n_qubits, hamming_n):
             job = control.run(aer_qc)
             control_probs = Statevector(job.result().get_statevector()).probabilities()
 
-            results = calc_stats(control_probs, experiment_counts, shots, d+1, ncrp, hamming_n)
+            results = calc_stats(
+                control_probs, experiment_counts, shots, d + 1, ncrp, hamming_n
+            )
             print(results)
 
-            if ((stop - start) > (2 * min_time)) or ((d > 0) and ((results['l2_similarity'] >= 1.0) or (results['xeb'] >= 1.0))):
+            if ((stop - start) > (2 * min_time)) or (
+                (d > 0)
+                and ((results["l2_similarity"] >= 1.0) or (results["xeb"] >= 1.0))
+            ):
                 # This has become too costly (or too accurate) to try lower rounding parameters:
                 break
 
@@ -134,7 +148,7 @@ def calc_stats(ideal_probs, counts, shots, depth, ncrp, hamming_n):
         if ideal > threshold:
             sum_hog_counts += count
 
-    l2_similarity = 1 - diff_sqr ** (1/2)
+    l2_similarity = 1 - diff_sqr ** (1 / 2)
     hog_prob = sum_hog_counts / shots
     xeb = numer / denom
 
@@ -143,24 +157,28 @@ def calc_stats(ideal_probs, counts, shots, depth, ncrp, hamming_n):
 
     # By Elara (OpenAI custom GPT)
     # Compute Hamming distances between each ACE bitstring and its closest in control case
-    min_distances = [min(hamming_distance(a, r, n) for r in con_top_n) for a in exp_top_n]
+    min_distances = [
+        min(hamming_distance(a, r, n) for r in con_top_n) for a in exp_top_n
+    ]
     avg_hamming_distance = np.mean(min_distances)
 
     return {
-        'qubits': n,
-        'ncrp': ncrp,
-        'depth': depth,
-        'l2_similarity': l2_similarity,
-        'xeb': xeb,
-        'hog_prob': hog_prob,
-        'hamming_distance_n': min(hamming_n, n_pow >> 1),
-        'hamming_distance_set_avg': avg_hamming_distance,
+        "qubits": n,
+        "ncrp": ncrp,
+        "depth": depth,
+        "l2_similarity": l2_similarity,
+        "xeb": xeb,
+        "hog_prob": hog_prob,
+        "hamming_distance_n": min(hamming_n, n_pow >> 1),
+        "hamming_distance_set_avg": avg_hamming_distance,
     }
 
 
 def main():
     if len(sys.argv) < 2:
-        raise RuntimeError('Usage: python3 fc_2n_plus_2_qiskit_validation.py [width] [hamming_n]')
+        raise RuntimeError(
+            "Usage: python3 fc_2n_plus_2_qiskit_validation.py [width] [hamming_n]"
+        )
 
     n_qubits = n_qubits = int(sys.argv[1])
     hamming_n = 2048
@@ -173,5 +191,5 @@ def main():
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

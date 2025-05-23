@@ -60,10 +60,19 @@ def bench_qrack(width, depth):
         experiment_sv = experiment.out_ket()
         control_sv = np.asarray(job.result().get_statevector())
 
-        overall_fidelity = np.abs(sum([np.conj(x) * y for x, y in zip(experiment_sv, control_sv)]))
+        overall_fidelity = np.abs(
+            sum([np.conj(x) * y for x, y in zip(experiment_sv, control_sv)])
+        )
         per_gate_fidelity = overall_fidelity ** (1 / gate_count)
 
-        print("Depth=" + str(d + 1) + ", overall fidelity=" + str(overall_fidelity) + ", per-gate fidelity avg.=" + str(per_gate_fidelity))
+        print(
+            "Depth="
+            + str(d + 1)
+            + ", overall fidelity="
+            + str(overall_fidelity)
+            + ", per-gate fidelity avg.="
+            + str(per_gate_fidelity)
+        )
 
 
 def main():
@@ -75,5 +84,5 @@ def main():
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

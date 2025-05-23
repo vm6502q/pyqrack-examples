@@ -15,7 +15,17 @@ def random_circuit(width, max_magic, circ):
     t_count = 0
     single_bit_gates = circ.h, circ.x, circ.y
     single_bit_gates_with_phase = circ.h, circ.x, circ.y, circ.z, circ.s, circ.adjs
-    two_bit_gates = circ.mcx, circ.mcy, circ.mcz, circ.macx, circ.macy, circ.macz, circ.swap, circ.iswap, circ.adjiswap
+    two_bit_gates = (
+        circ.mcx,
+        circ.mcy,
+        circ.mcz,
+        circ.macx,
+        circ.macy,
+        circ.macz,
+        circ.swap,
+        circ.iswap,
+        circ.adjiswap,
+    )
 
     for n in range(3 * width):
         # Single bit gates
@@ -47,16 +57,23 @@ def bench_qrack(n):
     # This is a demonstration of near-Clifford capabilities, with Clifford+RZ gate set.
     start = time.perf_counter()
 
-    sim = QrackSimulator(n, isStabilizerHybrid=True, isTensorNetwork=False, isSchmidtDecomposeMulti=False, isSchmidtDecompose=False, isOpenCL=False)
+    sim = QrackSimulator(
+        n,
+        isStabilizerHybrid=True,
+        isTensorNetwork=False,
+        isSchmidtDecomposeMulti=False,
+        isSchmidtDecompose=False,
+        isOpenCL=False,
+    )
 
     # Run a near-Clifford circuit
-    random_circuit(n, n+1, sim)
+    random_circuit(n, n + 1, sim)
 
     sim.out_to_file("_qrack_tableau.qnc")
     qrack_tableau = ""
     with open("_qrack_tableau.qnc", "r") as file:
         qrack_tableau = file.read()
- 
+
     # fidelity = sim.get_unitary_fidelity()
 
     return (time.perf_counter() - start, qrack_tableau)
@@ -74,7 +91,7 @@ def main():
     if len(sys.argv) > 2:
         samples = int(sys.argv[2])
 
-    os.environ["QRACK_MAX_CPU_QB"]="-1"
+    os.environ["QRACK_MAX_CPU_QB"] = "-1"
 
     for n in range(1, max_qb + 1):
         width_results = []
@@ -90,5 +107,5 @@ def main():
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

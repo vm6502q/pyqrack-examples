@@ -14,7 +14,7 @@ from pyqrack import QrackSimulator
 
 def factor_width(width):
     row_len = math.floor(math.sqrt(width))
-    while (((width // row_len) * row_len) != width):
+    while ((width // row_len) * row_len) != width:
         row_len -= 1
     col_len = width // row_len
     if row_len == 1:
@@ -33,7 +33,7 @@ def ct_pair_prob(sim, q1, q2):
     return p1, q2
 
 
-def cz_shadow(sim, q1, q2, anti = False):
+def cz_shadow(sim, q1, q2, anti=False):
     if anti:
         sim.x(q1)
     prob_max, t = ct_pair_prob(sim, q1, q2)
@@ -43,73 +43,75 @@ def cz_shadow(sim, q1, q2, anti = False):
         sim.x(q1)
 
 
-def cx_shadow(sim, c, t, anti = False):
+def cx_shadow(sim, c, t, anti=False):
     sim.h(t)
     cz_shadow(sim, c, t, anti)
     sim.h(t)
 
 
-def cy_shadow(sim, c, t, anti = False):
+def cy_shadow(sim, c, t, anti=False):
     sim.adjs(t)
     cx_shadow(sim, c, t, anti)
     sim.s(t)
+
 
 def swap_shadow(sim, q1, q2):
     cx_shadow(sim, q1, q2)
     cx_shadow(sim, q2, q1)
     cx_shadow(sim, q1, q2)
 
+
 def cx(sim, q1, q2, bound):
-    if (((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound))):
+    if ((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound)):
         cx_shadow(sim, q1, q2)
     else:
         sim.mcx([q1], q2)
 
 
 def cy(sim, q1, q2, bound):
-    if (((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound))):
+    if ((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound)):
         cy_shadow(sim, q1, q2)
     else:
         sim.mcy([q1], q2)
 
 
 def cz(sim, q1, q2, bound):
-    if (((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound))):
+    if ((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound)):
         cz_shadow(sim, q1, q2)
     else:
         sim.mcz([q1], q2)
 
 
 def acx(sim, q1, q2, bound):
-    if (((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound))):
+    if ((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound)):
         cx_shadow(sim, q1, q2, True)
     else:
         sim.macx([q1], q2)
 
 
 def acy(sim, q1, q2, bound):
-    if (((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound))):
+    if ((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound)):
         cy_shadow(sim, q1, q2, True)
     else:
         sim.macy([q1], q2)
 
 
 def acz(sim, q1, q2, bound):
-    if (((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound))):
+    if ((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound)):
         cz_shadow(sim, q1, q2, True)
     else:
         sim.macz([q1], q2)
 
 
 def swap(sim, q1, q2, bound):
-    if (((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound))):
+    if ((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound)):
         swap_shadow(sim, q1, q2)
     else:
         sim.swap(q1, q2)
 
 
 def iswap(sim, q1, q2, bound):
-    if (((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound))):
+    if ((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound)):
         swap_shadow(sim, q1, q2)
         cz_shadow(sim, q1, q2)
         sim.s(q1)
@@ -119,7 +121,7 @@ def iswap(sim, q1, q2, bound):
 
 
 def iiswap(sim, q1, q2, bound):
-    if (((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound))):
+    if ((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound)):
         sim.adjs(q1)
         sim.adjs(q2)
         cz_shadow(sim, q1, q2)
@@ -129,7 +131,7 @@ def iiswap(sim, q1, q2, bound):
 
 
 def pswap(sim, q1, q2, bound):
-    if (((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound))):
+    if ((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound)):
         cz_shadow(sim, q1, q2)
         swap_shadow(sim, q1, q2)
     else:
@@ -138,7 +140,7 @@ def pswap(sim, q1, q2, bound):
 
 
 def mswap(sim, q1, q2, bound):
-    if (((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound))):
+    if ((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound)):
         swap_shadow(sim, q1, q2)
         cz_shadow(sim, q1, q2)
     else:
@@ -147,7 +149,7 @@ def mswap(sim, q1, q2, bound):
 
 
 def nswap(sim, q1, q2, bound):
-    if (((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound))):
+    if ((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound)):
         cz_shadow(sim, q1, q2)
         swap_shadow(sim, q1, q2)
         cz_shadow(sim, q1, q2)
@@ -167,7 +169,7 @@ def bench_qrack(width, depth):
     all_bits = list(lcv_range)
 
     # Nearest-neighbor couplers:
-    gateSequence = [ 0, 3, 2, 1, 2, 1, 0, 3 ]
+    gateSequence = [0, 3, 2, 1, 2, 1, 0, 3]
     two_bit_gates = swap, pswap, mswap, nswap, iswap, iiswap, cx, cy, cz, acx, acy, acz
 
     row_len, col_len = factor_width(width)
@@ -189,7 +191,7 @@ def bench_qrack(width, depth):
             for col in range(col_len):
                 temp_row = row
                 temp_col = col
-                temp_row = temp_row + (1 if (gate & 2) else -1);
+                temp_row = temp_row + (1 if (gate & 2) else -1)
                 temp_col = temp_col + (1 if (gate & 1) else 0)
 
                 if temp_row < 0:
@@ -235,7 +237,7 @@ def calc_stats(ideal_probs, patch_probs, interval, depth):
         patch = patch_probs[b]
 
         # XEB / EPLG
-        ideal_centered = (ideal - u_u)
+        ideal_centered = ideal - u_u
         denom += ideal_centered * ideal_centered
         numer += ideal_centered * (patch - u_u)
 
@@ -246,19 +248,19 @@ def calc_stats(ideal_probs, patch_probs, interval, depth):
     xeb = numer / denom
 
     return {
-        'qubits': n,
-        'depth': depth,
-        'seconds': interval,
-        'xeb': xeb,
-        'hog_prob': hog_prob,
-        'qv_pass': hog_prob >= 2 / 3,
-        'eplg':  (1 - (xeb ** (1 / depth))) if xeb < 1 else 0
+        "qubits": n,
+        "depth": depth,
+        "seconds": interval,
+        "xeb": xeb,
+        "hog_prob": hog_prob,
+        "qv_pass": hog_prob >= 2 / 3,
+        "eplg": (1 - (xeb ** (1 / depth))) if xeb < 1 else 0,
     }
 
 
 def main():
     if len(sys.argv) < 3:
-        raise RuntimeError('Usage: python3 rcs_nn_elided_time.py [width] [depth]')
+        raise RuntimeError("Usage: python3 rcs_nn_elided_time.py [width] [depth]")
 
     width = int(sys.argv[1])
     depth = int(sys.argv[2])
@@ -271,5 +273,5 @@ def main():
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

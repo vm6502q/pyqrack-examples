@@ -10,10 +10,11 @@ from qiskit.providers.qrack import QasmSimulator
 def reverse(num_qubits, circ):
     start = 0
     end = num_qubits - 1
-    while (start < end):
+    while start < end:
         circ.swap(start, end)
         start += 1
         end -= 1
+
 
 # Implementation of the Quantum Fourier Transform
 # (See https://qiskit.org/textbook/ch-algorithms/quantum-fourier-transform.html)
@@ -24,7 +25,7 @@ def qft(n, circuit):
 
     circuit.h(n)
     for qubit in range(n):
-        circuit.cp(math.pi/2**(n-qubit), qubit, n)
+        circuit.cp(math.pi / 2 ** (n - qubit), qubit, n)
 
     # Recursive QFT is very similiar to a ("classical") FFT
     qft(n, circuit)
@@ -34,7 +35,12 @@ def bench_qrack(num_qubits):
     circ = QuantumCircuit(num_qubits, num_qubits)
     # Single-qubit gates
     for i in range(num_qubits):
-        circ.u(random.uniform(0, 2 * math.pi), random.uniform(0, 2 * math.pi), random.uniform(0, 2 * math.pi), i)
+        circ.u(
+            random.uniform(0, 2 * math.pi),
+            random.uniform(0, 2 * math.pi),
+            random.uniform(0, 2 * math.pi),
+            i,
+        )
     qft(num_qubits, circ)
     reverse(num_qubits, circ)
     for i in range(num_qubits):
@@ -68,5 +74,5 @@ def main():
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

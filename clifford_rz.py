@@ -15,7 +15,17 @@ def random_circuit(width, max_magic, circ):
     t_count = 0
     single_bit_gates = circ.h, circ.x, circ.y
     single_bit_gates_with_phase = circ.h, circ.x, circ.y, circ.z, circ.s, circ.adjs
-    two_bit_gates = circ.mcx, circ.mcy, circ.mcz, circ.macx, circ.macy, circ.macz, circ.swap, circ.iswap, circ.adjiswap
+    two_bit_gates = (
+        circ.mcx,
+        circ.mcy,
+        circ.mcz,
+        circ.macx,
+        circ.macy,
+        circ.macz,
+        circ.swap,
+        circ.iswap,
+        circ.adjiswap,
+    )
 
     for n in range(3 * width):
         # Single bit gates
@@ -47,11 +57,18 @@ def bench_qrack(n):
     # This is a demonstration of near-Clifford capabilities, with Clifford+RZ gate set.
     start = time.perf_counter()
 
-    sim = QrackSimulator(n, isStabilizerHybrid=True, isTensorNetwork=False, isSchmidtDecomposeMulti=False, isSchmidtDecompose=False, isOpenCL=False)
+    sim = QrackSimulator(
+        n,
+        isStabilizerHybrid=True,
+        isTensorNetwork=False,
+        isSchmidtDecomposeMulti=False,
+        isSchmidtDecompose=False,
+        isOpenCL=False,
+    )
 
     # Run a near-Clifford circuit
     random_circuit(n, 3, sim)
-    result = sim.prob_perm(list(range(n)), [False]*n)
+    result = sim.prob_perm(list(range(n)), [False] * n)
 
     # fidelity = sim.get_unitary_fidelity()
 
@@ -79,10 +96,17 @@ def main():
 
         time_result = sum(r[0] for r in width_results) / samples
         prob_result = sum(r[1] for r in width_results) / samples
-        print(n, ": ", time_result, " seconds, ", prob_result, " probability for |0...0> dimension")
+        print(
+            n,
+            ": ",
+            time_result,
+            " seconds, ",
+            prob_result,
+            " probability for |0...0> dimension",
+        )
 
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

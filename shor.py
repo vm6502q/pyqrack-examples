@@ -22,7 +22,7 @@ def cmul_native(sim, i, a, maxN, qo, qa):
 
 
 def phase_root_n(sim, n, q):
-    sim.mtrx([1, 0, 0, -1**(1.0 / (1<<(n - 1)))], q)
+    sim.mtrx([1, 0, 0, -(1 ** (1.0 / (1 << (n - 1))))], q)
 
 
 def shor(to_factor):
@@ -33,12 +33,18 @@ def shor(to_factor):
 
     if not factor == 1:
         print("Chose non-relative prime, (without need for quantum computing):")
-        print("Factors found : {} * {} = {}".format(factor, to_factor // factor, to_factor))
+        print(
+            "Factors found : {} * {} = {}".format(
+                factor, to_factor // factor, to_factor
+            )
+        )
         print("Time: " + str(time.perf_counter() - start) + "seconds")
         return
 
     qubitCount = math.ceil(math.log2(to_factor))
-    sim = QrackSimulator(2 * qubitCount + 2, isTensorNetwork=False, isStabilizerHybrid=False)
+    sim = QrackSimulator(
+        2 * qubitCount + 2, isTensorNetwork=False, isStabilizerHybrid=False
+    )
     qo = [i for i in range(qubitCount)]
     qa = [(i + qubitCount) for i in range(qubitCount)]
     qi = 2 * qubitCount
@@ -64,7 +70,7 @@ def shor(to_factor):
     y = 0
     for i in range(len(m_results)):
         if m_results[i]:
-            y |= 1<<i
+            y |= 1 << i
     r = Fraction(y).limit_denominator(to_factor - 1).denominator
 
     # try to determine the factors
@@ -74,7 +80,11 @@ def shor(to_factor):
     f1 = gcd(apowrhalf + 1, to_factor)
     f2 = gcd(apowrhalf - 1, to_factor)
     fmul = f1 * f2
-    if (not fmul == to_factor) and f1 * f2 > 1 and (to_factor // fmul) * fmul == to_factor:
+    if (
+        (not fmul == to_factor)
+        and f1 * f2 > 1
+        and (to_factor // fmul) * fmul == to_factor
+    ):
         f1, f2 = f1 * f2, to_factor // (f1 * f2)
     if f1 * f2 == to_factor and f1 > 1 and f2 > 1:
         print("Factors found : {} * {} = {}".format(f1, f2, to_factor))
@@ -86,7 +96,7 @@ def shor(to_factor):
 
 def main():
     if len(sys.argv) < 2:
-        raise RuntimeError('Usage: python3 qbdd_shor.py [to_factor]')
+        raise RuntimeError("Usage: python3 qbdd_shor.py [to_factor]")
 
     to_factor = int(sys.argv[1])
 
@@ -95,5 +105,5 @@ def main():
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

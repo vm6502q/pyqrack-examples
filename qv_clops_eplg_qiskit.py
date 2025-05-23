@@ -56,8 +56,12 @@ def bench_qrack(n, backend, shots):
 
     circ.measure_all()
 
-    device = Aer.get_backend(backend) if len(Aer.backends(backend)) > 0 else QiskitRuntimeService().backend(backend)
-    circ = transpile(circ, device, layout_method = "noise_adaptive")
+    device = (
+        Aer.get_backend(backend)
+        if len(Aer.backends(backend)) > 0
+        else QiskitRuntimeService().backend(backend)
+    )
+    circ = transpile(circ, device, layout_method="noise_adaptive")
 
     result = device.run(circ, shots=shots).result()
     counts = result.get_counts(circ)
@@ -93,18 +97,20 @@ def calc_stats(ideal_probs, counts, interval, sim_interval, shots):
     hog_prob = sum_hog_counts / shots
     xeb = numer / denom
     # p-value of heavy output count, if method were actually 50/50 chance of guessing
-    p_val = (1 - binom.cdf(sum_hog_counts - 1, shots, 1 / 2)) if sum_hog_counts > 0 else 1
+    p_val = (
+        (1 - binom.cdf(sum_hog_counts - 1, shots, 1 / 2)) if sum_hog_counts > 0 else 1
+    )
 
     return {
-        'qubits': n,
-        'seconds': interval,
-        'xeb': xeb,
-        'hog_prob': hog_prob,
-        'pass': hog_prob >= 2 / 3,
-        'p-value': p_val,
-        'clops': (n * shots) / interval,
-        'sim_clops': (n * shots) / sim_interval,
-        'eplg': (1 - (xeb ** (1 / depth))) if xeb < 1 else 0
+        "qubits": n,
+        "seconds": interval,
+        "xeb": xeb,
+        "hog_prob": hog_prob,
+        "pass": hog_prob >= 2 / 3,
+        "p-value": p_val,
+        "clops": (n * shots) / interval,
+        "sim_clops": (n * shots) / sim_interval,
+        "eplg": (1 - (xeb ** (1 / depth))) if xeb < 1 else 0,
     }
 
 
@@ -121,7 +127,9 @@ def main():
     if len(sys.argv) > 3:
         backend = sys.argv[3]
     if len(sys.argv) > 4:
-        QiskitRuntimeService.save_account(channel="ibm_quantum", token=sys.argv[4], set_as_default=True)
+        QiskitRuntimeService.save_account(
+            channel="ibm_quantum", token=sys.argv[4], set_as_default=True
+        )
 
     results = bench_qrack(n, backend, shots)
 
@@ -135,5 +143,5 @@ def main():
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

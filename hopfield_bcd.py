@@ -63,10 +63,17 @@ def main():
 
     predict_time = time.perf_counter() - start
 
-    print(width_i, "qubits input; Train: ", train_time, "seconds, Predict:" , predict_time, "seconds.")
+    print(
+        width_i,
+        "qubits input; Train: ",
+        train_time,
+        "seconds, Predict:",
+        predict_time,
+        "seconds.",
+    )
 
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

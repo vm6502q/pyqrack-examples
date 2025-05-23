@@ -9,7 +9,9 @@ from pyqrack import Pauli, QrackSimulator
 
 
 def inject_pauli_bit_flip_noise(simulator, basis, qubit, probability):
-    if (not probability >= 1.) and ((probability <= 0.) or (random.uniform(0., 1.) >= probability)):
+    if (not probability >= 1.0) and (
+        (probability <= 0.0) or (random.uniform(0.0, 1.0) >= probability)
+    ):
         # We avoid the bit flip error
         return
 
@@ -36,7 +38,12 @@ def bench_qrack(n):
     for _ in lcv_range:
         # Single-qubit gates
         for i in lcv_range:
-            sim.u(i, random.uniform(0, 2 * math.pi), random.uniform(0, 2 * math.pi), random.uniform(0, 2 * math.pi))
+            sim.u(
+                i,
+                random.uniform(0, 2 * math.pi),
+                random.uniform(0, 2 * math.pi),
+                random.uniform(0, 2 * math.pi),
+            )
             inject_pauli_bit_flip_noise(sim, Pauli.PauliX, i, noise_level)
             inject_pauli_bit_flip_noise(sim, Pauli.PauliZ, i, noise_level)
             fidelity = fidelity * (1.0 - noise_level)
@@ -66,17 +73,19 @@ def main():
 
     for n in range(1, max_qb + 1):
         width_results = []
-        
+
         # Run the benchmarks
         for _ in range(samples):
             width_results.append(bench_qrack(n))
 
         time_result = sum(r[0] for r in width_results) / samples
         fidelity_result = sum(r[1] for r in width_results) / samples
-        print(n, ": ", time_result, " seconds, ", fidelity_result, " out of 1.0 fidelity")
+        print(
+            n, ": ", time_result, " seconds, ", fidelity_result, " out of 1.0 fidelity"
+        )
 
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

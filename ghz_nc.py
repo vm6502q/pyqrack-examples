@@ -11,7 +11,9 @@ from pyqrack import QrackSimulator
 def bench_qrack(n):
     start = time.perf_counter()
 
-    sim = QrackSimulator(n, isTensorNetwork=False, isSchmidtDecompose=False, isStabilizerHybrid=True)
+    sim = QrackSimulator(
+        n, isTensorNetwork=False, isSchmidtDecompose=False, isStabilizerHybrid=True
+    )
 
     sim.h(0)
     for q in range(n - 1):
@@ -43,10 +45,12 @@ def main():
 
         time_result = sum(r[0] for r in width_results) / samples
         fidelity_result = sum(r[1] for r in width_results) / samples
-        print(n, ": ", time_result, " seconds, ", fidelity_result, " out of 1.0 fidelity")
+        print(
+            n, ": ", time_result, " seconds, ", fidelity_result, " out of 1.0 fidelity"
+        )
 
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

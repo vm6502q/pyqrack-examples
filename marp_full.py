@@ -82,7 +82,12 @@ def bench_qrack(width, depth, sdrp_samples):
             # Single-qubit gates
             for i in lcv_range:
                 try:
-                    sim.u(i, random.uniform(0, 2 * math.pi), random.uniform(0, 2 * math.pi), random.uniform(0, 2 * math.pi))
+                    sim.u(
+                        i,
+                        random.uniform(0, 2 * math.pi),
+                        random.uniform(0, 2 * math.pi),
+                        random.uniform(0, 2 * math.pi),
+                    )
                 except:
                     is_fail = True
                     break
@@ -108,13 +113,15 @@ def bench_qrack(width, depth, sdrp_samples):
         # Terminal measurement
         sim.m_all()
 
-        print({
-            'width': width,
-            'depth': depth,
-            'sdrp': sdrp,
-            'time': time.perf_counter() - start,
-            'fidelity': fidelity
-        })
+        print(
+            {
+                "width": width,
+                "depth": depth,
+                "sdrp": sdrp,
+                "time": time.perf_counter() - start,
+                "fidelity": fidelity,
+            }
+        )
 
 
 def main():
@@ -122,7 +129,7 @@ def main():
     depth = 6
     sdrp_samples = 11
     if len(sys.argv) != 4:
-        raise RuntimeError('Usage: python3 marp_full.py [width] [depth] [sdrp_samples]')
+        raise RuntimeError("Usage: python3 marp_full.py [width] [depth] [sdrp_samples]")
 
     width = int(sys.argv[1])
     depth = int(sys.argv[2])
@@ -134,5 +141,5 @@ def main():
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

@@ -23,7 +23,12 @@ def bench_qrack(width_depth):
     for _ in range(depth):
         # Single-qubit gates
         for i in lcv_range:
-            sim.u(i, random.uniform(0, 2 * math.pi), random.uniform(0, 2 * math.pi), random.uniform(0, 2 * math.pi))
+            sim.u(
+                i,
+                random.uniform(0, 2 * math.pi),
+                random.uniform(0, 2 * math.pi),
+                random.uniform(0, 2 * math.pi),
+            )
 
         # 2-qubit couplers
         unused_bits = all_bits.copy()
@@ -42,26 +47,36 @@ def bench_qrack(width_depth):
 
     time_result = time.perf_counter() - start
 
-    print("Width=" + str(width) + ", Depth=" + str(depth) + ": " + str(time_result) + " seconds, " + str(fidelity_est) + " out of 1.0 worst-case first-principles fidelity estimate.")
+    print(
+        "Width="
+        + str(width)
+        + ", Depth="
+        + str(depth)
+        + ": "
+        + str(time_result)
+        + " seconds, "
+        + str(fidelity_est)
+        + " out of 1.0 worst-case first-principles fidelity estimate."
+    )
 
     return time_result, fidelity_est
 
 
 def main():
     if len(sys.argv) < 4:
-        raise RuntimeError('Usage: python3 qbdd_fc_parallel.py [width] [depth] [shots]')
+        raise RuntimeError("Usage: python3 qbdd_fc_parallel.py [width] [depth] [shots]")
 
     width = int(sys.argv[1])
     depth = int(sys.argv[2])
     shots = int(sys.argv[3])
 
     # Run the benchmarks
-    pool = multiprocessing.Pool(processes = multiprocessing.cpu_count())
+    pool = multiprocessing.Pool(processes=multiprocessing.cpu_count())
     pool.map(bench_qrack, [(width, depth)] * shots)
     pool.close()
 
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

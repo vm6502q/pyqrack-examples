@@ -1,4 +1,4 @@
-#Quantum binary becision diagram GHZ state preparation simulation
+# Quantum binary becision diagram GHZ state preparation simulation
 
 import math
 import os
@@ -28,7 +28,7 @@ def bench_qrack(n):
 def main():
     bench_qrack(1)
 
-    os.environ["QRACK_QTENSORNETWORK_THRESHOLD_QB"] = '-1'
+    os.environ["QRACK_QTENSORNETWORK_THRESHOLD_QB"] = "-1"
 
     max_qb = 24
     samples = 1
@@ -46,10 +46,12 @@ def main():
 
         time_result = sum(r[0] for r in width_results) / samples
         fidelity_result = sum(r[1] for r in width_results) / samples
-        print(n, ": ", time_result, " seconds, ", fidelity_result, " out of 1.0 fidelity")
+        print(
+            n, ": ", time_result, " seconds, ", fidelity_result, " out of 1.0 fidelity"
+        )
 
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

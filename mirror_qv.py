@@ -14,7 +14,7 @@ from qiskit.compiler import transpile
 
 def factor_width(width):
     col_len = math.floor(math.sqrt(width))
-    while (((width // col_len) * col_len) != width):
+    while ((width // col_len) * col_len) != width:
         col_len -= 1
     row_len = width // col_len
     if col_len == 1:
@@ -24,7 +24,7 @@ def factor_width(width):
 
 
 def count_set_bits(n):
-    return bin(n).count('1')
+    return bin(n).count("1")
 
 
 def cx(sim, q1, q2):
@@ -95,22 +95,22 @@ def bench_qrack(width, depth, trials, is_obfuscated):
     all_bits = list(lcv_range)
 
     # Nearest-neighbor couplers:
-    gateSequence = [ 0, 3, 2, 1, 2, 1, 0, 3 ]
+    gateSequence = [0, 3, 2, 1, 2, 1, 0, 3]
     two_bit_gates = swap, pswap, mswap, nswap, iswap, iiswap, cx, cy, cz, acx, acy, acz
 
     row_len, col_len = factor_width(width)
 
     results = {
-        'qubits': width,
-        'depth': depth,
-        'trials': trials,
-        'forward_seconds_avg': 0,
-        'transpile_seconds_avg': 0,
-        'backward_seconds_avg': 0,
-        'fidelity_avg': 0,
-        'midpoint_weight_avg': 0,
-        'terminal_distance_avg': 0,
-        'hamming_fidelity_avg': 0
+        "qubits": width,
+        "depth": depth,
+        "trials": trials,
+        "forward_seconds_avg": 0,
+        "transpile_seconds_avg": 0,
+        "backward_seconds_avg": 0,
+        "fidelity_avg": 0,
+        "midpoint_weight_avg": 0,
+        "terminal_distance_avg": 0,
+        "hamming_fidelity_avg": 0,
     }
 
     for trial in range(trials):
@@ -151,7 +151,26 @@ def bench_qrack(width, depth, trials, is_obfuscated):
         # Optionally "obfuscate" the circuit adjoint.
         if is_obfuscated:
             adj_circ = transpile(circ, optimization_level=3)
-            adj_circ = transpile(adj_circ, optimization_level=3, basis_gates=['u', 'x', 'y', 'z', 's', 'sdg', 't', 'tdg', 'cx', 'cy', 'cz', 'cp', 'swap', 'iswap']).inverse()
+            adj_circ = transpile(
+                adj_circ,
+                optimization_level=3,
+                basis_gates=[
+                    "u",
+                    "x",
+                    "y",
+                    "z",
+                    "s",
+                    "sdg",
+                    "t",
+                    "tdg",
+                    "cx",
+                    "cy",
+                    "cz",
+                    "cp",
+                    "swap",
+                    "iswap",
+                ],
+            ).inverse()
         else:
             adj_circ = circ.inverse()
 
@@ -168,34 +187,41 @@ def bench_qrack(width, depth, trials, is_obfuscated):
         # ("...and measurement", SPAM) is observably uncomputed.
         terminal = experiment.measure_shots(all_bits, shots)
 
-        backward_seconds = time.perf_counter() - (transpile_seconds + forward_seconds + start)
+        backward_seconds = time.perf_counter() - (
+            transpile_seconds + forward_seconds + start
+        )
 
         # Experiment results
         hamming_weight = sum(count_set_bits(r) for r in midpoint) / shots
         # Validation
         hamming_distance = sum(count_set_bits(r) for r in terminal) / shots
 
-        results['forward_seconds_avg'] += forward_seconds
-        results['transpile_seconds_avg'] += transpile_seconds
-        results['backward_seconds_avg'] += backward_seconds
-        results['fidelity_avg'] += terminal.count(0) / shots
-        results['midpoint_weight_avg'] += hamming_weight
-        results['terminal_distance_avg'] += hamming_distance
-        results['hamming_fidelity_avg'] += (hamming_weight - hamming_distance) / hamming_weight
+        results["forward_seconds_avg"] += forward_seconds
+        results["transpile_seconds_avg"] += transpile_seconds
+        results["backward_seconds_avg"] += backward_seconds
+        results["fidelity_avg"] += terminal.count(0) / shots
+        results["midpoint_weight_avg"] += hamming_weight
+        results["terminal_distance_avg"] += hamming_distance
+        results["hamming_fidelity_avg"] += (
+            hamming_weight - hamming_distance
+        ) / hamming_weight
 
-    results['forward_seconds_avg'] /= trials
-    results['transpile_seconds_avg'] /= trials
-    results['backward_seconds_avg'] /= trials
-    results['fidelity_avg'] /= trials
-    results['midpoint_weight_avg'] /= trials
-    results['terminal_distance_avg'] /= trials
-    results['hamming_fidelity_avg'] /= trials
+    results["forward_seconds_avg"] /= trials
+    results["transpile_seconds_avg"] /= trials
+    results["backward_seconds_avg"] /= trials
+    results["fidelity_avg"] /= trials
+    results["midpoint_weight_avg"] /= trials
+    results["terminal_distance_avg"] /= trials
+    results["hamming_fidelity_avg"] /= trials
 
     return results
 
+
 def main():
     if len(sys.argv) < 3:
-        raise RuntimeError('Usage: python3 mirror_nn_depth_series.py [width] [depth] [trials] [is_obfuscated]')
+        raise RuntimeError(
+            "Usage: python3 mirror_nn_depth_series.py [width] [depth] [trials] [is_obfuscated]"
+        )
 
     width = int(sys.argv[1])
     depth = int(sys.argv[2])
@@ -204,7 +230,7 @@ def main():
     if len(sys.argv) > 3:
         trials = int(sys.argv[3])
     if len(sys.argv) > 4:
-        is_obfuscated = (sys.argv[4] not in ['False', '0'])
+        is_obfuscated = sys.argv[4] not in ["False", "0"]
 
     # Run the benchmarks
     print(bench_qrack(width, depth, trials, is_obfuscated))
@@ -212,5 +238,5 @@ def main():
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

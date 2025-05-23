@@ -18,7 +18,7 @@ from openfermion.transforms import jordan_wigner
 
 # Step 1: Define the molecule (Hydrogen, Helium, Lithium, Carbon, Nitrogen, Oxygen)
 
-basis = 'sto-3g'  # Minimal Basis Set
+basis = "sto-3g"  # Minimal Basis Set
 # basis = '6-31g'  # Larger basis set
 # basis = 'cc-pVDZ' # Even larger basis set!
 multiplicity = 1  # singlet, closed shell, all electrons are paired (neutral molecules with full valence)
@@ -28,7 +28,7 @@ charge = 0  # Excess +/- elementary charge, beyond multiplicity
 
 # Hydrogen (and lighter):
 
-geometry = [('H', (0.0, 0.0, 0.0)), ('H', (0.0, 0.0, 0.74))]  # H2 Molecule
+geometry = [("H", (0.0, 0.0, 0.0)), ("H", (0.0, 0.0, 0.74))]  # H2 Molecule
 
 # Helium (and lighter):
 
@@ -119,9 +119,9 @@ geometry = [('H', (0.0, 0.0, 0.0)), ('H', (0.0, 0.0, 0.74))]  # H2 Molecule
 
 # Hydrogen sulfide (rotten egg smell, major biologic sulfur compound):
 # geometry = [
-#     ('S', (0.0000, 0.0000, 0.0000)),  
-#     ('H', (1.3400, 0.0000, 0.0000)),  
-#     ('H', (-1.3400 * np.cos(np.deg2rad(92)), 1.3400 * np.sin(np.deg2rad(92)), 0.0000))  
+#     ('S', (0.0000, 0.0000, 0.0000)),
+#     ('H', (1.3400, 0.0000, 0.0000)),
+#     ('H', (-1.3400 * np.cos(np.deg2rad(92)), 1.3400 * np.sin(np.deg2rad(92)), 0.0000))
 # ]
 
 # Sulfur dioxide (major volcanic gas and pollutant):
@@ -133,40 +133,40 @@ geometry = [('H', (0.0, 0.0, 0.0)), ('H', (0.0, 0.0, 0.74))]  # H2 Molecule
 
 # Sulfur trioxide (key in acid rain, forms H₂SO₄):
 # geometry = [
-#     ('S', (0.0000, 0.0000, 0.0000)),  
-#     ('O', (1.4200, 0.0000, 0.0000)),  
-#     ('O', (-0.7100, 1.2290, 0.0000)),  
-#     ('O', (-0.7100, -1.2290, 0.0000))  
+#     ('S', (0.0000, 0.0000, 0.0000)),
+#     ('O', (1.4200, 0.0000, 0.0000)),
+#     ('O', (-0.7100, 1.2290, 0.0000)),
+#     ('O', (-0.7100, -1.2290, 0.0000))
 # ]
 
 # Sulfate ion (SO4--, major oceanic anion, ionically bonds to Mg++):
 # geometry = [
-#     ('S', (0.0000, 0.0000, 0.0000)),  
-#     ('O', (1.4900, 0.0000, 0.0000)),  
-#     ('O', (-0.7450, 1.2900, 0.0000)),  
-#     ('O', (-0.7450, -1.2900, 0.0000)),  
-#     ('O', (0.0000, 0.0000, 1.4900))  
+#     ('S', (0.0000, 0.0000, 0.0000)),
+#     ('O', (1.4900, 0.0000, 0.0000)),
+#     ('O', (-0.7450, 1.2900, 0.0000)),
+#     ('O', (-0.7450, -1.2900, 0.0000)),
+#     ('O', (0.0000, 0.0000, 1.4900))
 # ]
 
 # Oceanic electrolytes (consider isolating cations and anions as single atoms with excess charge):
 
 # Sodium chloride:
 # geometry = [
-#     ('Na', (0.0000, 0.0000, 0.0000)),  
-#     ('Cl', (2.3600, 0.0000, 0.0000))  
+#     ('Na', (0.0000, 0.0000, 0.0000)),
+#     ('Cl', (2.3600, 0.0000, 0.0000))
 # ]
 
 # Potassium chloride (biologically important):
 # geometry = [
-#     ('K', (0.0000, 0.0000, 0.0000)),  
-#     ('Cl', (2.6700, 0.0000, 0.0000))  
+#     ('K', (0.0000, 0.0000, 0.0000)),
+#     ('Cl', (2.6700, 0.0000, 0.0000))
 # ]
 
 # Calcium chloride:
 # geometry = [
-#     ('Ca', (0.0000, 0.0000, 0.0000)),  
-#     ('Cl', (2.7800, 0.0000, 0.0000)),  
-#     ('Cl', (-2.7800, 0.0000, 0.0000))  
+#     ('Ca', (0.0000, 0.0000, 0.0000)),
+#     ('Cl', (2.7800, 0.0000, 0.0000)),
+#     ('Cl', (-2.7800, 0.0000, 0.0000))
 # ]
 
 # Diatomic halogens:
@@ -234,11 +234,11 @@ print(str(n_qubits) + " qubits...")
 for term, coefficient in qubit_hamiltonian.terms.items():
     pauli_operators = []
     for qubit_idx, pauli in term:
-        if pauli == 'X':
+        if pauli == "X":
             pauli_operators.append(qml.PauliX(qubit_idx))
-        elif pauli == 'Y':
+        elif pauli == "Y":
             pauli_operators.append(qml.PauliY(qubit_idx))
-        elif pauli == 'Z':
+        elif pauli == "Z":
             pauli_operators.append(qml.PauliZ(qubit_idx))
     if pauli_operators:
         observable = pauli_operators[0]
@@ -252,7 +252,10 @@ for term, coefficient in qubit_hamiltonian.terms.items():
 hamiltonian = qml.Hamiltonian(coeffs, observables)
 
 # Step 5: Define Qrack Backend
-dev = qml.device("qrack.simulator", wires=n_qubits, isTensorNetwork=False)  # Replace with "default.qubit" for CPU test
+dev = qml.device(
+    "qrack.simulator", wires=n_qubits, isTensorNetwork=False
+)  # Replace with "default.qubit" for CPU test
+
 
 # Step 6: Define a Simple Variational Ansatz
 def ansatz(params, wires):
@@ -275,11 +278,13 @@ def ansatz(params, wires):
     # for i in range(len(wires) - 1):
     #     qml.CNOT(wires=[i, i + 1])
 
+
 # Step 7: Cost Function for VQE (Expectation of Hamiltonian)
 @qml.qnode(dev)
 def circuit(params):
     ansatz(params, wires=range(n_qubits))
     return qml.expval(hamiltonian)  # Scalar cost function
+
 
 # Step 8: Optimize the Energy
 opt = qml.AdamOptimizer(stepsize=0.1)

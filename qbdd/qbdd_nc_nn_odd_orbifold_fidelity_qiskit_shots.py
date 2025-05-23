@@ -20,7 +20,7 @@ from qiskit_aer.backends import AerSimulator
 
 def factor_width(width):
     col_len = math.floor(math.sqrt(width))
-    while (((width // col_len) * col_len) != width):
+    while ((width // col_len) * col_len) != width:
         col_len -= 1
     row_len = width // col_len
     if col_len == 1:
@@ -110,11 +110,11 @@ def bench_qrack(width, depth):
     lcv_range = range(width)
 
     # Nearest-neighbor couplers:
-    gateSequence = [ 0, 3, 2, 1, 2, 1, 0, 3 ]
+    gateSequence = [0, 3, 2, 1, 2, 1, 0, 3]
     two_bit_gates = swap, pswap, mswap, nswap, iswap, iiswap, cx, cy, cz, acx, acy, acz
 
     col_len = math.floor(math.sqrt(width))
-    while (((width // col_len) * col_len) != width):
+    while ((width // col_len) * col_len) != width:
         col_len -= 1
     row_len = width // col_len
     if col_len == 1:
@@ -137,7 +137,7 @@ def bench_qrack(width, depth):
             for col in range(col_len):
                 temp_row = row
                 temp_col = col
-                temp_row = temp_row + (1 if (gate & 2) else -1);
+                temp_row = temp_row + (1 if (gate & 2) else -1)
                 temp_col = temp_col + (1 if (gate & 1) else 0)
 
                 if temp_row < 0:
@@ -166,9 +166,11 @@ def bench_qrack(width, depth):
         circ_aer.save_statevector()
         job = control.run(circ_aer)
 
-        experiment_counts = dict(Counter(experiment.measure_shots(list(range(width)), 1 << width)))
+        experiment_counts = dict(
+            Counter(experiment.measure_shots(list(range(width)), 1 << width))
+        )
         control_probs = np.abs(np.asarray(job.result().get_statevector())) ** 2
-        
+
         print(calc_stats(control_probs, experiment_counts, d + 1, 1 << width))
 
 
@@ -197,14 +199,16 @@ def calc_stats(ideal_probs, counts, depth, shots):
     hog_prob = sum_hog_counts / shots
     xeb = numer / denom
     # p-value of heavy output count, if method were actually 50/50 chance of guessing
-    p_val = (1 - binom.cdf(sum_hog_counts - 1, shots, 1 / 2)) if sum_hog_counts > 0 else 1
+    p_val = (
+        (1 - binom.cdf(sum_hog_counts - 1, shots, 1 / 2)) if sum_hog_counts > 0 else 1
+    )
 
     return {
-        'qubits': n,
-        'depth': depth,
-        'xeb': xeb,
-        'hog_prob': hog_prob,
-        'p-value': p_val
+        "qubits": n,
+        "depth": depth,
+        "xeb": xeb,
+        "hog_prob": hog_prob,
+        "p-value": p_val,
     }
 
 
@@ -216,5 +220,5 @@ def main():
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

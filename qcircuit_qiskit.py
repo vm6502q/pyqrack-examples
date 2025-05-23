@@ -97,11 +97,11 @@ def iiswap(circ, q1, q2):
 
 
 def random_circuit(width, circ):
-    single_bit_gates = { 0: (z_to_x, z_to_y), 1: (x_to_y, x_to_z), 2: (y_to_z, y_to_x) } 
+    single_bit_gates = {0: (z_to_x, z_to_y), 1: (x_to_y, x_to_z), 2: (y_to_z, y_to_x)}
     two_bit_gates = swap, pswap, mswap, nswap, iswap, iiswap, cx, cy, cz, acx, acy, acz
-    
+
     # Nearest-neighbor couplers:
-    gateSequence = [ 0, 3, 2, 1, 2, 1, 0, 3 ]
+    gateSequence = [0, 3, 2, 1, 2, 1, 0, 3]
     row_len = math.ceil(math.sqrt(width))
 
     # Don't repeat bases:
@@ -109,7 +109,7 @@ def random_circuit(width, circ):
     directions = [0] * width
 
     num_gates = 0
-    
+
     for i in range(3 * width):
         # Single bit gates
         for j in range(width):
@@ -117,7 +117,7 @@ def random_circuit(width, circ):
             if i % 3 == 0:
                 bases[j] = random.randint(0, 2)
                 directions[j] = random.randint(0, 1)
-            
+
             # Sequential basis switch
             gate = single_bit_gates[bases[j]][directions[j]]
             gate(circ, j)
@@ -132,7 +132,7 @@ def random_circuit(width, circ):
                 bases[j] += 1
                 if bases[j] > 2:
                     bases[j] -= 3
-                
+
             # Rotate around local Z axis
 
             # T gate:
@@ -152,10 +152,15 @@ def random_circuit(width, circ):
             for col in range(row_len):
                 temp_row = row
                 temp_col = col
-                temp_row = temp_row + (1 if (gate & 2) else -1);
+                temp_row = temp_row + (1 if (gate & 2) else -1)
                 temp_col = temp_col + (1 if (gate & 1) else 0)
 
-                if (temp_row < 0) or (temp_col < 0) or (temp_row >= row_len) or (temp_col >= row_len):
+                if (
+                    (temp_row < 0)
+                    or (temp_col < 0)
+                    or (temp_row >= row_len)
+                    or (temp_col >= row_len)
+                ):
                     continue
 
                 b1 = row * row_len + col
@@ -179,7 +184,10 @@ def bench_qrack(n):
     print(n, "qubits:")
     print(random_circuit(n, qcircuit), "gates dispatched to QrackCircuit")
     qcircuit.out_to_file("qcircuit_example.qc")
-    print(QrackCircuit.file_gate_count("qcircuit_example.qc"), "gates in optimized circuit")
+    print(
+        QrackCircuit.file_gate_count("qcircuit_example.qc"),
+        "gates in optimized circuit",
+    )
     print()
 
 
@@ -196,5 +204,5 @@ def main():
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

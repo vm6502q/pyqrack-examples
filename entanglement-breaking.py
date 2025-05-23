@@ -27,6 +27,7 @@ def calc_fidelity(ideal_ket, split_ket):
     s = sum([x * y.conjugate() for x, y in zip(ideal_ket, split_ket)])
     return (s * s.conjugate()).real
 
+
 def main():
     control = QrackSimulator(2)
     experiment = QrackSimulator(2, isTensorNetwork=False, isStabilizerHybrid=False)
@@ -76,5 +77,5 @@ def main():
     print("XEB: " + str(calc_xeb(ideal_probs, split_probs)))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

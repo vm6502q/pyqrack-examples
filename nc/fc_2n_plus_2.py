@@ -9,13 +9,14 @@ import time
 
 from pyqrack import QrackSimulator, Pauli
 
+
 def bench_qrack(n_qubits, ncrp):
     # This is a "fully-connected" coupler random circuit.
     lcv_range = range(n_qubits)
     all_bits = list(lcv_range)
 
     rz_count = (n_qubits + 1) << 1
-    rz_opportunities =  n_qubits * n_qubits * 3
+    rz_opportunities = n_qubits * n_qubits * 3
     rz_positions = []
     while len(rz_positions) < rz_count:
         rz_position = random.randint(0, rz_opportunities - 1)
@@ -25,7 +26,12 @@ def bench_qrack(n_qubits, ncrp):
 
     start = time.perf_counter()
 
-    experiment = QrackSimulator(n_qubits, isTensorNetwork=False, isSchmidtDecompose=False, isStabilizerHybrid=True)
+    experiment = QrackSimulator(
+        n_qubits,
+        isTensorNetwork=False,
+        isSchmidtDecompose=False,
+        isStabilizerHybrid=True,
+    )
     # Round to nearest Clifford circuit
     experiment.set_ncrp(ncrp)
 
@@ -55,12 +61,19 @@ def bench_qrack(n_qubits, ncrp):
 
         samples = experiment.measure_shots(all_bits, 1)
 
-        print({ 'qubits': n_qubits, 'ncrp': ncrp, 'depth': d+1, 'seconds': time.perf_counter() - start })
+        print(
+            {
+                "qubits": n_qubits,
+                "ncrp": ncrp,
+                "depth": d + 1,
+                "seconds": time.perf_counter() - start,
+            }
+        )
 
 
 def main():
     if len(sys.argv) < 2:
-        raise RuntimeError('Usage: python3 fc_2n_plus_2.py [width] [ncrp]')
+        raise RuntimeError("Usage: python3 fc_2n_plus_2.py [width] [ncrp]")
 
     n_qubits = int(sys.argv[1])
     ncrp = 2.0
@@ -73,5 +86,5 @@ def main():
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

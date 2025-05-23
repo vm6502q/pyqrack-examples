@@ -69,11 +69,11 @@ def bench_qrack(width, depth):
     lcv_range = range(width)
 
     # Nearest-neighbor couplers:
-    gateSequence = [ 0, 3, 2, 1, 2, 1, 0, 3 ]
+    gateSequence = [0, 3, 2, 1, 2, 1, 0, 3]
     two_bit_gates = swap, pswap, mswap, nswap, iswap, iiswap, cx, cy, cz, acx, acy, acz
 
     col_len = math.floor(math.sqrt(width))
-    while (((width // col_len) * col_len) != width):
+    while ((width // col_len) * col_len) != width:
         col_len -= 1
     row_len = width // col_len
     if col_len == 1:
@@ -82,7 +82,12 @@ def bench_qrack(width, depth):
     for _ in range(depth):
         # Single-qubit gates
         for i in lcv_range:
-            sim.u(i, random.uniform(0, 2 * math.pi), random.uniform(0, 2 * math.pi), random.uniform(0, 2 * math.pi))
+            sim.u(
+                i,
+                random.uniform(0, 2 * math.pi),
+                random.uniform(0, 2 * math.pi),
+                random.uniform(0, 2 * math.pi),
+            )
 
         # Nearest-neighbor couplers:
         ############################
@@ -92,10 +97,15 @@ def bench_qrack(width, depth):
             for col in range(col_len):
                 temp_row = row
                 temp_col = col
-                temp_row = temp_row + (1 if (gate & 2) else -1);
+                temp_row = temp_row + (1 if (gate & 2) else -1)
                 temp_col = temp_col + (1 if (gate & 1) else 0)
 
-                if (temp_row < 0) or (temp_col < 0) or (temp_row >= row_len) or (temp_col >= col_len):
+                if (
+                    (temp_row < 0)
+                    or (temp_col < 0)
+                    or (temp_row >= row_len)
+                    or (temp_col >= col_len)
+                ):
                     continue
 
                 b1 = row * row_len + col
@@ -117,7 +127,7 @@ def bench_qrack(width, depth):
 
 def main():
     if len(sys.argv) < 3:
-        raise RuntimeError('Usage: python3 qbdd_nn.py [width] [depth]')
+        raise RuntimeError("Usage: python3 qbdd_nn.py [width] [depth]")
 
     width = int(sys.argv[1])
 
@@ -126,10 +136,20 @@ def main():
     # Run the benchmarks
     time_result, fidelity_est = bench_qrack(width, depth)
 
-    print("Width=" + str(width) + ", Depth=" + str(depth) + ": " + str(time_result) + " seconds, " + str(fidelity_est) + " out of 1.0 worst-case first-principles fidelity estimate.")
+    print(
+        "Width="
+        + str(width)
+        + ", Depth="
+        + str(depth)
+        + ": "
+        + str(time_result)
+        + " seconds, "
+        + str(fidelity_est)
+        + " out of 1.0 worst-case first-principles fidelity estimate."
+    )
 
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

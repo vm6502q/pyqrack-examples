@@ -36,5 +36,6 @@ def main():
     print(np.kron(ket1, ket2))
     print(S)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     sys.exit(main())

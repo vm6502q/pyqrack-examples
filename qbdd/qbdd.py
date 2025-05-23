@@ -15,16 +15,26 @@ def bench_qrack(width, sdrp):
 
     sim = QrackSimulator(width, isBinaryDecisionTree=True)
     two_bit_gates = sim.mcx, sim.mcy, sim.mcz, sim.macx, sim.macy, sim.macz
-    if (sdrp > 0):
+    if sdrp > 0:
         sim.set_sdrp(sdrp)
 
     # Start with a random (causal) action at first decision point
-    sim.u(0, random.uniform(0, 2 * math.pi), random.uniform(0, 2 * math.pi), random.uniform(0, 2 * math.pi))
+    sim.u(
+        0,
+        random.uniform(0, 2 * math.pi),
+        random.uniform(0, 2 * math.pi),
+        random.uniform(0, 2 * math.pi),
+    )
 
     # Loop over the sequence of conditional decision points
     for i in range(1, width):
         # Independent causal action for decision point
-        sim.u(i, random.uniform(0, 2 * math.pi), random.uniform(0, 2 * math.pi), random.uniform(0, 2 * math.pi))
+        sim.u(
+            i,
+            random.uniform(0, 2 * math.pi),
+            random.uniform(0, 2 * math.pi),
+            random.uniform(0, 2 * math.pi),
+        )
 
         # Conditional causal actions
         for j in range(random.randrange(i)):
@@ -57,9 +67,9 @@ def main():
         sdrp = float(sys.argv[3])
 
     # Prep the environment
-    os.environ['QRACK_QBDT_HYBRID_THRESHOLD'] = "2"
+    os.environ["QRACK_QBDT_HYBRID_THRESHOLD"] = "2"
     if qbddrp > 0:
-        os.environ['QRACK_QBDT_SEPARABILITY_THRESHOLD'] = str(qbddrp)
+        os.environ["QRACK_QBDT_SEPARABILITY_THRESHOLD"] = str(qbddrp)
     bench_qrack(1, 0.5)
 
     # Run the benchmarks
@@ -70,5 +80,5 @@ def main():
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

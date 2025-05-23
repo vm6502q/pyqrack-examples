@@ -9,13 +9,16 @@ import time
 
 from pyqrack import QrackSimulator, Pauli
 
+
 def bench_qrack(width, depth):
     lcv_range = range(width)
     all_bits = list(lcv_range)
 
     start = time.perf_counter()
 
-    experiment = QrackSimulator(width, isSchmidtDecompose=False, isStabilizerHybrid=True)
+    experiment = QrackSimulator(
+        width, isSchmidtDecompose=False, isStabilizerHybrid=True
+    )
 
     for _ in range(depth):
         # Single-qubit gates
@@ -42,7 +45,7 @@ def bench_qrack(width, depth):
 
 def main():
     if len(sys.argv) < 3:
-        raise RuntimeError('Usage: python3 fc.py [width] [depth]')
+        raise RuntimeError("Usage: python3 fc.py [width] [depth]")
 
     width = int(sys.argv[1])
     depth = int(sys.argv[2])
@@ -50,10 +53,17 @@ def main():
     # Run the benchmarks
     result = bench_qrack(width, depth)
     # Calc. and print the results
-    print("Width=" + str(width) + ", Depth=" + str(depth) + ", Seconds for amplitude |0> (ideal simulation)=" + str(result))
+    print(
+        "Width="
+        + str(width)
+        + ", Depth="
+        + str(depth)
+        + ", Seconds for amplitude |0> (ideal simulation)="
+        + str(result)
+    )
 
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

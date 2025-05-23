@@ -92,7 +92,7 @@ def execute(circ, radians):
 
 def main():
     if len(sys.argv) < 2:
-        raise RuntimeError('Usage: python3 mitiq_repetition_code.py [width]')
+        raise RuntimeError("Usage: python3 mitiq_repetition_code.py [width]")
 
     width = int(sys.argv[1])
 
@@ -105,14 +105,26 @@ def main():
 
         scale_count = 9
         max_scale = 5
-        factory = LinearFactory(scale_factors=[(1 + (max_scale - 1) * x / scale_count) for x in range(0, scale_count)])
+        factory = LinearFactory(
+            scale_factors=[
+                (1 + (max_scale - 1) * x / scale_count) for x in range(0, scale_count)
+            ]
+        )
 
-        expectation = 2 * expit(zne.execute_with_zne(circ, executor, scale_noise=fold_global, factory=factory)) - 1
+        expectation = (
+            2
+            * expit(
+                zne.execute_with_zne(
+                    circ, executor, scale_noise=fold_global, factory=factory
+                )
+            )
+            - 1
+        )
 
-        print({ 'width': width, 'angle' : radians, 'expectation': expectation })
+        print({"width": width, "angle": radians, "expectation": expectation})
 
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

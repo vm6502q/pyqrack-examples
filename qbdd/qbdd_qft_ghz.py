@@ -47,7 +47,7 @@ def main():
     if len(sys.argv) > 2:
         samples = int(sys.argv[2])
     if len(sys.argv) > 3:
-        single_width = (sys.argv[2] not in ['False', '0'])
+        single_width = sys.argv[2] not in ["False", "0"]
 
     min_qb = max_qb if single_width else 1
 
@@ -60,10 +60,12 @@ def main():
 
         time_result = sum(r[0] for r in width_results) / samples
         fidelity_result = sum(r[1] for r in width_results) / samples
-        print(n, ": ", time_result, " seconds, ", fidelity_result, " out of 1.0 fidelity")
+        print(
+            n, ": ", time_result, " seconds, ", fidelity_result, " out of 1.0 fidelity"
+        )
 
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

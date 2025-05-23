@@ -70,18 +70,23 @@ def bench_qrack(width, depth, sdrp):
     lcv_range = range(width)
 
     # Nearest-neighbor couplers:
-    gateSequence = [ 0, 3, 2, 1, 2, 1, 0, 3 ]
+    gateSequence = [0, 3, 2, 1, 2, 1, 0, 3]
     two_bit_gates = swap, pswap, mswap, nswap, iswap, iiswap, cx, cy, cz, acx, acy, acz
 
     col_len = math.floor(math.sqrt(width))
-    while (((width // col_len) * col_len) != width):
+    while ((width // col_len) * col_len) != width:
         col_len -= 1
     row_len = width // col_len
 
     for _ in range(depth):
         # Single-qubit gates
         for i in lcv_range:
-            sim.u(i, random.uniform(0, 2 * math.pi), random.uniform(0, 2 * math.pi), random.uniform(0, 2 * math.pi))
+            sim.u(
+                i,
+                random.uniform(0, 2 * math.pi),
+                random.uniform(0, 2 * math.pi),
+                random.uniform(0, 2 * math.pi),
+            )
 
         # Nearest-neighbor couplers:
         ############################
@@ -91,10 +96,15 @@ def bench_qrack(width, depth, sdrp):
             for col in range(col_len):
                 temp_row = row
                 temp_col = col
-                temp_row = temp_row + (1 if (gate & 2) else -1);
+                temp_row = temp_row + (1 if (gate & 2) else -1)
                 temp_col = temp_col + (1 if (gate & 1) else 0)
 
-                if (temp_row < 0) or (temp_col < 0) or (temp_row >= row_len) or (temp_col >= row_len):
+                if (
+                    (temp_row < 0)
+                    or (temp_col < 0)
+                    or (temp_row >= row_len)
+                    or (temp_col >= row_len)
+                ):
                     continue
 
                 b1 = row * row_len + col
@@ -120,7 +130,7 @@ def main():
     width = 36
     depth = 6
     if len(sys.argv) < 5:
-        raise RuntimeError('Usage: python3 sdrp_2d.py [sdrp] [width] [depth] [trials]')
+        raise RuntimeError("Usage: python3 sdrp_2d.py [sdrp] [width] [depth] [trials]")
 
     sdrp = float(sys.argv[1])
     width = int(sys.argv[2])
@@ -132,17 +142,19 @@ def main():
     for _ in range(trials):
         width_results.append(bench_qrack(width, depth, sdrp))
 
-    print({
-        'sdrp': sdrp,
-        'width': width,
-        'depth': depth,
-        'trials': trials,
-        'time': sum(r[0] for r in width_results) / trials,
-        'fidelity': sum(r[1] for r in width_results) / trials
-    })
+    print(
+        {
+            "sdrp": sdrp,
+            "width": width,
+            "depth": depth,
+            "trials": trials,
+            "time": sum(r[0] for r in width_results) / trials,
+            "fidelity": sum(r[1] for r in width_results) / trials,
+        }
+    )
 
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

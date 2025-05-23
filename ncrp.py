@@ -70,11 +70,11 @@ def bench_qrack(width, depth, magic, ncrp):
     magic_fraction = 3 * width * depth / magic
 
     # Nearest-neighbor couplers:
-    gateSequence = [ 0, 3, 2, 1, 2, 1, 0, 3 ]
+    gateSequence = [0, 3, 2, 1, 2, 1, 0, 3]
     two_bit_gates = swap, pswap, mswap, nswap, iswap, iiswap, cx, cy, cz, acx, acy, acz
 
     col_len = math.floor(math.sqrt(width))
-    while (((width // col_len) * col_len) != width):
+    while ((width // col_len) * col_len) != width:
         col_len -= 1
     row_len = width // col_len
 
@@ -107,10 +107,15 @@ def bench_qrack(width, depth, magic, ncrp):
             for col in range(col_len):
                 temp_row = row
                 temp_col = col
-                temp_row = temp_row + (1 if (gate & 2) else -1);
+                temp_row = temp_row + (1 if (gate & 2) else -1)
                 temp_col = temp_col + (1 if (gate & 1) else 0)
 
-                if (temp_row < 0) or (temp_col < 0) or (temp_row >= row_len) or (temp_col >= row_len):
+                if (
+                    (temp_row < 0)
+                    or (temp_col < 0)
+                    or (temp_row >= row_len)
+                    or (temp_col >= row_len)
+                ):
                     continue
 
                 b1 = row * row_len + col
@@ -137,7 +142,9 @@ def main():
     magic = 6
     samples = 1
     if len(sys.argv) < 6:
-        raise RuntimeError('Usage: python3 sdrp.py [ncrp] [width] [depth] [magic] [samples]')
+        raise RuntimeError(
+            "Usage: python3 sdrp.py [ncrp] [width] [depth] [magic] [samples]"
+        )
 
     ncrp = float(sys.argv[1])
 
@@ -160,10 +167,20 @@ def main():
 
     time_result = sum(r[0] for r in width_results) / samples
     fidelity_result = sum(r[1] for r in width_results) / samples
-    print("Width=", width, ", Depth=", depth, ": ", time_result, " seconds, ", fidelity_result, " out of 1.0 fidelity")
+    print(
+        "Width=",
+        width,
+        ", Depth=",
+        depth,
+        ": ",
+        time_result,
+        " seconds, ",
+        fidelity_result,
+        " out of 1.0 fidelity",
+    )
 
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

@@ -23,7 +23,7 @@ from qiskit.circuit.library import UnitaryGate
 
 def factor_width(width):
     col_len = math.floor(math.sqrt(width))
-    while (((width // col_len) * col_len) != width):
+    while ((width // col_len) * col_len) != width:
         col_len -= 1
     row_len = width // col_len
     if col_len == 1:
@@ -35,21 +35,36 @@ def factor_width(width):
 def sqrt_x(circ, q):
     ONE_PLUS_I_DIV_2 = 0.5 + 0.5j
     ONE_MINUS_I_DIV_2 = 0.5 - 0.5j
-    circ.append(UnitaryGate([ [ ONE_PLUS_I_DIV_2, ONE_MINUS_I_DIV_2 ], [ ONE_MINUS_I_DIV_2, ONE_PLUS_I_DIV_2 ] ]), [q])
+    circ.append(
+        UnitaryGate(
+            [
+                [ONE_PLUS_I_DIV_2, ONE_MINUS_I_DIV_2],
+                [ONE_MINUS_I_DIV_2, ONE_PLUS_I_DIV_2],
+            ]
+        ),
+        [q],
+    )
 
 
 def sqrt_y(circ, q):
     ONE_PLUS_I_DIV_2 = 0.5 + 0.5j
     ONE_PLUS_I_DIV_2_NEG = -0.5 - 0.5j
-    circ.append(UnitaryGate([ [ ONE_PLUS_I_DIV_2, ONE_PLUS_I_DIV_2_NEG ], [ ONE_PLUS_I_DIV_2, ONE_PLUS_I_DIV_2 ] ]), [q])
+    circ.append(
+        UnitaryGate(
+            [
+                [ONE_PLUS_I_DIV_2, ONE_PLUS_I_DIV_2_NEG],
+                [ONE_PLUS_I_DIV_2, ONE_PLUS_I_DIV_2],
+            ]
+        ),
+        [q],
+    )
 
 
 def sqrt_w(circ, q):
     diag = math.sqrt(0.5)
     m01 = -0.5 - 0.5j
     m10 = 0.5 - 0.5j
-    circ.append(UnitaryGate([ [ diag, m01 ], [ m10, diag ] ]), [q])
-
+    circ.append(UnitaryGate([[diag, m01], [m10, diag]]), [q])
 
 
 def bench_qrack(width, depth):
@@ -57,7 +72,7 @@ def bench_qrack(width, depth):
     circ = QuantumCircuit(width)
     control = AerSimulator(method="statevector")
     shots = 1 << (width + 2)
-    
+
     dead_qubit = 3 if width == 54 else width
 
     lcv_range = range(width)
@@ -65,8 +80,8 @@ def bench_qrack(width, depth):
     last_gates = []
 
     # Nearest-neighbor couplers:
-    gateSequence = [ 0, 3, 2, 1, 2, 1, 0, 3 ]
-    one_bit_gates = [ sqrt_x, sqrt_y, sqrt_w ]
+    gateSequence = [0, 3, 2, 1, 2, 1, 0, 3]
+    one_bit_gates = [sqrt_x, sqrt_y, sqrt_w]
 
     row_len, col_len = factor_width(width)
 
@@ -98,24 +113,36 @@ def bench_qrack(width, depth):
                 temp_col = temp_col + (1 if (gate & 1) else 0)
 
                 # Bounded:
-                if (temp_row < 0) or (temp_col < 0) or (temp_row >= row_len) or (temp_col >= col_len):
+                if (
+                    (temp_row < 0)
+                    or (temp_col < 0)
+                    or (temp_row >= row_len)
+                    or (temp_col >= col_len)
+                ):
                     continue
 
                 b1 = row * row_len + col
                 b2 = temp_row * row_len + temp_col
 
-                if (b1 >= width) or (b2 >= width) or (b1 == dead_qubit) or (b2 == dead_qubit):
+                if (
+                    (b1 >= width)
+                    or (b2 >= width)
+                    or (b1 == dead_qubit)
+                    or (b2 == dead_qubit)
+                ):
                     continue
 
                 mtrx = [
-                    [ 1, 0, 0, 0],
-                    [ 0, math.cos(-math.pi / 4), -1j * math.sin(-math.pi / 4), 0],
+                    [1, 0, 0, 0],
+                    [0, math.cos(-math.pi / 4), -1j * math.sin(-math.pi / 4), 0],
                     [0, -1j * math.sin(-math.pi / 4), math.cos(-math.pi / 4), 0],
-                    [ 0, 0, 0, np.exp(-1j * math.pi / 6) ]
+                    [0, 0, 0, np.exp(-1j * math.pi / 6)],
                 ]
                 circ.append(UnitaryGate(mtrx), [b1, b2])
 
-        circ_qrack = transpile(circ, basis_gates=['u', 'swap', 'iswap' 'cx', 'cy', 'cz'])
+        circ_qrack = transpile(
+            circ, basis_gates=["u", "swap", "iswap" "cx", "cy", "cz"]
+        )
         experiment = QrackSimulator(width)
         experiment.run_qiskit_circuit(circ_qrack)
 
@@ -129,13 +156,15 @@ def bench_qrack(width, depth):
 
             calc_stats(control_probs, experiment_counts, d + 1, shots)
         except:
-            print({
-                'qubits': width,
-                'depth': d + 1,
-                'xeb': 0,
-                'hog_prob': 0.5,
-                'p-value': 1.0
-            })
+            print(
+                {
+                    "qubits": width,
+                    "depth": d + 1,
+                    "xeb": 0,
+                    "hog_prob": 0.5,
+                    "p-value": 1.0,
+                }
+            )
 
 
 def calc_stats(ideal_probs, counts, depth, shots):
@@ -163,20 +192,24 @@ def calc_stats(ideal_probs, counts, depth, shots):
     hog_prob = sum_hog_counts / shots
     xeb = numer / denom
     # p-value of heavy output count, if method were actually 50/50 chance of guessing
-    p_val = (1 - binom.cdf(sum_hog_counts - 1, shots, 1 / 2)) if sum_hog_counts > 0 else 1
+    p_val = (
+        (1 - binom.cdf(sum_hog_counts - 1, shots, 1 / 2)) if sum_hog_counts > 0 else 1
+    )
 
-    print({
-        'qubits': n,
-        'depth': depth,
-        'xeb': xeb,
-        'hog_prob': hog_prob,
-        'p-value': p_val
-    })
+    print(
+        {
+            "qubits": n,
+            "depth": depth,
+            "xeb": xeb,
+            "hog_prob": hog_prob,
+            "p-value": p_val,
+        }
+    )
 
 
 def main():
     if len(sys.argv) < 3:
-        raise RuntimeError('Usage: python3 sycamore_2019.py [width] [depth]')
+        raise RuntimeError("Usage: python3 sycamore_2019.py [width] [depth]")
 
     width = int(sys.argv[1])
     depth = int(sys.argv[2])
@@ -187,5 +220,5 @@ def main():
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

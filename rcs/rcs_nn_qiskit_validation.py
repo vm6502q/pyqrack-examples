@@ -20,7 +20,7 @@ from qiskit.quantum_info import Statevector
 
 def factor_width(width):
     col_len = math.floor(math.sqrt(width))
-    while (((width // col_len) * col_len) != width):
+    while ((width // col_len) * col_len) != width:
         col_len -= 1
     row_len = width // col_len
     if col_len == 1:
@@ -96,13 +96,13 @@ def bench_qrack(width, depth, trials):
 
     lcv_range = range(width)
     all_bits = list(lcv_range)
-    
+
     # Nearest-neighbor couplers:
-    gateSequence = [ 0, 3, 2, 1, 2, 1, 0, 3 ]
+    gateSequence = [0, 3, 2, 1, 2, 1, 0, 3]
     two_bit_gates = swap, pswap, mswap, nswap, iswap, iiswap, cx, cy, cz, acx, acy, acz
-    
+
     row_len, col_len = factor_width(width)
-    
+
     results = []
 
     for trial in range(trials):
@@ -123,7 +123,7 @@ def bench_qrack(width, depth, trials):
                 for col in range(col_len):
                     temp_row = row
                     temp_col = col
-                    temp_row = temp_row + (1 if (gate & 2) else -1);
+                    temp_row = temp_row + (1 if (gate & 2) else -1)
                     temp_col = temp_col + (1 if (gate & 1) else 0)
 
                     if temp_row < 0:
@@ -153,20 +153,20 @@ def bench_qrack(width, depth, trials):
 
             experiment_counts = dict(Counter(experiment.measure_shots(all_bits, shots)))
             control_probs = Statevector(job.result().get_statevector()).probabilities()
-            
+
             stats = calc_stats(control_probs, experiment_counts, d + 1, shots)
 
             if trial == 0:
                 results.append(stats)
             else:
-                results[d]['xeb'] += stats['xeb']
-                results[d]['hog_prob'] += stats['hog_prob']
-                results[d]['p-value'] *= stats['p-value']
+                results[d]["xeb"] += stats["xeb"]
+                results[d]["hog_prob"] += stats["hog_prob"]
+                results[d]["p-value"] *= stats["p-value"]
 
             if trial == (trials - 1):
-                results[d]['xeb'] /= trials
-                results[d]['hog_prob'] /= trials
-                results[d]['p-value'] = results[d]['p-value'] ** (1 / trials)
+                results[d]["xeb"] /= trials
+                results[d]["hog_prob"] /= trials
+                results[d]["p-value"] = results[d]["p-value"] ** (1 / trials)
                 print(results[d])
 
 
@@ -195,20 +195,24 @@ def calc_stats(ideal_probs, counts, depth, shots):
     hog_prob = sum_hog_counts / shots
     xeb = numer / denom
     # p-value of heavy output count, if method were actually 50/50 chance of guessing
-    p_val = (1 - binom.cdf(sum_hog_counts - 1, shots, 1 / 2)) if sum_hog_counts > 0 else 1
+    p_val = (
+        (1 - binom.cdf(sum_hog_counts - 1, shots, 1 / 2)) if sum_hog_counts > 0 else 1
+    )
 
     return {
-        'qubits': n,
-        'depth': depth,
-        'xeb': xeb,
-        'hog_prob': hog_prob,
-        'p-value': p_val
+        "qubits": n,
+        "depth": depth,
+        "xeb": xeb,
+        "hog_prob": hog_prob,
+        "p-value": p_val,
     }
 
 
 def main():
     if len(sys.argv) < 3:
-        raise RuntimeError('Usage: python3 fc_qiskit_validation.py [width] [depth] [trials]')
+        raise RuntimeError(
+            "Usage: python3 fc_qiskit_validation.py [width] [depth] [trials]"
+        )
 
     width = int(sys.argv[1])
     depth = int(sys.argv[2])
@@ -222,5 +226,5 @@ def main():
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

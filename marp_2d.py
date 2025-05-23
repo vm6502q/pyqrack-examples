@@ -67,11 +67,11 @@ def bench_qrack(width, depth, sdrp_samples):
     lcv_range = range(width)
 
     # Nearest-neighbor couplers:
-    gateSequence = [ 0, 3, 2, 1, 2, 1, 0, 3 ]
+    gateSequence = [0, 3, 2, 1, 2, 1, 0, 3]
     two_bit_gates = swap, pswap, mswap, nswap, iswap, iiswap, cx, cy, cz, acx, acy, acz
 
     col_len = math.floor(math.sqrt(width))
-    while (((width // col_len) * col_len) != width):
+    while ((width // col_len) * col_len) != width:
         col_len -= 1
     row_len = width // col_len
 
@@ -90,7 +90,12 @@ def bench_qrack(width, depth, sdrp_samples):
             # Single-qubit gates
             for i in lcv_range:
                 try:
-                    sim.u(i, random.uniform(0, 2 * math.pi), random.uniform(0, 2 * math.pi), random.uniform(0, 2 * math.pi))
+                    sim.u(
+                        i,
+                        random.uniform(0, 2 * math.pi),
+                        random.uniform(0, 2 * math.pi),
+                        random.uniform(0, 2 * math.pi),
+                    )
                 except:
                     is_fail = True
                     break
@@ -103,10 +108,15 @@ def bench_qrack(width, depth, sdrp_samples):
                 for col in range(col_len):
                     temp_row = row
                     temp_col = col
-                    temp_row = temp_row + (1 if (gate & 2) else -1);
+                    temp_row = temp_row + (1 if (gate & 2) else -1)
                     temp_col = temp_col + (1 if (gate & 1) else 0)
 
-                    if (temp_row < 0) or (temp_col < 0) or (temp_row >= row_len) or (temp_col >= row_len):
+                    if (
+                        (temp_row < 0)
+                        or (temp_col < 0)
+                        or (temp_row >= row_len)
+                        or (temp_col >= row_len)
+                    ):
                         continue
 
                     b1 = row * row_len + col
@@ -129,13 +139,15 @@ def bench_qrack(width, depth, sdrp_samples):
         # Terminal measurement
         sim.m_all()
 
-        print({
-            'width': width,
-            'depth': depth,
-            'sdrp': sdrp,
-            'time': time.perf_counter() - start,
-            'fidelity': fidelity
-        })
+        print(
+            {
+                "width": width,
+                "depth": depth,
+                "sdrp": sdrp,
+                "time": time.perf_counter() - start,
+                "fidelity": fidelity,
+            }
+        )
 
 
 def main():
@@ -143,7 +155,7 @@ def main():
     depth = 6
     sdrp_samples = 11
     if len(sys.argv) != 4:
-        raise RuntimeError('Usage: python3 marp_2d.py [width] [depth] [sdrp_samples]')
+        raise RuntimeError("Usage: python3 marp_2d.py [width] [depth] [sdrp_samples]")
 
     width = int(sys.argv[1])
     depth = int(sys.argv[2])
@@ -155,5 +167,5 @@ def main():
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

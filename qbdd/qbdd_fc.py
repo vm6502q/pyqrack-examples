@@ -20,7 +20,12 @@ def bench_qrack(width, depth):
     for _ in range(depth):
         # Single-qubit gates
         for i in lcv_range:
-            sim.u(i, random.uniform(0, 2 * math.pi), random.uniform(0, 2 * math.pi), random.uniform(0, 2 * math.pi))
+            sim.u(
+                i,
+                random.uniform(0, 2 * math.pi),
+                random.uniform(0, 2 * math.pi),
+                random.uniform(0, 2 * math.pi),
+            )
 
         # 2-qubit couplers
         unused_bits = all_bits.copy()
@@ -42,7 +47,7 @@ def bench_qrack(width, depth):
 
 def main():
     if len(sys.argv) < 3:
-        raise RuntimeError('Usage: python3 qbdd_fc.py [width] [depth]')
+        raise RuntimeError("Usage: python3 qbdd_fc.py [width] [depth]")
 
     width = int(sys.argv[1])
 
@@ -51,10 +56,20 @@ def main():
     # Run the benchmarks
     time_result, fidelity_est = bench_qrack(width, depth)
 
-    print("Width=" + str(width) + ", Depth=" + str(depth) + ": " + str(time_result) + " seconds, " + str(fidelity_est) + " out of 1.0 worst-case first-principles fidelity estimate.")
+    print(
+        "Width="
+        + str(width)
+        + ", Depth="
+        + str(depth)
+        + ": "
+        + str(time_result)
+        + " seconds, "
+        + str(fidelity_est)
+        + " out of 1.0 worst-case first-principles fidelity estimate."
+    )
 
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

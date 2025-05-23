@@ -13,13 +13,14 @@ from pyqrack import QrackAceBackend
 
 def factor_width(width, reverse=False):
     col_len = math.floor(math.sqrt(width))
-    while (((width // col_len) * col_len) != width):
+    while ((width // col_len) * col_len) != width:
         col_len -= 1
     if col_len == 1:
         raise Exception("ERROR: Can't simulate prime number width!")
     row_len = width // col_len
 
     return (col_len, row_len) if reverse else (row_len, col_len)
+
 
 def bench_qrack(width, depth, reverse):
     # This is a "nearest-neighbor" coupler random circuit.
@@ -29,11 +30,18 @@ def bench_qrack(width, depth, reverse):
     lcv_range = range(width)
 
     # Nearest-neighbor couplers:
-    gateSequence = [ 0, 3, 2, 1, 2, 1, 0, 3 ]
-    two_bit_gates = experiment.cx, experiment.cy, experiment.cz, experiment.acx, experiment.acy, experiment.acz
+    gateSequence = [0, 3, 2, 1, 2, 1, 0, 3]
+    two_bit_gates = (
+        experiment.cx,
+        experiment.cy,
+        experiment.cz,
+        experiment.acx,
+        experiment.acy,
+        experiment.acz,
+    )
 
     row_len, col_len = factor_width(width, reverse)
-    
+
     single = []
     double = []
 
@@ -57,7 +65,7 @@ def bench_qrack(width, depth, reverse):
             for col in range(col_len):
                 temp_row = row
                 temp_col = col
-                temp_row = temp_row + (1 if (gate & 2) else -1);
+                temp_row = temp_row + (1 if (gate & 2) else -1)
                 temp_col = temp_col + (1 if (gate & 1) else 0)
 
                 if temp_row < 0:
@@ -91,7 +99,7 @@ def bench_qrack(width, depth, reverse):
     shots = 100
     experiment_samples = experiment.measure_shots(list(range(width)), shots)
     seconds = time.perf_counter() - start
-    
+
     mirror_fidelity = 0
     hamming_weight = 0
     for sample in experiment_samples:
@@ -111,22 +119,32 @@ def bench_qrack(width, depth, reverse):
 
 def main():
     if len(sys.argv) < 3:
-        raise RuntimeError('Usage: python3 rcs_nn_ace_mirror.py [width] [depth] [reverse row/column]')
+        raise RuntimeError(
+            "Usage: python3 rcs_nn_ace_mirror.py [width] [depth] [reverse row/column]"
+        )
 
     width = int(sys.argv[1])
     depth = int(sys.argv[2])
     reverse = False
     if len(sys.argv) > 3:
-        reverse = sys.argv[3] not in ['0', 'False']
+        reverse = sys.argv[3] not in ["0", "False"]
 
     # Run the benchmarks
     seconds, mirror_fidelity, hamming_weight = bench_qrack(width, depth, reverse)
 
     # Print the results
-    print({ 'width': width,  'depth': depth, 'seconds': seconds, 'mirror_fidelity': mirror_fidelity, 'hamming_weight': hamming_weight })
+    print(
+        {
+            "width": width,
+            "depth": depth,
+            "seconds": seconds,
+            "mirror_fidelity": mirror_fidelity,
+            "hamming_weight": hamming_weight,
+        }
+    )
 
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

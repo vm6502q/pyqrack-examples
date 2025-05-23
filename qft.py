@@ -16,7 +16,12 @@ def bench_qrack(n):
 
     # Single-qubit gates
     for i in lcv_range:
-        qsim.u(i, random.uniform(0, 2 * math.pi), random.uniform(0, 2 * math.pi), random.uniform(0, 2 * math.pi))
+        qsim.u(
+            i,
+            random.uniform(0, 2 * math.pi),
+            random.uniform(0, 2 * math.pi),
+            random.uniform(0, 2 * math.pi),
+        )
 
     # GHZ state
     # qsim.h(0)
@@ -55,10 +60,12 @@ def main():
 
         time_result = sum(r[0] for r in width_results) / samples
         fidelity_result = sum(r[1] for r in width_results) / samples
-        print(n, ": ", time_result, " seconds, ", fidelity_result, " out of 1.0 fidelity")
+        print(
+            n, ": ", time_result, " seconds, ", fidelity_result, " out of 1.0 fidelity"
+        )
 
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())
