@@ -119,7 +119,6 @@ def main():
         "iswap",
     ]
 
-    start = time.perf_counter()
     qc = transpile(qc, basis_gates=basis_gates)
     experiment = QrackAceBackend(n_qubits)
     start = time.perf_counter()

@@ -7,11 +7,13 @@ import time
 
 from collections import Counter
 
+import matplotlib.pyplot as plt
+
 from qiskit import QuantumCircuit
 from qiskit.circuit.library import RZZGate, RXGate
 from qiskit.compiler import transpile
 
-from pyqrack import QrackSimulator
+from pyqrack import QrackAceBackend
 
 
 def factor_width(width, reverse=False):
@@ -93,12 +95,11 @@ def main():
     theta = -math.pi / 6
 
     qc = QuantumCircuit(n_qubits)
-
     for q in range(n_qubits):
         qc.ry(theta, q)
 
-    for _ in range(depth):
-        trotter_step(qc, list(range(n_qubits)), (n_rows, n_cols), J, h, dt)
+    step = QuantumCircuit(n_qubits)
+    trotter_step(step, list(range(n_qubits)), (n_rows, n_cols), J, h, dt)
 
     basis_gates = [
         "rx",
@@ -120,22 +121,43 @@ def main():
         "swap",
         "iswap",
     ]
+    step = transpile(step, basis_gates=basis_gates)
 
-    qc = transpile(qc, basis_gates=basis_gates)
     experiment = QrackAceBackend(n_qubits)
+    depths = list(range(1, depth+1))
+    results = []
+    magnetizations = []
+    
     start = time.perf_counter()
     experiment.run_qiskit_circuit(qc)
-    experiment_samples = experiment.measure_shots(list(range(n_qubits)), shots)
-    seconds = time.perf_counter() - start
+    for d in depths:
+        experiment.run_qiskit_circuit(step)
+        experiment_samples = experiment.measure_shots(list(range(n_qubits)), shots)
 
-    magnetization = 0
-    for sample in experiment_samples:
-        for _ in range(n_qubits):
-            magnetization += -1 if (sample & 1) else 1
-            sample >>= 1
-    magnetization /= shots * n_qubits
+        magnetization = 0
+        for sample in experiment_samples:
+            for _ in range(n_qubits):
+                magnetization += -1 if (sample & 1) else 1
+                sample >>= 1
+        magnetization /= shots * n_qubits
+        
+        seconds = time.perf_counter() - start
+        
+        results.append({"width": n_qubits, "depth": d, "magnetization": magnetization, 'seconds': seconds})
+        magnetizations.append(magnetization)
 
-    print({"width": n_qubits, "depth": depth, "magnetization": magnetization, 'seconds': seconds})
+        print(results[-1])
+
+    # Plotting (contributed by Elara, an OpenAI custom GPT)
+    plt.figure(figsize=(14, 14))
+    plt.plot(depths, magnetizations, marker='o', linestyle='-')
+    plt.title("Magnetization vs Trotter Depth (56 Qubits)")
+    plt.xlabel("Trotter Depth")
+    plt.ylabel("Magnetization")
+    plt.grid(True)
+    plt.xticks(depths)
+    plt.ylim(0.5, 1.0)  # Adjusting y-axis for clearer resolution
+    plt.show()
 
     return 0
 
