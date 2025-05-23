@@ -151,7 +151,7 @@ def main():
     # Plotting (contributed by Elara, an OpenAI custom GPT)
     plt.figure(figsize=(14, 14))
     plt.plot(depths, magnetizations, marker='o', linestyle='-')
-    plt.title("Magnetization vs Trotter Depth (56 Qubits)")
+    plt.title("Magnetization vs Trotter Depth (" + str(n_qubits) + " Qubits)")
     plt.xlabel("Trotter Depth")
     plt.ylabel("Magnetization")
     plt.grid(True)
