@@ -82,13 +82,15 @@ def main():
     n_qubits = 56
     depth = 10
     reverse = False
-    shots = 1024
+    shots = 2048
     if len(sys.argv) > 1:
         n_qubits = int(sys.argv[1])
     if len(sys.argv) > 2:
         depth = int(sys.argv[2])
     if len(sys.argv) > 3:
-        reverse = sys.argv[3] not in ["0", "False"]
+        shots = int(sys.argv[3])
+    if len(sys.argv) > 4:
+        reverse = sys.argv[4] not in ["0", "False"]
 
     n_rows, n_cols = factor_width(n_qubits, reverse)
     J, h, dt = -1.0, 2.0, 0.25
