@@ -80,9 +80,9 @@ def trotter_step(circ, qubits, lattice_shape, J, h, dt):
 
 def main():
     n_qubits = 56
-    depth = 10
+    depth = 20
     reverse = False
-    shots = 65536
+    shots = 262144
     if len(sys.argv) > 1:
         n_qubits = int(sys.argv[1])
     if len(sys.argv) > 2:
