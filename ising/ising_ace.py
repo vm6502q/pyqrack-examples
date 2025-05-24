@@ -80,7 +80,7 @@ def main():
     n_qubits = 56
     depth = 10
     reverse = False
-    shots = 262144
+    shots = 1048576
     if len(sys.argv) > 1:
         n_qubits = int(sys.argv[1])
     if len(sys.argv) > 2:
