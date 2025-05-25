@@ -88,7 +88,7 @@ def main():
     if len(sys.argv) > 3:
         shots = int(sys.argv[3])
     else:
-        shots = min(1048576, 1 << (n_qubits + 2)
+        shots = min(1048576, 1 << (n_qubits + 2))
     if len(sys.argv) > 4:
         reverse = sys.argv[4] not in ["0", "False"]
 
