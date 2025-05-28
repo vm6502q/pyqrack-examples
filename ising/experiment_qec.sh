@@ -1,3 +1,5 @@
+# Turn off light-cone optimization
+export QRACK_QTENSORNETWORK_THRESHOLD_QB=-1
 # Suggested value for SDRP
 export QRACK_QUNIT_SEPARABILITY_THRESHOLD=0.03
 
