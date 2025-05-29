@@ -154,7 +154,7 @@ def expit(x):
 
 
 def execute(circ):
-    shots = 1 << (circ.width() + 2)
+    shots = min(1024, 1 << (circ.width() + 2))
     all_bits = list(range(circ.width()))
 
     qc = QuantumCircuit(circ.width())
