@@ -80,7 +80,7 @@ def main():
     n_qubits = 56
     depth = 10
     reverse = False
-    shots = 4096
+    shots = 8192
     if len(sys.argv) > 1:
         n_qubits = int(sys.argv[1])
     if len(sys.argv) > 2:
@@ -88,7 +88,7 @@ def main():
     if len(sys.argv) > 3:
         shots = int(sys.argv[3])
     else:
-        shots = min(4096, 1 << (n_qubits + 2))
+        shots = min(8192, 1 << (n_qubits + 2))
     if len(sys.argv) > 4:
         reverse = sys.argv[4] not in ["0", "False"]
 
