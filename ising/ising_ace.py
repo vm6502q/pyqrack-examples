@@ -124,7 +124,14 @@ def main():
     ]
 
     qc = transpile(qc, basis_gates=basis_gates)
+
     experiment = QrackAceBackend(n_qubits)
+    if reverse:
+        # Swap short and long dimensions to increase real entanglement.
+        temp = experiment.row_length
+        experiment.row_length = experiment.col_length
+        experiment.col_length = temp
+
     start = time.perf_counter()
     experiment.run_qiskit_circuit(qc)
     experiment_samples = experiment.measure_shots(list(range(n_qubits)), shots)
