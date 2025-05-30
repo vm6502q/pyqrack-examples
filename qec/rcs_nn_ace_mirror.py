@@ -52,8 +52,8 @@ def bench_qrack(width, depth, reverse):
             th = random.uniform(0, 2 * math.pi)
             ph = random.uniform(0, 2 * math.pi)
             lm = random.uniform(0, 2 * math.pi)
-            experiment.u(th, ph, lm, i)
-            single_layer.append((th, ph, lm, i))
+            experiment.u(i, th, ph, lm)
+            single_layer.append((i, th, ph, lm))
         single.append(single_layer)
 
         # Nearest-neighbor couplers:
@@ -93,7 +93,7 @@ def bench_qrack(width, depth, reverse):
         for g in reversed(double_layer):
             g[0](g[1], g[2])
         for g in reversed(single_layer):
-            experiment.u(-g[0], -g[2], -g[1], g[3])
+            experiment.u(g[0], -g[1], -g[3], -g[2])
 
     # Terminal measurement
     shots = 100
