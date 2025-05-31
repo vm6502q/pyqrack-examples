@@ -154,7 +154,7 @@ def top_n(n, a):
 
 
 def main():
-    n_qubits = 56
+    n_qubits = 28
     depth = 10
     hamming_n = 100
     reverse = False
