@@ -208,7 +208,7 @@ def main():
     job = control.run(qc)
     experiment_counts = dict(
         Counter(experiment.measure_shots(list(range(n_qubits)), shots))
-    )11
+    )
     control_probs = Statevector(job.result().get_statevector()).probabilities()
 
     print(calc_stats(control_probs, experiment_counts, shots, depth, hamming_n))
