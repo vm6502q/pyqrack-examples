@@ -5,6 +5,7 @@
 # See https://www.gnu.org/licenses/gpl-3.0.txt for details.
 
 import math
+import os
 import random
 import statistics
 import sys
@@ -164,6 +165,9 @@ def execute(circ):
     qc.compose(circ, all_bits, inplace=True)
 
     experiment = QrackAceBackend(qc.width())
+    if 'QRACK_QUNIT_SEPARABILITY_THRESHOLD' not in os.environ:
+        experiment.sim.set_sdrp(0.03)
+
     experiment.run_qiskit_circuit(qc)
 
     control = AerSimulator(method="statevector")
