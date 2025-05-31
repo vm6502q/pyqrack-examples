@@ -141,12 +141,7 @@ def main():
     ]
     step = transpile(step, basis_gates=basis_gates)
 
-    experiment = QrackAceBackend(n_qubits)
-    if reverse:
-        # Swap short and long dimensions to increase real entanglement.
-        temp = experiment.row_length
-        experiment.row_length = experiment.col_length
-        experiment.col_length = temp
+    experiment = QrackAceBackend(n_qubits, reverse_row_and_col=reverse)
 
     depths = list(range(1, depth+1))
     results = []
