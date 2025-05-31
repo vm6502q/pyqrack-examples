@@ -2,6 +2,7 @@
 # You likely want to specify environment variable QRACK_MAX_PAGING_QB=28
 
 import math
+import os
 import sys
 import time
 
@@ -142,6 +143,8 @@ def main():
     step = transpile(step, basis_gates=basis_gates)
 
     experiment = QrackAceBackend(n_qubits, reverse_row_and_col=reverse)
+    if 'QRACK_QUNIT_SEPARABILITY_THRESHOLD' not in os.environ:
+        experiment.sim.set_sdrp(0.03)
 
     depths = list(range(1, depth+1))
     results = []
