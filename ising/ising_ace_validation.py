@@ -2,6 +2,7 @@
 # Run ./experiment.sh
 
 import math
+import os
 import numpy as np
 import statistics
 import sys
@@ -16,6 +17,7 @@ from qiskit.quantum_info import Statevector
 from qiskit.transpiler import CouplingMap
 
 from pyqrack import QrackAceBackend
+from qiskit.providers.qrack import AceQasmSimulator
 
 
 def factor_width(width, reverse=False):
@@ -184,12 +186,12 @@ def main():
     experiment = QrackAceBackend(n_qubits, reverse_row_and_col=reverse)
     if "QRACK_QUNIT_SEPARABILITY_THRESHOLD" not in os.environ:
         experiment.sim.set_sdrp(0.03)
+    noise_dummy=AceQasmSimulator(n_qubits=n_qubits)
 
     qc = transpile(
         qc,
         optimization_level=3,
-        basis_gates=QrackAceBackend.get_qiskit_basis_gates(),
-        coupling_map=CouplingMap(experiment.get_logical_coupling_map()),
+        backend=noise_dummy,
     )
 
     control = AerSimulator(method="statevector")

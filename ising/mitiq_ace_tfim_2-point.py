@@ -16,6 +16,7 @@ import numpy as np
 from collections import Counter
 
 from pyqrack import QrackAceBackend
+from qiskit.providers.qrack import AceQasmSimulator
 
 from qiskit import QuantumCircuit
 from qiskit.circuit.library import RZZGate, RXGate
@@ -159,12 +160,11 @@ def main():
     for _ in range(depth):
         trotter_step(circ, list(range(n_qubits)), (n_rows, n_cols), J, h, dt)
 
-    coupling_dummy = QrackAceBackend(n_qubits, reverse_row_and_col=reverse)
+    noise_dummy=AceQasmSimulator(n_qubits=n_qubits)
     circ = transpile(
         circ,
         optimization_level=3,
-        basis_gates=QrackAceBackend.get_qiskit_basis_gates(),
-        coupling_map=CouplingMap(coupling_dummy.get_logical_coupling_map()),
+        backend=noise_dummy,
     )
 
     def executor(circ):

@@ -16,6 +16,7 @@ from qiskit.compiler import transpile
 from qiskit.transpiler import CouplingMap
 
 from pyqrack import QrackAceBackend
+from qiskit.providers.qrack import AceQasmSimulator
 
 
 def factor_width(width, reverse=False):
@@ -124,12 +125,12 @@ def main():
     experiment = QrackAceBackend(n_qubits, reverse_row_and_col=reverse)
     if "QRACK_QUNIT_SEPARABILITY_THRESHOLD" not in os.environ:
         experiment.sim.set_sdrp(0.03)
+    noise_dummy=AceQasmSimulator(n_qubits=n_qubits)
 
     step = transpile(
         step,
         optimization_level=3,
-        basis_gates=QrackAceBackend.get_qiskit_basis_gates(),
-        coupling_map=CouplingMap(experiment.get_logical_coupling_map()),
+        backend=noise_dummy,
     )
 
     depths = list(range(1, depth + 1))
