@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 from qiskit import QuantumCircuit
 from qiskit.circuit.library import RZZGate, RXGate
 from qiskit.compiler import transpile
+from qiskit.transpiler import CouplingMap
 
 from pyqrack import QrackAceBackend
 
@@ -120,36 +121,21 @@ def main():
     step = QuantumCircuit(n_qubits)
     trotter_step(step, list(range(n_qubits)), (n_rows, n_cols), J, h, dt)
 
-    basis_gates = [
-        "rx",
-        "ry",
-        "rz",
-        "h",
-        "x",
-        "y",
-        "z",
-        "sx",
-        "sxdg",
-        "s",
-        "sdg",
-        "t",
-        "tdg",
-        "cx",
-        "cy",
-        "cz",
-        "swap",
-        "iswap",
-    ]
-    step = transpile(step, basis_gates=basis_gates)
-
     experiment = QrackAceBackend(n_qubits, reverse_row_and_col=reverse)
-    if 'QRACK_QUNIT_SEPARABILITY_THRESHOLD' not in os.environ:
+    if "QRACK_QUNIT_SEPARABILITY_THRESHOLD" not in os.environ:
         experiment.sim.set_sdrp(0.03)
 
-    depths = list(range(1, depth+1))
+    step = transpile(
+        step,
+        optimization_level=3,
+        basis_gates=QrackAceBackend.get_qiskit_basis_gates(),
+        coupling_map=CouplingMap(experiment.get_logical_coupling_map()),
+    )
+
+    depths = list(range(1, depth + 1))
     results = []
     magnetizations = []
-    
+
     start = time.perf_counter()
     experiment.run_qiskit_circuit(qc)
     for d in depths:
@@ -162,10 +148,17 @@ def main():
                 magnetization += -1 if (sample & 1) else 1
                 sample >>= 1
         magnetization /= shots * n_qubits
-        
+
         seconds = time.perf_counter() - start
-        
-        results.append({"width": n_qubits, "depth": d, "magnetization": magnetization, 'seconds': seconds})
+
+        results.append(
+            {
+                "width": n_qubits,
+                "depth": d,
+                "magnetization": magnetization,
+                "seconds": seconds,
+            }
+        )
         magnetizations.append(magnetization)
 
         print(results[-1])
@@ -174,7 +167,7 @@ def main():
 
     # Plotting (contributed by Elara, an OpenAI custom GPT)
     plt.figure(figsize=(14, 14))
-    plt.plot(depths, magnetizations, marker='o', linestyle='-')
+    plt.plot(depths, magnetizations, marker="o", linestyle="-")
     plt.title("Magnetization vs Trotter Depth (" + str(n_qubits) + " Qubits)")
     plt.xlabel("Trotter Depth")
     plt.ylabel("Magnetization")

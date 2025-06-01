@@ -19,6 +19,7 @@ from pyqrack import QrackAceBackend
 
 from qiskit import QuantumCircuit
 from qiskit.circuit.library import RZZGate, RXGate
+from qiskit.transpiler import CouplingMap
 
 from mitiq import zne
 from mitiq.zne.scaling.folding import fold_global
@@ -122,7 +123,7 @@ def execute(circ, qubit1, qubit2):
     qc.compose(circ, all_bits, inplace=True)
 
     experiment = QrackAceBackend(qc.width())
-    if 'QRACK_QUNIT_SEPARABILITY_THRESHOLD' not in os.environ:
+    if "QRACK_QUNIT_SEPARABILITY_THRESHOLD" not in os.environ:
         experiment.sim.set_sdrp(0.03)
 
     experiment.run_qiskit_circuit(qc)
@@ -157,26 +158,14 @@ def main():
     circ = QuantumCircuit(n_qubits)
     for _ in range(depth):
         trotter_step(circ, list(range(n_qubits)), (n_rows, n_cols), J, h, dt)
-    basis_gates = [
-        "u",
-        "rx",
-        "ry",
-        "rz",
-        "h",
-        "x",
-        "y",
-        "z",
-        "s",
-        "sdg",
-        "t",
-        "tdg",
-        "cx",
-        "cy",
-        "cz",
-        "swap",
-        "iswap",
-    ]
-    circ = transpile(circ, optimization_level=3, basis_gates=basis_gates)
+
+    coupling_dummy = QrackAceBackend(n_qubits, reverse_row_and_col=reverse)
+    circ = transpile(
+        circ,
+        optimization_level=3,
+        basis_gates=QrackAceBackend.get_qiskit_basis_gates(),
+        coupling_map=CouplingMap(coupling_dummy.get_logical_coupling_map()),
+    )
 
     def executor(circ):
         return execute(circ, qubit1, qubit2)

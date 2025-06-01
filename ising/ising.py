@@ -139,7 +139,14 @@ def main():
             sample >>= 1
     magnetization /= shots * n_qubits
 
-    print({"width": n_qubits, "depth": depth, "magnetization": magnetization, 'seconds': seconds})
+    print(
+        {
+            "width": n_qubits,
+            "depth": depth,
+            "magnetization": magnetization,
+            "seconds": seconds,
+        }
+    )
 
     return 0
 

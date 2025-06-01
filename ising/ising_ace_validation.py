@@ -13,6 +13,7 @@ from qiskit.circuit.library import RZZGate, RXGate
 from qiskit.compiler import transpile
 from qiskit_aer.backends import AerSimulator
 from qiskit.quantum_info import Statevector
+from qiskit.transpiler import CouplingMap
 
 from pyqrack import QrackAceBackend
 
@@ -180,28 +181,17 @@ def main():
     for _ in range(depth):
         trotter_step(qc, list(range(n_qubits)), (n_rows, n_cols), J, h, dt)
 
-    basis_gates = [
-        "u",
-        "rx",
-        "ry",
-        "rz",
-        "h",
-        "x",
-        "y",
-        "z",
-        "s",
-        "sdg",
-        "t",
-        "tdg",
-        "cx",
-        "cy",
-        "cz",
-        "swap",
-        "iswap",
-    ]
-    qc = transpile(qc, basis_gates=basis_gates)
-
     experiment = QrackAceBackend(n_qubits, reverse_row_and_col=reverse)
+    if "QRACK_QUNIT_SEPARABILITY_THRESHOLD" not in os.environ:
+        experiment.sim.set_sdrp(0.03)
+
+    qc = transpile(
+        qc,
+        optimization_level=3,
+        basis_gates=QrackAceBackend.get_qiskit_basis_gates(),
+        coupling_map=CouplingMap(experiment.get_logical_coupling_map()),
+    )
+
     control = AerSimulator(method="statevector")
     experiment.run_qiskit_circuit(qc)
     qc.save_statevector()

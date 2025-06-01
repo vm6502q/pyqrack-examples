@@ -128,10 +128,10 @@ def main():
     step = transpile(step, basis_gates=basis_gates)
 
     experiment = QrackSimulator(n_qubits)
-    depths = list(range(1, depth+1))
+    depths = list(range(1, depth + 1))
     results = []
     magnetizations = []
-    
+
     start = time.perf_counter()
     experiment.run_qiskit_circuit(qc)
     for d in depths:
@@ -144,10 +144,17 @@ def main():
                 magnetization += -1 if (sample & 1) else 1
                 sample >>= 1
         magnetization /= shots * n_qubits
-        
+
         seconds = time.perf_counter() - start
-        
-        results.append({"width": n_qubits, "depth": d, "magnetization": magnetization, 'seconds': seconds})
+
+        results.append(
+            {
+                "width": n_qubits,
+                "depth": d,
+                "magnetization": magnetization,
+                "seconds": seconds,
+            }
+        )
         magnetizations.append(magnetization)
 
         print(results[-1])
@@ -156,7 +163,7 @@ def main():
 
     # Plotting (contributed by Elara, an OpenAI custom GPT)
     plt.figure(figsize=(14, 14))
-    plt.plot(depths, magnetizations, marker='o', linestyle='-')
+    plt.plot(depths, magnetizations, marker="o", linestyle="-")
     plt.title("Magnetization vs Trotter Depth (" + str(n_qubits) + " Qubits)")
     plt.xlabel("Trotter Depth")
     plt.ylabel("Magnetization")
