@@ -122,7 +122,7 @@ def main():
     step = QuantumCircuit(n_qubits)
     trotter_step(step, list(range(n_qubits)), (n_rows, n_cols), J, h, dt)
 
-    experiment = QrackAceBackend(n_qubits, reverse_row_and_col=reverse, long_range_columns=3 if (n_cols % 3) else 2)
+    experiment = QrackAceBackend(n_qubits, reverse_row_and_col=reverse, long_range_columns=3 if (n_cols % 3) == 1 else 2)
     if "QRACK_QUNIT_SEPARABILITY_THRESHOLD" not in os.environ:
         experiment.sim.set_sdrp(0.03)
     noise_dummy=AceQasmSimulator(n_qubits=n_qubits, long_range_columns=3 if (n_cols % 3) else 2)
