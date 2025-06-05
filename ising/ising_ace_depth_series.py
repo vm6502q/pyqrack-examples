@@ -85,6 +85,7 @@ def main():
     depth = 20
     is_transpose = False
     shots = 32768
+    long_range_columns = -1
     if len(sys.argv) > 1:
         n_qubits = int(sys.argv[1])
     if len(sys.argv) > 2:
@@ -95,6 +96,8 @@ def main():
         shots = min(32768, 1 << (n_qubits + 2))
     if len(sys.argv) > 4:
         is_transpose = sys.argv[4] not in ["0", "False"]
+    if len(sys.argv) > 5:
+        long_range_columns = int(sys.argv[5])
 
     n_rows, n_cols = factor_width(n_qubits, is_transpose)
 
@@ -121,7 +124,7 @@ def main():
     step = QuantumCircuit(n_qubits)
     trotter_step(step, list(range(n_qubits)), (n_rows, n_cols), J, h, dt)
 
-    experiment = QrackAceBackend(n_qubits, is_transpose=is_transpose)
+    experiment = QrackAceBackend(n_qubits, is_transpose=is_transpose, long_range_columns=long_range_columns)
     # We've achieved the dream: load balancing between discrete and integrated accelerators!
     # for sim_id in range(2, len(experiment.sim), 3):
     #     experiment.sim[sim_id].set_device(0)
