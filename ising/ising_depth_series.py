@@ -95,8 +95,22 @@ def main():
         reverse = sys.argv[4] not in ["0", "False"]
 
     n_rows, n_cols = factor_width(n_qubits, reverse)
+
+    # Quantinuum settings
     J, h, dt = -1.0, 2.0, 0.25
     theta = -math.pi / 6
+
+    # Pure ferromagnetic
+    # J, h, dt = -1.0, 0.0, 0.25
+    # theta = 0
+
+    # Pure transverse field
+    # J, h, dt = 0.0, 2.0, 0.25
+    # theta = -math.pi / 2
+
+    # Critical point (symmetry breaking)
+    # J, h, dt = -1.0, 1.0, 0.25
+    # theta = -math.pi / 4
 
     qc = QuantumCircuit(n_qubits)
     for q in range(n_qubits):
