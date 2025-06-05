@@ -16,7 +16,7 @@ from pyqrack import QrackAceBackend
 from qiskit.providers.qrack import AceQasmSimulator
 
 
-def factor_width(width, reverse=False):
+def factor_width(width, is_transpose=False):
     col_len = math.floor(math.sqrt(width))
     while ((width // col_len) * col_len) != width:
         col_len -= 1
@@ -24,7 +24,7 @@ def factor_width(width, reverse=False):
         raise Exception("ERROR: Can't simulate prime number width!")
     row_len = width // col_len
 
-    return (col_len, row_len) if reverse else (row_len, col_len)
+    return (col_len, row_len) if is_transpose else (row_len, col_len)
 
 
 def trotter_step(circ, qubits, lattice_shape, J, h, dt):
@@ -81,7 +81,7 @@ def trotter_step(circ, qubits, lattice_shape, J, h, dt):
 def main():
     n_qubits = 56
     depth = 10
-    reverse = False
+    is_transpose = False
     shots = 32768
     if len(sys.argv) > 1:
         n_qubits = int(sys.argv[1])
@@ -92,9 +92,9 @@ def main():
     else:
         shots = min(32768, 1 << (n_qubits + 2))
     if len(sys.argv) > 4:
-        reverse = sys.argv[4] not in ["0", "False"]
+        is_transpose = sys.argv[4] not in ["0", "False"]
 
-    n_rows, n_cols = factor_width(n_qubits, reverse)
+    n_rows, n_cols = factor_width(n_qubits, is_transpose)
     J, h, dt = -1.0, 2.0, 0.25
     theta = -math.pi / 6
 
@@ -106,7 +106,7 @@ def main():
     for _ in range(depth):
         trotter_step(qc, list(range(n_qubits)), (n_rows, n_cols), J, h, dt)
 
-    experiment = QrackAceBackend(n_qubits, reverse_row_and_col=reverse)
+    experiment = QrackAceBackend(n_qubits, is_transpose=is_transpose)
     # We've achieved the dream: load balancing between discrete and integrated accelerators!
     # for sim_id in range(2, len(experiment.sim), 3):
     #     experiment.sim[sim_id].set_device(0)
