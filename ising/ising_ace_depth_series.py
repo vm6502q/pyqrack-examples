@@ -121,9 +121,10 @@ def main():
     step = QuantumCircuit(n_qubits)
     trotter_step(step, list(range(n_qubits)), (n_rows, n_cols), J, h, dt)
 
-    experiment = QrackAceBackend(n_qubits, is_transpose=is_transpose, long_range_columns=5)
-    #   experiment.sim[0].set_device(1)
-    experiment.sim[-1].set_device(0)
+    experiment = QrackAceBackend(n_qubits, is_transpose=is_transpose)
+    # We've achieved the dream: load balancing between discrete and integrated accelerators!
+    # for sim_id in range(2, len(experiment.sim), 3):
+    #     experiment.sim[sim_id].set_device(0)
     noise_dummy=AceQasmSimulator(n_qubits=n_qubits)
 
     step = transpile(
