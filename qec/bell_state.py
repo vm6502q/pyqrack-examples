@@ -8,7 +8,7 @@ from pyqrack import QrackAceBackend
 
 
 def main():
-    experiment = QrackAceBackend(2, long_range_columns=0)
+    experiment = QrackAceBackend(9, long_range_columns=1)
 
     # Experiment has a cleaved-QEC code ACE boundary.
     experiment.h(0)
@@ -28,7 +28,7 @@ def main():
             correlated += 1
 
     print("Correlation: " + str(correlated / shots))
-    print("0/1 balance: " + str(zero / correlated))
+    print("0/1 balance: " + (str(zero / correlated) if correlated else "N/A"))
 
 
 if __name__ == "__main__":
