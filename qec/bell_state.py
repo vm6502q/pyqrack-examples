@@ -14,7 +14,7 @@ def main():
     experiment.h(0)
     experiment.cx(0, 1)
 
-    # L2 fidelity should be 50%:
+    # Any correlation above 0.5 is entanglement non-locality.
     shots = 1024
     counts = experiment.measure_shots([0, 1], shots)
 
