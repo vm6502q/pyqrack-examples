@@ -81,11 +81,11 @@ def trotter_step(circ, qubits, lattice_shape, J, h, dt):
 
 
 def main():
-    n_qubits = 54
+    n_qubits = 56
     depth = 20
     is_transpose = False
     shots = 32768
-    long_range_columns = 1
+    long_range_columns = 2
     if len(sys.argv) > 1:
         n_qubits = int(sys.argv[1])
     if len(sys.argv) > 2:
@@ -126,8 +126,8 @@ def main():
 
     experiment = QrackAceBackend(n_qubits, is_transpose=is_transpose, long_range_columns=long_range_columns)
     # We've achieved the dream: load balancing between discrete and integrated accelerators!
-    for sim_id in range(1, len(experiment.sim), 2):
-        experiment.sim[sim_id].set_device(0)
+    # for sim_id in range(1, len(experiment.sim), 2):
+    #     experiment.sim[sim_id].set_device(0)
     noise_dummy=AceQasmSimulator(n_qubits=n_qubits)
 
     step = transpile(

@@ -83,7 +83,7 @@ def main():
     depth = 20
     is_transpose = False
     shots = 32768
-    long_range_columns = -1
+    long_range_columns = 2
     if len(sys.argv) > 1:
         n_qubits = int(sys.argv[1])
     if len(sys.argv) > 2:
