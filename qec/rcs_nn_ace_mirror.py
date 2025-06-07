@@ -25,7 +25,7 @@ def factor_width(width, reverse=False):
 def bench_qrack(width, depth, reverse):
     # This is a "nearest-neighbor" coupler random circuit.
     start = time.perf_counter()
-    experiment = QrackAceBackend(width)
+    experiment = QrackAceBackend(width, long_range_columns=2)
 
     lcv_range = range(width)
 
