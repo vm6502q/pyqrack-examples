@@ -30,11 +30,11 @@ def generate_Jt(n_nodes, step, depth):
     return J
 
 # Main simulation function
-def run_dynamic_J_sim(n_nodes=8, h=2.0, dt=0.25, depth=20, trials=5, phase_shift=0.0, noise_strength=0.0):
+def run_dynamic_J_sim(n_nodes=64, lr_columns=3, lr_rows=3, h=2.0, dt=0.25, depth=20, trials=5, phase_shift=0.0, noise_strength=0.0):
     results = []
 
     for trial in range(trials):
-        sim = QrackAceBackend(n_nodes)
+        sim = QrackAceBackend(n_nodes, long_range_columns=lr_columns, long_range_rows=lr_rows)
         lq = list(range(n_nodes))
 
         # Initial rotation
@@ -92,9 +92,13 @@ def plot_results(results, title="Dynamic Supply Chain Resilience vs Stress Cycle
 
 # Example run
 if __name__ == "__main__":
-    n_nodes = 8
+    n_nodes = 64
+    lr_columns = 3
+    lr_rows = 3
     results = run_dynamic_J_sim(
         n_nodes,
+        lr_columns,
+        lr_rows,
         h=2.0,
         dt=0.25,
         depth=20,
