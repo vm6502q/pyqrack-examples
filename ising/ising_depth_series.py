@@ -98,7 +98,7 @@ def main():
 
     # Quantinuum settings
     J, h, dt = -1.0, 2.0, 0.25
-    theta = -math.pi / 6
+    theta = 2 * math.pi / 9
 
     # Pure ferromagnetic
     # J, h, dt = -1.0, 0.0, 0.25
