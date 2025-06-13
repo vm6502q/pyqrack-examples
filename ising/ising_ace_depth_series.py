@@ -7,6 +7,8 @@ import time
 
 from collections import Counter
 
+import numpy as np
+
 import matplotlib.pyplot as plt
 
 from qiskit import QuantumCircuit
@@ -84,9 +86,10 @@ def main():
     n_qubits = 56
     depth = 20
     is_transpose = False
-    shots = 32768
+    shots = 1024
     long_range_columns = 3
     long_range_rows= 6
+    trials = 5
     if len(sys.argv) > 1:
         n_qubits = int(sys.argv[1])
     if len(sys.argv) > 2:
@@ -101,6 +104,8 @@ def main():
         long_range_columns = int(sys.argv[5])
     if len(sys.argv) > 6:
         long_range_rows = int(sys.argv[6])
+    if len(sys.argv) > 7:
+        trials = int(sys.argv[7])
 
     n_rows, n_cols = factor_width(n_qubits, is_transpose)
 
@@ -126,13 +131,7 @@ def main():
 
     step = QuantumCircuit(n_qubits)
     trotter_step(step, list(range(n_qubits)), (n_rows, n_cols), J, h, dt)
-
-    experiment = QrackAceBackend(n_qubits, is_transpose=is_transpose, long_range_columns=long_range_columns, long_range_rows=long_range_rows)
-    # We've achieved the dream: load balancing between discrete and integrated accelerators!
-    # for sim_id in range(1, len(experiment.sim), 2):
-    #     experiment.sim[sim_id].set_device(0)
     noise_dummy=AceQasmSimulator(n_qubits=n_qubits)
-
     step = transpile(
         step,
         optimization_level=3,
@@ -140,47 +139,100 @@ def main():
     )
 
     depths = list(range(1, depth + 1))
+    min_sqr_mag = 1
     results = []
     magnetizations = []
 
-    start = time.perf_counter()
-    experiment.run_qiskit_circuit(qc)
-    for d in depths:
-        experiment.run_qiskit_circuit(step)
-        experiment_samples = experiment.measure_shots(list(range(n_qubits)), shots)
+    for trial in range(trials):
+        magnetizations.append([])
+        experiment = QrackAceBackend(n_qubits, is_transpose=is_transpose, long_range_columns=long_range_columns, long_range_rows=long_range_rows)
+        # We've achieved the dream: load balancing between discrete and integrated accelerators!
+        # for sim_id in range(1, len(experiment.sim), 2):
+        #     experiment.sim[sim_id].set_device(0)
 
-        magnetization = 0
-        for sample in experiment_samples:
-            for _ in range(n_qubits):
-                magnetization += -1 if (sample & 1) else 1
-                sample >>= 1
-        magnetization /= shots * n_qubits
+        start = time.perf_counter()
+        experiment.run_qiskit_circuit(qc)
+        for d in depths:
+            experiment.run_qiskit_circuit(step)
+            experiment_samples = experiment.measure_shots(list(range(n_qubits)), shots)
 
-        seconds = time.perf_counter() - start
+            magnetization = 0
+            sqr_magnetization = 0
+            for sample in experiment_samples:
+                m = 0
+                for _ in range(n_qubits):
+                    m += -1 if (sample & 1) else 1
+                    sample >>= 1
+                m /= n_qubits
+                magnetization += m
+                sqr_magnetization += m * m
+            magnetization /= shots
+            sqr_magnetization /= shots
+            if sqr_magnetization < min_sqr_mag:
+                min_sqr_mag = sqr_magnetization
 
-        results.append(
-            {
-                "width": n_qubits,
-                "depth": d,
-                "magnetization": magnetization,
-                "seconds": seconds,
-            }
-        )
-        magnetizations.append(magnetization)
+            seconds = time.perf_counter() - start
 
-        print(results[-1])
+            results.append(
+                {
+                    "width": n_qubits,
+                    "depth": d,
+                    "trial": trial + 1,
+                    "magnetization": magnetization,
+                    "square_magnetization": sqr_magnetization,
+                    "seconds": seconds,
+                }
+            )
+            magnetizations[-1].append(sqr_magnetization)
 
-    ylim = ((min(magnetizations) * 100) // 10) / 10
+            print(results[-1])
 
-    # Plotting (contributed by Elara, an OpenAI custom GPT)
+    if trials < 2:
+        # Plotting (contributed by Elara, an OpenAI custom GPT)
+        ylim = ((min(magnetizations) * 100) // 10) / 10
+
+        plt.plot(depths, magnetizations[0], marker="o", linestyle="-")
+        plt.title("Square Magnetization vs Trotter Depth (" + str(n_qubits) + " Qubits)")
+        plt.xlabel("Trotter Depth")
+        plt.ylabel("Square Magnetization")
+        plt.grid(True)
+        plt.xticks(depths)
+        plt.ylim(ylim, 1.0)  # Adjusting y-axis for clearer resolution
+        plt.show()
+
+        return 0
+
+    mean_magnetization = np.mean(magnetizations, axis=0)
+    std_magnetization = np.std(magnetizations, axis=0)
+    
+    ylim = ((min(mean_magnetization) * 100) // 10) / 10
+
+    # Plot with error bands
     plt.figure(figsize=(14, 14))
-    plt.plot(depths, magnetizations, marker="o", linestyle="-")
-    plt.title("Magnetization vs Trotter Depth (" + str(n_qubits) + " Qubits)")
+    plt.errorbar(depths, mean_magnetization, yerr=std_magnetization, fmt='-o', capsize=5, label='Mean ± Std Dev')
     plt.xlabel("Trotter Depth")
-    plt.ylabel("Magnetization")
+    plt.ylabel("Square Magnetization")
+    plt.title("Square Magnetization vs Trotter Depth (" + str(n_qubits) + " Qubits, " + str(trials) + " Trials)\nWith Mean and Standard Deviation")
+    plt.ylim(ylim, 1.0)
     plt.grid(True)
-    plt.xticks(depths)
-    plt.ylim(ylim, 1.0)  # Adjusting y-axis for clearer resolution
+    plt.legend()
+    plt.tight_layout()
+    plt.show()
+
+    ylim = ((min_sqr_mag * 100) // 10) / 10
+    
+    # Plot each trial individually
+    plt.figure(figsize=(14, 14))
+    for i, magnetization in enumerate(magnetizations):
+        plt.plot(depths, magnetization, marker='o', label=f'Trial {i + 1}')
+
+    plt.title("Square Magnetization vs Trotter Depth (" + str(n_qubits) + " Qubits, " + str(trials) + " Trials)")
+    plt.xlabel("Trotter Depth")
+    plt.ylabel("Square Magnetization")
+    plt.ylim(ylim, 1.0)
+    plt.grid(True)
+    plt.legend([f"Trial {i + 1}" for i in range(trials)], loc="lower left")
+    plt.tight_layout()
     plt.show()
 
     return 0
