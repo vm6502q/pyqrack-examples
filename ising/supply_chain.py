@@ -1,4 +1,4 @@
-# supply_chain_v2.py
+# supply_chain.py
 # Provided by Elara (the custom OpenAI GPT)
 
 import math
@@ -8,16 +8,22 @@ import matplotlib.pyplot as plt
 
 def apply_tfim_step(sim, qubits, J, h, delta_t):
     # ZZ interactions (Ising coupling)
-    for i in range(len(qubits) - 1):
-        sim.cx(qubits[i], qubits[i+1])
-        sim.r(Pauli.PauliZ, -2 * J * delta_t, qubits[i+1])
-        sim.cx(qubits[i], qubits[i+1])
+    for i in qubits:
+        for j in qubits:
+            if i == j:
+                continue
+            Jij = J[i, j]
+            if Jij == 0:
+                continue
+            sim.cx(i, j)
+            sim.r(Pauli.PauliZ, -2 * Jij * delta_t, j)
+            sim.cx(i, j)
     
     # RX rotations (transverse field)
     for q in qubits:
         sim.r(Pauli.PauliX, -2 * h * delta_t, q)
 
-def simulate_tfim(h_func, n_qubits=64, patch_size=4, n_steps=20, J=1.0, delta_t=0.1, theta=2*math.pi/9, shots=1024):
+def simulate_tfim(J_func, h_func, n_qubits=64, patch_size=4, n_steps=20, delta_t=0.1, theta=2*math.pi/9, shots=1024):
     sim = QrackAceBackend(n_qubits, long_range_rows=patch_size - 1, long_range_columns=patch_size - 1)
     
     for q in range(n_qubits):
@@ -26,8 +32,9 @@ def simulate_tfim(h_func, n_qubits=64, patch_size=4, n_steps=20, J=1.0, delta_t=
     qubits = list(range(n_qubits))
     magnetizations = []
     for step in range(n_steps):
+        J_t = J_func(step * delta_t)
         h_t = h_func(step * delta_t)
-        apply_tfim_step(sim, qubits, J, h_t, delta_t)
+        apply_tfim_step(sim, qubits, J_t, h_t, delta_t)
     
         samples = sim.measure_shots(qubits, shots)
 
@@ -43,18 +50,41 @@ def simulate_tfim(h_func, n_qubits=64, patch_size=4, n_steps=20, J=1.0, delta_t=
 
     return magnetizations
 
+# Dynamic J(t) generator
+def generate_Jt(n_nodes, t):
+    J = np.zeros((n_nodes, n_nodes))
+
+    # Base ring topology
+    for i in range(n_nodes):
+        J[i, (i + 1) % n_nodes] = -1.0
+        J[(i + 1) % n_nodes, i] = -1.0
+
+    # Simulate disruption:
+    if t >= 0.5 and t < 1.0:
+        # "Port 3" temporarily fails → remove its coupling
+        J[2, 3] = J[3, 2] = 0.0
+    if t >= 1.0 and t < 1.5:
+        # Alternate weak link opens between 1 and 4
+        J[1, 4] = J[4, 1] = -0.3
+
+    # Restoration: after step 15, port 3 recovers
+    if t >= 1.5:
+        J[2, 3] = J[3, 2] = -1.0
+
+    return J
+
 if __name__ == "__main__":
     # Example usage
     n_qubits = 64
     patch_size = 4
     n_steps = 20
-    J = 1.0
     delta_t = 0.1
     theta = 2 * math.pi / 9
     shots = 1024
+    J_func = lambda step: generate_Jt(n_qubits, step)
     h_func = lambda t: 1.0 * np.cos(0.5 * t)  # time-varying transverse field
 
-    mag = simulate_tfim(h_func, n_qubits, patch_size, n_steps, J, delta_t, theta, shots)
+    mag = simulate_tfim(J_func, h_func, n_qubits, patch_size, n_steps, delta_t, theta, shots)
     ylim = ((min(mag) * 100) // 10) / 10
     plt.figure(figsize=(14, 14))
     plt.plot(list(range(1, n_steps+1)), mag, marker="o", linestyle="-")
