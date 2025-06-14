@@ -1,4 +1,4 @@
-# supply_chain_v3_dynamic_J.py
+# supply_chain_v1.py
 # Provided by Elara (the custom OpenAI GPT)
 
 import math
@@ -87,7 +87,7 @@ def plot_results(results, title="Dynamic Supply Chain Resilience vs Stress Cycle
     plt.legend()
     plt.grid(True)
     plt.tight_layout()
-    plt.savefig("supply_chain_v3_dynamic_J.png", dpi=150)
+    plt.savefig("supply_chain_v1.png", dpi=150)
     plt.show()
 
 # Example run
