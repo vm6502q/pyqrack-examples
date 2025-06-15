@@ -23,8 +23,8 @@ def apply_tfim_step(sim, qubits, J, h, delta_t):
     for q in qubits:
         sim.r(Pauli.PauliX, -2 * h * delta_t, q)
 
-def simulate_tfim(J_func, h_func, n_qubits=64, patch_size=4, n_steps=20, delta_t=0.1, theta=2*math.pi/9, shots=1024):
-    sim = QrackAceBackend(n_qubits, long_range_rows=patch_size - 1, long_range_columns=patch_size - 1)
+def simulate_tfim(J_func, h_func, n_qubits=64, lrr=3, lrc=3, n_steps=20, delta_t=0.1, theta=2*math.pi/9, shots=1024):
+    sim = QrackAceBackend(n_qubits, long_range_rows=lrr, long_range_columns=lrc)
     
     for q in range(n_qubits):
         sim.r(Pauli.PauliY, theta, q)
@@ -76,7 +76,8 @@ def generate_Jt(n_nodes, t):
 if __name__ == "__main__":
     # Example usage
     n_qubits = 64
-    patch_size = 4
+    lrr = 3
+    lrc = 3
     n_steps = 20
     delta_t = 0.1
     theta = 2 * math.pi / 9
@@ -84,7 +85,7 @@ if __name__ == "__main__":
     J_func = lambda step: generate_Jt(n_qubits, step)
     h_func = lambda t: 1.0 * np.cos(0.5 * t)  # time-varying transverse field
 
-    mag = simulate_tfim(J_func, h_func, n_qubits, patch_size, n_steps, delta_t, theta, shots)
+    mag = simulate_tfim(J_func, h_func, n_qubits, lrr, lrc, n_steps, delta_t, theta, shots)
     ylim = ((min(mag) * 100) // 10) / 10
     plt.figure(figsize=(14, 14))
     plt.plot(list(range(1, n_steps+1)), mag, marker="o", linestyle="-")
