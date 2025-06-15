@@ -78,12 +78,12 @@ if __name__ == "__main__":
     n_qubits = 64
     lrr = 3
     lrc = 3
-    n_steps = 20
+    n_steps = 40
     delta_t = 0.1
     theta = 2 * math.pi / 9
     shots = 1024
     J_func = lambda step: generate_Jt(n_qubits, step)
-    h_func = lambda t: 1.0 * np.cos(0.5 * t)  # time-varying transverse field
+    h_func = lambda t: 0.5  * np.cos(t * math.pi / 10)  # time-varying transverse field
 
     mag = simulate_tfim(J_func, h_func, n_qubits, lrr, lrc, n_steps, delta_t, theta, shots)
     ylim = ((min(mag) * 100) // 10) / 10
