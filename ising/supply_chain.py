@@ -74,12 +74,17 @@ def generate_Jt(n_nodes, t):
     return J
 
 def generate_ht(n_nodes, t):
-    # We can program h(q, t) for spatial locality, but we don't.
+    # We can program h(q, t) for spatial-temporal locality.
     h = np.zeros(n_nodes)
     # Time-varying transverse field
-    c = 0.5  * np.cos(t * math.pi / 10)
+    c = 0.5  * np.sin(t * math.pi / 10)
+    # "Hemispheric" odd-function reversal
+    n_half = n_nodes / 2
     for i in range(n_nodes):
-        h[i] = c
+        if i < n_half:
+            h[i] = c
+        else:
+            h[i] = -c
 
     return h
 
