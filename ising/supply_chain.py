@@ -77,11 +77,13 @@ def generate_ht(n_nodes, t):
     # We can program h(q, t) for spatial-temporal locality.
     h = np.zeros(n_nodes)
     # Time-varying transverse field
-    c = 0.5  * np.sin(t * math.pi / 10)
+    c = 0.5  * np.cos(t * math.pi / 10)
+    # We can program for spatial locality, but we don't.
     # "Longitude"-dependent severity
-    n_sqrt = math.sqrt(n_nodes)
+    #  n_sqrt = math.sqrt(n_nodes)
     for i in range(n_nodes):
-        h[i] = ((i % n_sqrt) / n_sqrt) * c
+        # h[i] = ((i % n_sqrt) / n_sqrt) * c
+        h[i] = c
 
     return h
 
