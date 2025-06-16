@@ -79,12 +79,9 @@ def generate_ht(n_nodes, t):
     # Time-varying transverse field
     c = 0.5  * np.sin(t * math.pi / 10)
     # "Hemispheric" odd-function reversal
-    n_half = n_nodes / 2
+    n_sqrt = math.sqrt(n_nodes)
     for i in range(n_nodes):
-        if i < n_half:
-            h[i] = c
-        else:
-            h[i] = -c
+        h[i] = ((i % n_sqrt) / n_sqrt) * c
 
     return h
 
