@@ -78,7 +78,7 @@ def generate_ht(n_nodes, t):
     h = np.zeros(n_nodes)
     # Time-varying transverse field
     c = 0.5  * np.sin(t * math.pi / 10)
-    # "Hemispheric" odd-function reversal
+    # "Longitude"-dependent severity
     n_sqrt = math.sqrt(n_nodes)
     for i in range(n_nodes):
         h[i] = ((i % n_sqrt) / n_sqrt) * c
