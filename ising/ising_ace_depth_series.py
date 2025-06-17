@@ -14,7 +14,6 @@ import matplotlib.pyplot as plt
 from qiskit import QuantumCircuit
 from qiskit.circuit.library import RZZGate, RXGate
 from qiskit.compiler import transpile
-from qiskit.transpiler import CouplingMap
 
 from pyqrack import QrackAceBackend
 from qiskit.providers.qrack import AceQasmSimulator
