@@ -81,11 +81,10 @@ def trotter_step(circ, qubits, lattice_shape, J, h, dt):
     return circ
 
 
-def calc_stats(ideal_probs, counts, shots, depth, hamming_n):
+def calc_stats(n, ideal_probs, counts, shots, depth, hamming_n):
     # For QV, we compare probabilities of (ideal) "heavy outputs."
     # If the probability is above 2/3, the protocol certifies/passes the qubit width.
-    n_pow = len(ideal_probs)
-    n = int(round(math.log2(n_pow)))
+    n_pow = 2 ** n
     threshold = statistics.median(ideal_probs)
     u_u = statistics.mean(ideal_probs)
     diff_sqr = 0
@@ -161,7 +160,7 @@ def main():
     is_transpose = False
     hamming_n = 100
     long_range_columns = 3
-    long_range_rows = 6
+    long_range_rows = 3
     if len(sys.argv) > 1:
         n_qubits = int(sys.argv[1])
     if len(sys.argv) > 2:
@@ -209,7 +208,7 @@ def main():
     )
     control_probs = Statevector(job.result().get_statevector()).probabilities()
 
-    print(calc_stats(control_probs, experiment_counts, shots, depth, hamming_n))
+    print(calc_stats(n_qubits, control_probs, experiment_counts, shots, depth, hamming_n))
 
     return 0
 
