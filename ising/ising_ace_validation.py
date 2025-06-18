@@ -182,7 +182,7 @@ def main():
     qc = QuantumCircuit(n_qubits)
 
     for q in range(n_qubits):
-        qc.ry(theta, q)
+        qc.ry(theta / 2, q)
 
     for _ in range(depth):
         trotter_step(qc, list(range(n_qubits)), (n_rows, n_cols), J, h, dt)
