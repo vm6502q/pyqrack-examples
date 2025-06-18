@@ -114,7 +114,7 @@ def main():
 
     qc = QuantumCircuit(n_qubits)
     for q in range(n_qubits):
-        qc.ry(theta, q)
+        qc.ry(theta / 2, q)
 
     step = QuantumCircuit(n_qubits)
     trotter_step(step, list(range(n_qubits)), (n_rows, n_cols), J, h, dt)
