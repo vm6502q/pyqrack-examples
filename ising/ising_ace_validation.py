@@ -159,8 +159,8 @@ def main():
     depth = 10
     is_transpose = False
     hamming_n = 100
-    long_range_columns = 3
-    long_range_rows = 3
+    long_range_columns = 4
+    long_range_rows = 4
     if len(sys.argv) > 1:
         n_qubits = int(sys.argv[1])
     if len(sys.argv) > 2:
