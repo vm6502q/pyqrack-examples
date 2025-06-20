@@ -177,7 +177,7 @@ def main():
     # Plot each trial individually
     plt.figure(figsize=(14, 14))
     for i, free_energy in enumerate(free_energies):
-        plt.plot(depths, free_energy, marker='o', label=f'Trial {i + 1}')
+        plt.plot(range(1, depth + 1), free_energy, marker='o', label=f'Trial {i + 1}')
 
     plt.title("Free Energy vs Trotter Depth (" + str(n_qubits) + " Qubits, " + str(trials) + " Trials)")
     plt.xlabel("Trotter Depth")
