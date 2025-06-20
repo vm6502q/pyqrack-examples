@@ -127,13 +127,11 @@ def main():
     trotter_step(step, list(range(n_qubits)), (n_rows, n_cols), J, h, dt)
     step = transpile(step, optimization_level=3, backend=AceQasmSimulator(n_qubits=n_qubits))
 
-    experiment = QrackAceBackend(n_qubits, is_transpose=is_transpose, long_range_columns=long_range_columns, long_range_rows=long_range_rows)
-    experiment.run_qiskit_circuit(qc)
-
     free_energies = []
     for trial in range(trials):
         free_energies.append([])
-
+        experiment = QrackAceBackend(n_qubits, is_transpose=is_transpose, long_range_columns=long_range_columns, long_range_rows=long_range_rows)
+        experiment.run_qiskit_circuit(qc)
         for d in range(depth):
             experiment.run_qiskit_circuit(step)
             z_samples = experiment.measure_shots(list(range(n_qubits)), shots)
