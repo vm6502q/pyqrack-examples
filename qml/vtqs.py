@@ -8,12 +8,12 @@ from collections import Counter
 import math
 
 # System size and number of shots
-n_qubits = 8
+n_qubits = 36
 shots = 1024
 T = 1.0  # Temperature (arbitrary units)
 
 # Create the Qrack ACE device
-dev = qml.device("qrack.ace", wires=n_qubits, shots=shots)
+dev = qml.device("qrack.ace", wires=n_qubits, shots=shots, long_range_columns=2, long_range_rows=2)
 
 # Define the TFIM Hamiltonian (open boundary conditions)
 def tfim_hamiltonian(n_qubits, h=1.0):
