@@ -93,7 +93,7 @@ def compute_x_energy(state, n_qubits, shots, h=2.0):
 
 def main():
     n_qubits = 100
-    depth = 20
+    depth = 30
     is_transpose = False
     shots = 1024
     long_range_columns = 4
@@ -142,7 +142,7 @@ def main():
     # Plot Free Energy
     plt.figure(figsize=(10, 6))
     plt.plot(range(1, depth + 1), free_energies, marker='o')
-    plt.title("Free Energy vs Trotter Depth")
+    plt.title("Free Energy vs Trotter Depth (" + str(n_qubits) + " qubits)")
     plt.xlabel("Trotter Depth")
     plt.ylabel("Free Energy")
     plt.grid(True)
