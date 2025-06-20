@@ -98,6 +98,7 @@ def main():
     shots = 1024
     long_range_columns = 4
     long_range_rows = 4
+    trials = 5
     T = 1.0
     if len(sys.argv) > 1:
         n_qubits = int(sys.argv[1])
@@ -111,6 +112,8 @@ def main():
         long_range_columns = int(sys.argv[5])
     if len(sys.argv) > 6:
         long_range_rows = int(sys.argv[6])
+    if len(sys.argv) > 7:
+        trials = int(sys.argv[7])
 
     n_rows, n_cols = factor_width(n_qubits, is_transpose)
     J, h, dt = -1.0, 2.0, 0.25
@@ -128,26 +131,66 @@ def main():
     experiment.run_qiskit_circuit(qc)
 
     free_energies = []
+    for trial in range(trials):
+        free_energies.append([])
 
-    for d in range(depth):
-        experiment.run_qiskit_circuit(step)
-        z_samples = experiment.measure_shots(list(range(n_qubits)), shots)
-        E_z = compute_z_energy(z_samples, n_qubits, J=J)
-        S = estimate_entropy(z_samples)
-        E_x = compute_x_energy(experiment, n_qubits, shots, h=h)
-        F = E_z + E_x - T * S
-        free_energies.append(F)
-        print(f"Step {d+1}, Free Energy = {F:.5f}, Z Energy = {E_z:.5f}, X Energy = {E_x:.5f}, Entropy = {S:.5f}")
+        for d in range(depth):
+            experiment.run_qiskit_circuit(step)
+            z_samples = experiment.measure_shots(list(range(n_qubits)), shots)
+            E_z = compute_z_energy(z_samples, n_qubits, J=J)
+            S = estimate_entropy(z_samples)
+            E_x = compute_x_energy(experiment, n_qubits, shots, h=h)
+            F = E_z + E_x - T * S
+            free_energies[-1].append(F)
+            print(f"Step {d+1}, Free Energy = {F:.5f}, Z Energy = {E_z:.5f}, X Energy = {E_x:.5f}, Entropy = {S:.5f}")
 
     # Plot Free Energy
-    plt.figure(figsize=(10, 6))
-    plt.plot(range(1, depth + 1), free_energies, marker='o')
-    plt.title("Free Energy vs Trotter Depth (" + str(n_qubits) + " qubits)")
+    if trials < 2:
+        plt.figure(figsize=(10, 6))
+        plt.plot(range(1, depth + 1), free_energies[0], marker='o')
+        plt.title("Free Energy vs Trotter Depth (" + str(n_qubits) + " qubits)")
+        plt.xlabel("Trotter Depth")
+        plt.ylabel("Free Energy")
+        plt.grid(True)
+        plt.tight_layout()
+        plt.show()
+
+        return 0
+
+    mean_free_energy = np.mean(free_energies, axis=0)
+    std_free_energy = np.std(free_energies, axis=0)
+    
+    ylim = ((min(mean_free_energy) * 100) // 10) / 10
+
+    # Plot with error bands
+    plt.figure(figsize=(14, 14))
+    plt.errorbar(depths, mean_free_energy, yerr=std_free_energy, fmt='-o', capsize=5, label='Mean ± Std Dev')
+    plt.title("Free Energy vs Trotter Depth (" + str(n_qubits) + " Qubits, " + str(trials) + " Trials)\nWith Mean and Standard Deviation")
     plt.xlabel("Trotter Depth")
     plt.ylabel("Free Energy")
+    plt.ylim(ylim, 1.0)
     plt.grid(True)
+    plt.legend()
     plt.tight_layout()
     plt.show()
+
+    ylim = ((min_sqr_mag * 100) // 10) / 10
+    
+    # Plot each trial individually
+    plt.figure(figsize=(14, 14))
+    for i, free_energy in enumerate(free_energies):
+        plt.plot(depths, free_energy, marker='o', label=f'Trial {i + 1}')
+
+    plt.title("Free Energy vs Trotter Depth (" + str(n_qubits) + " Qubits, " + str(trials) + " Trials)")
+    plt.xlabel("Trotter Depth")
+    plt.ylabel("Free Energy")
+    plt.ylim(ylim, 1.0)
+    plt.grid(True)
+    plt.legend([f"Trial {i + 1}" for i in range(trials)], loc="lower left")
+    plt.tight_layout()
+    plt.show()
+
+    return 0
 
     return 0
 
