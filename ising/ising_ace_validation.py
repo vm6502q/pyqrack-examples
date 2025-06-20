@@ -176,7 +176,7 @@ def main():
     for _ in range(depth):
         trotter_step(qc, list(range(n_qubits)), (n_rows, n_cols), J, h, dt)
 
-    experiment = QrackAceBackend(n_qubits, is_transpose=False, long_range_columns=long_range_columns, long_range_rows=long_range_rows)
+    experiment = QrackAceBackend(n_qubits, long_range_columns=long_range_columns, long_range_rows=long_range_rows)
     # We've achieved the dream: load balancing between discrete and integrated accelerators!
     # for sim_id in range(2, len(experiment.sim), 3):
     #     experiment.sim[sim_id].set_device(0)
