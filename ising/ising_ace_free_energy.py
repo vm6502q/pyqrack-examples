@@ -92,7 +92,7 @@ def compute_x_energy(state, n_qubits, shots, h=2.0):
     return compute_z_energy(samples, n_qubits, h)
 
 def main():
-    n_qubits = 64
+    n_qubits = 100
     depth = 20
     is_transpose = False
     shots = 1024
