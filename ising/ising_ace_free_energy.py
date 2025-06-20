@@ -94,7 +94,6 @@ def compute_x_energy(state, n_qubits, shots, h=2.0):
 def main():
     n_qubits = 100
     depth = 30
-    is_transpose = False
     shots = 1024
     long_range_columns = 4
     long_range_rows = 4
@@ -109,15 +108,13 @@ def main():
     else:
         shots = min(shots, 1 << (n_qubits + 2))
     if len(sys.argv) > 4:
-        is_transpose = sys.argv[4] not in ["0", "False"]
+        long_range_columns = int(sys.argv[4])
     if len(sys.argv) > 5:
-        long_range_columns = int(sys.argv[5])
+        long_range_rows = int(sys.argv[5])
     if len(sys.argv) > 6:
-        long_range_rows = int(sys.argv[6])
-    if len(sys.argv) > 7:
-        trials = int(sys.argv[7])
+        trials = int(sys.argv[6])
 
-    n_rows, n_cols = factor_width(n_qubits, is_transpose)
+    n_rows, n_cols = factor_width(n_qubits, False)
     J, h, dt = -1.0, 2.0, 0.25
     theta = 2 * math.pi / 9
 
@@ -127,12 +124,12 @@ def main():
 
     step = QuantumCircuit(n_qubits)
     trotter_step(step, list(range(n_qubits)), (n_rows, n_cols), J, h, dt)
-    step = transpile(step, optimization_level=3, backend=AceQasmSimulator(n_qubits=n_qubits))
+    step = transpile(step, optimization_level=3, backend=AceQasmSimulator(n_qubits=n_qubits, long_range_columns=long_range_columns, long_range_rows=long_range_rows))
 
     free_energies = []
     for trial in range(trials):
         free_energies.append([])
-        experiment = QrackAceBackend(n_qubits, is_transpose=is_transpose, long_range_columns=long_range_columns, long_range_rows=long_range_rows)
+        experiment = QrackAceBackend(n_qubits, long_range_columns=long_range_columns, long_range_rows=long_range_rows)
         experiment.run_qiskit_circuit(qc)
         for d in range(depth):
             experiment.run_qiskit_circuit(step)

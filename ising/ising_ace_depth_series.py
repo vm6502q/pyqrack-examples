@@ -84,7 +84,6 @@ def trotter_step(circ, qubits, lattice_shape, J, h, dt):
 def main():
     n_qubits = 100
     depth = 20
-    is_transpose = False
     shots = 1024
     long_range_columns = 4
     long_range_rows= 4
@@ -98,15 +97,13 @@ def main():
     else:
         shots = min(shots, 1 << (n_qubits + 2))
     if len(sys.argv) > 4:
-        is_transpose = sys.argv[4] not in ["0", "False"]
+        long_range_columns = int(sys.argv[4])
     if len(sys.argv) > 5:
-        long_range_columns = int(sys.argv[5])
+        long_range_rows = int(sys.argv[5])
     if len(sys.argv) > 6:
-        long_range_rows = int(sys.argv[6])
-    if len(sys.argv) > 7:
-        trials = int(sys.argv[7])
+        trials = int(sys.argv[6])
 
-    n_rows, n_cols = factor_width(n_qubits, is_transpose)
+    n_rows, n_cols = factor_width(n_qubits, False)
 
     # Quantinuum settings
     J, h, dt = -1.0, 2.0, 0.25
@@ -130,11 +127,10 @@ def main():
 
     step = QuantumCircuit(n_qubits)
     trotter_step(step, list(range(n_qubits)), (n_rows, n_cols), J, h, dt)
-    noise_dummy=AceQasmSimulator(n_qubits=n_qubits)
     step = transpile(
         step,
         optimization_level=3,
-        backend=noise_dummy,
+        backend=AceQasmSimulator(n_qubits=n_qubits, long_range_columns=long_range_columns, long_range_rows=long_range_rows)),
     )
 
     depths = list(range(1, depth + 1))
@@ -144,7 +140,7 @@ def main():
 
     for trial in range(trials):
         magnetizations.append([])
-        experiment = QrackAceBackend(n_qubits, is_transpose=is_transpose, long_range_columns=long_range_columns, long_range_rows=long_range_rows)
+        experiment = QrackAceBackend(n_qubits, long_range_columns=long_range_columns, long_range_rows=long_range_rows)
         # We've achieved the dream: load balancing between discrete and integrated accelerators!
         # for sim_id in range(1, len(experiment.sim), 2):
         #     experiment.sim[sim_id].set_device(0)

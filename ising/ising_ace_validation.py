@@ -88,8 +88,6 @@ def calc_stats(n, ideal_probs, counts, shots, depth, hamming_n):
     threshold = statistics.median(ideal_probs)
     u_u = statistics.mean(ideal_probs)
     diff_sqr = 0
-    numer = 0
-    denom = 0
     sum_hog_counts = 0
     experiment = [0] * n_pow
     for i in range(n_pow):
@@ -101,17 +99,12 @@ def calc_stats(n, ideal_probs, counts, shots, depth, hamming_n):
         # L2 distance
         diff_sqr += (ideal - (count / shots)) ** 2
 
-        # XEB / EPLG
-        denom += (ideal - u_u) ** 2
-        numer += (ideal - u_u) * ((count / shots) - u_u)
-
         # QV / HOG
         if ideal > threshold:
             sum_hog_counts += count
 
     l2_similarity = 1 - diff_sqr ** (1 / 2)
     hog_prob = sum_hog_counts / shots
-    xeb = numer / denom
 
     exp_top_n = top_n(hamming_n, experiment)
     con_top_n = top_n(hamming_n, ideal_probs)
@@ -126,11 +119,10 @@ def calc_stats(n, ideal_probs, counts, shots, depth, hamming_n):
     return {
         "qubits": n,
         "depth": depth,
-        "l2_similarity": l2_similarity,
-        "xeb": xeb,
+        "l2_similarity": float(l2_similarity),
         "hog_prob": hog_prob,
         "hamming_distance_n": min(hamming_n, n_pow >> 1),
-        "hamming_distance_set_avg": avg_hamming_distance,
+        "hamming_distance_set_avg": float(avg_hamming_distance),
     }
 
 
@@ -155,12 +147,11 @@ def top_n(n, a):
 
 
 def main():
-    n_qubits = 28
+    n_qubits = 16
     depth = 10
-    is_transpose = False
-    hamming_n = 100
-    long_range_columns = 4
-    long_range_rows = 4
+    hamming_n = 2048
+    long_range_columns = 2
+    long_range_rows = 2
     if len(sys.argv) > 1:
         n_qubits = int(sys.argv[1])
     if len(sys.argv) > 2:
@@ -168,13 +159,11 @@ def main():
     if len(sys.argv) > 3:
         hamming_n = int(sys.argv[3])
     if len(sys.argv) > 4:
-        is_transpose = sys.argv[4] not in ["0", "False"]
+        long_range_columns = int(sys.argv[4])
     if len(sys.argv) > 5:
-        long_range_columns = int(sys.argv[5])
-    if len(sys.argv) > 6:
-        long_range_rows = int(sys.argv[6])
+        long_range_rows = int(sys.argv[5])
 
-    n_rows, n_cols = factor_width(n_qubits, is_transpose)
+    n_rows, n_cols = factor_width(n_qubits, False)
     J, h, dt = -1.0, 2.0, 0.25
     theta = 2 * math.pi / 9
     shots = min(1024, 1 << (n_qubits + 2))
@@ -187,16 +176,15 @@ def main():
     for _ in range(depth):
         trotter_step(qc, list(range(n_qubits)), (n_rows, n_cols), J, h, dt)
 
-    experiment = QrackAceBackend(n_qubits, is_transpose=is_transpose, long_range_columns=long_range_columns, long_range_rows=long_range_rows)
+    experiment = QrackAceBackend(n_qubits, is_transpose=False, long_range_columns=long_range_columns, long_range_rows=long_range_rows)
     # We've achieved the dream: load balancing between discrete and integrated accelerators!
     # for sim_id in range(2, len(experiment.sim), 3):
     #     experiment.sim[sim_id].set_device(0)
-    noise_dummy=AceQasmSimulator(n_qubits=n_qubits)
 
     qc = transpile(
         qc,
         optimization_level=3,
-        backend=noise_dummy,
+        backend=AceQasmSimulator(n_qubits=n_qubits),
     )
 
     control = AerSimulator(method="statevector")
