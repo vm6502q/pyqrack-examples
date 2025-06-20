@@ -142,10 +142,12 @@ def main():
             free_energies[-1].append(F)
             print(f"Step {d+1}, Free Energy = {F:.5f}, Z Energy = {E_z:.5f}, X Energy = {E_x:.5f}, Entropy = {S:.5f}")
 
+    depths = range(1, depth + 1)
+
     # Plot Free Energy
     if trials < 2:
         plt.figure(figsize=(10, 6))
-        plt.plot(range(1, depth + 1), free_energies[0], marker='o')
+        plt.plot(depths, free_energies[0], marker='o')
         plt.title("Free Energy vs Trotter Depth (" + str(n_qubits) + " qubits)")
         plt.xlabel("Trotter Depth")
         plt.ylabel("Free Energy")
@@ -157,8 +159,9 @@ def main():
 
     mean_free_energy = np.mean(free_energies, axis=0)
     std_free_energy = np.std(free_energies, axis=0)
-    
-    ylim = ((min(mean_free_energy) * 100) // 10) / 10
+
+    ymax = (((max(free_energy_values) * 100) + 9) // 10) / 10
+    ymin = ((min(free_energy_values) * 100) // 10) / 10
 
     # Plot with error bands
     plt.figure(figsize=(14, 14))
@@ -166,29 +169,25 @@ def main():
     plt.title("Free Energy vs Trotter Depth (" + str(n_qubits) + " Qubits, " + str(trials) + " Trials)\nWith Mean and Standard Deviation")
     plt.xlabel("Trotter Depth")
     plt.ylabel("Free Energy")
-    plt.ylim(ylim, 1.0)
+    plt.ylim(ymin, ymax)
     plt.grid(True)
     plt.legend()
     plt.tight_layout()
     plt.show()
-
-    ylim = ((min_sqr_mag * 100) // 10) / 10
     
     # Plot each trial individually
     plt.figure(figsize=(14, 14))
     for i, free_energy in enumerate(free_energies):
-        plt.plot(range(1, depth + 1), free_energy, marker='o', label=f'Trial {i + 1}')
+        plt.plot(depths, free_energy, marker='o', label=f'Trial {i + 1}')
 
     plt.title("Free Energy vs Trotter Depth (" + str(n_qubits) + " Qubits, " + str(trials) + " Trials)")
     plt.xlabel("Trotter Depth")
     plt.ylabel("Free Energy")
-    plt.ylim(ylim, 1.0)
+    plt.ylim(ymin, ymax)
     plt.grid(True)
     plt.legend([f"Trial {i + 1}" for i in range(trials)], loc="lower left")
     plt.tight_layout()
     plt.show()
-
-    return 0
 
     return 0
 
