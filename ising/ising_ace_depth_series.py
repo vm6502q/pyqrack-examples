@@ -96,7 +96,7 @@ def main():
     if len(sys.argv) > 3:
         shots = int(sys.argv[3])
     else:
-        shots = min(32768, 1 << (n_qubits + 2))
+        shots = min(shots, 1 << (n_qubits + 2))
     if len(sys.argv) > 4:
         is_transpose = sys.argv[4] not in ["0", "False"]
     if len(sys.argv) > 5:
