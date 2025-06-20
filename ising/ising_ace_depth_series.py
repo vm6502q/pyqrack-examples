@@ -82,7 +82,7 @@ def trotter_step(circ, qubits, lattice_shape, J, h, dt):
 
 
 def main():
-    n_qubits = 56
+    n_qubits = 100
     depth = 20
     is_transpose = False
     shots = 1024
