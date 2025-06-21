@@ -8,15 +8,15 @@ from pyqrack import QrackAceBackend
 
 
 def main():
-    experiment = QrackAceBackend(9, long_range_columns=1)
+    experiment = QrackAceBackend(16, long_range_columns=1)
 
     # Experiment has a cleaved-QEC code ACE boundary.
-    experiment.h(0)
-    experiment.cx(0, 1)
+    experiment.h(4)
+    experiment.cx(4, 5)
 
     # Any correlation above 0.5 is entanglement non-locality.
     shots = 1024
-    counts = experiment.measure_shots([0, 1], shots)
+    counts = experiment.measure_shots([4, 5], shots)
 
     zero = 0
     correlated = 0

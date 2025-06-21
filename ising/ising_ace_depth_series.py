@@ -130,7 +130,7 @@ def main():
     step = transpile(
         step,
         optimization_level=3,
-        backend=AceQasmSimulator(n_qubits=n_qubits, long_range_columns=long_range_columns, long_range_rows=long_range_rows)),
+        backend=AceQasmSimulator(n_qubits=n_qubits, long_range_columns=long_range_columns, long_range_rows=long_range_rows),
     )
 
     depths = list(range(1, depth + 1))
