@@ -10,7 +10,7 @@ def apply_measurement_basis(sim, q, theta):
     sim.r(Pauli.PauliY, theta, q)
 
 def measure_expectation(sim, shots):
-    results = sim.measure_shots([4, 5], shots)
+    results = sim.measure_shots([0, 1], shots)
     total = 0
     for res in results:
         a = (res >> 0) & 1
@@ -20,8 +20,8 @@ def measure_expectation(sim, shots):
 
 def run_chsh_test(shots):
     sim = QrackAceBackend(16, long_range_columns=1)
-    sim.h(4)
-    sim.mcx([4], 5)
+    sim.h(0)
+    sim.mcx([0], 1)
 
     pi = math.pi
 
@@ -32,9 +32,9 @@ def run_chsh_test(shots):
     theta_bp = -pi / 4
 
     def expectation(theta1, theta2):
-        s = QrackAceBackend(9, long_range_columns=1)
-        s.h(4)
-        s.mcx([4], 5)
+        s = QrackAceBackend(16, long_range_columns=1)
+        s.h(0)
+        s.mcx([0], 1)
         apply_measurement_basis(s, 0, theta1)
         apply_measurement_basis(s, 1, theta2)
         return measure_expectation(s, shots)
