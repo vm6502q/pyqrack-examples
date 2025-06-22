@@ -27,7 +27,7 @@ from qiskit.transpiler import CouplingMap
 
 from mitiq import zne
 from mitiq.zne.scaling.folding import fold_global
-from mitiq.zne.inference import RichardsonFactory
+from mitiq.zne.inference import LinearFactory
 
 
 def calc_stats(ideal_probs, counts, shots):
@@ -213,7 +213,7 @@ def main():
 
     scale_count = 6
     max_scale = 3
-    factory = RichardsonFactory(
+    factory = LinearFactory(
         scale_factors=[
             (1 + (max_scale - 1) * x / scale_count) for x in range(0, scale_count)
         ]

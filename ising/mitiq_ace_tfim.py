@@ -114,7 +114,7 @@ def expit(x):
 
 
 def execute(circ):
-    shots = min(8192, 1 << (circ.width() + 2))
+    shots = min(1024, 1 << (circ.width() + 2))
     all_bits = list(range(circ.width()))
 
     qc = QuantumCircuit(circ.width())
@@ -123,7 +123,7 @@ def execute(circ):
         qc.ry(theta, q)
     qc.compose(circ, all_bits, inplace=True)
 
-    experiment = QrackAceBackend(qc.width())
+    experiment = QrackAceBackend(qc.width(), long_range_columns=1, long_range_rows=1)
     # We've achieved the dream: load balancing between discrete and integrated accelerators!
     # for sim_id in range(2, len(experiment.sim), 3):
     #     experiment.sim[sim_id].set_device(0)
@@ -155,16 +155,16 @@ def main():
     for _ in range(depth):
         trotter_step(circ, list(range(n_qubits)), (n_rows, n_cols), J, h, dt)
 
-    noise_dummy=AceQasmSimulator(n_qubits=n_qubits)
+    noise_dummy=AceQasmSimulator(n_qubits=n_qubits, long_range_columns=1, long_range_rows=1)
     circ = transpile(
         circ,
         optimization_level=3,
         backend=noise_dummy,
     )
 
-    scale_count = 4
-    max_scale = 4
-    factory = LinearFactory(
+    scale_count = 6
+    max_scale = 7
+    factory = RichardsonFactory(
         scale_factors=[
             (1 + (max_scale - 1) * x / scale_count) for x in range(0, scale_count)
         ]
