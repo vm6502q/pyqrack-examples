@@ -15,13 +15,7 @@ Clone this repository:
 ```
 If this doesn't work, you might need to install `git`, first.
 
-Install PyQrack. On Ubuntu, you can use the official system package:
-```sh
- $ sudo add-apt-repository ppa:wrathfulspatula/vm6502q
- $ sudo apt update
- $ sudo apt install pyqrack
-```
-Otherwise, if the Ubuntu package won't work with your system, you can use `pip`:
+You can install `pyqrack` with `pip`:
 ```sh
  $ python3 -m pip3 install pyqrack
 ```
