@@ -26,5 +26,5 @@ or, depending on your environment, this is the basic idea:
 
 That's it! To run any of the scripts in this repository, just invoke the Python interpreter! For example, this script times a random circuit sampling benchmark:
 ```sh
- $ python3 rcs.py
+ $ python3 rcs/rcs.py
 ```
