@@ -90,7 +90,7 @@ def main():
     if len(sys.argv) > 3:
         shots = int(sys.argv[3])
     else:
-        shots = min(1024, 1 << (n_qubits + 2))
+        shots = min(shots, 1 << (n_qubits + 2))
     if len(sys.argv) > 4:
         sdrp = float(sys.argv[4])
 
