@@ -120,6 +120,12 @@ def main():
     trotter_step(step, list(range(n_qubits)), (n_rows, n_cols), J, h, dt)
 
     basis_gates = [
+        "id",
+        "u",
+        "u1",
+        "u2",
+        "u3",
+        "r",
         "rx",
         "ry",
         "rz",
@@ -127,10 +133,11 @@ def main():
         "x",
         "y",
         "z",
-        "sx",
-        "sxdg",
         "s",
         "sdg",
+        "sx",
+        "sxdg",
+        "p",
         "t",
         "tdg",
         "cx",
@@ -138,8 +145,10 @@ def main():
         "cz",
         "swap",
         "iswap",
+        "reset",
+        "measure",
     ]
-    step = transpile(step, basis_gates=basis_gates)
+    step = transpile(step, optimization_level=3, basis_gates=basis_gates)
 
     experiment = QrackSimulator(n_qubits, isTensorNetwork=False)
     experiment.set_sdrp(sdrp)
