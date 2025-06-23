@@ -150,7 +150,7 @@ def main():
     ]
     step = transpile(step, optimization_level=3, basis_gates=basis_gates)
 
-    experiment = QrackSimulator(n_qubits, isTensorNetwork=False)
+    experiment = QrackSimulator(n_qubits, isTensorNetwork=False, isOpenCL=False)
     experiment.set_sdrp(sdrp)
     depths = list(range(1, depth + 1))
     results = []
