@@ -79,10 +79,10 @@ def trotter_step(circ, qubits, lattice_shape, J, h, dt):
 
 
 def main():
-    n_qubits = 56
+    n_qubits = 64
     depth = 20
-    reverse = False
-    shots = 1048576
+    shots = 1024
+    sdrp = 0.02375
     if len(sys.argv) > 1:
         n_qubits = int(sys.argv[1])
     if len(sys.argv) > 2:
@@ -90,11 +90,11 @@ def main():
     if len(sys.argv) > 3:
         shots = int(sys.argv[3])
     else:
-        shots = min(1048576, 1 << (n_qubits + 2))
+        shots = min(1024, 1 << (n_qubits + 2))
     if len(sys.argv) > 4:
-        reverse = sys.argv[4] not in ["0", "False"]
+        sdrp = float(sys.argv[4])
 
-    n_rows, n_cols = factor_width(n_qubits, reverse)
+    n_rows, n_cols = factor_width(n_qubits, False)
 
     # Quantinuum settings
     J, h, dt = -1.0, 2.0, 0.25
@@ -142,6 +142,7 @@ def main():
     step = transpile(step, basis_gates=basis_gates)
 
     experiment = QrackSimulator(n_qubits)
+    experiment.set_sdrp(sdrp)
     depths = list(range(1, depth + 1))
     results = []
     magnetizations = []
