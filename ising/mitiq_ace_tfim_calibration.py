@@ -30,7 +30,7 @@ from mitiq.zne.scaling.folding import fold_global
 from mitiq.zne.inference import LinearFactory
 
 
-def calc_stats(ideal_probs, counts, shots):
+def calc_stats(ideal_probs, counts, shots, hamming_n):
     # For QV, we compare probabilities of (ideal) "heavy outputs."
     # If the probability is above 2/3, the protocol certifies/passes the qubit width.
     n_pow = len(ideal_probs)
@@ -63,11 +63,43 @@ def calc_stats(ideal_probs, counts, shots):
     hog_prob = sum_hog_counts / shots
     xeb = numer / denom
 
+    exp_top_n = top_n(hamming_n, experiment)
+    con_top_n = top_n(hamming_n, ideal_probs)
+
+    # By Elara (OpenAI custom GPT)
+    # Compute Hamming distances between each ACE bitstring and its closest in control case
+    min_distances = [
+        min(hamming_distance(a, r, n) for r in con_top_n) for a in exp_top_n
+    ]
+    avg_hamming_distance = np.mean(min_distances)
+
     return {
+        "qubits": n,
         "l2_similarity": l2_similarity,
         "xeb": xeb,
         "hog_prob": hog_prob,
+        "hamming_distance_set_avg": avg_hamming_distance,
     }
+
+
+# By Gemini (Google Search AI)
+def int_to_bitstring(integer, length):
+    return bin(integer)[2:].zfill(length)
+
+
+# By Elara (OpenAI custom GPT)
+def hamming_distance(s1, s2, n):
+    return sum(
+        ch1 != ch2 for ch1, ch2 in zip(int_to_bitstring(s1, n), int_to_bitstring(s2, n))
+    )
+
+
+# From https://stackoverflow.com/questions/13070461/get-indices-of-the-top-n-values-of-a-list#answer-38835860
+def top_n(n, a):
+    median_index = len(a) >> 1
+    if n > median_index:
+        n = median_index
+    return np.argsort(a)[-n:]
 
 
 def factor_width(width):
@@ -156,7 +188,7 @@ def expit(x):
     return 1 / (1 + np.exp(-x))
 
 
-def execute(circ, long_range_columns, long_range_rows):
+def execute(qc, long_range_columns, long_range_rows, hamming_n):
     shots = min(1024, 1 << (circ.width() + 2))
     all_bits = list(range(circ.width()))
 
@@ -180,22 +212,24 @@ def execute(circ, long_range_columns, long_range_rows):
     experiment_counts = dict(Counter(experiment.measure_shots(all_bits, shots)))
     control_probs = Statevector(job.result().get_statevector()).probabilities()
 
-    stats = calc_stats(control_probs, experiment_counts, shots)
+    stats = calc_stats(control_probs, experiment_counts, shots, hamming_n)
 
     # So as not to exceed floor at 0.0 and ceiling at 1.0, (assuming 0 < p < 1,)
     # we mitigate its logit function value (https://en.wikipedia.org/wiki/Logit)
-    # return logit(stats['hog_prob'])
     return logit(stats["l2_similarity"])
 
 
 def main():
     if len(sys.argv) < 5:
-        raise RuntimeError("Usage: python3 mitiq_tfim_calibration.py [width] [depth] [long_range_columns] [long_range_rows]")
+        raise RuntimeError("Usage: python3 mitiq_tfim_calibration.py [width] [depth] [long_range_columns] [long_range_rows] [hamming_n]")
 
     n_qubits = int(sys.argv[1])
     depth = int(sys.argv[2])
     long_range_columns=int(sys.argv[3])
     long_range_rows=int(sys.argv[4])
+    hamming_n = 2048
+    if len(sys.argv) > 5:
+        hamming_n = int(sys.argv[5])
 
     n_rows, n_cols = factor_width(n_qubits)
     J, h, dt = -1.0, 2.0, 0.25
@@ -211,15 +245,15 @@ def main():
         backend=noise_dummy,
     )
 
-    scale_count = 6
-    max_scale = 3
+    scale_count = 4
+    max_scale = 2
     factory = LinearFactory(
         scale_factors=[
             (1 + (max_scale - 1) * x / scale_count) for x in range(0, scale_count)
         ]
     )
     
-    executor = lambda c: execute(c, long_range_columns, long_range_rows)
+    executor = lambda c: execute(c, long_range_columns, long_range_rows, hamming_n)
 
     mitigated_l2_similarity = expit(
         zne.execute_with_zne(circ, executor, scale_noise=fold_global, factory=factory)
