@@ -15,12 +15,14 @@ from qiskit.compiler import transpile
 from pyqrack import QrackAceBackend
 from qiskit.providers.qrack import AceQasmSimulator
 
+
 def factor_width(width, is_transpose=False):
     col_len = math.floor(math.sqrt(width))
     while ((width // col_len) * col_len) != width:
         col_len -= 1
     row_len = width // col_len
     return (col_len, row_len) if is_transpose else (row_len, col_len)
+
 
 def trotter_step(circ, qubits, lattice_shape, J, h, dt):
     n_rows, n_cols = lattice_shape
@@ -64,10 +66,12 @@ def trotter_step(circ, qubits, lattice_shape, J, h, dt):
 
     return circ
 
+
 def estimate_entropy(samples):
     counts = Counter(samples)
     probs = np.array(list(counts.values())) / len(samples)
     return -np.sum(probs * np.log(probs + 1e-10))
+
 
 def compute_z_energy(samples, n_qubits, J=-1.0):
     energy = 0
@@ -76,9 +80,10 @@ def compute_z_energy(samples, n_qubits, J=-1.0):
         for i in range(n_qubits - 1):
             bit_i = (sample >> i) & 1
             bit_j = (sample >> (i + 1)) & 1
-            z_terms += (1 if bit_i == bit_j else -1)
+            z_terms += 1 if bit_i == bit_j else -1
         energy += -J * z_terms
     return energy / len(samples)
+
 
 def compute_x_energy(state, n_qubits, shots, h=2.0):
     for q in range(n_qubits):
@@ -88,6 +93,7 @@ def compute_x_energy(state, n_qubits, shots, h=2.0):
         state.h(q)
 
     return compute_z_energy(samples, n_qubits, h)
+
 
 def main():
     n_qubits = 100
@@ -111,6 +117,12 @@ def main():
         long_range_rows = int(sys.argv[5])
     if len(sys.argv) > 6:
         trials = int(sys.argv[6])
+    lcv = 7
+    devices = []
+    while len(sys.argv) > lcv:
+        devices.append(int(sys.argv[lcv]))
+        lcv += 1
+    print("Devices: " + str(devices))
 
     n_rows, n_cols = factor_width(n_qubits, False)
     J, h, dt = -1.0, 2.0, 0.25
@@ -122,12 +134,28 @@ def main():
 
     step = QuantumCircuit(n_qubits)
     trotter_step(step, list(range(n_qubits)), (n_rows, n_cols), J, h, dt)
-    step = transpile(step, optimization_level=3, backend=AceQasmSimulator(n_qubits=n_qubits, long_range_columns=long_range_columns, long_range_rows=long_range_rows))
+    step = transpile(
+        step,
+        optimization_level=3,
+        backend=AceQasmSimulator(
+            n_qubits=n_qubits,
+            long_range_columns=long_range_columns,
+            long_range_rows=long_range_rows,
+        ),
+    )
 
     free_energies = []
     for trial in range(trials):
         free_energies.append([])
-        experiment = QrackAceBackend(n_qubits, long_range_columns=long_range_columns, long_range_rows=long_range_rows)
+        experiment = QrackAceBackend(
+            n_qubits,
+            long_range_columns=long_range_columns,
+            long_range_rows=long_range_rows,
+        )
+        # We've achieved the dream: load balancing between discrete and integrated accelerators!
+        for sim_id in range(min(len(experiment.sim), len(devices))):
+            experiment.sim[sim_id].set_device(devices[sim_id])
+
         experiment.run_qiskit_circuit(qc)
         for d in range(depth):
             experiment.run_qiskit_circuit(step)
@@ -137,14 +165,16 @@ def main():
             E_x = compute_x_energy(experiment, n_qubits, shots, h=h)
             F = E_z + E_x - T * S
             free_energies[-1].append(F)
-            print(f"Step {d+1}, Free Energy = {F:.5f}, Z Energy = {E_z:.5f}, X Energy = {E_x:.5f}, Entropy = {S:.5f}")
+            print(
+                f"Step {d+1}, Free Energy = {F:.5f}, Z Energy = {E_z:.5f}, X Energy = {E_x:.5f}, Entropy = {S:.5f}"
+            )
 
     depths = range(1, depth + 1)
 
     # Plot Free Energy
     if trials < 2:
         plt.figure(figsize=(10, 6))
-        plt.plot(depths, free_energies[0], marker='o')
+        plt.plot(depths, free_energies[0], marker="o")
         plt.title("Free Energy vs Trotter Depth (" + str(n_qubits) + " qubits)")
         plt.xlabel("Trotter Depth")
         plt.ylabel("Free Energy")
@@ -162,8 +192,21 @@ def main():
 
     # Plot with error bands
     plt.figure(figsize=(14, 14))
-    plt.errorbar(depths, mean_free_energy, yerr=std_free_energy, fmt='-o', capsize=5, label='Mean ± Std Dev')
-    plt.title("Free Energy vs Trotter Depth (" + str(n_qubits) + " Qubits, " + str(trials) + " Trials)\nWith Mean and Standard Deviation")
+    plt.errorbar(
+        depths,
+        mean_free_energy,
+        yerr=std_free_energy,
+        fmt="-o",
+        capsize=5,
+        label="Mean ± Std Dev",
+    )
+    plt.title(
+        "Free Energy vs Trotter Depth ("
+        + str(n_qubits)
+        + " Qubits, "
+        + str(trials)
+        + " Trials)\nWith Mean and Standard Deviation"
+    )
     plt.xlabel("Trotter Depth")
     plt.ylabel("Free Energy")
     plt.ylim(ymin, ymax)
@@ -171,13 +214,19 @@ def main():
     plt.legend()
     plt.tight_layout()
     plt.show()
-    
+
     # Plot each trial individually
     plt.figure(figsize=(14, 14))
     for i, free_energy in enumerate(free_energies):
-        plt.plot(depths, free_energy, marker='o', label=f'Trial {i + 1}')
+        plt.plot(depths, free_energy, marker="o", label=f"Trial {i + 1}")
 
-    plt.title("Free Energy vs Trotter Depth (" + str(n_qubits) + " Qubits, " + str(trials) + " Trials)")
+    plt.title(
+        "Free Energy vs Trotter Depth ("
+        + str(n_qubits)
+        + " Qubits, "
+        + str(trials)
+        + " Trials)"
+    )
     plt.xlabel("Trotter Depth")
     plt.ylabel("Free Energy")
     plt.ylim(ymin, ymax)
@@ -187,6 +236,7 @@ def main():
     plt.show()
 
     return 0
+
 
 if __name__ == "__main__":
     sys.exit(main())

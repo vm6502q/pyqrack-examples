@@ -196,7 +196,11 @@ def execute(qc, long_range_columns, long_range_rows, hamming_n):
         qc.ry(theta / 2, q)
     qc.compose(circ, all_bits, inplace=True)
 
-    experiment = QrackAceBackend(qc.width(), long_range_columns=long_range_columns, long_range_rows=long_range_rows)
+    experiment = QrackAceBackend(
+        qc.width(),
+        long_range_columns=long_range_columns,
+        long_range_rows=long_range_rows,
+    )
     # We've achieved the dream: load balancing between discrete and integrated accelerators!
     # for sim_id in range(2, len(experiment.sim), 3):
     #     experiment.sim[sim_id].set_device(0)
@@ -219,12 +223,14 @@ def execute(qc, long_range_columns, long_range_rows, hamming_n):
 
 def main():
     if len(sys.argv) < 5:
-        raise RuntimeError("Usage: python3 mitiq_tfim_calibration.py [width] [depth] [long_range_columns] [long_range_rows] [hamming_n]")
+        raise RuntimeError(
+            "Usage: python3 mitiq_tfim_calibration.py [width] [depth] [long_range_columns] [long_range_rows] [hamming_n]"
+        )
 
     n_qubits = int(sys.argv[1])
     depth = int(sys.argv[2])
-    long_range_columns=int(sys.argv[3])
-    long_range_rows=int(sys.argv[4])
+    long_range_columns = int(sys.argv[3])
+    long_range_rows = int(sys.argv[4])
     hamming_n = 2048
     if len(sys.argv) > 5:
         hamming_n = int(sys.argv[5])
@@ -236,7 +242,11 @@ def main():
     for _ in range(depth):
         trotter_step(circ, list(range(n_qubits)), (n_rows, n_cols), J, h, dt)
 
-    noise_dummy=AceQasmSimulator(n_qubits=n_qubits, long_range_columns=long_range_columns, long_range_rows=long_range_rows)
+    noise_dummy = AceQasmSimulator(
+        n_qubits=n_qubits,
+        long_range_columns=long_range_columns,
+        long_range_rows=long_range_rows,
+    )
     circ = transpile(
         circ,
         optimization_level=3,
@@ -250,7 +260,7 @@ def main():
             (1 + (max_scale - 1) * x / scale_count) for x in range(0, scale_count)
         ]
     )
-    
+
     executor = lambda c: execute(c, long_range_columns, long_range_rows, hamming_n)
 
     mitigated_l2_similarity = expit(

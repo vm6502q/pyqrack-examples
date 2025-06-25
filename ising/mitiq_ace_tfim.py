@@ -153,7 +153,9 @@ def main():
     for _ in range(depth):
         trotter_step(circ, list(range(n_qubits)), (n_rows, n_cols), J, h, dt)
 
-    noise_dummy=AceQasmSimulator(n_qubits=n_qubits, long_range_columns=1, long_range_rows=1)
+    noise_dummy = AceQasmSimulator(
+        n_qubits=n_qubits, long_range_columns=1, long_range_rows=1
+    )
     circ = transpile(
         circ,
         optimization_level=3,

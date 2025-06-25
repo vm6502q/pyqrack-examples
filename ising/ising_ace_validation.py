@@ -82,7 +82,7 @@ def trotter_step(circ, qubits, lattice_shape, J, h, dt):
 def calc_stats(n, ideal_probs, counts, shots, depth, hamming_n):
     # For QV, we compare probabilities of (ideal) "heavy outputs."
     # If the probability is above 2/3, the protocol certifies/passes the qubit width.
-    n_pow = 2 ** n
+    n_pow = 2**n
     threshold = statistics.median(ideal_probs)
     u_u = statistics.mean(ideal_probs)
     diff_sqr = 0
@@ -161,6 +161,12 @@ def main():
         long_range_columns = int(sys.argv[4])
     if len(sys.argv) > 5:
         long_range_rows = int(sys.argv[5])
+    lcv = 7
+    devices = []
+    while len(sys.argv) > lcv:
+        devices.append(int(sys.argv[lcv]))
+        lcv += 1
+    print("Devices: " + str(devices))
 
     n_rows, n_cols = factor_width(n_qubits, False)
     J, h, dt = -1.0, 2.0, 0.25
@@ -175,10 +181,12 @@ def main():
     for _ in range(depth):
         trotter_step(qc, list(range(n_qubits)), (n_rows, n_cols), J, h, dt)
 
-    experiment = QrackAceBackend(n_qubits, long_range_columns=long_range_columns, long_range_rows=long_range_rows)
+    experiment = QrackAceBackend(
+        n_qubits, long_range_columns=long_range_columns, long_range_rows=long_range_rows
+    )
     # We've achieved the dream: load balancing between discrete and integrated accelerators!
-    # for sim_id in range(2, len(experiment.sim), 3):
-    #     experiment.sim[sim_id].set_device(0)
+    for sim_id in range(min(len(experiment.sim), len(devices))):
+        experiment.sim[sim_id].set_device(devices[sim_id])
 
     qc = transpile(
         qc,
@@ -195,7 +203,9 @@ def main():
     )
     control_probs = Statevector(job.result().get_statevector()).probabilities()
 
-    print(calc_stats(n_qubits, control_probs, experiment_counts, shots, depth, hamming_n))
+    print(
+        calc_stats(n_qubits, control_probs, experiment_counts, shots, depth, hamming_n)
+    )
 
     return 0
 

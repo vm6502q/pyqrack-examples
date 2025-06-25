@@ -84,7 +84,7 @@ def main():
     depth = 20
     shots = 1024
     long_range_columns = 4
-    long_range_rows= 4
+    long_range_rows = 4
     trials = 5
     if len(sys.argv) > 1:
         n_qubits = int(sys.argv[1])
@@ -100,6 +100,12 @@ def main():
         long_range_rows = int(sys.argv[5])
     if len(sys.argv) > 6:
         trials = int(sys.argv[6])
+    lcv = 7
+    devices = []
+    while len(sys.argv) > lcv:
+        devices.append(int(sys.argv[lcv]))
+        lcv += 1
+    print("Devices: " + str(devices))
 
     n_rows, n_cols = factor_width(n_qubits, False)
 
@@ -128,7 +134,11 @@ def main():
     step = transpile(
         step,
         optimization_level=3,
-        backend=AceQasmSimulator(n_qubits=n_qubits, long_range_columns=long_range_columns, long_range_rows=long_range_rows),
+        backend=AceQasmSimulator(
+            n_qubits=n_qubits,
+            long_range_columns=long_range_columns,
+            long_range_rows=long_range_rows,
+        ),
     )
 
     depths = list(range(1, depth + 1))
@@ -138,10 +148,14 @@ def main():
 
     for trial in range(trials):
         magnetizations.append([])
-        experiment = QrackAceBackend(n_qubits, long_range_columns=long_range_columns, long_range_rows=long_range_rows)
+        experiment = QrackAceBackend(
+            n_qubits,
+            long_range_columns=long_range_columns,
+            long_range_rows=long_range_rows,
+        )
         # We've achieved the dream: load balancing between discrete and integrated accelerators!
-        # for sim_id in range(1, len(experiment.sim), 2):
-        #     experiment.sim[sim_id].set_device(0)
+        for sim_id in range(min(len(experiment.sim), len(devices))):
+            experiment.sim[sim_id].set_device(devices[sim_id])
 
         start = time.perf_counter()
         experiment.run_qiskit_circuit(qc)
@@ -185,7 +199,9 @@ def main():
         ylim = ((min_sqr_mag * 100) // 10) / 10
 
         plt.plot(depths, magnetizations[0], marker="o", linestyle="-")
-        plt.title("Square Magnetization vs Trotter Depth (" + str(n_qubits) + " Qubits)")
+        plt.title(
+            "Square Magnetization vs Trotter Depth (" + str(n_qubits) + " Qubits)"
+        )
         plt.xlabel("Trotter Depth")
         plt.ylabel("Square Magnetization")
         plt.grid(True)
@@ -197,15 +213,28 @@ def main():
 
     mean_magnetization = np.mean(magnetizations, axis=0)
     std_magnetization = np.std(magnetizations, axis=0)
-    
+
     ylim = ((min(mean_magnetization) * 100) // 10) / 10
 
     # Plot with error bands
     plt.figure(figsize=(14, 14))
-    plt.errorbar(depths, mean_magnetization, yerr=std_magnetization, fmt='-o', capsize=5, label='Mean ± Std Dev')
+    plt.errorbar(
+        depths,
+        mean_magnetization,
+        yerr=std_magnetization,
+        fmt="-o",
+        capsize=5,
+        label="Mean ± Std Dev",
+    )
     plt.xlabel("Trotter Depth")
     plt.ylabel("Square Magnetization")
-    plt.title("Square Magnetization vs Trotter Depth (" + str(n_qubits) + " Qubits, " + str(trials) + " Trials)\nWith Mean and Standard Deviation")
+    plt.title(
+        "Square Magnetization vs Trotter Depth ("
+        + str(n_qubits)
+        + " Qubits, "
+        + str(trials)
+        + " Trials)\nWith Mean and Standard Deviation"
+    )
     plt.ylim(ylim, 1.0)
     plt.grid(True)
     plt.legend()
@@ -213,13 +242,19 @@ def main():
     plt.show()
 
     ylim = ((min_sqr_mag * 100) // 10) / 10
-    
+
     # Plot each trial individually
     plt.figure(figsize=(14, 14))
     for i, magnetization in enumerate(magnetizations):
-        plt.plot(depths, magnetization, marker='o', label=f'Trial {i + 1}')
+        plt.plot(depths, magnetization, marker="o", label=f"Trial {i + 1}")
 
-    plt.title("Square Magnetization vs Trotter Depth (" + str(n_qubits) + " Qubits, " + str(trials) + " Trials)")
+    plt.title(
+        "Square Magnetization vs Trotter Depth ("
+        + str(n_qubits)
+        + " Qubits, "
+        + str(trials)
+        + " Trials)"
+    )
     plt.xlabel("Trotter Depth")
     plt.ylabel("Square Magnetization")
     plt.ylim(ylim, 1.0)

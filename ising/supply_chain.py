@@ -6,6 +6,7 @@ import numpy as np
 from pyqrack import QrackAceBackend, Pauli
 import matplotlib.pyplot as plt
 
+
 def apply_tfim_step(sim, qubits, J, h, delta_t):
     # ZZ interactions (Ising coupling)
     for i in qubits:
@@ -18,14 +19,25 @@ def apply_tfim_step(sim, qubits, J, h, delta_t):
             sim.cx(i, j)
             sim.r(Pauli.PauliZ, -2 * Jij * delta_t, j)
             sim.cx(i, j)
-    
+
     # RX rotations (transverse field)
     for q in qubits:
         sim.r(Pauli.PauliX, -2 * h[q] * delta_t, q)
 
-def simulate_tfim(J_func, h_func, n_qubits=64, lrr=3, lrc=3, n_steps=20, delta_t=0.1, theta=2*math.pi/9, shots=1024):
+
+def simulate_tfim(
+    J_func,
+    h_func,
+    n_qubits=64,
+    lrr=3,
+    lrc=3,
+    n_steps=20,
+    delta_t=0.1,
+    theta=2 * math.pi / 9,
+    shots=1024,
+):
     sim = QrackAceBackend(n_qubits, long_range_rows=lrr, long_range_columns=lrc)
-    
+
     for q in range(n_qubits):
         sim.r(Pauli.PauliY, theta, q)
 
@@ -35,7 +47,7 @@ def simulate_tfim(J_func, h_func, n_qubits=64, lrr=3, lrc=3, n_steps=20, delta_t
         J_t = J_func(step * delta_t)
         h_t = h_func(step * delta_t)
         apply_tfim_step(sim, qubits, J_t, h_t, delta_t)
-    
+
         samples = sim.measure_shots(qubits, shots)
 
         magnetization = 0
@@ -49,6 +61,7 @@ def simulate_tfim(J_func, h_func, n_qubits=64, lrr=3, lrc=3, n_steps=20, delta_t
         magnetizations.append(magnetization)
 
     return magnetizations
+
 
 # Dynamic J(t) generator
 def generate_Jt(n_nodes, t):
@@ -73,11 +86,12 @@ def generate_Jt(n_nodes, t):
 
     return J
 
+
 def generate_ht(n_nodes, t):
     # We can program h(q, t) for spatial-temporal locality.
     h = np.zeros(n_nodes)
     # Time-varying transverse field
-    c = 0.5  * np.cos(t * math.pi / 10)
+    c = 0.5 * np.cos(t * math.pi / 10)
     # We can program for spatial locality, but we don't.
     #  n_sqrt = math.sqrt(n_nodes)
     for i in range(n_nodes):
@@ -86,6 +100,7 @@ def generate_ht(n_nodes, t):
         h[i] = c
 
     return h
+
 
 if __name__ == "__main__":
     # Example usage
@@ -99,11 +114,17 @@ if __name__ == "__main__":
     J_func = lambda t: generate_Jt(n_qubits, t)
     h_func = lambda t: generate_ht(n_qubits, t)
 
-    mag = simulate_tfim(J_func, h_func, n_qubits, lrr, lrc, n_steps, delta_t, theta, shots)
+    mag = simulate_tfim(
+        J_func, h_func, n_qubits, lrr, lrc, n_steps, delta_t, theta, shots
+    )
     ylim = ((min(mag) * 100) // 10) / 10
     plt.figure(figsize=(14, 14))
-    plt.plot(list(range(1, n_steps+1)), mag, marker="o", linestyle="-")
-    plt.title("Supply Chain Resilience over Time (Magnetization vs Trotter Depth, " + str(n_qubits) + " Qubits)")
+    plt.plot(list(range(1, n_steps + 1)), mag, marker="o", linestyle="-")
+    plt.title(
+        "Supply Chain Resilience over Time (Magnetization vs Trotter Depth, "
+        + str(n_qubits)
+        + " Qubits)"
+    )
     plt.xlabel("Trotter Depth")
     plt.ylabel("Magnetization")
     plt.ylim(ylim, 1.0)
