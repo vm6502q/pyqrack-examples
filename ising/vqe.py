@@ -318,7 +318,7 @@ def trotter_step(lattice_shape, J, h, dt):
 
 # Step 8: Optimize the Energy
 @qml.qnode(dev)
-def circuit(rows, cols, steps=40):
+def circuit(rows, cols, steps=60):
     for q in range(rows * cols):
         qml.Hadamard(wires=q)
     for step in range(steps):
@@ -326,6 +326,6 @@ def circuit(rows, cols, steps=40):
 
     return qml.expval(hamiltonian)
 
-steps = 40
+steps = 60
 energy = circuit(rows, cols, steps)
 print(f"Energy = {energy} Ha")
