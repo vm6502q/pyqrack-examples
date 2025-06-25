@@ -20,8 +20,6 @@ def factor_width(width, is_transpose=False):
     col_len = math.floor(math.sqrt(width))
     while ((width // col_len) * col_len) != width:
         col_len -= 1
-    if col_len == 1:
-        raise Exception("ERROR: Can't simulate prime number width!")
     row_len = width // col_len
 
     return (col_len, row_len) if is_transpose else (row_len, col_len)

@@ -107,8 +107,6 @@ def factor_width(width):
     while ((width // col_len) * col_len) != width:
         col_len -= 1
     row_len = width // col_len
-    if col_len == 1:
-        raise Exception("ERROR: Can't simulate prime number width!")
 
     return row_len, col_len
 
