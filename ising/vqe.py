@@ -322,7 +322,7 @@ def circuit(rows, cols, steps=60):
     for q in range(rows * cols):
         qml.Hadamard(wires=q)
     for step in range(steps):
-        trotter_step((rows, cols), J=1.0, h=1.0, dt=0.1)()
+        trotter_step((rows, cols), J=-1.0, h=1.0, dt=0.25)()
 
     return qml.expval(hamiltonian)
 
