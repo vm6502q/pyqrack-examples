@@ -50,6 +50,10 @@ def trotter_step(circ, qubits, lattice_shape, J, h, dt):
         for c in range(1, n_cols - 1, 2)
     ]
     add_rzz_pairs(horiz_pairs)
+    
+    # horizontal wrap
+    wrap_pairs = [(r*n_cols + (n_cols-1), r*n_cols) for r in range(n_rows)]
+    add_rzz_pairs(wrap_pairs)
 
     # Layer 3: vertical pairs (even columns)
     vert_pairs = [
@@ -66,6 +70,10 @@ def trotter_step(circ, qubits, lattice_shape, J, h, dt):
         for c in range(n_cols)
     ]
     add_rzz_pairs(vert_pairs)
+
+    # vertical wrap
+    wrap_pairs = [((n_rows-1)*n_cols + c, c) for c in range(n_cols)]
+    add_rzz_pairs(wrap_pairs)
 
     # Second half of transverse field term
     for q in qubits:
@@ -92,7 +100,7 @@ def main():
 
     n_rows, n_cols = factor_width(n_qubits, reverse)
     J, h, dt = -1.0, 2.0, 0.25
-    theta = -math.pi / 6
+    theta = 2 * math.pi / 9
 
     qc = QuantumCircuit(n_qubits)
 

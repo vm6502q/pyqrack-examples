@@ -26,13 +26,17 @@ def factor_width(width, is_transpose=False):
 
 def trotter_step(circ, qubits, lattice_shape, J, h, dt):
     n_rows, n_cols = lattice_shape
+
+    # First half of transverse field term
     for q in qubits:
         circ.rx(h * dt / 2, q)
 
+    # Layered RZZ interactions (simulate 2D nearest-neighbor coupling)
     def add_rzz_pairs(pairs):
         for q1, q2 in pairs:
             circ.append(RZZGate(2 * J * dt), [q1, q2])
 
+    # Layer 1: horizontal pairs (even rows)
     horiz_pairs = [
         (r * n_cols + c, r * n_cols + (c + 1) % n_cols)
         for r in range(n_rows)
@@ -40,13 +44,19 @@ def trotter_step(circ, qubits, lattice_shape, J, h, dt):
     ]
     add_rzz_pairs(horiz_pairs)
 
+    # Layer 2: horizontal pairs (odd rows)
     horiz_pairs = [
         (r * n_cols + c, r * n_cols + (c + 1) % n_cols)
         for r in range(n_rows)
         for c in range(1, n_cols - 1, 2)
     ]
     add_rzz_pairs(horiz_pairs)
+    
+    # horizontal wrap
+    wrap_pairs = [(r*n_cols + (n_cols-1), r*n_cols) for r in range(n_rows)]
+    add_rzz_pairs(wrap_pairs)
 
+    # Layer 3: vertical pairs (even columns)
     vert_pairs = [
         (r * n_cols + c, ((r + 1) % n_rows) * n_cols + c)
         for r in range(0, n_rows - 1, 2)
@@ -54,6 +64,7 @@ def trotter_step(circ, qubits, lattice_shape, J, h, dt):
     ]
     add_rzz_pairs(vert_pairs)
 
+    # Layer 4: vertical pairs (odd columns)
     vert_pairs = [
         (r * n_cols + c, ((r + 1) % n_rows) * n_cols + c)
         for r in range(1, n_rows - 1, 2)
@@ -61,6 +72,11 @@ def trotter_step(circ, qubits, lattice_shape, J, h, dt):
     ]
     add_rzz_pairs(vert_pairs)
 
+    # vertical wrap
+    wrap_pairs = [((n_rows-1)*n_cols + c, c) for c in range(n_cols)]
+    add_rzz_pairs(wrap_pairs)
+
+    # Second half of transverse field term
     for q in qubits:
         circ.rx(h * dt / 2, q)
 
@@ -130,7 +146,7 @@ def main():
 
     qc = QuantumCircuit(n_qubits)
     for q in range(n_qubits):
-        qc.ry(theta / 2, q)
+        qc.ry(theta, q)
 
     step = QuantumCircuit(n_qubits)
     trotter_step(step, list(range(n_qubits)), (n_rows, n_cols), J, h, dt)
