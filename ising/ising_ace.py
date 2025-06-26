@@ -52,9 +52,9 @@ def trotter_step(circ, qubits, lattice_shape, J, h, dt):
         for c in range(1, n_cols - 1, 2)
     ]
     add_rzz_pairs(horiz_pairs)
-    
+
     # horizontal wrap
-    wrap_pairs = [(r*n_cols + (n_cols-1), r*n_cols) for r in range(n_rows)]
+    wrap_pairs = [(r * n_cols + (n_cols - 1), r * n_cols) for r in range(n_rows)]
     add_rzz_pairs(wrap_pairs)
 
     # Layer 3: vertical pairs (even columns)
@@ -74,7 +74,7 @@ def trotter_step(circ, qubits, lattice_shape, J, h, dt):
     add_rzz_pairs(vert_pairs)
 
     # vertical wrap
-    wrap_pairs = [((n_rows-1)*n_cols + c, c) for c in range(n_cols)]
+    wrap_pairs = [((n_rows - 1) * n_cols + c, c) for c in range(n_cols)]
     add_rzz_pairs(wrap_pairs)
 
     # Second half of transverse field term
