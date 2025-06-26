@@ -57,7 +57,7 @@ def trotter_step(circ, qubits, lattice_shape, J, h, dt):
     add_rzz_pairs(horiz_pairs)
 
     # horizontal wrap
-    if (n_rows & 1) == 0:
+    if (n_cols & 1) == 0:
         wrap_pairs = [(r * n_cols + (n_cols - 1), r * n_cols) for r in range(n_rows)]
         add_rzz_pairs(wrap_pairs)
 
@@ -78,7 +78,7 @@ def trotter_step(circ, qubits, lattice_shape, J, h, dt):
     add_rzz_pairs(vert_pairs)
 
     # vertical wrap
-    if (n_cols & 1) == 0:
+    if (n_rows & 1) == 0:
         wrap_pairs = [((n_rows - 1) * n_cols + c, c) for c in range(n_cols)]
         add_rzz_pairs(wrap_pairs)
 
