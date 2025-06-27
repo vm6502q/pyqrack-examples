@@ -28,13 +28,13 @@ def factor_width(width):
 
 def trotter_step(circ, qubits, lattice_shape, J, h, dt, is_odd):
     n_rows, n_cols = lattice_shape
-    
-    c_offset = (0 if is_odd and ((n_cols & 1) == 0) else 1)
-    r_offset = (0 if is_odd and ((n_rows & 1) == 0) else 1)
 
     # First half of transverse field term
     for q in qubits:
         circ.rx(h * dt / 2, q)
+
+    a_offset = (1 if is_odd else 0)
+    b_offset = (0 if is_odd else 1)
 
     # Layered RZZ interactions (simulate 2D nearest-neighbor coupling)
     def add_rzz_pairs(pairs):
@@ -45,7 +45,7 @@ def trotter_step(circ, qubits, lattice_shape, J, h, dt, is_odd):
     horiz_pairs = [
         (r * n_cols + c, r * n_cols + (c + 1) % n_cols)
         for r in range(n_rows)
-        for c in range(0, n_cols - c_offset, 2)
+        for c in range(a_offset, n_cols - 1, 2)
     ]
     add_rzz_pairs(horiz_pairs)
 
@@ -53,19 +53,19 @@ def trotter_step(circ, qubits, lattice_shape, J, h, dt, is_odd):
     horiz_pairs = [
         (r * n_cols + c, r * n_cols + (c + 1) % n_cols)
         for r in range(n_rows)
-        for c in range(1, n_cols, 2)
+        for c in range(b_offset, n_cols - 1, 2)
     ]
     add_rzz_pairs(horiz_pairs)
 
     # horizontal wrap
-    if (not is_odd) and ((n_cols & 1) == 0):
+    if (n_cols & 1) == 0:
         wrap_pairs = [(r * n_cols + (n_cols - 1), r * n_cols) for r in range(n_rows)]
         add_rzz_pairs(wrap_pairs)
 
     # Layer 3: vertical pairs (even columns)
     vert_pairs = [
         (r * n_cols + c, ((r + 1) % n_rows) * n_cols + c)
-        for r in range(0, n_rows - r_offset, 2)
+        for r in range(b_offset, n_rows - 1, 2)
         for c in range(n_cols)
     ]
     add_rzz_pairs(vert_pairs)
@@ -73,13 +73,13 @@ def trotter_step(circ, qubits, lattice_shape, J, h, dt, is_odd):
     # Layer 4: vertical pairs (odd columns)
     vert_pairs = [
         (r * n_cols + c, ((r + 1) % n_rows) * n_cols + c)
-        for r in range(1, n_rows, 2)
+        for r in range(a_offset, n_rows - 1, 2)
         for c in range(n_cols)
     ]
     add_rzz_pairs(vert_pairs)
 
     # vertical wrap
-    if (not is_odd) and ((n_rows & 1) == 0):
+    if (n_rows & 1) == 0:
         wrap_pairs = [((n_rows - 1) * n_cols + c, c) for c in range(n_cols)]
         add_rzz_pairs(wrap_pairs)
 
