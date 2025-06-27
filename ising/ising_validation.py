@@ -30,7 +30,7 @@ def trotter_step(circ, qubits, lattice_shape, J, h, dt, is_odd):
     n_rows, n_cols = lattice_shape
 
     # We want to make an alternating "checkerboard" or "brick-wall" pattern that barely doesn't
-    # overlap gates in the same step whether the row and column counts are even or odd
+    # overlap gates in the same layer whether the row and column counts are even or odd
     # (though "is_odd" corresponds to even-or-odd depth step, not spatial parity).
     a_offset = 1 if is_odd else 0
     b_offset = 0 if is_odd else 1
