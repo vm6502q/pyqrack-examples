@@ -27,6 +27,9 @@ def factor_width(width, reverse=False):
 
 def trotter_step(circ, qubits, lattice_shape, J, h, dt, is_odd):
     n_rows, n_cols = lattice_shape
+    
+    c_offset = (0 if is_odd and ((n_cols & 1) == 0) else 1)
+    r_offset = (0 if is_odd and ((n_rows & 1) == 0) else 1)
 
     # First half of transverse field term
     for q in qubits:
@@ -41,7 +44,7 @@ def trotter_step(circ, qubits, lattice_shape, J, h, dt, is_odd):
     horiz_pairs = [
         (r * n_cols + c, r * n_cols + (c + 1) % n_cols)
         for r in range(n_rows)
-        for c in range(0, n_cols - (0 if is_odd else 1), 2)
+        for c in range(0, n_cols - c_offset, 2)
     ]
     add_rzz_pairs(horiz_pairs)
 
@@ -49,7 +52,7 @@ def trotter_step(circ, qubits, lattice_shape, J, h, dt, is_odd):
     horiz_pairs = [
         (r * n_cols + c, r * n_cols + (c + 1) % n_cols)
         for r in range(n_rows)
-        for c in range(1, n_cols - 1, 2)
+        for c in range(1, n_cols, 2)
     ]
     add_rzz_pairs(horiz_pairs)
 
@@ -61,7 +64,7 @@ def trotter_step(circ, qubits, lattice_shape, J, h, dt, is_odd):
     # Layer 3: vertical pairs (even columns)
     vert_pairs = [
         (r * n_cols + c, ((r + 1) % n_rows) * n_cols + c)
-        for r in range(0, n_rows - (0 if is_odd else 1), 2)
+        for r in range(0, n_rows - r_offset, 2)
         for c in range(n_cols)
     ]
     add_rzz_pairs(vert_pairs)
