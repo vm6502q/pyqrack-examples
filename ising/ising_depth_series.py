@@ -25,7 +25,7 @@ def factor_width(width, reverse=False):
     return (col_len, row_len) if reverse else (row_len, col_len)
 
 
-def trotter_step(circ, qubits, lattice_shape, J, h, dt):
+def trotter_step(circ, qubits, lattice_shape, J, h, dt, is_odd):
     n_rows, n_cols = lattice_shape
 
     # First half of transverse field term
@@ -41,7 +41,7 @@ def trotter_step(circ, qubits, lattice_shape, J, h, dt):
     horiz_pairs = [
         (r * n_cols + c, r * n_cols + (c + 1) % n_cols)
         for r in range(n_rows)
-        for c in range(0, n_cols - 1, 2)
+        for c in range(1 if is_odd else 0, n_cols, 2)
     ]
     add_rzz_pairs(horiz_pairs)
 
@@ -49,14 +49,19 @@ def trotter_step(circ, qubits, lattice_shape, J, h, dt):
     horiz_pairs = [
         (r * n_cols + c, r * n_cols + (c + 1) % n_cols)
         for r in range(n_rows)
-        for c in range(1, n_cols - 1, 2)
+        for c in range(0 if is_odd else 1, n_cols, 2)
     ]
     add_rzz_pairs(horiz_pairs)
+
+    # horizontal wrap
+    if (n_cols & 1) == 0:
+        wrap_pairs = [(r * n_cols + (n_cols - 1), r * n_cols) for r in range(n_rows)]
+        add_rzz_pairs(wrap_pairs)
 
     # Layer 3: vertical pairs (even columns)
     vert_pairs = [
         (r * n_cols + c, ((r + 1) % n_rows) * n_cols + c)
-        for r in range(0, n_rows - 1, 2)
+        for r in range(1 if is_odd else 0, n_rows, 2)
         for c in range(n_cols)
     ]
     add_rzz_pairs(vert_pairs)
@@ -64,10 +69,15 @@ def trotter_step(circ, qubits, lattice_shape, J, h, dt):
     # Layer 4: vertical pairs (odd columns)
     vert_pairs = [
         (r * n_cols + c, ((r + 1) % n_rows) * n_cols + c)
-        for r in range(1, n_rows - 1, 2)
+        for r in range(0 if is_odd else 1, n_rows, 2)
         for c in range(n_cols)
     ]
     add_rzz_pairs(vert_pairs)
+
+    # vertical wrap
+    if (n_rows & 1) == 0:
+        wrap_pairs = [((n_rows - 1) * n_cols + c, c) for c in range(n_cols)]
+        add_rzz_pairs(wrap_pairs)
 
     # Second half of transverse field term
     for q in qubits:
@@ -114,9 +124,6 @@ def main():
     for q in range(n_qubits):
         qc.ry(theta / 2, q)
 
-    step = QuantumCircuit(n_qubits)
-    trotter_step(step, list(range(n_qubits)), (n_rows, n_cols), J, h, dt)
-
     basis_gates = [
         "id",
         "u",
@@ -146,6 +153,22 @@ def main():
         "reset",
         "measure",
     ]
+
+    even_step = QuantumCircuit(n_qubits)
+    trotter_step(even_step, list(range(n_qubits)), (n_rows, n_cols), J, h, dt, False)
+    even_step = transpile(
+        even_step,
+        optimization_level=3,
+        basis_gates=basis_gates,
+    )
+    odd_step = QuantumCircuit(n_qubits)
+    trotter_step(odd_step, list(range(n_qubits)), (n_rows, n_cols), J, h, dt, True)
+    odd_step = transpile(
+        odd_step,
+        optimization_level=3,
+        basis_gates=basis_gates,
+    )
+
     step = transpile(step, optimization_level=3, basis_gates=basis_gates)
 
     experiment = QrackSimulator(n_qubits, isTensorNetwork=False)
@@ -157,7 +180,7 @@ def main():
     start = time.perf_counter()
     experiment.run_qiskit_circuit(qc)
     for d in depths:
-        experiment.run_qiskit_circuit(step)
+        experiment.run_qiskit_circuit(odd_step if d & 1 else even_step)
         experiment_samples = experiment.measure_shots(list(range(n_qubits)), shots)
 
         magnetization = 0

@@ -181,8 +181,8 @@ def main():
     for q in range(n_qubits):
         qc.ry(theta, q)
 
-    for _ in range(depth):
-        trotter_step(qc, list(range(n_qubits)), (n_rows, n_cols), J, h, dt)
+    for d in range(depth):
+        trotter_step(qc, list(range(n_qubits)), (n_rows, n_cols), J, h, dt, (d & 1) == 1)
 
     basis_gates = [
         "u",

@@ -24,7 +24,7 @@ def factor_width(width, is_transpose=False):
     return (col_len, row_len) if is_transpose else (row_len, col_len)
 
 
-def trotter_step(circ, qubits, lattice_shape, J, h, dt):
+def trotter_step(circ, qubits, lattice_shape, J, h, dt, is_odd):
     n_rows, n_cols = lattice_shape
 
     # First half of transverse field term
@@ -40,7 +40,7 @@ def trotter_step(circ, qubits, lattice_shape, J, h, dt):
     horiz_pairs = [
         (r * n_cols + c, r * n_cols + (c + 1) % n_cols)
         for r in range(n_rows)
-        for c in range(0, n_cols - 1, 2)
+        for c in range(0, n_cols - (0 if is_odd else 1), 2)
     ]
     add_rzz_pairs(horiz_pairs)
 
@@ -53,13 +53,14 @@ def trotter_step(circ, qubits, lattice_shape, J, h, dt):
     add_rzz_pairs(horiz_pairs)
 
     # horizontal wrap
-    wrap_pairs = [(r * n_cols + (n_cols - 1), r * n_cols) for r in range(n_rows)]
-    add_rzz_pairs(wrap_pairs)
+    if not is_odd and ((n_cols & 1) == 0):
+        wrap_pairs = [(r * n_cols + (n_cols - 1), r * n_cols) for r in range(n_rows)]
+        add_rzz_pairs(wrap_pairs)
 
     # Layer 3: vertical pairs (even columns)
     vert_pairs = [
         (r * n_cols + c, ((r + 1) % n_rows) * n_cols + c)
-        for r in range(0, n_rows - 1, 2)
+        for r in range(0, n_rows - (0 if is_odd else 1), 2)
         for c in range(n_cols)
     ]
     add_rzz_pairs(vert_pairs)
@@ -67,14 +68,15 @@ def trotter_step(circ, qubits, lattice_shape, J, h, dt):
     # Layer 4: vertical pairs (odd columns)
     vert_pairs = [
         (r * n_cols + c, ((r + 1) % n_rows) * n_cols + c)
-        for r in range(1, n_rows - 1, 2)
+        for r in range(1, n_rows, 2)
         for c in range(n_cols)
     ]
     add_rzz_pairs(vert_pairs)
 
     # vertical wrap
-    wrap_pairs = [((n_rows - 1) * n_cols + c, c) for c in range(n_cols)]
-    add_rzz_pairs(wrap_pairs)
+    if not is_odd and ((n_rows & 1) == 0):
+        wrap_pairs = [((n_rows - 1) * n_cols + c, c) for c in range(n_cols)]
+        add_rzz_pairs(wrap_pairs)
 
     # Second half of transverse field term
     for q in qubits:
@@ -148,16 +150,24 @@ def main():
     for q in range(n_qubits):
         qc.ry(theta, q)
 
-    step = QuantumCircuit(n_qubits)
-    trotter_step(step, list(range(n_qubits)), (n_rows, n_cols), J, h, dt)
-    step = transpile(
-        step,
+    dummy_backend = AceQasmSimulator(
+        n_qubits=n_qubits,
+        long_range_columns=long_range_columns,
+        long_range_rows=long_range_rows,
+    )
+    even_step = QuantumCircuit(n_qubits)
+    trotter_step(even_step, list(range(n_qubits)), (n_rows, n_cols), J, h, dt, False)
+    even_step = transpile(
+        even_step,
         optimization_level=3,
-        backend=AceQasmSimulator(
-            n_qubits=n_qubits,
-            long_range_columns=long_range_columns,
-            long_range_rows=long_range_rows,
-        ),
+        backend=dummy_backend,
+    )
+    odd_step = QuantumCircuit(n_qubits)
+    trotter_step(odd_step, list(range(n_qubits)), (n_rows, n_cols), J, h, dt, True)
+    odd_step = transpile(
+        odd_step,
+        optimization_level=3,
+        backend=dummy_backend,
     )
 
     free_energies = []
@@ -174,7 +184,7 @@ def main():
 
         experiment.run_qiskit_circuit(qc)
         for d in range(depth):
-            experiment.run_qiskit_circuit(step)
+            experiment.run_qiskit_circuit(odd_step if d & 1 else even_step)
             z_samples = experiment.measure_shots(list(range(n_qubits)), shots)
             E_z = compute_z_energy(z_samples, n_qubits, J=J)
             S = estimate_entropy(z_samples)
