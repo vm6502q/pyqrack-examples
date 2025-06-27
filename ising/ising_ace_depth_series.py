@@ -31,12 +31,15 @@ def factor_width(width, is_transpose=False):
 def trotter_step(circ, qubits, lattice_shape, J, h, dt, is_odd):
     n_rows, n_cols = lattice_shape
 
+    # We want to make an alternating "checkerboard" or "brick-wall" pattern that barely doesn't
+    # overlap gates in the same step whether the row and column counts are even or odd
+    # (though "is_odd" corresponds to even-or-odd depth step, not spatial parity).
+    a_offset = 1 if is_odd else 0
+    b_offset = 0 if is_odd else 1
+
     # First half of transverse field term
     for q in qubits:
         circ.rx(h * dt / 2, q)
-
-    a_offset = (1 if is_odd else 0)
-    b_offset = (0 if is_odd else 1)
 
     # Layered RZZ interactions (simulate 2D nearest-neighbor coupling)
     def add_rzz_pairs(pairs):
@@ -74,6 +77,7 @@ def trotter_step(circ, qubits, lattice_shape, J, h, dt, is_odd):
         for c in range(n_cols)
     ]
     add_rzz_pairs(vert_pairs)
+
     # Second half of transverse field term
     for q in qubits:
         circ.rx(h * dt / 2, q)
@@ -112,7 +116,7 @@ def main():
     n_rows, n_cols = factor_width(n_qubits, False)
 
     # Quantinuum settings
-    J, h, dt = -1.0, 2.0, 0.25
+    J, h, dt = -1.0, 2.0, 0.05
     theta = 2 * math.pi / 9
 
     # Pure ferromagnetic
