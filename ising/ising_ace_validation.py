@@ -91,6 +91,8 @@ def calc_stats(n, ideal_probs, counts, shots, depth, hamming_n):
     n_pow = 2**n
     threshold = statistics.median(ideal_probs)
     u_u = statistics.mean(ideal_probs)
+    numer = 0
+    denom = 0
     diff_sqr = 0
     sum_hog_counts = 0
     experiment = [0] * n_pow
@@ -107,6 +109,11 @@ def calc_stats(n, ideal_probs, counts, shots, depth, hamming_n):
         if ideal > threshold:
             sum_hog_counts += count
 
+        # XEB / EPLG
+        ideal_centered = ideal - u_u
+        denom += ideal_centered * ideal_centered
+        numer += ideal_centered * ((count / shots) - u_u)
+
     l2_similarity = 1 - diff_sqr ** (1 / 2)
     hog_prob = sum_hog_counts / shots
 
@@ -120,11 +127,14 @@ def calc_stats(n, ideal_probs, counts, shots, depth, hamming_n):
     ]
     avg_hamming_distance = np.mean(min_distances)
 
+    xeb = numer / denom
+
     return {
         "qubits": n,
         "depth": depth,
         "l2_similarity": float(l2_similarity),
         "hog_prob": hog_prob,
+        "xeb": xeb,
         "hamming_distance_n": min(hamming_n, n_pow >> 1),
         "hamming_distance_set_avg": float(avg_hamming_distance),
         "hamming_fidelity_heuristic": 1 - 2 * float(avg_hamming_distance) / n,
@@ -175,9 +185,9 @@ def main():
     print("Devices: " + str(devices))
 
     n_rows, n_cols = factor_width(n_qubits, False)
-    J, h, dt = -1.0, 2.0, 0.25
+    J, h, dt = -1.0, 2.0, 0.05
     theta = 2 * math.pi / 9
-    shots = min(hamming_n << 4, 1 << (n_qubits + 2))
+    shots = 1 << (n_qubits + 2)
 
     qc = QuantumCircuit(n_qubits)
 
