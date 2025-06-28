@@ -83,16 +83,13 @@ def trotter_step(circ, qubits, lattice_shape, J, h, dt, is_odd):
     return circ
 
 
-def calc_stats(ideal_probs, counts, shots, depth, ace_fidelity_est, hamming_n):
+def calc_stats(n, ideal_probs, counts, shots, depth, hamming_n):
     # For QV, we compare probabilities of (ideal) "heavy outputs."
     # If the probability is above 2/3, the protocol certifies/passes the qubit width.
-    n_pow = len(ideal_probs)
-    n = int(round(math.log2(n_pow)))
+    n_pow = 2**n
     threshold = statistics.median(ideal_probs)
     u_u = statistics.mean(ideal_probs)
     diff_sqr = 0
-    numer = 0
-    denom = 0
     sum_hog_counts = 0
     experiment = [0] * n_pow
     for i in range(n_pow):
@@ -104,17 +101,12 @@ def calc_stats(ideal_probs, counts, shots, depth, ace_fidelity_est, hamming_n):
         # L2 distance
         diff_sqr += (ideal - (count / shots)) ** 2
 
-        # XEB / EPLG
-        denom += (ideal - u_u) ** 2
-        numer += (ideal - u_u) * ((count / shots) - u_u)
-
         # QV / HOG
         if ideal > threshold:
             sum_hog_counts += count
 
     l2_similarity = 1 - diff_sqr ** (1 / 2)
     hog_prob = sum_hog_counts / shots
-    xeb = numer / denom
 
     exp_top_n = top_n(hamming_n, experiment)
     con_top_n = top_n(hamming_n, ideal_probs)
@@ -129,12 +121,11 @@ def calc_stats(ideal_probs, counts, shots, depth, ace_fidelity_est, hamming_n):
     return {
         "qubits": n,
         "depth": depth,
-        "ace_fidelity_est": ace_fidelity_est,
-        "l2_similarity": l2_similarity,
-        "xeb": xeb,
+        "l2_similarity": float(l2_similarity),
         "hog_prob": hog_prob,
         "hamming_distance_n": min(hamming_n, n_pow >> 1),
-        "hamming_distance_set_avg": avg_hamming_distance,
+        "hamming_distance_set_avg": float(avg_hamming_distance),
+        "hamming_fidelity_heuristic": 1 - float(avg_hamming_distance) / n,
     }
 
 
@@ -211,7 +202,6 @@ def main():
     experiment = QrackSimulator(n_qubits)
     control = AerSimulator(method="statevector")
     experiment.run_qiskit_circuit(qc)
-    experiment_fidelity = experiment.get_unitary_fidelity()
     qc.save_statevector()
     job = control.run(qc)
     experiment_counts = dict(
@@ -220,14 +210,7 @@ def main():
     control_probs = Statevector(job.result().get_statevector()).probabilities()
 
     print(
-        calc_stats(
-            control_probs,
-            experiment_counts,
-            shots,
-            depth,
-            experiment_fidelity,
-            hamming_n,
-        )
+        calc_stats(n_qubits, control_probs, experiment_counts, shots, depth, hamming_n)
     )
 
     return 0
