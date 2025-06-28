@@ -125,7 +125,7 @@ def calc_stats(n, ideal_probs, counts, shots, depth, hamming_n):
         "hog_prob": hog_prob,
         "hamming_distance_n": min(hamming_n, n_pow >> 1),
         "hamming_distance_set_avg": float(avg_hamming_distance),
-        "hamming_fidelity_heuristic": 1 - float(avg_hamming_distance) / n,
+        "hamming_fidelity_heuristic": 1 - 2 * float(avg_hamming_distance) / n,
     }
 
 
