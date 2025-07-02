@@ -155,7 +155,7 @@ def main():
         backend=dummy_backend,
     )
 
-    depths = list(range(1, depth + 1))
+    depths = list(range(0, depth + 1))
     min_sqr_mag = 1
     results = []
     magnetizations = []
@@ -174,7 +174,8 @@ def main():
         start = time.perf_counter()
         experiment.run_qiskit_circuit(qc)
         for d in depths:
-            experiment.run_qiskit_circuit(odd_step if d & 1 else even_step)
+            if d > 0:
+                experiment.run_qiskit_circuit(odd_step if d & 1 else even_step)
             experiment_samples = experiment.measure_shots(list(range(n_qubits)), shots)
 
             magnetization = 0
