@@ -102,7 +102,7 @@ def main():
 
     # Quantinuum settings
     J, h, dt = -1.0, 2.0, 0.25
-    theta = 2 * math.pi / 9
+    theta = math.pi / 18
 
     # Pure ferromagnetic
     # J, h, dt = -1.0, 0.0, 0.25
@@ -118,7 +118,7 @@ def main():
 
     qc = QuantumCircuit(n_qubits)
     for q in range(n_qubits):
-        qc.ry(theta / 2, q)
+        qc.ry(2 * theta, q)
 
     basis_gates = [
         "id",
