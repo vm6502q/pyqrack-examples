@@ -133,7 +133,7 @@ def main():
 
     qc = QuantumCircuit(n_qubits)
     for q in range(n_qubits):
-        qc.ry(2 * theta, q)
+        qc.ry(theta, q)
 
     dummy_backend = AceQasmSimulator(
         n_qubits=n_qubits,
