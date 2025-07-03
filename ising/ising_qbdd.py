@@ -26,7 +26,7 @@ def trotter_step(circ, qubits, lattice_shape, J, h, dt):
 
     # First half of transverse field term
     for q in qubits:
-        circ.rx(h * dt / 2, q)
+        circ.rx(h * dt, q)
 
     # Layered RZZ interactions (simulate 2D nearest-neighbor coupling)
     def add_rzz_pairs(pairs):
@@ -67,7 +67,7 @@ def trotter_step(circ, qubits, lattice_shape, J, h, dt):
 
     # Second half of transverse field term
     for q in qubits:
-        circ.rx(h * dt / 2, q)
+        circ.rx(h * dt, q)
 
     return circ
 
