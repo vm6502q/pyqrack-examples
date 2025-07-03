@@ -24,14 +24,8 @@ def factor_width(width, is_transpose=False):
     return (col_len, row_len) if is_transpose else (row_len, col_len)
 
 
-def trotter_step(circ, qubits, lattice_shape, J, h, dt, is_odd):
+def trotter_step(circ, qubits, lattice_shape, J, h, dt):
     n_rows, n_cols = lattice_shape
-
-    # We want to make an alternating "checkerboard" or "brick-wall" pattern that barely doesn't
-    # overlap gates in the same layer whether the row and column counts are even or odd
-    # (though "is_odd" corresponds to even-or-odd depth step, not spatial parity).
-    a_offset = 1 if is_odd else 0
-    b_offset = 0 if is_odd else 1
 
     # First half of transverse field term
     for q in qubits:
@@ -46,7 +40,7 @@ def trotter_step(circ, qubits, lattice_shape, J, h, dt, is_odd):
     horiz_pairs = [
         (r * n_cols + c, r * n_cols + (c + 1) % n_cols)
         for r in range(n_rows)
-        for c in range(a_offset, n_cols - b_offset, 2)
+        for c in range(0, n_cols, 2)
     ]
     add_rzz_pairs(horiz_pairs)
 
@@ -54,14 +48,14 @@ def trotter_step(circ, qubits, lattice_shape, J, h, dt, is_odd):
     horiz_pairs = [
         (r * n_cols + c, r * n_cols + (c + 1) % n_cols)
         for r in range(n_rows)
-        for c in range(b_offset, n_cols - a_offset, 2)
+        for c in range(1, n_cols, 2)
     ]
     add_rzz_pairs(horiz_pairs)
 
     # Layer 3: vertical pairs (even columns)
     vert_pairs = [
         (r * n_cols + c, ((r + 1) % n_rows) * n_cols + c)
-        for r in range(b_offset, n_rows - a_offset, 2)
+        for r in range(1, n_rows, 2)
         for c in range(n_cols)
     ]
     add_rzz_pairs(vert_pairs)
@@ -69,7 +63,7 @@ def trotter_step(circ, qubits, lattice_shape, J, h, dt, is_odd):
     # Layer 4: vertical pairs (odd columns)
     vert_pairs = [
         (r * n_cols + c, ((r + 1) % n_rows) * n_cols + c)
-        for r in range(a_offset, n_rows - b_offset, 2)
+        for r in range(0, n_rows, 2)
         for c in range(n_cols)
     ]
     add_rzz_pairs(vert_pairs)
@@ -151,17 +145,10 @@ def main():
         long_range_columns=long_range_columns,
         long_range_rows=long_range_rows,
     )
-    even_step = QuantumCircuit(n_qubits)
-    trotter_step(even_step, list(range(n_qubits)), (n_rows, n_cols), J, h, dt, False)
-    even_step = transpile(
-        even_step,
-        optimization_level=3,
-        backend=dummy_backend,
-    )
-    odd_step = QuantumCircuit(n_qubits)
-    trotter_step(odd_step, list(range(n_qubits)), (n_rows, n_cols), J, h, dt, True)
-    odd_step = transpile(
-        odd_step,
+    step = QuantumCircuit(n_qubits)
+    trotter_step(step, list(range(n_qubits)), (n_rows, n_cols), J, h, dt, False)
+    step = transpile(
+        step,
         optimization_level=3,
         backend=dummy_backend,
     )
@@ -180,7 +167,7 @@ def main():
 
         experiment.run_qiskit_circuit(qc)
         for d in range(depth):
-            experiment.run_qiskit_circuit(odd_step if d & 1 else even_step)
+            experiment.run_qiskit_circuit(step)
             z_samples = experiment.measure_shots(list(range(n_qubits)), shots)
             E_z = compute_z_energy(z_samples, n_qubits, J=J)
             S = estimate_entropy(z_samples)
