@@ -5,6 +5,8 @@ import math
 import sys
 import time
 
+import numpy as np
+
 from collections import Counter
 
 import matplotlib.pyplot as plt
@@ -77,10 +79,10 @@ def trotter_step(circ, qubits, lattice_shape, J, h, dt):
 
 
 def main():
-    n_qubits = 64
+    n_qubits = 100
     depth = 20
     shots = 1024
-    sdrp = 0.02375
+    trials = 5
     if len(sys.argv) > 1:
         n_qubits = int(sys.argv[1])
     if len(sys.argv) > 2:
@@ -89,8 +91,8 @@ def main():
         shots = int(sys.argv[3])
     else:
         shots = min(shots, 1 << (n_qubits + 2))
-    if len(sys.argv) > 4:
-        sdrp = float(sys.argv[4])
+    if len(sys.argv) > 6:
+        trials = int(sys.argv[6])
 
     n_rows, n_cols = factor_width(n_qubits, False)
 
@@ -114,91 +116,127 @@ def main():
     for q in range(n_qubits):
         qc.ry(theta, q)
 
-    basis_gates = [
-        "id",
-        "u",
-        "u1",
-        "u2",
-        "u3",
-        "r",
-        "rx",
-        "ry",
-        "rz",
-        "h",
-        "x",
-        "y",
-        "z",
-        "s",
-        "sdg",
-        "sx",
-        "sxdg",
-        "p",
-        "t",
-        "tdg",
-        "cx",
-        "cy",
-        "cz",
-        "swap",
-        "iswap",
-        "reset",
-        "measure",
-    ]
-
     step = QuantumCircuit(n_qubits)
     trotter_step(step, list(range(n_qubits)), (n_rows, n_cols), J, h, dt)
-    even_step = transpile(
+    step = transpile(
         step,
         optimization_level=3,
-        basis_gates=basis_gates,
+        basis_gates=QrackSimulator.get_qiskit_basis_gates(),
     )
 
-    step = transpile(step, optimization_level=3, basis_gates=basis_gates)
-
-    experiment = QrackSimulator(n_qubits, isTensorNetwork=False)
-    experiment.set_sdrp(sdrp)
     depths = list(range(0, depth + 1))
+    min_sqr_mag = 1
     results = []
     magnetizations = []
 
-    start = time.perf_counter()
-    experiment.run_qiskit_circuit(qc)
-    for d in depths:
-        if d > 0:
-            experiment.run_qiskit_circuit(step)
-        experiment_samples = experiment.measure_shots(list(range(n_qubits)), shots)
+    for trial in range(trials):
+        magnetizations.append([])
+        experiment = QrackSimulator(n_qubits)
+        start = time.perf_counter()
+        experiment.run_qiskit_circuit(qc)
+        for d in depths:
+            if d > 0:
+                experiment.run_qiskit_circuit(step)
+            experiment_samples = experiment.measure_shots(list(range(n_qubits)), shots)
 
-        magnetization = 0
-        for sample in experiment_samples:
-            for _ in range(n_qubits):
-                magnetization += -1 if (sample & 1) else 1
-                sample >>= 1
-        magnetization /= shots * n_qubits
+            magnetization = 0
+            sqr_magnetization = 0
+            for sample in experiment_samples:
+                m = 0
+                for _ in range(n_qubits):
+                    m += -1 if (sample & 1) else 1
+                    sample >>= 1
+                m /= n_qubits
+                magnetization += m
+                sqr_magnetization += m * m
+            magnetization /= shots
+            sqr_magnetization /= shots
+            if sqr_magnetization < min_sqr_mag:
+                min_sqr_mag = sqr_magnetization
 
-        seconds = time.perf_counter() - start
+            seconds = time.perf_counter() - start
 
-        results.append(
-            {
-                "width": n_qubits,
-                "depth": d,
-                "magnetization": magnetization,
-                "seconds": seconds,
-            }
+            results.append(
+                {
+                    "width": n_qubits,
+                    "depth": d,
+                    "trial": trial + 1,
+                    "magnetization": magnetization,
+                    "square_magnetization": sqr_magnetization,
+                    "seconds": seconds,
+                }
+            )
+            magnetizations[-1].append(sqr_magnetization)
+
+            print(results[-1])
+
+    if trials < 2:
+        # Plotting (contributed by Elara, an OpenAI custom GPT)
+        ylim = ((min_sqr_mag * 100) // 10) / 10
+
+        plt.plot(depths, magnetizations[0], marker="o", linestyle="-")
+        plt.title(
+            "Square Magnetization vs Trotter Depth (" + str(n_qubits) + " Qubits)"
         )
-        magnetizations.append(magnetization)
+        plt.xlabel("Trotter Depth")
+        plt.ylabel("Square Magnetization")
+        plt.grid(True)
+        plt.xticks(depths)
+        plt.ylim(ylim, 1.0)  # Adjusting y-axis for clearer resolution
+        plt.show()
 
-        print(results[-1])
+        return 0
 
-    ylim = ((min(magnetizations) * 100) // 10) / 10
+    mean_magnetization = np.mean(magnetizations, axis=0)
+    std_magnetization = np.std(magnetizations, axis=0)
 
-    # Plotting (contributed by Elara, an OpenAI custom GPT)
+    ylim = ((min(mean_magnetization) * 100) // 10) / 10
+
+    # Plot with error bands
     plt.figure(figsize=(14, 14))
-    plt.plot(depths, magnetizations, marker="o", linestyle="-")
-    plt.title("Magnetization vs Trotter Depth (" + str(n_qubits) + " Qubits)")
+    plt.errorbar(
+        depths,
+        mean_magnetization,
+        yerr=std_magnetization,
+        fmt="-o",
+        capsize=5,
+        label="Mean ± Std Dev",
+    )
     plt.xlabel("Trotter Depth")
-    plt.ylabel("Magnetization")
+    plt.ylabel("Square Magnetization")
+    plt.title(
+        "Square Magnetization vs Trotter Depth ("
+        + str(n_qubits)
+        + " Qubits, "
+        + str(trials)
+        + " Trials)\nWith Mean and Standard Deviation"
+    )
+    plt.ylim(ylim, 1.0)
     plt.grid(True)
-    plt.xticks(depths)
-    plt.ylim(ylim, 1.0)  # Adjusting y-axis for clearer resolution
+    plt.legend()
+    plt.tight_layout()
+    plt.show()
+
+    ylim = ((min_sqr_mag * 100) // 10) / 10
+
+    # Plot each trial individually
+    plt.figure(figsize=(14, 14))
+    for i, magnetization in enumerate(magnetizations):
+        plt.plot(depths, magnetization, marker="o", label=f"Trial {i + 1}")
+
+    plt.title(
+        "Square Magnetization vs Trotter Depth ("
+        + str(n_qubits)
+        + " Qubits, "
+        + str(trials)
+        + " Trials)"
+    )
+    plt.xlabel("Trotter Depth")
+    plt.ylabel("Square Magnetization")
+    plt.ylim(ylim, 1.0)
+    plt.grid(True)
+    plt.legend([f"Trial {i + 1}" for i in range(trials)], loc="lower left")
+    plt.tight_layout()
     plt.show()
 
     return 0
