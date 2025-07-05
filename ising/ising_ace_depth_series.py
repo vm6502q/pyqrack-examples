@@ -125,23 +125,18 @@ def main():
     # J, h, dt = -1.0, 1.0, 0.25
     # theta = -math.pi / 4
 
-    bias = 0 if abs(J) == abs(h) else ((1 if abs(J) > abs(h) else -1) / (1 << 20))
+    bias = 0 if abs(J) == abs(h) else ((1 if abs(J) > abs(h) else -1) / (1 << 24))
 
     qc = QuantumCircuit(n_qubits)
     for q in range(n_qubits):
         qc.ry(theta, q)
 
-    dummy_backend = AceQasmSimulator(
-        n_qubits=n_qubits,
-        long_range_columns=long_range_columns,
-        long_range_rows=long_range_rows,
-    )
     step = QuantumCircuit(n_qubits)
-    trotter_step(step, list(range(n_qubits)), (n_rows, n_cols), J, h, dt)
+    trotter_step(step, qubits, (n_rows, n_cols), J, h, dt)
     step = transpile(
         step,
         optimization_level=3,
-        backend=dummy_backend,
+        basis_gates=QrackAceBackend.get_qiskit_basis_gates(),
     )
 
     depths = list(range(0, depth + 1))
