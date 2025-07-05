@@ -197,7 +197,7 @@ def main():
     # theta = -math.pi / 4
 
     shots = max(1 << 14, 1 << (n_qubits + 2))
-    bias = 0 if abs(J) == abs(h) else (0.0001 if abs(J) > abs(h) else -0.0001)
+    bias = 0 if abs(J) == abs(h) else ((1 if abs(J) > abs(h) else -1) / (1 << 20))
     qubits = list(range(n_qubits))
 
     qc = QuantumCircuit(n_qubits)

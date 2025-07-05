@@ -125,7 +125,7 @@ def main():
     # J, h, dt = -1.0, 1.0, 0.25
     # theta = -math.pi / 4
 
-    bias = 0 if abs(J) == abs(h) else (0.0001 if abs(J) > abs(h) else -0.0001)
+    bias = 0 if abs(J) == abs(h) else ((1 if abs(J) > abs(h) else -1) / (1 << 20))
 
     qc = QuantumCircuit(n_qubits)
     for q in range(n_qubits):
