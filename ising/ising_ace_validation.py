@@ -181,43 +181,56 @@ def main():
     n_rows, n_cols = factor_width(n_qubits, False)
     J, h, dt = -1.0, 2.0, 0.25
     theta = math.pi / 18
-    shots = 1 << (n_qubits + 2)
+    shots = max(1 << 14, 1 << (n_qubits + 2))
+    bias = 0 if abs(J) == abs(h) else (0.001 if abs(J) > abs(h) else -0.001)
+    qubits = list(range(n_qubits))
 
     qc = QuantumCircuit(n_qubits)
-
     for q in range(n_qubits):
         qc.ry(theta, q)
 
-    for d in range(depth):
-        trotter_step(
-            qc, list(range(n_qubits)), (n_rows, n_cols), J, h, dt
-        )
+    dummy_backend = AceQasmSimulator(
+        n_qubits=n_qubits,
+        long_range_columns=long_range_columns,
+        long_range_rows=long_range_rows,
+    )
+    step = QuantumCircuit(n_qubits)
+    trotter_step(step, qubits, (n_rows, n_cols), J, h, dt)
+    step = transpile(
+        step,
+        optimization_level=3,
+        backend=dummy_backend,
+    )
 
     experiment = QrackAceBackend(
-        n_qubits, long_range_columns=long_range_columns, long_range_rows=long_range_rows
+        n_qubits,
+        long_range_columns=long_range_columns,
+        long_range_rows=long_range_rows,
     )
+    border_qubits = []
+    for i in range(len(experiment._qubits)):
+        if len(experiment._qubits[i]) > 1:
+            border_qubits.append(i)
     # We've achieved the dream: load balancing between discrete and integrated accelerators!
     for sim_id in range(min(len(experiment.sim), len(devices))):
         experiment.sim[sim_id].set_device(devices[sim_id])
 
-    qc = transpile(
-        qc,
-        optimization_level=3,
-        backend=AceQasmSimulator(n_qubits=n_qubits),
+    experiment.run_qiskit_circuit(qc)
+    for d in range(depth):
+        trotter_step(qc, qubits, (n_rows, n_cols), J, h, dt)
+        experiment.run_qiskit_circuit(step)
+        experiment.apply_magnetic_bias(border_qubits, bias)
+    experiment_counts = dict(
+        Counter(experiment.measure_shots(qubits, shots))
     )
 
     control = AerSimulator(method="statevector")
-    qc_aer = transpile(
+    qc = transpile(
         qc,
         backend=control,
     )
-
-    experiment.run_qiskit_circuit(qc)
-    qc_aer.save_statevector()
-    job = control.run(qc_aer)
-    experiment_counts = dict(
-        Counter(experiment.measure_shots(list(range(n_qubits)), shots))
-    )
+    qc.save_statevector()
+    job = control.run(qc)
     control_probs = Statevector(job.result().get_statevector()).probabilities()
 
     print(

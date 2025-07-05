@@ -167,7 +167,7 @@ def main():
     n_rows, n_cols = factor_width(n_qubits)
     J, h, dt = -1.0, 2.0, 0.25
     theta = math.pi / 18
-    shots = 1 << (n_qubits + 2)
+    shots = max(1 << 14, 1 << (n_qubits + 2))
 
     qc = QuantumCircuit(n_qubits)
 

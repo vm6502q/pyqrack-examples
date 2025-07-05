@@ -125,6 +125,8 @@ def main():
     # J, h, dt = -1.0, 1.0, 0.25
     # theta = -math.pi / 4
 
+    bias = 0 if abs(J) == abs(h) else (0.001 if abs(J) > abs(h) else -0.001)
+
     qc = QuantumCircuit(n_qubits)
     for q in range(n_qubits):
         qc.ry(theta, q)
@@ -154,6 +156,10 @@ def main():
             long_range_columns=long_range_columns,
             long_range_rows=long_range_rows,
         )
+        border_qubits = []
+        for i in range(len(experiment._qubits)):
+            if len(experiment._qubits[i]) > 1:
+                border_qubits.append(i)
         # We've achieved the dream: load balancing between discrete and integrated accelerators!
         for sim_id in range(min(len(experiment.sim), len(devices))):
             experiment.sim[sim_id].set_device(devices[sim_id])
@@ -163,6 +169,7 @@ def main():
         for d in depths:
             if d > 0:
                 experiment.run_qiskit_circuit(step)
+                experiment.apply_magnetic_bias(border_qubits, bias)
             experiment_samples = experiment.measure_shots(list(range(n_qubits)), shots)
 
             magnetization = 0
