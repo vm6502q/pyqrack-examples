@@ -179,8 +179,23 @@ def main():
     print("Devices: " + str(devices))
 
     n_rows, n_cols = factor_width(n_qubits, False)
+
+    # Quantinuum settings
     J, h, dt = -1.0, 2.0, 0.25
     theta = math.pi / 18
+
+    # Pure ferromagnetic
+    # J, h, dt = -1.0, 0.0, 0.25
+    # theta = 0
+
+    # Pure transverse field
+    # J, h, dt = 0.0, 2.0, 0.25
+    # theta = -math.pi / 2
+
+    # Critical point (symmetry breaking)
+    # J, h, dt = -1.0, 1.0, 0.25
+    # theta = -math.pi / 4
+
     shots = max(1 << 14, 1 << (n_qubits + 2))
     bias = 0 if abs(J) == abs(h) else (0.001 if abs(J) > abs(h) else -0.001)
     qubits = list(range(n_qubits))
