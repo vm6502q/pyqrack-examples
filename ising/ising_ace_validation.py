@@ -225,7 +225,7 @@ def main():
     experiment_counts = dict(
         Counter(experiment.measure_shots(qubits, remainder_shots))
     )
-    experiment_counts[0] += bias_shots
+    experiment_counts[0] = experiment_counts.get(0, 0) + bias_shots
 
     control = AerSimulator(method="statevector")
     qc = transpile(
