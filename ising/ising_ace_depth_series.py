@@ -177,7 +177,7 @@ def main():
                     min_sqr_mag = sqr_magnetization
             else:
                 bias_0_shots = int(shots * (1.75 - 0.04 * (depth - 1)) / n_qubits)
-                bias_1_shots = int(0.54 * (shots * (1.75 - 0.02 * (depth - 1)))) // n_qubits
+                bias_1_shots = int(0.53 * (shots * (1.75 - 0.02 * (depth - 1)))) // n_qubits
                 remainder_shots = shots - (bias_0_shots + bias_1_shots)
 
                 experiment.run_qiskit_circuit(step)
