@@ -136,7 +136,7 @@ def main():
     J, h, dt = -1.0, 2.0, 0.25
     theta = 2 * math.pi / 9
 
-    bias_shots = int(shots * (1.8 - 0.006 * (depth - 1)) / n_qubits)
+    bias_shots = int(shots * (1.75 - 0.04 * (depth - 1)) / n_qubits)
     remainder_shots = shots - bias_shots
     qubits = list(range(n_qubits))
 
