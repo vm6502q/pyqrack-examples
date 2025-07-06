@@ -159,8 +159,8 @@ def main():
     n_qubits = 16
     depth = 10
     hamming_n = 2048
-    long_range_columns = 1
-    long_range_rows = 1
+    long_range_columns = 0
+    long_range_rows = 28
     if len(sys.argv) > 1:
         n_qubits = int(sys.argv[1])
     if len(sys.argv) > 2:

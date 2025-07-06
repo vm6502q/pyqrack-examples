@@ -83,8 +83,8 @@ def main():
     n_qubits = 54
     depth = 20
     shots = 1024
-    long_range_columns = 2
-    long_range_rows = 6
+    long_range_columns = 0
+    long_range_rows = 28
     trials = 5
     if len(sys.argv) > 1:
         n_qubits = int(sys.argv[1])
