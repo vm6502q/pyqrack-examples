@@ -108,8 +108,6 @@ def main():
     print("Devices: " + str(devices))
 
     n_rows, n_cols = factor_width(n_qubits, False)
-    bias_shots = int(shots * (1.75 - 0.04 * (depth - 1)) / n_qubits)
-    remainder_shots = shots - bias_shots
 
     # Quantinuum settings
     J, h, dt = -1.0, 2.0, 0.25
@@ -178,6 +176,10 @@ def main():
                 if sqr_magnetization < min_sqr_mag:
                     min_sqr_mag = sqr_magnetization
             else:
+                bias_shots = int(shots * (1.75 - 0.04 * (d - 1)) / n_qubits)
+                remainder_shots = shots - bias_shots
+
+                experiment.run_qiskit_circuit(step)
                 experiment_samples = experiment.measure_shots(qubits, remainder_shots)
 
                 magnetization = bias_shots
