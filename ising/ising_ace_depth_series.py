@@ -158,26 +158,42 @@ def main():
             experiment.sim[sim_id].set_device(devices[sim_id])
 
         start = time.perf_counter()
+
         experiment.run_qiskit_circuit(qc)
         for d in depths:
-            if d > 0:
-                experiment.run_qiskit_circuit(step)
-            experiment_samples = experiment.measure_shots(qubits, remainder_shots)
+            if d == 0:
+                experiment_samples = experiment.measure_shots(qubits, shots)
+                magnetization = 0
+                sqr_magnetization = 0
+                for sample in experiment_samples:
+                    m = 0
+                    for _ in range(n_qubits):
+                        m += -1 if (sample & 1) else 1
+                        sample >>= 1
+                    m /= n_qubits
+                    magnetization += m
+                    sqr_magnetization += m * m
+                magnetization /= shots
+                sqr_magnetization /= shots
+                if sqr_magnetization < min_sqr_mag:
+                    min_sqr_mag = sqr_magnetization
+            else:
+                experiment_samples = experiment.measure_shots(qubits, remainder_shots)
 
-            magnetization = bias_shots
-            sqr_magnetization = bias_shots
-            for sample in experiment_samples:
-                m = 0
-                for _ in range(n_qubits):
-                    m += -1 if (sample & 1) else 1
-                    sample >>= 1
-                m /= n_qubits
-                magnetization += m
-                sqr_magnetization += m * m
-            magnetization /= shots
-            sqr_magnetization /= shots
-            if sqr_magnetization < min_sqr_mag:
-                min_sqr_mag = sqr_magnetization
+                magnetization = bias_shots
+                sqr_magnetization = bias_shots
+                for sample in experiment_samples:
+                    m = 0
+                    for _ in range(n_qubits):
+                        m += -1 if (sample & 1) else 1
+                        sample >>= 1
+                    m /= n_qubits
+                    magnetization += m
+                    sqr_magnetization += m * m
+                magnetization /= shots
+                sqr_magnetization /= shots
+                if sqr_magnetization < min_sqr_mag:
+                    min_sqr_mag = sqr_magnetization
 
             seconds = time.perf_counter() - start
 

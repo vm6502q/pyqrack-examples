@@ -172,7 +172,9 @@ def main():
         experiment.run_qiskit_circuit(qc)
         for d in range(depth):
             experiment.run_qiskit_circuit(step)
-            z_samples = experiment.measure_shots(qubits, remainder_shots) + bias_shots * [0]
+            z_samples = experiment.measure_shots(
+                qubits, remainder_shots
+            ) + bias_shots * [0]
             E_z = compute_z_energy(z_samples, n_qubits, J=J)
             S = estimate_entropy(z_samples)
             E_x = compute_x_energy(experiment, n_qubits, shots, h=h)
