@@ -217,10 +217,6 @@ def main():
         long_range_columns=long_range_columns,
         long_range_rows=long_range_rows,
     )
-    border_qubits = []
-    for i in range(len(experiment._qubits)):
-        if len(experiment._qubits[i]) > 1:
-            border_qubits.append(i)
     # We've achieved the dream: load balancing between discrete and integrated accelerators!
     for sim_id in range(min(len(experiment.sim), len(devices))):
         experiment.sim[sim_id].set_device(devices[sim_id])
@@ -229,7 +225,7 @@ def main():
     for d in range(depth):
         trotter_step(qc, qubits, (n_rows, n_cols), J, h, dt)
         experiment.run_qiskit_circuit(step)
-        experiment.apply_magnetic_bias(border_qubits, bias)
+        experiment.apply_magnetic_bias(qubits, bias)
     experiment_counts = dict(
         Counter(experiment.measure_shots(qubits, shots))
     )
