@@ -197,7 +197,7 @@ def main():
     # theta = -math.pi / 4
 
     shots = max(1 << 14, 1 << (n_qubits + 2))
-    bias = 0 if abs(J) == abs(h) else ((1 if abs(J) > abs(h) else -1) / (1 << 48))
+    bias = 0 if abs(J) == abs(h) else ((1 if abs(J) > abs(h) else -1) / (1 << 64))
     qubits = list(range(n_qubits))
 
     qc = QuantumCircuit(n_qubits)
@@ -224,7 +224,7 @@ def main():
     experiment.run_qiskit_circuit(qc)
     for d in range(depth):
         trotter_step(qc, qubits, (n_rows, n_cols), J, h, dt)
-        if (d % 5) == 2:
+        if d == 3:
             experiment.apply_magnetic_bias(qubits, bias)
         experiment.run_qiskit_circuit(step)
     experiment_counts = dict(
