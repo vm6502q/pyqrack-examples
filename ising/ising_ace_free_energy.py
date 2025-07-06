@@ -135,7 +135,8 @@ def main():
     n_rows, n_cols = factor_width(n_qubits, False)
     J, h, dt = -1.0, 2.0, 0.25
     theta = 2 * math.pi / 9
-    bias_shots = int((1.8 / n_qubits - depth / 200) * shots)
+
+    bias_shots = int((1.79 / n_qubits - depth / 200) * shots)
     remainder_shots = shots - bias_shots
     qubits = list(range(n_qubits))
 
