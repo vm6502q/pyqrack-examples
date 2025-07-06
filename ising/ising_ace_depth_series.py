@@ -126,7 +126,7 @@ def main():
     # theta = -math.pi / 4
 
     qubits = list(range(n_qubits))
-    bias = 0 if abs(J) == abs(h) else ((1 if abs(J) > abs(h) else -1) / (1 << 24))
+    bias = 0 if abs(J) == abs(h) else ((1 if abs(J) > abs(h) else -1) / (1 << 48))
 
     qc = QuantumCircuit(n_qubits)
     for q in range(n_qubits):
@@ -160,8 +160,9 @@ def main():
         experiment.run_qiskit_circuit(qc)
         for d in depths:
             if d > 0:
+                if (d % 5) == 3:
+                    experiment.apply_magnetic_bias(qubits, bias)
                 experiment.run_qiskit_circuit(step)
-                experiment.apply_magnetic_bias(qubits, bias)
             experiment_samples = experiment.measure_shots(qubits, shots)
 
             magnetization = 0
