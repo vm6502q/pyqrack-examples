@@ -197,17 +197,17 @@ def main():
     # theta = -math.pi / 4
 
     shots = max(1 << 14, 1 << (n_qubits + 2))
-    bias = 0 if abs(J) == abs(h) else ((1 if abs(J) > abs(h) else -1) / (1 << 64))
+    bias_shots = int(0.25 * shots)
+    remainder_shots = shots - bias_shots
     qubits = list(range(n_qubits))
 
     qc = QuantumCircuit(n_qubits)
     for q in range(n_qubits):
         qc.ry(theta, q)
-
-    step = QuantumCircuit(n_qubits)
-    trotter_step(step, qubits, (n_rows, n_cols), J, h, dt)
-    step = transpile(
-        step,
+    for d in range(depth):
+        trotter_step(qc, qubits, (n_rows, n_cols), J, h, dt)
+    qc = transpile(
+        qc,
         optimization_level=3,
         basis_gates=QrackAceBackend.get_qiskit_basis_gates(),
     )
@@ -222,14 +222,10 @@ def main():
         experiment.sim[sim_id].set_device(devices[sim_id])
 
     experiment.run_qiskit_circuit(qc)
-    for d in range(depth):
-        trotter_step(qc, qubits, (n_rows, n_cols), J, h, dt)
-        if d == 4:
-            experiment.apply_magnetic_bias(qubits, bias)
-        experiment.run_qiskit_circuit(step)
     experiment_counts = dict(
-        Counter(experiment.measure_shots(qubits, shots))
+        Counter(experiment.measure_shots(qubits, remainder_shots))
     )
+    experiment_counts[0] += bias_shots
 
     control = AerSimulator(method="statevector")
     qc = transpile(

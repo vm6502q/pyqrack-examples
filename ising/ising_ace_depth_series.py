@@ -108,6 +108,8 @@ def main():
     print("Devices: " + str(devices))
 
     n_rows, n_cols = factor_width(n_qubits, False)
+    bias_shots = int(0.25 * shots)
+    remainder_shots = shots - bias_shots
 
     # Quantinuum settings
     J, h, dt = -1.0, 2.0, 0.25
@@ -126,7 +128,6 @@ def main():
     # theta = -math.pi / 4
 
     qubits = list(range(n_qubits))
-    bias = 0 if abs(J) == abs(h) else ((1 if abs(J) > abs(h) else -1) / (1 << 64))
 
     qc = QuantumCircuit(n_qubits)
     for q in range(n_qubits):
@@ -160,13 +161,11 @@ def main():
         experiment.run_qiskit_circuit(qc)
         for d in depths:
             if d > 0:
-                if d == 5:
-                    experiment.apply_magnetic_bias(qubits, bias)
                 experiment.run_qiskit_circuit(step)
-            experiment_samples = experiment.measure_shots(qubits, shots)
+            experiment_samples = experiment.measure_shots(qubits, remainder_shots)
 
-            magnetization = 0
-            sqr_magnetization = 0
+            magnetization = bias_shots
+            sqr_magnetization = bias_shots
             for sample in experiment_samples:
                 m = 0
                 for _ in range(n_qubits):
