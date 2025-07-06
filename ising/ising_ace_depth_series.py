@@ -160,7 +160,7 @@ def main():
         experiment.run_qiskit_circuit(qc)
         for d in depths:
             if d > 0:
-                if d == 4:
+                if d == 5:
                     experiment.apply_magnetic_bias(qubits, bias)
                 experiment.run_qiskit_circuit(step)
             experiment_samples = experiment.measure_shots(qubits, shots)

@@ -224,7 +224,7 @@ def main():
     experiment.run_qiskit_circuit(qc)
     for d in range(depth):
         trotter_step(qc, qubits, (n_rows, n_cols), J, h, dt)
-        if d == 3:
+        if d == 4:
             experiment.apply_magnetic_bias(qubits, bias)
         experiment.run_qiskit_circuit(step)
     experiment_counts = dict(
