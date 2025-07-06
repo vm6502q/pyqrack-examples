@@ -197,7 +197,7 @@ def main():
     # theta = -math.pi / 4
 
     shots = max(1 << 14, 1 << (n_qubits + 2))
-    bias_shots = int(0.22 * shots)
+    bias_shots = int(1.75 * shots / n_qubits)
     remainder_shots = shots - bias_shots
     qubits = list(range(n_qubits))
 

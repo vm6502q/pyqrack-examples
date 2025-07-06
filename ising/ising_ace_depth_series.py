@@ -108,7 +108,7 @@ def main():
     print("Devices: " + str(devices))
 
     n_rows, n_cols = factor_width(n_qubits, False)
-    bias_shots = int(0.22 * shots)
+    bias_shots = int(1.75 * shots / n_qubits)
     remainder_shots = shots - bias_shots
 
     # Quantinuum settings
