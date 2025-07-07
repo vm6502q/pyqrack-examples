@@ -178,16 +178,10 @@ def main():
             else:
                 nq_2 = n_qubits * (n_qubits - 1)
                 nq_3 = n_qubits * (n_qubits - 1) * (n_qubits - 2)
-                model = max(
-                    0.5,
-                    2
-                    - 0.05 * d
-                    + (0.05 * d) ** 2
-                    - (0.05 * d) ** 3
-                    + (0.05 * d) ** 4
-                    - (0.05 * d) ** 5
-                    + (0.05 * d) ** 6,
-                )
+                c0 = 2
+                c1 = 0.125
+                t = c1 * dt * d 
+                model = max(0.5, 2 - t + t ** 2 - t ** 3 + t ** 4 - t ** 5 + t ** 6 - t ** 7 + t ** 8)
                 bias_0_shots = int(shots * model / n_qubits)
                 bias_1_shots = int(shots * model / 2) // n_qubits
                 bias_2_shots = n_qubits * (int(shots * model / 4) // nq_2)
