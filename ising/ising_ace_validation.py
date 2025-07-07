@@ -197,9 +197,11 @@ def main():
     # theta = -math.pi / 4
 
     shots = max(1 << 14, 1 << (n_qubits + 2))
-    bias_0_shots = int(shots * (1.75 - 0.04 * (depth - 1)) / n_qubits)
-    bias_1_shots = int(0.54 * (shots * (1.75 - 0.005 * (depth - 1)))) // n_qubits
-    remainder_shots = shots - (bias_0_shots + bias_1_shots)
+    b_c0 = 1.77
+    bias_0_shots = int(shots * b_c0 / n_qubits)
+    bias_1_shots = int(shots * b_c0 / 2) // n_qubits
+    bias_2_shots = n_qubits * int(shots * b_c0 / 4) // (n_qubits * n_qubits)
+    remainder_shots = shots - (bias_0_shots + bias_1_shots + bias_2_shots)
     qubits = list(range(n_qubits))
 
     qc = QuantumCircuit(n_qubits)
@@ -228,6 +230,14 @@ def main():
     for q in range(n_qubits):
         p = 1 << q
         experiment_counts[p] = experiment_counts.get(p, 0) + bias_1_shots // n_qubits
+    for q1 in range(n_qubits):
+        p1 = 1 << q1
+        for q2 in range(n_qubits):
+            if q1 == q2:
+                continue
+            p2 = 1 << q2
+            p = p1 | p2
+            experiment_counts[p] = experiment_counts.get(p, 0) + bias_1_shots // (n_qubits * n_qubits)
 
     control = AerSimulator(method="statevector")
     qc = transpile(

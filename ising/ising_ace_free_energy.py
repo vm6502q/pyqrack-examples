@@ -178,6 +178,14 @@ def main():
             ) + bias_shots * [0]
             for q in range(n_qubits):
                 z_samples += (bias_1_shots // n_qubits) * [1 << q]
+            for q1 in range(n_qubits):
+                p1 = 1 << q1
+                for q2 in range(n_qubits):
+                    if q1 == q2:
+                        continue
+                    p2 = 1 << q2
+                    p = p1 | p2
+                    z_samples += (bias_2_shots // n_qubits) * [p]
             E_z = compute_z_energy(z_samples, n_qubits, J=J)
             S = estimate_entropy(z_samples)
             E_x = compute_x_energy(experiment, n_qubits, shots, h=h)
