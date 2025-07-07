@@ -181,8 +181,8 @@ def main():
                 b_c0 = 1.75
                 bias_0_shots = int(shots * b_c0 / n_qubits)
                 bias_1_shots = int(shots * b_c0 / 2) // n_qubits
-                bias_2_shots = n_qubits * int(shots * b_c0 / 4) // nq_2
-                bias_3_shots = nq_2 * int(shots * b_c0 / 8) // nq_3
+                bias_2_shots = n_qubits * (int(shots * b_c0 / 4) // nq_2)
+                bias_3_shots = nq_2 * (int(shots * b_c0 / 8) // nq_3)
                 remainder_shots = shots - (bias_0_shots + bias_1_shots + bias_2_shots + bias_3_shots)
 
                 experiment.run_qiskit_circuit(step)
