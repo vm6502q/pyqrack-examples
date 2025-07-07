@@ -159,58 +159,43 @@ def main():
 
         experiment.run_qiskit_circuit(qc)
         for d in depths:
-            if d == 0:
-                experiment_samples = experiment.measure_shots(qubits, shots)
-                magnetization = 0
-                sqr_magnetization = 0
-                for sample in experiment_samples:
-                    m = 0
-                    for _ in range(n_qubits):
-                        m += -1 if (sample & 1) else 1
-                        sample >>= 1
-                    m /= n_qubits
-                    magnetization += m
-                    sqr_magnetization += m * m
-                magnetization /= shots
-                sqr_magnetization /= shots
-                if sqr_magnetization < min_sqr_mag:
-                    min_sqr_mag = sqr_magnetization
-            else:
+            if d > 0:
                 experiment.run_qiskit_circuit(step)
-                experiment_samples = experiment.measure_shots(qubits, shots)
 
-                t1 = 8
-                t = d * dt / t1
-                model = 1 / (1 + t)
+            experiment_samples = experiment.measure_shots(qubits, shots)
 
-                d_magnetization = 0
-                d_sqr_magnetization = 0
-                for q in range(n_qubits // 2):
-                    n = model / (1 << q)
-                    m = (n_qubits - (q << 1)) / n_qubits
-                    d_magnetization += n * m
-                    d_sqr_magnetization += n * m * m
-                d_magnetization /= 2
-                d_sqr_magnetization /= 2
+            t1 = 8
+            t = d * dt / t1
+            model = 1 / (1 + t)
 
-                for sample in experiment_samples:
-                    m = 0
-                    for _ in range(n_qubits):
-                        m += -1 if (sample & 1) else 1
-                        sample >>= 1
-                    m /= n_qubits
-                    magnetization += m
-                    sqr_magnetization += m * m
-                magnetization /= shots
-                sqr_magnetization /= shots
+            d_magnetization = 0
+            d_sqr_magnetization = 0
+            for q in range(n_qubits // 2):
+                n = model / (1 << q)
+                m = (n_qubits - (q << 1)) / n_qubits
+                d_magnetization += n * m
+                d_sqr_magnetization += n * m * m
+            d_magnetization /= 2
+            d_sqr_magnetization /= 2
 
-                magnetization = model * d_magnetization + (1 - model) * magnetization
-                sqr_magnetization = (
-                    model * d_sqr_magnetization + (1 - model) * sqr_magnetization
-                )
+            for sample in experiment_samples:
+                m = 0
+                for _ in range(n_qubits):
+                    m += -1 if (sample & 1) else 1
+                    sample >>= 1
+                m /= n_qubits
+                magnetization += m
+                sqr_magnetization += m * m
+            magnetization /= shots
+            sqr_magnetization /= shots
 
-                if sqr_magnetization < min_sqr_mag:
-                    min_sqr_mag = sqr_magnetization
+            magnetization = model * d_magnetization + (1 - model) * magnetization
+            sqr_magnetization = (
+                model * d_sqr_magnetization + (1 - model) * sqr_magnetization
+            )
+
+            if sqr_magnetization < min_sqr_mag:
+                min_sqr_mag = sqr_magnetization
 
             seconds = time.perf_counter() - start
 
