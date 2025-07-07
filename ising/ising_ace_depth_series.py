@@ -178,6 +178,8 @@ def main():
             d_magnetization /= 2
             d_sqr_magnetization /= 2
 
+            magnetization = 0
+            sqr_magnetization = 0
             for sample in experiment_samples:
                 m = 0
                 for _ in range(n_qubits):
