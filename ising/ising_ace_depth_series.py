@@ -178,18 +178,39 @@ def main():
             else:
                 nq_2 = n_qubits * (n_qubits - 1)
                 nq_3 = n_qubits * (n_qubits - 1) * (n_qubits - 2)
-                model = 1.75 - 0.0324 * (d - 1)
+                model = max(
+                    0.5,
+                    2
+                    - 0.05 * d
+                    + (0.05 * d) ** 2
+                    - (0.05 * d) ** 3
+                    + (0.05 * d) ** 4
+                    - (0.05 * d) ** 5
+                    + (0.05 * d) ** 6,
+                )
                 bias_0_shots = int(shots * model / n_qubits)
                 bias_1_shots = int(shots * model / 2) // n_qubits
                 bias_2_shots = n_qubits * (int(shots * model / 4) // nq_2)
                 bias_3_shots = nq_2 * (int(shots * model / 8) // nq_3)
-                remainder_shots = shots - (bias_0_shots + bias_1_shots + bias_2_shots + bias_3_shots)
+                remainder_shots = shots - (
+                    bias_0_shots + bias_1_shots + bias_2_shots + bias_3_shots
+                )
 
                 experiment.run_qiskit_circuit(step)
                 experiment_samples = experiment.measure_shots(qubits, remainder_shots)
 
-                magnetization = bias_shots + bias_1_shots * (n_qubits - 1) / n_qubits + bias_2_shots * (n_qubits - 2) / n_qubits + bias_3_shots * (n_qubits - 3) / n_qubits
-                sqr_magnetization = bias_shots + bias_1_shots * ((n_qubits - 1) / n_qubits) ** 2 + bias_2_shots * ((n_qubits - 2) / n_qubits) ** 2 + bias_3_shots * ((n_qubits - 3) / n_qubits) ** 2
+                magnetization = (
+                    bias_shots
+                    + bias_1_shots * (n_qubits - 1) / n_qubits
+                    + bias_2_shots * (n_qubits - 2) / n_qubits
+                    + bias_3_shots * (n_qubits - 3) / n_qubits
+                )
+                sqr_magnetization = (
+                    bias_shots
+                    + bias_1_shots * ((n_qubits - 1) / n_qubits) ** 2
+                    + bias_2_shots * ((n_qubits - 2) / n_qubits) ** 2
+                    + bias_3_shots * ((n_qubits - 3) / n_qubits) ** 2
+                )
                 for sample in experiment_samples:
                     m = 0
                     for _ in range(n_qubits):
