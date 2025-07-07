@@ -140,7 +140,7 @@ def main():
 
     nq_2 = n_qubits * (n_qubits - 1)
     nq_3 = n_qubits * (n_qubits - 1) * (n_qubits - 2)
-    model = 1.75 - 0.35 * (depth - 1) / n_qubits
+    model = 1.75 - 0.005 * (depth - 1) * n_qubits
     bias_0_shots = int(shots * model / n_qubits)
     bias_1_shots = int(shots * model / 2) // n_qubits
     bias_2_shots = n_qubits * (int(shots * model / 4) // nq_2)
