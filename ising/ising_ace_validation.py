@@ -204,7 +204,7 @@ def main():
     c0 = 2
     c1 = 0.125
     t = c1 * dt * depth 
-    model = max(0.5, 2 - t + t ** 2 - t ** 3 + t ** 4 - t ** 5 + t ** 6 - t ** 7 + t ** 8)
+    model = max(0.5, 1 / (1 + t))
     bias_0_shots = int(shots * model / n_qubits)
     bias_1_shots = int(shots * model / 2) // n_qubits
     bias_2_shots = n_qubits * (int(shots * model / 4) // nq_2)
