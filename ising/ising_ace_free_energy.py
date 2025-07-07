@@ -136,10 +136,16 @@ def main():
     J, h, dt = -1.0, 2.0, 0.25
     theta = 2 * math.pi / 9
 
-    bias_0_shots = int(shots * (1.75 - 0.04 * (depth - 1)) / n_qubits)
-    bias_1_shots = int(0.54 * (shots * (1.75 - 0.005 * (depth - 1)))) // n_qubits
-    remainder_shots = shots - (bias_0_shots + bias_1_shots)
     qubits = list(range(n_qubits))
+
+    nq_2 = n_qubits * (n_qubits - 1)
+    nq_3 = n_qubits * (n_qubits - 1) * (n_qubits - 2)
+    b_c0 = 1.75
+    bias_0_shots = int(shots * b_c0 / n_qubits)
+    bias_1_shots = int(shots * b_c0 / 2) // n_qubits
+    bias_2_shots = n_qubits * int(shots * b_c0 / 4) // nq_2
+    bias_3_shots = nq_2 * int(shots * b_c0 / 8) // nq_3
+    remainder_shots = shots - (bias_0_shots + bias_1_shots + bias_2_shots + bias_3_shots)
 
     qc = QuantumCircuit(n_qubits)
     for q in range(n_qubits):
@@ -176,16 +182,21 @@ def main():
             z_samples = experiment.measure_shots(
                 qubits, remainder_shots
             ) + bias_shots * [0]
-            for q in range(n_qubits):
-                z_samples += (bias_1_shots // n_qubits) * [1 << q]
             for q1 in range(n_qubits):
                 p1 = 1 << q1
+                z_samples += (bias_1_shots // n_qubits) * [p1]
                 for q2 in range(n_qubits):
                     if q1 == q2:
                         continue
                     p2 = 1 << q2
                     p = p1 | p2
-                    z_samples += (bias_2_shots // n_qubits) * [p]
+                    z_samples += (bias_2_shots // nq_2) * [p]
+                    for q3 in range(n_qubits):
+                        if (q1 == q3) or (q2 == q3):
+                            continue
+                        p3 = 1 << q3
+                        p = p1 | p2 | p3
+                        z_samples += (bias_2_shots // nq_3) * [p]
             E_z = compute_z_energy(z_samples, n_qubits, J=J)
             S = estimate_entropy(z_samples)
             E_x = compute_x_energy(experiment, n_qubits, shots, h=h)

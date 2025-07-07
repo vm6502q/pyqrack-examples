@@ -197,12 +197,16 @@ def main():
     # theta = -math.pi / 4
 
     shots = max(1 << 14, 1 << (n_qubits + 2))
-    b_c0 = 1.77
+    qubits = list(range(n_qubits))
+
+    nq_2 = n_qubits * (n_qubits - 1)
+    nq_3 = n_qubits * (n_qubits - 1) * (n_qubits - 2)
+    b_c0 = 1.75
     bias_0_shots = int(shots * b_c0 / n_qubits)
     bias_1_shots = int(shots * b_c0 / 2) // n_qubits
-    bias_2_shots = n_qubits * int(shots * b_c0 / 4) // (n_qubits * n_qubits)
-    remainder_shots = shots - (bias_0_shots + bias_1_shots + bias_2_shots)
-    qubits = list(range(n_qubits))
+    bias_2_shots = n_qubits * int(shots * b_c0 / 4) // nq_2
+    bias_3_shots = nq_2 * int(shots * b_c0 / 8) // nq_3
+    remainder_shots = shots - (bias_0_shots + bias_1_shots + bias_2_shots + bias_3_shots)
 
     qc = QuantumCircuit(n_qubits)
     for q in range(n_qubits):
@@ -227,17 +231,21 @@ def main():
     experiment.run_qiskit_circuit(qc)
     experiment_counts = dict(Counter(experiment.measure_shots(qubits, remainder_shots)))
     experiment_counts[0] = experiment_counts.get(0, 0) + bias_0_shots
-    for q in range(n_qubits):
-        p = 1 << q
-        experiment_counts[p] = experiment_counts.get(p, 0) + bias_1_shots // n_qubits
     for q1 in range(n_qubits):
         p1 = 1 << q1
+        experiment_counts[p1] = experiment_counts.get(p1, 0) + bias_1_shots // n_qubits
         for q2 in range(n_qubits):
             if q1 == q2:
                 continue
             p2 = 1 << q2
             p = p1 | p2
-            experiment_counts[p] = experiment_counts.get(p, 0) + bias_1_shots // (n_qubits * n_qubits)
+            experiment_counts[p] = experiment_counts.get(p, 0) + bias_2_shots // nq_2
+            for q3 in range(n_qubits):
+                if (q1 == q3) or (q2 == q3):
+                    continue
+                p3 = 1 << q3
+                p = p1 | p2 | p3
+                experiment_counts[p] = experiment_counts.get(p, 0) + bias_3_shots // nq_3
 
     control = AerSimulator(method="statevector")
     qc = transpile(
