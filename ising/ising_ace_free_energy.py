@@ -141,11 +141,11 @@ def main():
     nq_2 = n_qubits * (n_qubits - 1)
     nq_3 = n_qubits * (n_qubits - 1) * (n_qubits - 2)
     b_c0 = 1.75
-    b_c1 = 0.04
-    bias_0_shots = int(shots * (b_c0 - (b_c1 * depth) ** 2) / n_qubits)
-    bias_1_shots = int(shots * (b_c0 - (b_c1 * depth) ** 2) / 2) // n_qubits
-    bias_2_shots = n_qubits * (int(shots * (b_c0 - (b_c1 * depth) ** 2) / 4) // nq_2)
-    bias_3_shots = nq_2 * (int(shots * (b_c0 - (b_c1 * depth) ** 2) / 8) // nq_3)
+    b_c1 = -0.04
+    bias_0_shots = int(shots * (b_c0 + (b_c1 * depth)) / n_qubits)
+    bias_1_shots = int(shots * (b_c0 + (b_c1 * depth) ** 2) / 2) // n_qubits
+    bias_2_shots = n_qubits * (int(shots * (b_c0 + (b_c1 * depth) ** 3) / 4) // nq_2)
+    bias_3_shots = nq_2 * (int(shots * (b_c0 + (b_c1 * depth) ** 4) / 8) // nq_3)
     remainder_shots = shots - (bias_0_shots + bias_1_shots + bias_2_shots + bias_3_shots)
 
     qc = QuantumCircuit(n_qubits)
