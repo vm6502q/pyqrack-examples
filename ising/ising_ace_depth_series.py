@@ -86,6 +86,7 @@ def main():
     long_range_columns = 2
     long_range_rows = 7
     trials = 5
+    t1 = 1
     if len(sys.argv) > 1:
         n_qubits = int(sys.argv[1])
     if len(sys.argv) > 2:
@@ -100,7 +101,9 @@ def main():
         long_range_rows = int(sys.argv[5])
     if len(sys.argv) > 6:
         trials = int(sys.argv[6])
-    lcv = 7
+    if len(sys.argv) > 7:
+        t1 = float(sys.argv[7])
+    lcv = 8
     devices = []
     while len(sys.argv) > lcv:
         devices.append(int(sys.argv[lcv]))
@@ -162,7 +165,8 @@ def main():
             if d > 0:
                 experiment.run_qiskit_circuit(step)
 
-            t1 = 15
+            experiment_samples = experiment.measure_shots(qubits, shots)
+
             t = d * dt / t1
             model = 1 / (1 + t)
             d_magnetization = 0
