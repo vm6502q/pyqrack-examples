@@ -108,7 +108,7 @@ def calc_stats(n, ideal_probs, counts, bias, model, shots, depth, hamming_n):
             for _ in range(hamming_weight):
                 weight *= combo_factor
                 combo_factor -= 1
-            count = (1 - model) * count + model * bias[hamming_weight] / weight
+            count = (1 - 2 * model) * count + bias[hamming_weight] / weight
 
         experiment[i] = int(count * shots)
 
@@ -217,7 +217,7 @@ def main():
     bias = []
     tot_bias = 0
     for q in range(n_qubits + 1):
-        bias.append(model / (n_qubits * (1 << q)))
+        bias.append(model / (n_qubits * (1 << (q + 1))))
         tot_bias += bias[-1]
     # Normalize
     for q in range(n_qubits + 1):

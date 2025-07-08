@@ -172,7 +172,7 @@ def main():
             d_sqr_magnetization = 0
             tot_n = 0
             for q in range(n_qubits + 1):
-                n = model / (n_qubits * (1 << q))
+                n = model / (n_qubits * (1 << (q + 1)))
                 m = (n_qubits - (q << 1)) / n_qubits
                 d_magnetization += n * m
                 d_sqr_magnetization += n * m * m
