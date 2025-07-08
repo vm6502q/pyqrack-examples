@@ -167,11 +167,13 @@ def main():
 
             t1 = 14
             t = depth * dt / t1
-            model = 2 - t + t ** 2 - t ** 3
+            model = 2
+            for q in range(1, n_qubits + 1):
+                model += -t ** q
             d_magnetization = 0
             d_sqr_magnetization = 0
             tot_n = 0
-            for q in range(4):
+            for q in range(n_qubits):
                 n = model / (n_qubits * (1 << q))
                 m = (n_qubits - (q << 1)) / n_qubits
                 d_magnetization += n * m
