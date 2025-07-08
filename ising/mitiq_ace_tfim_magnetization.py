@@ -153,7 +153,7 @@ def execute(circ, long_range_columns, long_range_rows, depth, dt):
     experiment.run_qiskit_circuit(qc)
     experiment_samples = experiment.measure_shots(all_bits, shots)
 
-    t1 = 0.0024
+    t1 = 0.175
     t = depth * dt / t1
     model = 1 - 1 / (1 + t)
     d_magnetization = 0
@@ -165,6 +165,8 @@ def execute(circ, long_range_columns, long_range_rows, depth, dt):
         d_magnetization += n * m
         d_sqr_magnetization += n * m * m
         tot_n += n
+    d_magnetization /= tot_n
+    d_sqr_magnetization /= tot_n
 
     magnetization = 0
     sqr_magnetization = 0
@@ -179,8 +181,8 @@ def execute(circ, long_range_columns, long_range_rows, depth, dt):
     magnetization /= shots
     sqr_magnetization /= shots
 
-    magnetization = d_magnetization + (1 - tot_n) * magnetization
-    sqr_magnetization = d_sqr_magnetization + (1 - tot_n) * sqr_magnetization
+    magnetization = model * d_magnetization + (1 - model) * magnetization
+    sqr_magnetization = model * d_sqr_magnetization + (1 - model) * sqr_magnetization
 
     return logit(sqr_magnetization)
 

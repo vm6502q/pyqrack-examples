@@ -79,7 +79,7 @@ def trotter_step(circ, qubits, lattice_shape, J, h, dt):
     return circ
 
 
-def calc_stats(n, ideal_probs, counts, bias, tot_bias, shots, depth, hamming_n):
+def calc_stats(n, ideal_probs, counts, bias, model, shots, depth, hamming_n):
     # For QV, we compare probabilities of (ideal) "heavy outputs."
     # If the probability is above 2/3, the protocol certifies/passes the qubit width.
     n_pow = 2**n
@@ -108,7 +108,7 @@ def calc_stats(n, ideal_probs, counts, bias, tot_bias, shots, depth, hamming_n):
             for _ in range(hamming_weight):
                 weight *= combo_factor
                 combo_factor -= 1
-            count = (1 - tot_bias) * count + bias[hamming_weight] / weight
+            count = (1 - model) * count + model * bias[hamming_weight] / weight
 
         experiment[i] = int(count * shots)
 
@@ -211,7 +211,7 @@ def main():
     shots = max(1 << 14, 1 << (n_qubits + 2))
     qubits = list(range(n_qubits))
 
-    t1 = 0.0024
+    t1 = 0.175
     t = depth * dt / t1
     model = 1 - 1 / (1 + t)
     bias = []
@@ -219,6 +219,9 @@ def main():
     for q in range(n_qubits + 1):
         bias.append(model / (n_qubits * (1 << q)))
         tot_bias += bias[-1]
+    # Normalize
+    for q in range(n_qubits + 1):
+        bias[q] /= tot_bias
 
     qc = QuantumCircuit(n_qubits)
     for q in range(n_qubits):
@@ -258,7 +261,7 @@ def main():
             control_probs,
             experiment_counts,
             bias,
-            tot_bias,
+            model,
             shots,
             depth,
             hamming_n,
