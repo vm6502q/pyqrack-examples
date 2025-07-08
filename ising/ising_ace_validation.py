@@ -79,7 +79,7 @@ def trotter_step(circ, qubits, lattice_shape, J, h, dt):
     return circ
 
 
-def calc_stats(n, ideal_probs, counts, shots, depth, hamming_n):
+def calc_stats(n, ideal_probs, counts, bias, tot_bias, shots, depth, hamming_n):
     # For QV, we compare probabilities of (ideal) "heavy outputs."
     # If the probability is above 2/3, the protocol certifies/passes the qubit width.
     n_pow = 2**n
@@ -91,22 +91,34 @@ def calc_stats(n, ideal_probs, counts, shots, depth, hamming_n):
     sum_hog_counts = 0
     experiment = [0] * n_pow
     for i in range(n_pow):
-        count = counts[i] if i in counts else 0
         ideal = ideal_probs[i]
 
-        experiment[i] = count
-
-        # L2 distance
-        diff_sqr += (ideal - (count / shots)) ** 2
+        count = counts[i] if i in counts else 0
 
         # QV / HOG
         if ideal > threshold:
             sum_hog_counts += count
 
+        count /= shots
+
+        hamming_weight = hamming_distance(i, 0, n)
+        if hamming_weight <= (n // 2):
+            weight = 1
+            combo_factor = n
+            for _ in range(hamming_weight):
+                weight *= combo_factor
+                combo_factor -= 1
+            count = (1 - tot_bias) * count + bias[hamming_weight] / weight
+
+        experiment[i] = int(count * shots)
+
+        # L2 distance
+        diff_sqr += (ideal - count) ** 2
+
         # XEB / EPLG
         ideal_centered = ideal - u_u
         denom += ideal_centered * ideal_centered
-        numer += ideal_centered * ((count / shots) - u_u)
+        numer += ideal_centered * (count - u_u)
 
     l2_similarity = 1 - diff_sqr ** (1 / 2)
     hog_prob = sum_hog_counts / shots
@@ -199,18 +211,14 @@ def main():
     shots = max(1 << 14, 1 << (n_qubits + 2))
     qubits = list(range(n_qubits))
 
-    nq_2 = n_qubits * (n_qubits - 1)
-    nq_3 = n_qubits * (n_qubits - 1) * (n_qubits - 2)
-    t1 = 18
+    t1 = 16
     t = depth * dt / t1
     model = 1 / (1 + t)
-    bias_0_shots = int(shots * 2 * model / n_qubits)
-    bias_1_shots = int(shots * model) // n_qubits
-    bias_2_shots = n_qubits * (int(shots * model / 2) // nq_2)
-    bias_3_shots = nq_2 * (int(shots * model / 4) // nq_3)
-    remainder_shots = shots - (
-        bias_0_shots + bias_1_shots + bias_2_shots + bias_3_shots
-    )
+    bias = []
+    tot_bias = 0
+    for q in range((n_qubits // 2) + 1):
+        bias.append(2 * model / (n_qubits * (1 << q)))
+        tot_bias += bias[-1]
 
     qc = QuantumCircuit(n_qubits)
     for q in range(n_qubits):
@@ -233,25 +241,7 @@ def main():
         experiment.sim[sim_id].set_device(devices[sim_id])
 
     experiment.run_qiskit_circuit(qc)
-    experiment_counts = dict(Counter(experiment.measure_shots(qubits, remainder_shots)))
-    experiment_counts[0] = experiment_counts.get(0, 0) + bias_0_shots
-    for q1 in range(n_qubits):
-        p1 = 1 << q1
-        experiment_counts[p1] = experiment_counts.get(p1, 0) + bias_1_shots // n_qubits
-        for q2 in range(n_qubits):
-            if q1 == q2:
-                continue
-            p2 = 1 << q2
-            p = p1 | p2
-            experiment_counts[p] = experiment_counts.get(p, 0) + bias_2_shots // nq_2
-            for q3 in range(n_qubits):
-                if (q1 == q3) or (q2 == q3):
-                    continue
-                p3 = 1 << q3
-                p = p1 | p2 | p3
-                experiment_counts[p] = (
-                    experiment_counts.get(p, 0) + bias_3_shots // nq_3
-                )
+    experiment_counts = dict(Counter(experiment.measure_shots(qubits, shots)))
 
     control = AerSimulator(method="statevector")
     qc = transpile(
@@ -263,7 +253,16 @@ def main():
     control_probs = Statevector(job.result().get_statevector()).probabilities()
 
     print(
-        calc_stats(n_qubits, control_probs, experiment_counts, shots, depth, hamming_n)
+        calc_stats(
+            n_qubits,
+            control_probs,
+            experiment_counts,
+            bias,
+            tot_bias,
+            shots,
+            depth,
+            hamming_n,
+        )
     )
 
     return 0

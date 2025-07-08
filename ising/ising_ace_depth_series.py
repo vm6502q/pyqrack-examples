@@ -165,13 +165,13 @@ def main():
 
             experiment_samples = experiment.measure_shots(qubits, shots)
 
-            t1 = 18
+            t1 = 16
             t = depth * dt / t1
             model = 1 / (1 + t)
             d_magnetization = 0
             d_sqr_magnetization = 0
             tot_n = 0
-            for q in range(n_qubits):
+            for q in range(n_qubits // 2):
                 n = 2 * model / (n_qubits * (1 << q))
                 m = (n_qubits - (q << 1)) / n_qubits
                 d_magnetization += n * m
