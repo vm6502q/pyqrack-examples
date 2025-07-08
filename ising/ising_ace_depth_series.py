@@ -162,37 +162,20 @@ def main():
             if d > 0:
                 experiment.run_qiskit_circuit(step)
 
-            nq_2 = n_qubits * (n_qubits - 1)
-            nq_3 = n_qubits * (n_qubits - 1) * (n_qubits - 2)
-            t1 = 14
-            t = depth * dt / t1
-            model = 2 - t + t ** 2 - t ** 3
-            bias_0_shots = int(shots * model / n_qubits)
-            bias_1_shots = int(shots * model / 2) // n_qubits
-            bias_2_shots = n_qubits * (int(shots * model / 4) // nq_2)
-            bias_3_shots = nq_2 * (int(shots * model / 8) // nq_3)
-            remainder_shots = shots - (
-                bias_0_shots + bias_1_shots + bias_2_shots + bias_3_shots
-            )
-
-            experiment_samples = experiment.measure_shots(qubits, remainder_shots)
-            
-            experiment_samples += bias_0_shots * [0]
-            for q1 in range(n_qubits):
-                p1 = 1 << q1
-                experiment_samples += (bias_1_shots // n_qubits) * [p1]
-                for q2 in range(n_qubits):
-                    if q1 == q2:
-                        continue
-                    p2 = 1 << q2
-                    p = p1 | p2
-                    experiment_samples += (bias_2_shots // nq_2) * [p2]
-                    for q3 in range(n_qubits):
-                        if (q1 == q3) or (q2 == q3):
-                            continue
-                        p3 = 1 << q3
-                        p = p1 | p2 | p3
-                        experiment_samples += (bias_3_shots // nq_2) * [p2]
+            t1 = 15
+            t = d * dt / t1
+            model = 1 / (1 + t)
+            d_magnetization = 0
+            d_sqr_magnetization = 0
+            tot_n = 0
+            for q in range(n_qubits):
+                n = model / (1 << q)
+                m = (n_qubits - (q << 1)) / n_qubits
+                d_magnetization += n * m
+                d_sqr_magnetization += n * m * m
+                tot_n += n
+            d_magnetization /= tot_n
+            d_sqr_magnetization /= tot_n
 
             magnetization = 0
             sqr_magnetization = 0
@@ -206,6 +189,11 @@ def main():
                 sqr_magnetization += m * m
             magnetization /= shots
             sqr_magnetization /= shots
+
+            magnetization = model * d_magnetization + (1 - model) * magnetization
+            sqr_magnetization = (
+                model * d_sqr_magnetization + (1 - model) * sqr_magnetization
+            )
 
             if sqr_magnetization < min_sqr_mag:
                 min_sqr_mag = sqr_magnetization
