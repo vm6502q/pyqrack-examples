@@ -167,8 +167,8 @@ def main():
             t1 = 15
             t = d * dt / t1
             model = 2
-            for q in range(n_qubits):
-                model += (-1) ** (q + 1) * (t ** q)
+            for q in range(1, n_qubits + 1):
+                model += (-1) ** q * (t ** q)
             d_magnetization = 0
             d_sqr_magnetization = 0
             tot_n = 0
