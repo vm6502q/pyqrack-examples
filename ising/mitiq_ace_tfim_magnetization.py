@@ -217,7 +217,7 @@ def main():
         backend=noise_dummy,
     )
 
-    scale_count = (depth >> 1) + 1
+    scale_count = depth + 1
     max_scale = 2
     factory = RichardsonFactory(
         scale_factors=[
