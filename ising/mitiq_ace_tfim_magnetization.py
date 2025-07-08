@@ -153,9 +153,9 @@ def execute(circ, long_range_columns, long_range_rows, depth, dt):
     experiment.run_qiskit_circuit(qc)
     experiment_samples = experiment.measure_shots(all_bits, shots)
 
-    t1 = 16
+    t1 = 0.0014
     t = depth * dt / t1
-    model = 1 / (1 + t)
+    model = 1 - 1 / (1 + t)
     d_magnetization = 0
     d_sqr_magnetization = 0
     tot_n = 0

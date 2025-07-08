@@ -211,9 +211,9 @@ def main():
     shots = max(1 << 14, 1 << (n_qubits + 2))
     qubits = list(range(n_qubits))
 
-    t1 = 16
+    t1 = 0.0014
     t = depth * dt / t1
-    model = 1 / (1 + t)
+    model = 1 - 1 / (1 + t)
     bias = []
     tot_bias = 0
     for q in range((n_qubits // 2) + 1):

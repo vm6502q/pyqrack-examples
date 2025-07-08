@@ -165,9 +165,9 @@ def main():
 
             experiment_samples = experiment.measure_shots(qubits, shots)
 
-            t1 = 16
-            t = depth * dt / t1
-            model = 1 / (1 + t)
+            t1 = 0.0014
+            t = d * dt / t1
+            model = 1 - 1 / (1 + t)
             d_magnetization = 0
             d_sqr_magnetization = 0
             tot_n = 0
