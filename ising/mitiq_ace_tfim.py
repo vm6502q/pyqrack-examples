@@ -19,35 +19,12 @@ from pyqrack import QrackAceBackend
 from qiskit.providers.qrack import AceQasmSimulator
 
 from qiskit import QuantumCircuit
-from qiskit.compiler import transpile
-from qiskit_aer.backends import AerSimulator
-from qiskit.quantum_info import Statevector
 from qiskit.circuit.library import RZZGate, RXGate
 from qiskit.transpiler import CouplingMap
 
 from mitiq import zne
 from mitiq.zne.scaling.folding import fold_global
-from mitiq.zne.inference import RichardsonFactory
-
-
-# By Gemini (Google Search AI)
-def int_to_bitstring(integer, length):
-    return bin(integer)[2:].zfill(length)
-
-
-# By Elara (OpenAI custom GPT)
-def hamming_distance(s1, s2, n):
-    return sum(
-        ch1 != ch2 for ch1, ch2 in zip(int_to_bitstring(s1, n), int_to_bitstring(s2, n))
-    )
-
-
-# From https://stackoverflow.com/questions/13070461/get-indices-of-the-top-n-values-of-a-list#answer-38835860
-def top_n(n, a):
-    median_index = len(a) >> 1
-    if n > median_index:
-        n = median_index
-    return np.argsort(a)[-n:]
+from mitiq.zne.inference import LinearFactory
 
 
 def factor_width(width):
@@ -64,7 +41,7 @@ def trotter_step(circ, qubits, lattice_shape, J, h, dt):
 
     # First half of transverse field term
     for q in qubits:
-        circ.rx(h * dt, q)
+        circ.rx(h * dt / 2, q)
 
     # Layered RZZ interactions (simulate 2D nearest-neighbor coupling)
     def add_rzz_pairs(pairs):
@@ -75,7 +52,7 @@ def trotter_step(circ, qubits, lattice_shape, J, h, dt):
     horiz_pairs = [
         (r * n_cols + c, r * n_cols + (c + 1) % n_cols)
         for r in range(n_rows)
-        for c in range(0, n_cols, 2)
+        for c in range(0, n_cols - 1, 2)
     ]
     add_rzz_pairs(horiz_pairs)
 
@@ -83,14 +60,18 @@ def trotter_step(circ, qubits, lattice_shape, J, h, dt):
     horiz_pairs = [
         (r * n_cols + c, r * n_cols + (c + 1) % n_cols)
         for r in range(n_rows)
-        for c in range(1, n_cols, 2)
+        for c in range(1, n_cols - 1, 2)
     ]
     add_rzz_pairs(horiz_pairs)
+
+    # horizontal wrap
+    wrap_pairs = [(r * n_cols + (n_cols - 1), r * n_cols) for r in range(n_rows)]
+    add_rzz_pairs(wrap_pairs)
 
     # Layer 3: vertical pairs (even columns)
     vert_pairs = [
         (r * n_cols + c, ((r + 1) % n_rows) * n_cols + c)
-        for r in range(1, n_rows, 2)
+        for r in range(0, n_rows - 1, 2)
         for c in range(n_cols)
     ]
     add_rzz_pairs(vert_pairs)
@@ -98,14 +79,18 @@ def trotter_step(circ, qubits, lattice_shape, J, h, dt):
     # Layer 4: vertical pairs (odd columns)
     vert_pairs = [
         (r * n_cols + c, ((r + 1) % n_rows) * n_cols + c)
-        for r in range(0, n_rows, 2)
+        for r in range(1, n_rows - 1, 2)
         for c in range(n_cols)
     ]
     add_rzz_pairs(vert_pairs)
 
+    # vertical wrap
+    wrap_pairs = [((n_rows - 1) * n_cols + c, c) for c in range(n_cols)]
+    add_rzz_pairs(wrap_pairs)
+
     # Second half of transverse field term
     for q in qubits:
-        circ.rx(h * dt, q)
+        circ.rx(h * dt / 2, q)
 
     return circ
 
@@ -134,18 +119,17 @@ def expit(x):
     return 1 / (1 + np.exp(-x))
 
 
-def execute(circ, long_range_columns, long_range_rows, depth, dt):
-    n_qubits = circ.width()
-    shots = min(1 << 20, max(1 << 10, 1 << (n_qubits + 2))
-    all_bits = list(range(n_qubits))
+def execute(circ):
+    shots = min(1 << 20, max(1 << 10, 1 << (circ.width() + 2))
+    all_bits = list(range(circ.width()))
 
-    qc = QuantumCircuit(n_qubits)
-    theta = math.pi / 18
+    qc = QuantumCircuit(circ.width())
+    theta = 2 * math.pi / 9
     for q in range(circ.width()):
         qc.ry(theta, q)
     qc.compose(circ, all_bits, inplace=True)
 
-    experiment = QrackAceBackend(qc.width(), long_range_columns=long_range_columns, long_range_rows=long_range_rows)
+    experiment = QrackAceBackend(qc.width(), long_range_columns=1, long_range_rows=1)
     # We've achieved the dream: load balancing between discrete and integrated accelerators!
     # for sim_id in range(2, len(experiment.sim), 3):
     #     experiment.sim[sim_id].set_device(0)
@@ -153,51 +137,22 @@ def execute(circ, long_range_columns, long_range_rows, depth, dt):
     experiment.run_qiskit_circuit(qc)
     experiment_samples = experiment.measure_shots(all_bits, shots)
 
-    t1 = 16
-    t = depth * dt / t1
-    model = 1 / (1 + t)
-    d_magnetization = 0
-    d_sqr_magnetization = 0
-    tot_n = 0
-    for q in range(n_qubits // 2):
-        n = 2 * model / (n_qubits * (1 << q))
-        m = (n_qubits - (q << 1)) / n_qubits
-        d_magnetization += n * m
-        d_sqr_magnetization += n * m * m
-        tot_n += n
-
     magnetization = 0
-    sqr_magnetization = 0
     for sample in experiment_samples:
-        m = 0
-        for _ in range(n_qubits):
-            m += -1 if (sample & 1) else 1
+        for _ in range(circ.width()):
+            magnetization += -1 if (sample & 1) else 1
             sample >>= 1
-        m /= n_qubits
-        magnetization += m
-        sqr_magnetization += m * m
-    magnetization /= shots
-    sqr_magnetization /= shots
+    magnetization /= shots * circ.width()
 
-    magnetization = d_magnetization + (1 - tot_n) * magnetization
-    sqr_magnetization = d_sqr_magnetization + (1 - tot_n) * sqr_magnetization
-
-    return logit(sqr_magnetization)
+    return logit((magnetization + 1) / 2)
 
 
 def main():
-    if len(sys.argv) < 5:
-        raise RuntimeError(
-            "Usage: python3 mitiq_tfim_calibration.py [width] [depth] [long_range_columns] [long_range_rows] [hamming_n]"
-        )
+    if len(sys.argv) < 3:
+        raise RuntimeError("Usage: python3 mitiq_tfim.py [width] [depth]")
 
     n_qubits = int(sys.argv[1])
     depth = int(sys.argv[2])
-    long_range_columns = int(sys.argv[3])
-    long_range_rows = int(sys.argv[4])
-    hamming_n = 2048
-    if len(sys.argv) > 5:
-        hamming_n = int(sys.argv[5])
 
     n_rows, n_cols = factor_width(n_qubits)
     J, h, dt = -1.0, 2.0, 0.25
@@ -207,9 +162,7 @@ def main():
         trotter_step(circ, list(range(n_qubits)), (n_rows, n_cols), J, h, dt)
 
     noise_dummy = AceQasmSimulator(
-        n_qubits=n_qubits,
-        long_range_columns=long_range_columns,
-        long_range_rows=long_range_rows,
+        n_qubits=n_qubits, long_range_columns=1, long_range_rows=1
     )
     circ = transpile(
         circ,
@@ -217,19 +170,25 @@ def main():
         backend=noise_dummy,
     )
 
-    scale_count = (depth >> 1) + 1
-    max_scale = 2
+    scale_count = 6
+    max_scale = 7
     factory = RichardsonFactory(
         scale_factors=[
-            (1 + (max_scale - 1) * x / (scale_count - 1)) for x in range(0, scale_count)
+            (1 + (max_scale - 1) * x / scale_count) for x in range(0, scale_count)
         ]
     )
 
-    executor = lambda c: execute(c, long_range_columns, long_range_rows, depth, dt)
+    magnetization = (
+        2
+        * expit(
+            zne.execute_with_zne(
+                circ, execute, scale_noise=fold_global, factory=factory
+            )
+        )
+        - 1
+    )
 
-    sqr_magnetization = (expit(zne.execute_with_zne(circ, executor, scale_noise=fold_global, factory=factory)))
-
-    print({"width": n_qubits, "depth": depth, "sqr_magnetization": sqr_magnetization})
+    print({"width": n_qubits, "depth": depth, "magnetization": magnetization})
 
     return 0
 

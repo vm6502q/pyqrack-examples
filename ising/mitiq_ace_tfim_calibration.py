@@ -204,7 +204,7 @@ def expit(x):
 
 def execute(circ, long_range_columns, long_range_rows, hamming_n, depth, dt):
     n_qubits = circ.width()
-    shots = min(1024, 1 << (n_qubits + 2))
+    shots = min(1 << 20, max(1 << 10, 1 << (n_qubits + 2))
     all_bits = list(range(n_qubits))
 
     t1 = 16
