@@ -182,7 +182,7 @@ def execute(circ, long_range_columns, long_range_rows, depth, dt):
     magnetization = d_magnetization + (1 - tot_n) * magnetization
     sqr_magnetization = d_sqr_magnetization + (1 - tot_n) * sqr_magnetization
 
-    return logit(sqr_magnetization)
+    return logit((magnetization + 1) / 2)
 
 
 def main():
@@ -227,9 +227,9 @@ def main():
 
     executor = lambda c: execute(c, long_range_columns, long_range_rows, depth, dt)
 
-    sqr_magnetization = expit(zne.execute_with_zne(circ, executor, scale_noise=fold_global, factory=factory))
+    magnetization =  2 * expit(zne.execute_with_zne(circ, executor, scale_noise=fold_global, factory=factory)) - 1
 
-    print({"width": n_qubits, "depth": depth, "sqr_magnetization": sqr_magnetization})
+    print({"width": n_qubits, "depth": depth, "magnetization": magnetization})
 
     return 0
 
