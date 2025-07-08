@@ -101,9 +101,7 @@ def main():
         long_range_rows = int(sys.argv[5])
     if len(sys.argv) > 6:
         trials = int(sys.argv[6])
-    if len(sys.argv) > 7:
-        t1 = float(sys.argv[7])
-    lcv = 8
+    lcv = 7
     devices = []
     while len(sys.argv) > lcv:
         devices.append(int(sys.argv[lcv]))
@@ -167,19 +165,18 @@ def main():
 
             experiment_samples = experiment.measure_shots(qubits, shots)
 
-            t = d * dt / t1
-            model = 1 / (1 + t)
+            t1 = 14
+            t = depth * dt / t1
+            model = 2 - t + t ** 2 - t ** 3
             d_magnetization = 0
             d_sqr_magnetization = 0
             tot_n = 0
-            for q in range(n_qubits):
-                n = model / (1 << q)
+            for q in range(4):
+                n = model / (n_qubits * (1 << q))
                 m = (n_qubits - (q << 1)) / n_qubits
                 d_magnetization += n * m
                 d_sqr_magnetization += n * m * m
                 tot_n += n
-            d_magnetization /= tot_n
-            d_sqr_magnetization /= tot_n
 
             magnetization = 0
             sqr_magnetization = 0
@@ -194,10 +191,8 @@ def main():
             magnetization /= shots
             sqr_magnetization /= shots
 
-            magnetization = model * d_magnetization + (1 - model) * magnetization
-            sqr_magnetization = (
-                model * d_sqr_magnetization + (1 - model) * sqr_magnetization
-            )
+            magnetization = d_magnetization + (1 - tot_n) * magnetization
+            sqr_magnetization = d_sqr_magnetization + (1 - tot_n) * sqr_magnetization
 
             if sqr_magnetization < min_sqr_mag:
                 min_sqr_mag = sqr_magnetization
