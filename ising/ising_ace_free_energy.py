@@ -140,13 +140,13 @@ def main():
 
     nq_2 = n_qubits * (n_qubits - 1)
     nq_3 = n_qubits * (n_qubits - 1) * (n_qubits - 2)
-    t1 = 0.0014
+    t1 = 0.0024
     t = depth * dt / t1
     model = 1 - 1 / (1 + t)
-    bias_0_shots = int(shots * 2 * model / n_qubits)
-    bias_1_shots = int(shots * model) // n_qubits
-    bias_2_shots = n_qubits * (int(shots * model / 2) // nq_2)
-    bias_3_shots = nq_2 * (int(shots * model / 4) // nq_3)
+    bias_0_shots = int(shots * model / n_qubits)
+    bias_1_shots = int(shots * model / 2) // n_qubits
+    bias_2_shots = n_qubits * (int(shots * model / 4) // nq_2)
+    bias_3_shots = nq_2 * (int(shots * model / 8) // nq_3)
     remainder_shots = shots - (
         bias_0_shots + bias_1_shots + bias_2_shots + bias_3_shots
     )
