@@ -229,7 +229,7 @@ def main():
 
     sqr_magnetization = (expit(zne.execute_with_zne(circ, executor, scale_noise=fold_global, factory=factory)))
 
-    print({"width": n_qubits, "depth": depth, "sqr_magnetization": magnetization})
+    print({"width": n_qubits, "depth": depth, "sqr_magnetization": sqr_magnetization})
 
     return 0
 
