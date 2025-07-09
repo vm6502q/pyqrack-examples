@@ -35,13 +35,6 @@ def int_to_bitstring(integer, length):
     return bin(integer)[2:].zfill(length)
 
 
-# By Elara (OpenAI custom GPT)
-def hamming_distance(s1, s2, n):
-    return sum(
-        ch1 != ch2 for ch1, ch2 in zip(int_to_bitstring(s1, n), int_to_bitstring(s2, n))
-    )
-
-
 # From https://stackoverflow.com/questions/13070461/get-indices-of-the-top-n-values-of-a-list#answer-38835860
 def top_n(n, a):
     median_index = len(a) >> 1
@@ -134,7 +127,7 @@ def expit(x):
     return 1 / (1 + np.exp(-x))
 
 
-def execute(circ, long_range_columns, long_range_rows, depth, dt):
+def execute(circ, long_range_columns, long_range_rows, depth, J, h, dt):
     n_qubits = circ.width()
     shots = 8192
     all_bits = list(range(n_qubits))
@@ -201,16 +194,13 @@ def execute(circ, long_range_columns, long_range_rows, depth, dt):
 def main():
     if len(sys.argv) < 5:
         raise RuntimeError(
-            "Usage: python3 mitiq_tfim_calibration.py [width] [depth] [long_range_columns] [long_range_rows] [hamming_n]"
+            "Usage: python3 mitiq_tfim_calibration.py [width] [depth] [long_range_columns] [long_range_rows]"
         )
 
     n_qubits = int(sys.argv[1])
     depth = int(sys.argv[2])
     long_range_columns = int(sys.argv[3])
     long_range_rows = int(sys.argv[4])
-    hamming_n = 2048
-    if len(sys.argv) > 5:
-        hamming_n = int(sys.argv[5])
 
     n_rows, n_cols = factor_width(n_qubits)
     J, h, dt = -1.0, 2.0, 0.25
@@ -238,7 +228,7 @@ def main():
         ]
     )
 
-    executor = lambda c: execute(c, long_range_columns, long_range_rows, depth, dt)
+    executor = lambda c: execute(c, long_range_columns, long_range_rows, depth, J, h, dt)
 
     sqr_magnetization = expit(zne.execute_with_zne(circ, executor, scale_noise=fold_global, factory=factory))
 
