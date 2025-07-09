@@ -155,7 +155,7 @@ def execute(circ, long_range_columns, long_range_rows, depth, dt):
 
     t1 = 1
     t2 = 1
-    p0 = 2.25
+    p0 = 2.60
     t = depth * dt
     m = t / t1
     p = p0 + J * t / (h * t2)
