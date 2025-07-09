@@ -165,9 +165,10 @@ def execute(circ, long_range_columns, long_range_rows, depth, J, h, dt):
     d_sqr_magnetization = 0
     tot_n = 0
     for q in range(n_qubits + 1):
+        n = model / (n_qubits * (2 ** (p * (q + 1))))
         m = (n_qubits - (q << 1)) / n_qubits
-        d_magnetization += bias[q] * m
-        d_sqr_magnetization += bias[q] * m * m
+        d_magnetization += n * m
+        d_sqr_magnetization += n * m * m
         tot_n += n
     d_magnetization /= tot_n
     d_sqr_magnetization /= tot_n
