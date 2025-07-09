@@ -210,9 +210,9 @@ def main():
     shots = max(1 << 14, 1 << (n_qubits + 2))
     qubits = list(range(n_qubits))
 
-    t1 = 1
-    t2 = 1
-    p0 = 2.60
+    t1 = 1.25
+    t2 = 1.25
+    p0 = 2.5
     t = depth * dt
     m = t / t1
     p = p0 + J * t / (h * t2)

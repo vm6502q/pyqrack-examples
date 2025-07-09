@@ -153,9 +153,9 @@ def execute(circ, long_range_columns, long_range_rows, depth, dt):
     experiment.run_qiskit_circuit(qc)
     experiment_samples = experiment.measure_shots(all_bits, shots)
 
-    t1 = 1
-    t2 = 1
-    p0 = 2.60
+    t1 = 1.25
+    t2 = 1.25
+    p0 = 2.5
     t = depth * dt
     m = t / t1
     p = p0 + J * t / (h * t2)
