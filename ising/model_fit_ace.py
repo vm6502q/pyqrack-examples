@@ -172,8 +172,8 @@ def main():
     t1 = 1.625
     t2 = 1.625
 
-    print("t1: " + t1)
-    print("t2: " + t2)
+    print("t1: " + str(t1))
+    print("t2: " + str(t2))
 
     n_rows, n_cols = factor_width(n_qubits, False)
 
@@ -266,7 +266,7 @@ def main():
 
     r_squared = 1 - (r_squared ** (1 / 2)) / 20
 
-    print("R^2: " + r_squared)
+    print("R^2: " + str(r_squared))
 
     return 0
 

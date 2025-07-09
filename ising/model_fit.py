@@ -168,12 +168,13 @@ def top_n(n, a):
 def main():
     n_qubits = 8
     depth = 20
+    trials = 10
     hamming_n = 2048
     t1 = 4.625
     t2 = 1.25
 
-    print("t1: " + t1)
-    print("t2: " + t2)
+    print("t1: " + str(t1))
+    print("t2: " + str(t2))
 
     n_rows, n_cols = factor_width(n_qubits, False)
 
@@ -193,7 +194,7 @@ def main():
     # J, h, dt = -1.0, 1.0, 0.25
     # theta = -math.pi / 4
 
-    shots = max(1 << 14, 1 << (n_qubits + 2))
+    shots = 8192
     qubits = list(range(n_qubits))
 
     experiment = QrackSimulator(n_qubits)
@@ -212,58 +213,58 @@ def main():
 
     experiment.run_qiskit_circuit(qc)
     r_squared = 0
-    first = 0
-    for d in range(1, depth + 1):
-        experiment.run_qiskit_circuit(step)
-        trotter_step(qc_aer, qubits, (n_rows, n_cols), J, h, dt)
+    for t in range(trials):
+        for d in range(1, depth + 1):
+            experiment.run_qiskit_circuit(step)
+            trotter_step(qc_aer, qubits, (n_rows, n_cols), J, h, dt)
 
-        bias = []
-        t = d * dt
-        m = t / t1
-        model = 1 - 1 / (1 + m)
-        if np.isclose(h, 0):
-            bias.append(1)
-            bias += n_qubits * [0]
-        elif np.isclose(J, 0):
-            bias = (n_qubits + 1) * [1 / (n_qubits + 1)]
-        else:
-            p = J * t / (h * t2) - h / J
-            tot_bias = 0
-            for q in range(n_qubits + 1):
-                bias.append(model / (n_qubits * (2 ** (p * (q + 1)))))
-                tot_bias += bias[-1]
-            # Normalize
-            for q in range(n_qubits + 1):
-                bias[q] /= tot_bias
+            bias = []
+            t = d * dt
+            m = t / t1
+            model = 1 - 1 / (1 + m)
+            if np.isclose(h, 0):
+                bias.append(1)
+                bias += n_qubits * [0]
+            elif np.isclose(J, 0):
+                bias = (n_qubits + 1) * [1 / (n_qubits + 1)]
+            else:
+                p = J * t / (h * t2) - h / J
+                tot_bias = 0
+                for q in range(n_qubits + 1):
+                    bias.append(model / (n_qubits * (2 ** (p * (q + 1)))))
+                    tot_bias += bias[-1]
+                # Normalize
+                for q in range(n_qubits + 1):
+                    bias[q] /= tot_bias
 
-        experiment_counts = dict(Counter(experiment.measure_shots(qubits, shots)))
+            experiment_counts = dict(Counter(experiment.measure_shots(qubits, shots)))
 
-        control = AerSimulator(method="statevector")
-        qc_aer = transpile(
-            qc_aer,
-            backend=control,
-        )
-        qc_aer_sv = qc_aer.copy()
-        qc_aer_sv.save_statevector()
-        job = control.run(qc_aer_sv)
-        control_probs = Statevector(job.result().get_statevector()).probabilities()
+            control = AerSimulator(method="statevector")
+            qc_aer = transpile(
+                qc_aer,
+                backend=control,
+            )
+            qc_aer_sv = qc_aer.copy()
+            qc_aer_sv.save_statevector()
+            job = control.run(qc_aer_sv)
+            control_probs = Statevector(job.result().get_statevector()).probabilities()
 
-        result = calc_stats(
-            n_qubits,
-            control_probs,
-            experiment_counts,
-            bias,
-            model,
-            shots,
-            depth,
-            hamming_n,
-        )
+            result = calc_stats(
+                n_qubits,
+                control_probs,
+                experiment_counts,
+                bias,
+                model,
+                shots,
+                depth,
+                hamming_n,
+            )
 
-        r_squared += (1 - result["l2_similarity"]) ** 2
+            r_squared += (1 - result["l2_similarity"]) ** 2
 
-    r_squared = 1 - (r_squared ** (1 / 2)) / 20
+    r_squared = 1 - (r_squared ** (1 / 2)) / (20 * trials)
 
-    print("R^2: " + r_squared)
+    print("R^2: " + str(r_squared))
 
     return 0
 
