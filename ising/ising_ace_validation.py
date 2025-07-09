@@ -210,7 +210,7 @@ def main():
     shots = max(1 << 14, 1 << (n_qubits + 2))
     qubits = list(range(n_qubits))
 
-    t1 = 0.5
+    t1 = 7
     p = -h / J
     t = depth * dt / t1
     model = 1 - 1 / (1 + t)
