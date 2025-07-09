@@ -15,8 +15,7 @@ import numpy as np
 
 from collections import Counter
 
-from pyqrack import QrackAceBackend
-from qiskit.providers.qrack import AceQasmSimulator
+from pyqrack import QrackSimulator
 
 from qiskit import QuantumCircuit
 from qiskit.compiler import transpile
@@ -124,7 +123,7 @@ def expit(x):
     return 1 / (1 + np.exp(-x))
 
 
-def execute(circ, long_range_columns, long_range_rows, depth, J, h, dt):
+def execute(circ, depth, J, h, dt):
     n_qubits = circ.width()
     shots = 8192
     all_bits = list(range(n_qubits))
@@ -135,16 +134,12 @@ def execute(circ, long_range_columns, long_range_rows, depth, J, h, dt):
         qc.ry(theta, q)
     qc.compose(circ, all_bits, inplace=True)
 
-    experiment = QrackAceBackend(qc.width(), long_range_columns=long_range_columns, long_range_rows=long_range_rows)
-    # We've achieved the dream: load balancing between discrete and integrated accelerators!
-    # for sim_id in range(2, len(experiment.sim), 3):
-    #     experiment.sim[sim_id].set_device(0)
-
+    experiment = QrackSimulator(qc.width())
     experiment.run_qiskit_circuit(qc)
     experiment_samples = experiment.measure_shots(all_bits, shots)
 
-    t1 = 0.625
-    t2 = 0.875
+    t1 = 3.625
+    t2 = 1.75
     t = depth * dt
     m = t / t1
     model = 1 - 1 / (1 + m)
@@ -196,15 +191,13 @@ def execute(circ, long_range_columns, long_range_rows, depth, J, h, dt):
 
 
 def main():
-    if len(sys.argv) < 5:
+    if len(sys.argv) < 3:
         raise RuntimeError(
-            "Usage: python3 mitiq_tfim_calibration.py [width] [depth] [long_range_columns] [long_range_rows]"
+            "Usage: python3 mitiq_tfim_calibration.py [width] [depth]
         )
 
     n_qubits = int(sys.argv[1])
     depth = int(sys.argv[2])
-    long_range_columns = int(sys.argv[3])
-    long_range_rows = int(sys.argv[4])
 
     n_rows, n_cols = factor_width(n_qubits)
     J, h, dt = -1.0, 2.0, 0.25
@@ -213,15 +206,10 @@ def main():
     for _ in range(depth):
         trotter_step(circ, list(range(n_qubits)), (n_rows, n_cols), J, h, dt)
 
-    noise_dummy = AceQasmSimulator(
-        n_qubits=n_qubits,
-        long_range_columns=long_range_columns,
-        long_range_rows=long_range_rows,
-    )
     circ = transpile(
         circ,
         optimization_level=3,
-        backend=noise_dummy,
+        basis_gates=QrackSimulator.get_qiskit_basis_gates(),
     )
 
     scale_count = depth + 1
@@ -232,7 +220,7 @@ def main():
         ]
     )
 
-    executor = lambda c: execute(c, long_range_columns, long_range_rows, depth, J, h, dt)
+    executor = lambda c: execute(c, depth, J, h, dt)
 
     sqr_magnetization = expit(zne.execute_with_zne(circ, executor, scale_noise=fold_global, factory=factory))
 

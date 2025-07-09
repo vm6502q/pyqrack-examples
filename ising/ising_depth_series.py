@@ -5,9 +5,9 @@ import math
 import sys
 import time
 
-import numpy as np
-
 from collections import Counter
+
+import numpy as np
 
 import matplotlib.pyplot as plt
 
@@ -16,15 +16,16 @@ from qiskit.circuit.library import RZZGate, RXGate
 from qiskit.compiler import transpile
 
 from pyqrack import QrackSimulator
+from qiskit.providers.qrack import AceQasmSimulator
 
 
-def factor_width(width, reverse=False):
+def factor_width(width, is_transpose=False):
     col_len = math.floor(math.sqrt(width))
     while ((width // col_len) * col_len) != width:
         col_len -= 1
     row_len = width // col_len
 
-    return (col_len, row_len) if reverse else (row_len, col_len)
+    return (col_len, row_len) if is_transpose else (row_len, col_len)
 
 
 def trotter_step(circ, qubits, lattice_shape, J, h, dt):
@@ -79,7 +80,7 @@ def trotter_step(circ, qubits, lattice_shape, J, h, dt):
 
 
 def main():
-    n_qubits = 100
+    n_qubits = 54
     depth = 20
     shots = 1024
     trials = 5
@@ -91,8 +92,8 @@ def main():
         shots = int(sys.argv[3])
     else:
         shots = min(shots, 1 << (n_qubits + 2))
-    if len(sys.argv) > 6:
-        trials = int(sys.argv[6])
+    if len(sys.argv) > 4:
+        trials = int(sys.argv[4])
 
     n_rows, n_cols = factor_width(n_qubits, False)
 
@@ -112,12 +113,14 @@ def main():
     # J, h, dt = -1.0, 1.0, 0.25
     # theta = -math.pi / 4
 
+    qubits = list(range(n_qubits))
+
     qc = QuantumCircuit(n_qubits)
     for q in range(n_qubits):
         qc.ry(theta, q)
 
     step = QuantumCircuit(n_qubits)
-    trotter_step(step, list(range(n_qubits)), (n_rows, n_cols), J, h, dt)
+    trotter_step(step, qubits, (n_rows, n_cols), J, h, dt)
     step = transpile(
         step,
         optimization_level=3,
@@ -132,12 +135,43 @@ def main():
     for trial in range(trials):
         magnetizations.append([])
         experiment = QrackSimulator(n_qubits)
+
         start = time.perf_counter()
+
         experiment.run_qiskit_circuit(qc)
         for d in depths:
+            d_magnetization = 0
+            d_sqr_magnetization = 0
+            model = 0
             if d > 0:
                 experiment.run_qiskit_circuit(step)
-            experiment_samples = experiment.measure_shots(list(range(n_qubits)), shots)
+                
+                t1 = 3.625
+                t2 = 1.75
+                t = d * dt
+                m = t / t1
+                model = 1 - 1 / (1 + m)
+                d_magnetization = 0
+                d_sqr_magnetization = 0
+                if np.isclose(h, 0):
+                    d_magnetization = 1
+                    d_sqr_magnetization = 1
+                elif np.isclose(J, 0):
+                    d_magnetization = 0
+                    d_sqr_magnetization = 0
+                else:
+                    p = J * t / (h * t2) - h / J
+                    tot_n = 0
+                    for q in range(n_qubits + 1):
+                        n = model / (n_qubits * (2 ** (p * (q + 1))))
+                        m = (n_qubits - (q << 1)) / n_qubits
+                        d_magnetization += n * m
+                        d_sqr_magnetization += n * m * m
+                        tot_n += n
+                    d_magnetization /= tot_n
+                    d_sqr_magnetization /= tot_n
+
+            experiment_samples = experiment.measure_shots(qubits, shots)
 
             magnetization = 0
             sqr_magnetization = 0
@@ -151,6 +185,10 @@ def main():
                 sqr_magnetization += m * m
             magnetization /= shots
             sqr_magnetization /= shots
+
+            magnetization = model * d_magnetization + (1 - model) * magnetization
+            sqr_magnetization = model * d_sqr_magnetization + (1 - model) * sqr_magnetization
+
             if sqr_magnetization < min_sqr_mag:
                 min_sqr_mag = sqr_magnetization
 

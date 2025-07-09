@@ -13,17 +13,18 @@ from qiskit.circuit.library import RZZGate, RXGate
 from qiskit.compiler import transpile
 from qiskit_aer.backends import AerSimulator
 from qiskit.quantum_info import Statevector
+from qiskit.transpiler import CouplingMap
 
 from pyqrack import QrackSimulator
 
 
-def factor_width(width):
+def factor_width(width, is_transpose=False):
     col_len = math.floor(math.sqrt(width))
     while ((width // col_len) * col_len) != width:
         col_len -= 1
     row_len = width // col_len
 
-    return row_len, col_len
+    return (col_len, row_len) if is_transpose else (row_len, col_len)
 
 
 def trotter_step(circ, qubits, lattice_shape, J, h, dt):
@@ -77,7 +78,7 @@ def trotter_step(circ, qubits, lattice_shape, J, h, dt):
     return circ
 
 
-def calc_stats(n, ideal_probs, counts, shots, depth, hamming_n):
+def calc_stats(n, ideal_probs, counts, bias, model, shots, depth, hamming_n):
     # For QV, we compare probabilities of (ideal) "heavy outputs."
     # If the probability is above 2/3, the protocol certifies/passes the qubit width.
     n_pow = 2**n
@@ -89,22 +90,33 @@ def calc_stats(n, ideal_probs, counts, shots, depth, hamming_n):
     sum_hog_counts = 0
     experiment = [0] * n_pow
     for i in range(n_pow):
-        count = counts[i] if i in counts else 0
         ideal = ideal_probs[i]
 
-        experiment[i] = count
+        count = counts[i] if i in counts else 0
+        count /= shots
 
-        # L2 distance
-        diff_sqr += (ideal - (count / shots)) ** 2
+        hamming_weight = hamming_distance(i, 0, n)
+        if hamming_weight <= (n // 2):
+            weight = 1
+            combo_factor = n
+            for _ in range(hamming_weight):
+                weight *= combo_factor
+                combo_factor -= 1
+            count = (1 - model) * count + model * bias[hamming_weight] / weight
+
+        experiment[i] = int(count * shots)
 
         # QV / HOG
         if ideal > threshold:
-            sum_hog_counts += count
+            sum_hog_counts += count * shots
+
+        # L2 distance
+        diff_sqr += (ideal - count) ** 2
 
         # XEB / EPLG
         ideal_centered = ideal - u_u
         denom += ideal_centered * ideal_centered
-        numer += ideal_centered * ((count / shots) - u_u)
+        numer += ideal_centered * (count - u_u)
 
     l2_similarity = 1 - diff_sqr ** (1 / 2)
     hog_prob = sum_hog_counts / shots
@@ -154,9 +166,9 @@ def top_n(n, a):
 
 
 def main():
-    n_qubits = 56
+    n_qubits = 16
     depth = 10
-    hamming_n = 100
+    hamming_n = 2048
     if len(sys.argv) > 1:
         n_qubits = int(sys.argv[1])
     if len(sys.argv) > 2:
@@ -164,55 +176,83 @@ def main():
     if len(sys.argv) > 3:
         hamming_n = int(sys.argv[3])
 
-    n_rows, n_cols = factor_width(n_qubits)
+    n_rows, n_cols = factor_width(n_qubits, False)
+
+    # Quantinuum settings
     J, h, dt = -1.0, 2.0, 0.25
     theta = math.pi / 18
+
+    # Pure ferromagnetic
+    # J, h, dt = -1.0, 0.0, 0.25
+    # theta = 0
+
+    # Pure transverse field
+    # J, h, dt = 0.0, 2.0, 0.25
+    # theta = -math.pi / 2
+
+    # Critical point (symmetry breaking)
+    # J, h, dt = -1.0, 1.0, 0.25
+    # theta = -math.pi / 4
+
     shots = max(1 << 14, 1 << (n_qubits + 2))
+    qubits = list(range(n_qubits))
+
+    bias = []
+    t1 = 3.625
+    t2 = 1.75
+    t = depth * dt
+    m = t / t1
+    model = 1 - 1 / (1 + m)
+    if np.isclose(h, 0):
+        bias.append(1)
+        bias += n_qubits * [0]
+    elif np.isclose(J, 0):
+        bias = (n_qubits + 1) * [1 / (n_qubits + 1)]
+    else:
+        p = J * t / (h * t2) - h / J
+        tot_bias = 0
+        for q in range(n_qubits + 1):
+            bias.append(model / (n_qubits * (2 ** (p * (q + 1)))))
+            tot_bias += bias[-1]
+        # Normalize
+        for q in range(n_qubits + 1):
+            bias[q] /= tot_bias
 
     qc = QuantumCircuit(n_qubits)
-
     for q in range(n_qubits):
         qc.ry(theta, q)
-
     for d in range(depth):
-        trotter_step(qc, list(range(n_qubits)), (n_rows, n_cols), J, h, dt)
-
-    basis_gates = [
-        "u",
-        "rx",
-        "ry",
-        "rz",
-        "h",
-        "x",
-        "y",
-        "z",
-        "sx",
-        "sxdg",
-        "s",
-        "sdg",
-        "t",
-        "tdg",
-        "cx",
-        "cy",
-        "cz",
-        "cp",
-        "swap",
-        "iswap",
-    ]
-    qc = transpile(qc, basis_gates=basis_gates)
+        trotter_step(qc, qubits, (n_rows, n_cols), J, h, dt)
+    qc = transpile(
+        qc,
+        optimization_level=3,
+        basis_gates=QrackSimulator.get_qiskit_basis_gates(),
+    )
 
     experiment = QrackSimulator(n_qubits)
-    control = AerSimulator(method="statevector")
     experiment.run_qiskit_circuit(qc)
+    experiment_counts = dict(Counter(experiment.measure_shots(qubits, shots)))
+
+    control = AerSimulator(method="statevector")
+    qc = transpile(
+        qc,
+        backend=control,
+    )
     qc.save_statevector()
     job = control.run(qc)
-    experiment_counts = dict(
-        Counter(experiment.measure_shots(list(range(n_qubits)), shots))
-    )
     control_probs = Statevector(job.result().get_statevector()).probabilities()
 
     print(
-        calc_stats(n_qubits, control_probs, experiment_counts, shots, depth, hamming_n)
+        calc_stats(
+            n_qubits,
+            control_probs,
+            experiment_counts,
+            bias,
+            model,
+            shots,
+            depth,
+            hamming_n,
+        )
     )
 
     return 0
