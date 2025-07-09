@@ -171,19 +171,23 @@ def main():
                 p0 = 2
                 t = d * dt
                 m = t / t1
-                p = p0 + J * t / (h * t2)
                 model = 1 - 1 / (1 + m)
                 d_magnetization = 0
                 d_sqr_magnetization = 0
-                tot_n = 0
-                for q in range(n_qubits + 1):
-                    n = model / (n_qubits * (2 ** (p * (q + 1))))
-                    m = (n_qubits - (q << 1)) / n_qubits
-                    d_magnetization += n * m
-                    d_sqr_magnetization += n * m * m
-                    tot_n += n
-                d_magnetization /= tot_n
-                d_sqr_magnetization /= tot_n
+                if np.isclose(h, 0):
+                    d_magnetization = 1
+                    d_sqr_magnetization = 1
+                else:
+                    p = p0 + J * t / (h * t2)
+                    tot_n = 0
+                    for q in range(n_qubits + 1):
+                        n = model / (n_qubits * (2 ** (p * (q + 1))))
+                        m = (n_qubits - (q << 1)) / n_qubits
+                        d_magnetization += n * m
+                        d_sqr_magnetization += n * m * m
+                        tot_n += n
+                    d_magnetization /= tot_n
+                    d_sqr_magnetization /= tot_n
 
             experiment_samples = experiment.measure_shots(qubits, shots)
 

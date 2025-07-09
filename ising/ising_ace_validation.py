@@ -210,21 +210,26 @@ def main():
     shots = max(1 << 14, 1 << (n_qubits + 2))
     qubits = list(range(n_qubits))
 
+    bias = []
     t1 = 2
     t2 = 2
     p0 = 2
     t = depth * dt
     m = t / t1
-    p = p0 + J * t / (h * t2)
     model = 1 - 1 / (1 + m)
-    bias = []
     tot_bias = 0
-    for q in range(n_qubits + 1):
-        bias.append(model / (n_qubits * (2 ** (p * (q + 1)))))
-        tot_bias += bias[-1]
-    # Normalize
-    for q in range(n_qubits + 1):
-        bias[q] /= tot_bias
+    if np.isclose(h, 0):
+        bias.append(1)
+        bias += n_qubits * [0]
+        tot_bias = 1
+    else:
+        p = (p0 + J * t / (h * t2))
+        for q in range(n_qubits + 1):
+            bias.append(model / (n_qubits * (2 ** (p * (q + 1)))))
+            tot_bias += bias[-1]
+        # Normalize
+        for q in range(n_qubits + 1):
+            bias[q] /= tot_bias
 
     qc = QuantumCircuit(n_qubits)
     for q in range(n_qubits):
