@@ -135,7 +135,11 @@ def execute(circ, long_range_columns, long_range_rows, depth, J, h, dt):
         qc.ry(theta, q)
     qc.compose(circ, all_bits, inplace=True)
 
-    experiment = QrackAceBackend(qc.width(), long_range_columns=long_range_columns, long_range_rows=long_range_rows)
+    experiment = QrackAceBackend(
+        qc.width(),
+        long_range_columns=long_range_columns,
+        long_range_rows=long_range_rows,
+    )
     # We've achieved the dream: load balancing between discrete and integrated accelerators!
     # for sim_id in range(2, len(experiment.sim), 3):
     #     experiment.sim[sim_id].set_device(0)
@@ -232,11 +236,17 @@ def main():
         ]
     )
 
-    executor = lambda c: execute(c, long_range_columns, long_range_rows, depth, J, h, dt)
+    executor = lambda c: execute(
+        c, long_range_columns, long_range_rows, depth, J, h, dt
+    )
 
-    sqr_magnetization = expit(zne.execute_with_zne(circ, executor, scale_noise=fold_global, factory=factory))
+    sqr_magnetization = expit(
+        zne.execute_with_zne(circ, executor, scale_noise=fold_global, factory=factory)
+    )
 
-    print({"width": n_qubits, "depth": depth, "square_magnetization": sqr_magnetization})
+    print(
+        {"width": n_qubits, "depth": depth, "square_magnetization": sqr_magnetization}
+    )
 
     return 0
 

@@ -165,7 +165,7 @@ def main():
             model = 0
             if d > 0:
                 experiment.run_qiskit_circuit(step)
-                
+
                 t1 = 1.625
                 t2 = 1.625
                 t = d * dt
@@ -207,7 +207,9 @@ def main():
             sqr_magnetization /= shots
 
             magnetization = model * d_magnetization + (1 - model) * magnetization
-            sqr_magnetization = model * d_sqr_magnetization + (1 - model) * sqr_magnetization
+            sqr_magnetization = (
+                model * d_sqr_magnetization + (1 - model) * sqr_magnetization
+            )
 
             if sqr_magnetization < min_sqr_mag:
                 min_sqr_mag = sqr_magnetization
