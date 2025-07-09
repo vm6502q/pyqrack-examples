@@ -82,8 +82,8 @@ def trotter_step(circ, qubits, lattice_shape, J, h, dt):
 def main():
     n_qubits = 16
     depth = 20
-    shots = 8192
-    trials = 50
+    shots = 32768
+    trials = 128
     if len(sys.argv) > 1:
         n_qubits = int(sys.argv[1])
     if len(sys.argv) > 2:
@@ -254,28 +254,6 @@ def main():
     plt.ylim(ylim, 1.0)
     plt.grid(True)
     plt.legend()
-    plt.tight_layout()
-    plt.show()
-
-    ylim = ((min_sqr_mag * 100) // 10) / 10
-
-    # Plot each trial individually
-    plt.figure(figsize=(14, 14))
-    for i, magnetization in enumerate(magnetizations):
-        plt.plot(depths, magnetization, marker="o", label=f"Trial {i + 1}")
-
-    plt.title(
-        "Square Magnetization vs Trotter Depth ("
-        + str(n_qubits)
-        + " Qubits, "
-        + str(trials)
-        + " Trials)"
-    )
-    plt.xlabel("Trotter Depth")
-    plt.ylabel("Square Magnetization")
-    plt.ylim(ylim, 1.0)
-    plt.grid(True)
-    plt.legend([f"Trial {i + 1}" for i in range(trials)], loc="lower left")
     plt.tight_layout()
     plt.show()
 
