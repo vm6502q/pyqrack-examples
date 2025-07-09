@@ -166,9 +166,9 @@ def main():
             if d > 0:
                 experiment.run_qiskit_circuit(step)
                 
-                t1 = 4.25
+                t1 = 6
                 t = d * dt / t1
-                p = -t * h / J
+                p = 1 - t * h / J
                 model = 1 - 1 / (1 + t)
                 d_magnetization = 0
                 d_sqr_magnetization = 0
