@@ -103,7 +103,7 @@ def calc_stats(n, ideal_probs, counts, bias, model, shots, depth, hamming_n):
             for _ in range(hamming_weight):
                 weight *= combo_factor
                 combo_factor -= 1
-            count = (1 - 2 * model) * count + bias[hamming_weight] / weight
+            count = (1 - model) * count + model * bias[hamming_weight] / weight
 
         experiment[i] = int(count * shots)
 
@@ -210,8 +210,8 @@ def main():
     shots = max(1 << 14, 1 << (n_qubits + 2))
     qubits = list(range(n_qubits))
 
-    t1 = 7.5
-    p = -J / h
+    t1 = 0.5
+    p = -h / J
     t = depth * dt / t1
     model = 1 - 1 / (1 + t)
     bias = []
