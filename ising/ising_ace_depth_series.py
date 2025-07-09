@@ -166,8 +166,8 @@ def main():
             if d > 0:
                 experiment.run_qiskit_circuit(step)
                 
-                t1 = 1.25
-                t2 = 1.25
+                t1 = 2
+                t2 = 2
                 p0 = 2
                 t = d * dt
                 m = t / t1
