@@ -170,8 +170,8 @@ def main():
     depth = 20
     trials = 10
     hamming_n = 2048
-    t1 = 4.57
-    t2 = 2.22
+    t1 = 4.5
+    t2 = 2.2
 
     print("t1: " + str(t1))
     print("t2: " + str(t2))
