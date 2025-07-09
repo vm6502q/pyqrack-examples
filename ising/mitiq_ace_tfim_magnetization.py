@@ -154,9 +154,9 @@ def execute(circ, long_range_columns, long_range_rows, depth, dt):
     experiment_samples = experiment.measure_shots(all_bits, shots)
 
     t1 = 0.175
-    t2 = 8.25
+    t2 = 2
     t = depth * dt / t1
-    p = 1 + depth * dt * h / (J * t2)
+    p = 1 + depth * dt * J / (h * t2)
     model = 1 - 1 / (1 + t)
     bias = []
     tot_bias = 0
