@@ -153,9 +153,10 @@ def execute(circ, long_range_columns, long_range_rows, depth, dt):
     experiment.run_qiskit_circuit(qc)
     experiment_samples = experiment.measure_shots(all_bits, shots)
 
-    t1 = 4.25
+    t1 = 0.175
+    t2 = 8.25
     t = depth * dt / t1
-    p = -t * h / J
+    p = 1 + depth * dt * h / (J * t2)
     model = 1 - 1 / (1 + t)
     bias = []
     tot_bias = 0

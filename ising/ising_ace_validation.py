@@ -210,9 +210,10 @@ def main():
     shots = max(1 << 14, 1 << (n_qubits + 2))
     qubits = list(range(n_qubits))
 
-    t1 = 6
+    t1 = 0.175
+    t2 = 8.25
     t = depth * dt / t1
-    p = 1 - t * h / J
+    p = 1 + depth * dt * h / (J * t2)
     model = 1 - 1 / (1 + t)
     bias = []
     tot_bias = 0
