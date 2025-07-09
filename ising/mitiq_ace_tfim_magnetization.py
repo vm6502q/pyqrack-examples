@@ -146,24 +146,23 @@ def execute(circ, long_range_columns, long_range_rows, depth, J, h, dt):
     experiment.run_qiskit_circuit(qc)
     experiment_samples = experiment.measure_shots(all_bits, shots)
 
-    bias = []
     t1 = 2
     t2 = 2
-    p0 = 2
     t = depth * dt
     m = t / t1
     model = 1 - 1 / (1 + m)
-    tot_bias = 0
     d_magnetization = 0
     d_sqr_magnetization = 0
     if np.isclose(h, 0):
-        bias.append(1)
-        bias += n_qubits * [0]
-        tot_bias = 1
         d_magnetization = 1
         d_sqr_magnetization = 1
+    elif np.isclose(J, 0):
+        d_magnetization = 0
+        d_sqr_magnetization = 0
     else:
-        p = (p0 + J * t / (h * t2))
+        p = J * t / (h * t2) - h / J
+        bias = []
+        tot_bias = 0
         for q in range(n_qubits + 1):
             bias.append(model / (n_qubits * (2 ** (p * (q + 1)))))
             tot_bias += bias[-1]

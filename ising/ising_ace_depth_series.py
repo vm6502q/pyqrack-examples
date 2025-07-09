@@ -168,7 +168,6 @@ def main():
                 
                 t1 = 2
                 t2 = 2
-                p0 = 2
                 t = d * dt
                 m = t / t1
                 model = 1 - 1 / (1 + m)
@@ -177,8 +176,11 @@ def main():
                 if np.isclose(h, 0):
                     d_magnetization = 1
                     d_sqr_magnetization = 1
+                elif np.isclose(J, 0):
+                    d_magnetization = 0
+                    d_sqr_magnetization = 0
                 else:
-                    p = p0 + J * t / (h * t2)
+                    p = J * t / (h * t2) - h / J
                     tot_n = 0
                     for q in range(n_qubits + 1):
                         n = model / (n_qubits * (2 ** (p * (q + 1))))
