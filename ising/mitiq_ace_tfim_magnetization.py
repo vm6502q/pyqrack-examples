@@ -147,7 +147,7 @@ def execute(circ, long_range_columns, long_range_rows, depth, J, h, dt):
     experiment_samples = experiment.measure_shots(all_bits, shots)
 
     t1 = 0.625
-    t2 = 0.75
+    t2 = 0.875
     t = depth * dt
     m = t / t1
     model = 1 - 1 / (1 + m)

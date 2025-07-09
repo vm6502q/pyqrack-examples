@@ -212,7 +212,7 @@ def main():
 
     bias = []
     t1 = 0.625
-    t2 = 0.75
+    t2 = 0.875
     t = depth * dt
     m = t / t1
     model = 1 - 1 / (1 + m)
