@@ -94,11 +94,6 @@ def calc_stats(n, ideal_probs, counts, bias, model, shots, depth, hamming_n):
         ideal = ideal_probs[i]
 
         count = counts[i] if i in counts else 0
-
-        # QV / HOG
-        if ideal > threshold:
-            sum_hog_counts += count
-
         count /= shots
 
         hamming_weight = hamming_distance(i, 0, n)
@@ -111,6 +106,10 @@ def calc_stats(n, ideal_probs, counts, bias, model, shots, depth, hamming_n):
             count = (1 - 2 * model) * count + bias[hamming_weight] / weight
 
         experiment[i] = int(count * shots)
+
+        # QV / HOG
+        if ideal > threshold:
+            sum_hog_counts += count * shots
 
         # L2 distance
         diff_sqr += (ideal - count) ** 2
