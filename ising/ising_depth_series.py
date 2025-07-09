@@ -9,6 +9,8 @@ from collections import Counter
 
 import numpy as np
 
+from scipy.stats import distributions as dists
+
 import matplotlib.pyplot as plt
 
 from qiskit import QuantumCircuit
@@ -227,20 +229,28 @@ def main():
 
         return 0
 
+    # Plot with error bands
     mean_magnetization = np.mean(magnetizations, axis=0)
-    std_magnetization = np.std(magnetizations, axis=0)
+    std_magnetization = np.std(magnetizations, axis=0, ddof=1)  # sample std dev
+    sem_magnetization = std_magnetization / np.sqrt(trials)
 
     ylim = ((min(mean_magnetization) * 100) // 10) / 10
 
-    # Plot with error bands
+    # 95% confidence interval multiplier (two-tailed)
+    confidence_level = 0.95
+    degrees_freedom = trials - 1
+    t_critical = dists.t.ppf((1 + confidence_level) / 2, df=degrees_freedom)
+    ci95_magnetization = t_critical * sem_magnetization
+
+    # Plot with 95% confidence intervals
     plt.figure(figsize=(14, 14))
     plt.errorbar(
         depths,
         mean_magnetization,
-        yerr=std_magnetization,
+        yerr=ci95_magnetization,
         fmt="-o",
         capsize=5,
-        label="Mean ± Std Dev",
+        label="Mean ± 95% CI",
     )
     plt.xlabel("Trotter Depth")
     plt.ylabel("Square Magnetization")
@@ -249,7 +259,7 @@ def main():
         + str(n_qubits)
         + " Qubits, "
         + str(trials)
-        + " Trials)\nWith Mean and Standard Deviation"
+        + " Trials)\nWith Mean and 95% CI Error"
     )
     plt.ylim(ylim, 1.0)
     plt.grid(True)
