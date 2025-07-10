@@ -216,6 +216,7 @@ def main():
         # Plotting (contributed by Elara, an OpenAI custom GPT)
         ylim = ((min_sqr_mag * 100) // 10) / 10
 
+        plt.figure(figsize=(14, 14))
         plt.plot(depths, magnetizations[0], marker="o", linestyle="-")
         plt.title(
             "Square Magnetization vs Trotter Depth (" + str(n_qubits) + " Qubits)"
