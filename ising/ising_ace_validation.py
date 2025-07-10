@@ -210,8 +210,8 @@ def main():
     qubits = list(range(n_qubits))
 
     bias = []
-    t1 = 1.625
-    t2 = 1.625
+    t1 = 1.5
+    t2 = 1.5
     t = depth * dt
     m = t / t1
     model = 1 - 1 / (1 + m)
