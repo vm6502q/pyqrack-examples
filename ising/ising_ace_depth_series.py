@@ -85,8 +85,7 @@ def main():
     shots = 1024
     long_range_columns = 2
     long_range_rows = 7
-    trials = 5
-    t1 = 1
+    trials = 1
     if len(sys.argv) > 1:
         n_qubits = int(sys.argv[1])
     if len(sys.argv) > 2:
