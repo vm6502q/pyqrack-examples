@@ -145,40 +145,35 @@ def execute(circ, long_range_columns, long_range_rows, depth, J, h, dt):
     #     experiment.sim[sim_id].set_device(0)
 
     experiment.run_qiskit_circuit(qc)
-    experiment_samples = experiment.measure_shots(all_bits, shots)
 
     t1 = 1.5
     t2 = 1.5
     t = depth * dt
     m = t / t1
     model = 1 - 1 / (1 + m)
+    p = 2 ** (-1 - h / J) + J * t / (h * t2)
+    factor = 2**p
     d_magnetization = 0
     d_sqr_magnetization = 0
     if np.isclose(J, 0):
         d_magnetization = 0
         d_sqr_magnetization = 0
-    elif np.isclose(h, 0):
+    elif np.isclose(h, 0) or np.isclose(factor, 0):
         d_magnetization = 1 if J < 0 else -1
         d_sqr_magnetization = 1
     else:
-        p = 2 ** (-1 - h / J) + J * t / (h * t2)
-        bias = []
-        tot_bias = 0
-        for q in range(n_qubits + 1):
-            bias.append(model / (n_qubits * (2 ** (p * (q + 1)))))
-            tot_bias += bias[-1]
-        # Normalize
-        for q in range(n_qubits + 1):
-            bias[q] /= tot_bias
+        n = model / (n_qubits * 2)
         tot_n = 0
         for q in range(n_qubits + 1):
-            n = model / (n_qubits * (2 ** (p * (q + 1))))
+            n = n / factor
             m = (n_qubits - (q << 1)) / n_qubits
             d_magnetization += n * m
             d_sqr_magnetization += n * m * m
             tot_n += n
         d_magnetization /= tot_n
         d_sqr_magnetization /= tot_n
+
+    experiment_samples = experiment.measure_shots(qubits, shots)
 
     magnetization = 0
     sqr_magnetization = 0
