@@ -224,7 +224,7 @@ def main():
         t = d * dt
         m = t / t1
         model = 1 - 1 / (1 + m)
-        p = 2 ** (-1 - h / J) + (t / t2) * math.log(J / h) / math.log(2)
+        p = 2 ** (-1 - h / J) - (t / t2) * math.log(-J / h) / math.log(2)
         factor = 2**p
         if np.isclose(J, 0):
             bias = (n_qubits + 1) * [1 / (n_qubits + 1)]

@@ -110,8 +110,8 @@ def main():
     n_rows, n_cols = factor_width(n_qubits, False)
 
     # Quantinuum settings
-    J, h, dt = -1.0, 2.0, 0.25
-    theta = math.pi / 18
+    # J, h, dt = -1.0, 2.0, 0.25
+    # theta = math.pi / 18
 
     # Pure ferromagnetic
     # J, h, dt = -1.0, 0.0, 0.25
@@ -122,8 +122,8 @@ def main():
     # theta = -math.pi / 2
 
     # Critical point (symmetry breaking)
-    # J, h, dt = -1.0, 1.0, 0.25
-    # theta = -math.pi / 4
+    J, h, dt = -1.0, 1.0, 0.25
+    theta = -math.pi / 4
 
     qubits = list(range(n_qubits))
 
@@ -170,7 +170,7 @@ def main():
                 t = d * dt
                 m = t / t1
                 model = 1 - 1 / (1 + m)
-                p = 2 ** (-1 - h / J) + (t / t2) * math.log(J / h) / math.log(2)
+                p = 2 ** (-1 - h / J) - (t / t2) * math.log(-J / h) / math.log(2)
                 factor = 2**p
                 d_magnetization = 0
                 d_sqr_magnetization = 0
