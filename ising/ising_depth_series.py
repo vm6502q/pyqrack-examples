@@ -153,7 +153,7 @@ def main():
                 t = d * dt
                 m = t / t1
                 model = 1 - 1 / (1 + m)
-                p = 2 ** (-1 - h / J) + J * t / (h * t2)
+                p = 2 ** (-1 - h / J) + (t / t2) * math.log(J / h) / math.log(2)
                 factor = 2**p
                 d_magnetization = 0
                 d_sqr_magnetization = 0
