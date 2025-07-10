@@ -198,8 +198,8 @@ def main():
     qubits = list(range(n_qubits))
 
     bias = []
-    t1 = 4.625
-    t2 = 3.625
+    t1 = 4.5
+    t2 = 2.2
     t = depth * dt
     m = t / t1
     model = 1 - 1 / (1 + m)
@@ -209,7 +209,7 @@ def main():
     elif np.isclose(J, 0):
         bias = (n_qubits + 1) * [1 / (n_qubits + 1)]
     else:
-        p = 2 ** (1.5 + h / J) - J * t / (h * t2)
+        p = 2 ** (1.5 + h / J) + J * t / (h * t2)
         tot_bias = 0
         for q in range(n_qubits + 1):
             bias.append(model / (n_qubits * (2 ** (p * (q + 1)))))
