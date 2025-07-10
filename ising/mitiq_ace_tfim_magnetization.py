@@ -155,7 +155,7 @@ def execute(circ, long_range_columns, long_range_rows, depth, J, h, dt):
     d_magnetization = 0
     d_sqr_magnetization = 0
     if np.isclose(h, 0):
-        d_magnetization = 1
+        d_magnetization = 1 if J < 0 else -1
         d_sqr_magnetization = 1
     elif np.isclose(J, 0):
         d_magnetization = 0

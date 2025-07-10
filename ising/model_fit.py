@@ -225,6 +225,8 @@ def main():
             if np.isclose(h, 0):
                 bias.append(1)
                 bias += n_qubits * [0]
+                if J > 0:
+                    bias.reverse()
             elif np.isclose(J, 0):
                 bias = (n_qubits + 1) * [1 / (n_qubits + 1)]
             else:
