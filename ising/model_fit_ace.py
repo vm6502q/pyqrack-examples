@@ -169,8 +169,8 @@ def main():
     n_qubits = 8
     depth = 20
     hamming_n = 2048
-    t1 = 2.75
-    t2 = 2
+    t1 = 1.625
+    t2 = 1.625
 
     print("t1: " + str(t1))
     print("t2: " + str(t2))
@@ -230,7 +230,7 @@ def main():
         elif np.isclose(J, 0):
             bias = (n_qubits + 1) * [1 / (n_qubits + 1)]
         else:
-            p = 2 ** (1.5 + h / J) - J * t / (h * t2)
+            p = 2 ** (-1 - h / J) + J * t / (h * t2)
             tot_bias = 0
             for q in range(n_qubits + 1):
                 bias.append(model / (n_qubits * (2 ** (p * (q + 1)))))
