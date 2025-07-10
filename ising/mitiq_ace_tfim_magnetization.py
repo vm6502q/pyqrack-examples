@@ -154,12 +154,12 @@ def execute(circ, long_range_columns, long_range_rows, depth, J, h, dt):
     model = 1 - 1 / (1 + m)
     d_magnetization = 0
     d_sqr_magnetization = 0
-    if np.isclose(h, 0):
-        d_magnetization = 1 if J < 0 else -1
-        d_sqr_magnetization = 1
-    elif np.isclose(J, 0):
+    if np.isclose(J, 0):
         d_magnetization = 0
         d_sqr_magnetization = 0
+    elif np.isclose(h, 0):
+        d_magnetization = 1 if J < 0 else -1
+        d_sqr_magnetization = 1
     else:
         p = 2 ** (-1 - h / J) + J * t / (h * t2)
         bias = []

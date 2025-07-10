@@ -203,13 +203,13 @@ def main():
     t = depth * dt
     m = t / t1
     model = 1 - 1 / (1 + m)
-    if np.isclose(h, 0):
+    if np.isclose(J, 0):
+        bias = (n_qubits + 1) * [1 / (n_qubits + 1)]
+    elif np.isclose(h, 0):
         bias.append(1)
         bias += n_qubits * [0]
         if J > 0:
             bias.reverse()
-    elif np.isclose(J, 0):
-        bias = (n_qubits + 1) * [1 / (n_qubits + 1)]
     else:
         p = 2 ** (-1 - h / J) + J * t / (h * t2)
         tot_bias = 0
