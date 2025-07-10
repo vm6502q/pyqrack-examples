@@ -110,8 +110,8 @@ def main():
     n_rows, n_cols = factor_width(n_qubits, False)
 
     # Quantinuum settings
-    # J, h, dt = -1.0, 2.0, 0.25
-    # theta = math.pi / 18
+    J, h, dt = -1.0, 2.0, 0.25
+    theta = math.pi / 18
 
     # Pure ferromagnetic
     # J, h, dt = -1.0, 0.0, 0.25
@@ -122,8 +122,8 @@ def main():
     # theta = -math.pi / 2
 
     # Critical point (symmetry breaking)
-    J, h, dt = -1.0, 1.0, 0.25
-    theta = -math.pi / 4
+    # J, h, dt = -1.0, 1.0, 0.25
+    # theta = -math.pi / 4
 
     qubits = list(range(n_qubits))
 
