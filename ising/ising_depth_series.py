@@ -162,7 +162,7 @@ def main():
                     d_magnetization = 0
                     d_sqr_magnetization = 0
                 else:
-                    p = 2 ** (2 + h / J) + J * t / (h * t2)
+                    p = 2 ** (1.5 + h / J) + J * t / (h * t2)
                     tot_n = 0
                     for q in range(n_qubits + 1):
                         n = model / (n_qubits * (2 ** (p * (q + 1))))
