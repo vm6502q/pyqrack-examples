@@ -231,7 +231,7 @@ def main():
                 if J > 0:
                     bias.reverse()
             else:
-                p = 2 ** (-1 - abs(h) / J) + J / abs(h) * (t / t2)
+                p = 2 ** arg + math.tanh(J / abs(h)) * (t / t2)
                 factor = 2 ** p
                 n = model / (n_qubits * 2)
                 tot_n = 0

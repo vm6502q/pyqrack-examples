@@ -163,7 +163,7 @@ def main():
                     d_magnetization = 1 if J < 0 else -1
                     d_sqr_magnetization = 1
                 else:
-                    p = 2 ** arg + J / abs(h) * (t / t2)
+                    p = 2 ** arg + math.tanh(J / abs(h)) * (t / t2)
                     factor = 2 ** p
                     n = model / (n_qubits * 2)
                     tot_n = 0
