@@ -253,6 +253,7 @@ def main():
 
     experiment.run_qiskit_circuit(qc)
     experiment_samples = experiment.measure_shots(qubits, shots)
+    del experiment
 
     magnetization = 0
     sqr_magnetization = 0
