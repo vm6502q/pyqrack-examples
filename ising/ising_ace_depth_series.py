@@ -180,7 +180,7 @@ def main():
                     d_magnetization = 1 if J < 0 else -1
                     d_sqr_magnetization = 1
                 else:
-                    p = (2 ** arg + math.tanh(J / abs(h)) * math.log(1 + t / t2) / math.log(2)) / 2
+                    p = (2**arg + math.tanh(J / abs(h)) * math.log(1 + t / t2) / math.log(2)) / 2
                     factor = 2**p
                     n = model / (n_qubits * 2)
                     tot_n = 0
@@ -214,9 +214,7 @@ def main():
             sqr_magnetization /= shots
 
             magnetization = model * d_magnetization + (1 - model) * magnetization
-            sqr_magnetization = (
-                model * d_sqr_magnetization + (1 - model) * sqr_magnetization
-            )
+            sqr_magnetization = model * d_sqr_magnetization + (1 - model) * sqr_magnetization
 
             if sqr_magnetization < min_sqr_mag:
                 min_sqr_mag = sqr_magnetization
@@ -243,9 +241,7 @@ def main():
 
         plt.figure(figsize=(14, 14))
         plt.plot(depths, magnetizations[0], marker="o", linestyle="-")
-        plt.title(
-            "Square Magnetization vs Trotter Depth (" + str(n_qubits) + " Qubits)"
-        )
+        plt.title("Square Magnetization vs Trotter Depth (" + str(n_qubits) + " Qubits)")
         plt.xlabel("Trotter Depth")
         plt.ylabel("Square Magnetization")
         plt.grid(True)

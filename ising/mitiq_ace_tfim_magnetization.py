@@ -161,7 +161,7 @@ def execute(circ, long_range_columns, long_range_rows, depth, J, h, dt):
         d_magnetization = 1 if J < 0 else -1
         d_sqr_magnetization = 1
     else:
-        p = (2 ** arg + math.tanh(J / abs(h)) * math.log(1 + t / t2) / math.log(2)) / 2
+        p = (2**arg + math.tanh(J / abs(h)) * math.log(1 + t / t2) / math.log(2)) / 2
         factor = 2**p
         n = model / (n_qubits * 2)
         tot_n = 0
@@ -232,22 +232,16 @@ def main():
     scale_count = depth + 1
     max_scale = 2
     factory = LinearFactory(
-        scale_factors=[
-            (1 + (max_scale - 1) * x / (scale_count - 1)) for x in range(0, scale_count)
-        ]
+        scale_factors=[(1 + (max_scale - 1) * x / (scale_count - 1)) for x in range(0, scale_count)]
     )
 
-    executor = lambda c: execute(
-        c, long_range_columns, long_range_rows, depth, J, h, dt
-    )
+    executor = lambda c: execute(c, long_range_columns, long_range_rows, depth, J, h, dt)
 
     sqr_magnetization = expit(
         zne.execute_with_zne(circ, executor, scale_noise=fold_global, factory=factory)
     )
 
-    print(
-        {"width": n_qubits, "depth": depth, "square_magnetization": sqr_magnetization}
-    )
+    print({"width": n_qubits, "depth": depth, "square_magnetization": sqr_magnetization})
 
     return 0
 

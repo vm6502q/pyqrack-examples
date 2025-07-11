@@ -126,9 +126,7 @@ def calc_stats(n, ideal_probs, counts, bias, model, shots, depth, hamming_n):
 
     # By Elara (OpenAI custom GPT)
     # Compute Hamming distances between each ACE bitstring and its closest in control case
-    min_distances = [
-        min(hamming_distance(a, r, n) for r in con_top_n) for a in exp_top_n
-    ]
+    min_distances = [min(hamming_distance(a, r, n) for r in con_top_n) for a in exp_top_n]
     avg_hamming_distance = np.mean(min_distances)
 
     xeb = numer / denom
@@ -152,9 +150,7 @@ def int_to_bitstring(integer, length):
 
 # By Elara (OpenAI custom GPT)
 def hamming_distance(s1, s2, n):
-    return sum(
-        ch1 != ch2 for ch1, ch2 in zip(int_to_bitstring(s1, n), int_to_bitstring(s2, n))
-    )
+    return sum(ch1 != ch2 for ch1, ch2 in zip(int_to_bitstring(s1, n), int_to_bitstring(s2, n)))
 
 
 # From https://stackoverflow.com/questions/13070461/get-indices-of-the-top-n-values-of-a-list#answer-38835860
@@ -198,8 +194,8 @@ def main():
     qubits = list(range(n_qubits))
 
     bias = []
-    t1 = 4.5
-    t2 = 2.2
+    t1 = 5
+    t2 = 2
     t = depth * dt
     m = t / t1
     model = 1 - 1 / (1 + m)
@@ -212,7 +208,7 @@ def main():
         if J > 0:
             bias.reverse()
     else:
-        p = 2**arg + math.tanh(J / abs(h)) * (t / t2)
+        p = (2**arg + math.tanh(J / abs(h)) * math.log(1 + t / t2) / math.log(2)) / 2
         factor = 2**p
         n = model / (n_qubits * 2)
         tot_n = 0
