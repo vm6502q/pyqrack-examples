@@ -165,7 +165,7 @@ def main():
     n_qubits = 8
     depth = 20
     hamming_n = 2048
-    t1 = 2.75
+    t1 = 3.25
     t2 = 1
 
     print("t1: " + str(t1))
@@ -229,7 +229,7 @@ def main():
             if J > 0:
                 bias.reverse()
         else:
-            p = (2**arg - math.tanh(J / abs(h)) * math.log(1 + t / t2) / math.log(2)) / 2
+            p = 2**arg - math.tanh(J / abs(h)) * math.log(1 + t / t2) / math.log(2)
             factor = 2**p
             n = model / (n_qubits * 2)
             tot_n = 0
