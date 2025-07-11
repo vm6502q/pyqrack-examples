@@ -210,8 +210,8 @@ def main():
     qubits = list(range(n_qubits))
 
     bias = []
-    t1 = 1.5
-    t2 = 1.5
+    t1 = 2
+    t2 = 1
     t = depth * dt
     m = t / t1
     model = 1 - 1 / (1 + m)
@@ -225,8 +225,8 @@ def main():
         if J > 0:
             bias.reverse()
     else:
-        p = 2 ** arg + math.tanh(J / abs(h)) * (t / t2)
-        factor = 2 ** p
+        p = 2**arg + math.tanh(J / abs(h)) * math.log(1 + t / t2) / math.log(2)
+        factor = 2**p
         n = model / (n_qubits * 2)
         tot_n = 0
         for q in range(n_qubits + 1):

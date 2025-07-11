@@ -169,8 +169,8 @@ def main():
     n_qubits = 8
     depth = 20
     hamming_n = 2048
-    t1 = 1.5
-    t2 = 1.5
+    t1 = 2
+    t2 = 1
 
     print("t1: " + str(t1))
     print("t2: " + str(t2))
@@ -190,8 +190,8 @@ def main():
     # theta = -math.pi / 2
 
     # Critical point (symmetry breaking)
-    # J, h, dt = -1.0, 1.0, 0.25
-    # theta = -math.pi / 4
+    J, h, dt = -1.0, 1.0, 0.25
+    theta = -math.pi / 4
 
     shots = 1 << (n_qubits + 2)
     qubits = list(range(n_qubits))
@@ -233,8 +233,8 @@ def main():
             if J > 0:
                 bias.reverse()
         else:
-            p = 2 ** arg + math.tanh(J / abs(h)) * (t / t2)
-            factor = 2 ** p
+            p = 2**arg + math.tanh(J / abs(h)) * math.log(1 + t / t2) / math.log(2)
+            factor = 2**p
             n = model / (n_qubits * 2)
             tot_n = 0
             for q in range(n_qubits + 1):
