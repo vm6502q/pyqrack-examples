@@ -211,17 +211,14 @@ def main():
         if J > 0:
             bias.reverse()
     else:
-        p = 2 ** (-1 - abs(h) / J) + (t / t2) * math.log(abs(J / h)) / math.log(2)
-        factor = 2**p
-        n = model / (n_qubits * 2)
-        tot_n = 0
+        p = 2 ** (-1 - abs(h) / J) + abs(J / h) * (t / t2)
+        tot_bias = 0
         for q in range(n_qubits + 1):
-            n = n / factor
-            bias.append(n)
-            tot_n += n
+            bias.append(model / (n_qubits * (2 ** (p * (q + 1)))))
+            tot_bias += bias[-1]
         # Normalize
         for q in range(n_qubits + 1):
-            bias[q] /= tot_n
+            bias[q] /= tot_bias
 
     qc = QuantumCircuit(n_qubits)
     for q in range(n_qubits):
