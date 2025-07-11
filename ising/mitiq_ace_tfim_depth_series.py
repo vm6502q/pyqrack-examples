@@ -190,8 +190,8 @@ def main():
     n_qubits = 16
     depth = 20
     shots = 1024
-    long_range_columns = 2
-    long_range_rows = 6
+    long_range_columns = 1
+    long_range_rows = 4
     if len(sys.argv) > 1:
         n_qubits = int(sys.argv[1])
     if len(sys.argv) > 2:
@@ -282,7 +282,7 @@ def main():
         }
     )
     magnetizations.append(sqr_magnetization)
-    
+
     print(results[0])
 
     circ = QuantumCircuit(n_qubits)
@@ -319,6 +319,9 @@ def main():
             }
         )
         magnetizations.append(sqr_magnetization)
+
+        if sqr_magnetization < min_sqr_mag:
+            min_sqr_mag = sqr_magnetization
 
         print(results[-1])
 
