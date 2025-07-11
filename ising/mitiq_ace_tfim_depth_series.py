@@ -5,48 +5,34 @@
 # See https://www.gnu.org/licenses/gpl-3.0.txt for details.
 
 import math
-import os
-import random
-import statistics
 import sys
 import time
 
+from collections import Counter
+
 import numpy as np
 
-from collections import Counter
+import matplotlib.pyplot as plt
+
+from qiskit import QuantumCircuit
+from qiskit.circuit.library import RZZGate, RXGate
+from qiskit.compiler import transpile
 
 from pyqrack import QrackAceBackend
 from qiskit.providers.qrack import AceQasmSimulator
-
-from qiskit import QuantumCircuit
-from qiskit.compiler import transpile
-from qiskit.circuit.library import RZZGate, RXGate
 
 from mitiq import zne
 from mitiq.zne.scaling.folding import fold_global
 from mitiq.zne.inference import LinearFactory
 
 
-# By Gemini (Google Search AI)
-def int_to_bitstring(integer, length):
-    return bin(integer)[2:].zfill(length)
-
-
-# From https://stackoverflow.com/questions/13070461/get-indices-of-the-top-n-values-of-a-list#answer-38835860
-def top_n(n, a):
-    median_index = len(a) >> 1
-    if n > median_index:
-        n = median_index
-    return np.argsort(a)[-n:]
-
-
-def factor_width(width):
+def factor_width(width, is_transpose=False):
     col_len = math.floor(math.sqrt(width))
     while ((width // col_len) * col_len) != width:
         col_len -= 1
     row_len = width // col_len
 
-    return row_len, col_len
+    return (col_len, row_len) if is_transpose else (row_len, col_len)
 
 
 def trotter_step(circ, qubits, lattice_shape, J, h, dt):
@@ -201,47 +187,152 @@ def execute(circ, long_range_columns, long_range_rows, depth, J, h, dt):
 
 
 def main():
-    if len(sys.argv) < 5:
-        raise RuntimeError(
-            "Usage: python3 mitiq_tfim_calibration.py [width] [depth] [long_range_columns] [long_range_rows]"
-        )
+    n_qubits = 16
+    depth = 20
+    shots = 1024
+    long_range_columns = 2
+    long_range_rows = 6
+    if len(sys.argv) > 1:
+        n_qubits = int(sys.argv[1])
+    if len(sys.argv) > 2:
+        depth = int(sys.argv[2])
+    if len(sys.argv) > 3:
+        shots = int(sys.argv[3])
+    else:
+        shots = min(shots, 1 << (n_qubits + 2))
+    if len(sys.argv) > 4:
+        long_range_columns = int(sys.argv[4])
+    if len(sys.argv) > 5:
+        long_range_rows = int(sys.argv[5])
+    lcv = 6
+    devices = []
+    while len(sys.argv) > lcv:
+        devices.append(int(sys.argv[lcv]))
+        lcv += 1
+    print("Devices: " + str(devices))
 
-    n_qubits = int(sys.argv[1])
-    depth = int(sys.argv[2])
-    long_range_columns = int(sys.argv[3])
-    long_range_rows = int(sys.argv[4])
+    n_rows, n_cols = factor_width(n_qubits, False)
 
-    n_rows, n_cols = factor_width(n_qubits)
+    # Quantinuum settings
     J, h, dt = -1.0, 2.0, 0.25
+    theta = math.pi / 18
 
-    circ = QuantumCircuit(n_qubits)
-    for _ in range(depth):
-        trotter_step(circ, list(range(n_qubits)), (n_rows, n_cols), J, h, dt)
+    # Pure ferromagnetic
+    # J, h, dt = -1.0, 0.0, 0.25
+    # theta = 0
 
-    noise_dummy = AceQasmSimulator(
-        n_qubits=n_qubits,
+    # Pure transverse field
+    # J, h, dt = 0.0, 2.0, 0.25
+    # theta = -math.pi / 2
+
+    # Critical point (symmetry breaking)
+    # J, h, dt = -1.0, 1.0, 0.25
+    # theta = -math.pi / 4
+
+    qubits = list(range(n_qubits))
+
+    qc = QuantumCircuit(n_qubits)
+    for q in range(n_qubits):
+        qc.ry(theta, q)
+
+    depths = list(range(0, depth + 1))
+    min_sqr_mag = 1
+    results = []
+    magnetizations = []
+
+    experiment = QrackAceBackend(
+        n_qubits,
         long_range_columns=long_range_columns,
         long_range_rows=long_range_rows,
     )
-    circ = transpile(
-        circ,
-        optimization_level=3,
-        backend=noise_dummy,
+    # We've achieved the dream: load balancing between discrete and integrated accelerators!
+    for sim_id in range(min(len(experiment.sim), len(devices))):
+        experiment.sim[sim_id].set_device(devices[sim_id])
+
+    start = time.perf_counter()
+
+    experiment.run_qiskit_circuit(qc)
+    experiment_samples = experiment.measure_shots(qubits, shots)
+
+    magnetization = 0
+    sqr_magnetization = 0
+    for sample in experiment_samples:
+        m = 0
+        for _ in range(n_qubits):
+            m += -1 if (sample & 1) else 1
+            sample >>= 1
+        m /= n_qubits
+        magnetization += m
+        sqr_magnetization += m * m
+    magnetization /= shots
+    sqr_magnetization /= shots
+
+    if sqr_magnetization < min_sqr_mag:
+        min_sqr_mag = sqr_magnetization
+
+    seconds = time.perf_counter() - start
+
+    results.append(
+        {
+            "width": n_qubits,
+            "depth": 0,
+            "square_magnetization": sqr_magnetization,
+            "seconds": seconds,
+        }
     )
+    magnetizations.append(sqr_magnetization)
+    
+    print(results[0])
 
-    scale_count = depth + 1
-    max_scale = 2
-    factory = LinearFactory(
-        scale_factors=[(1 + (max_scale - 1) * x / (scale_count - 1)) for x in range(0, scale_count)]
-    )
+    circ = QuantumCircuit(n_qubits)
+    for d in depths[1:]:
+        trotter_step(circ, qubits, (n_rows, n_cols), J, h, dt)
+        circ = transpile(
+            circ,
+            optimization_level=3,
+            basis_gates=QrackAceBackend.get_qiskit_basis_gates(),
+        )
 
-    executor = lambda c: execute(c, long_range_columns, long_range_rows, depth, J, h, dt)
+        scale_count = d + 1
+        max_scale = 2
+        factory = LinearFactory(
+            scale_factors=[
+                (1 + (max_scale - 1) * x / (scale_count - 1)) for x in range(0, scale_count)
+            ]
+        )
 
-    sqr_magnetization = expit(
-        zne.execute_with_zne(circ, executor, scale_noise=fold_global, factory=factory)
-    )
+        executor = lambda c: execute(c, long_range_columns, long_range_rows, d, J, h, dt)
 
-    print({"width": n_qubits, "depth": depth, "square_magnetization": sqr_magnetization})
+        sqr_magnetization = expit(
+            zne.execute_with_zne(circ, executor, scale_noise=fold_global, factory=factory)
+        )
+
+        seconds = time.perf_counter() - start
+
+        results.append(
+            {
+                "width": n_qubits,
+                "depth": d,
+                "square_magnetization": sqr_magnetization,
+                "seconds": seconds,
+            }
+        )
+        magnetizations.append(sqr_magnetization)
+
+        print(results[-1])
+
+    # Plotting (contributed by Elara, an OpenAI custom GPT)
+    ylim = ((min_sqr_mag * 100) // 10) / 10
+
+    plt.figure(figsize=(14, 14))
+    plt.plot(depths, magnetizations, marker="o", linestyle="-")
+    plt.title("Square Magnetization vs Trotter Depth (" + str(n_qubits) + " Qubits)")
+    plt.xlabel("Trotter Depth")
+    plt.ylabel("Square Magnetization")
+    plt.grid(True)
+    plt.xticks(depths)
+    plt.ylim(ylim, 1.0)  # Adjusting y-axis for clearer resolution
+    plt.show()
 
     return 0
 
