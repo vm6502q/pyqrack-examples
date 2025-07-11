@@ -170,7 +170,7 @@ def main():
                 t = d * dt
                 m = t / t1
                 model = 1 - 1 / (1 + m)
-                arg = -1 - abs(h) / J
+                arg = -h / J
                 d_magnetization = 0
                 d_sqr_magnetization = 0
                 if np.isclose(J, 0) or (arg >= 1024):

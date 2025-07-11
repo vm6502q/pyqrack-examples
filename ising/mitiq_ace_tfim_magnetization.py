@@ -151,7 +151,7 @@ def execute(circ, long_range_columns, long_range_rows, depth, J, h, dt):
     t = depth * dt
     m = t / t1
     model = 1 - 1 / (1 + m)
-    arg = -1 - abs(h) / J
+    arg = -h / J
     d_magnetization = 0
     d_sqr_magnetization = 0
     if np.isclose(J, 0) or (arg >= 1024):
