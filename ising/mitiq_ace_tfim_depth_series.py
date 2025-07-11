@@ -192,6 +192,7 @@ def main():
     shots = 1024
     long_range_columns = 1
     long_range_rows = 4
+    mitiq_depth = 4
     if len(sys.argv) > 1:
         n_qubits = int(sys.argv[1])
     if len(sys.argv) > 2:
@@ -204,7 +205,9 @@ def main():
         long_range_columns = int(sys.argv[4])
     if len(sys.argv) > 5:
         long_range_rows = int(sys.argv[5])
-    lcv = 6
+    if len(sys.argv) > 6:
+        mitiq_depth = int(sys.argv[6])
+    lcv = 7
     devices = []
     while len(sys.argv) > lcv:
         devices.append(int(sys.argv[lcv]))
@@ -235,6 +238,14 @@ def main():
     for q in range(n_qubits):
         qc.ry(theta, q)
 
+    step = QuantumCircuit(n_qubits)
+    trotter_step(step, qubits, (n_rows, n_cols), J, h, dt)
+    step = transpile(
+        step,
+        optimization_level=3,
+        basis_gates=QrackAceBackend.get_qiskit_basis_gates(),
+    )
+
     depths = list(range(0, depth + 1))
     min_sqr_mag = 1
     results = []
@@ -253,7 +264,6 @@ def main():
 
     experiment.run_qiskit_circuit(qc)
     experiment_samples = experiment.measure_shots(qubits, shots)
-    del experiment
 
     magnetization = 0
     sqr_magnetization = 0
@@ -287,26 +297,74 @@ def main():
 
     circ = QuantumCircuit(n_qubits)
     for d in depths[1:]:
-        trotter_step(circ, qubits, (n_rows, n_cols), J, h, dt)
-        circ = transpile(
-            circ,
-            optimization_level=3,
-            basis_gates=QrackAceBackend.get_qiskit_basis_gates(),
-        )
+        experiment.run_qiskit_circuit(step)
 
-        scale_count = d + 1
-        max_scale = 2
-        factory = LinearFactory(
-            scale_factors=[
-                (1 + (max_scale - 1) * x / (scale_count - 1)) for x in range(0, scale_count)
-            ]
-        )
+        if d <= mitiq_depth:
+            trotter_step(circ, qubits, (n_rows, n_cols), J, h, dt)
+            circ = transpile(
+                circ,
+                optimization_level=3,
+                basis_gates=QrackAceBackend.get_qiskit_basis_gates(),
+            )
 
-        executor = lambda c: execute(c, long_range_columns, long_range_rows, d, J, h, dt)
+            scale_count = (d << 1) + 1
+            max_scale = 2
+            factory = LinearFactory(
+                scale_factors=[
+                    (1 + (max_scale - 1) * x / (scale_count - 1)) for x in range(0, scale_count)
+                ]
+            )
 
-        sqr_magnetization = expit(
-            zne.execute_with_zne(circ, executor, scale_noise=fold_global, factory=factory)
-        )
+            executor = lambda c: execute(c, long_range_columns, long_range_rows, d, J, h, dt)
+
+            sqr_magnetization = expit(
+                zne.execute_with_zne(circ, executor, scale_noise=fold_global, factory=factory)
+            )
+        else:
+            d_sqr_magnetization = 0
+            model = 0
+
+            t1 = 3.38
+            t2 = 1.25
+            t = d * dt
+            m = t / t1
+            model = 1 - 1 / (1 + m)
+            arg = -h / J
+            d_sqr_magnetization = 0
+            if np.isclose(J, 0) or (arg >= 1024):
+                d_sqr_magnetization = 0
+            elif np.isclose(h, 0) or (arg < -1024):
+                d_sqr_magnetization = 1
+            else:
+                p = 2**arg - math.tanh(J / abs(h)) * math.log(1 + t / t2) / math.log(2)
+                factor = 2**p
+                n = model / (n_qubits * 2)
+                tot_n = 0
+                for q in range(n_qubits + 1):
+                    n = n / factor
+                    if n == float("inf"):
+                        d_sqr_magnetization = 1
+                        tot_n = 1
+                        break
+                    m = (n_qubits - (q << 1)) / n_qubits
+                    d_sqr_magnetization += n * m * m
+                    tot_n += n
+                d_sqr_magnetization /= tot_n
+
+                experiment_samples = experiment.measure_shots(qubits, shots)
+
+                sqr_magnetization = 0
+                for sample in experiment_samples:
+                    m = 0
+                    for _ in range(n_qubits):
+                        m += -1 if (sample & 1) else 1
+                        sample >>= 1
+                    m /= n_qubits
+                    magnetization += m
+                    sqr_magnetization += m * m
+                sqr_magnetization /= shots
+
+                sqr_magnetization = model * d_sqr_magnetization + (1 - model) * sqr_magnetization
 
         seconds = time.perf_counter() - start
 
