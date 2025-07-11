@@ -215,7 +215,7 @@ def main():
     t = depth * dt
     m = t / t1
     model = 1 - 1 / (1 + m)
-    p = 2 ** (-1 - abs(h) / J) + abs(J / h) * (t / t2)
+    p = 2 ** (-1 - abs(h) / J) + J / abs(h) * (t / t2)
     factor = 2**p
     if np.isclose(J, 0):
         bias = (n_qubits + 1) * [1 / (n_qubits + 1)]

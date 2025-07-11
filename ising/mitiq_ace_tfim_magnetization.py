@@ -151,7 +151,7 @@ def execute(circ, long_range_columns, long_range_rows, depth, J, h, dt):
     t = depth * dt
     m = t / t1
     model = 1 - 1 / (1 + m)
-    p = 2 ** (-1 - abs(h) / J) + abs(J / h) * (t / t2)
+    p = 2 ** (-1 - abs(h) / J) + J / abs(h) * (t / t2)
     factor = 2**p
     d_magnetization = 0
     d_sqr_magnetization = 0
