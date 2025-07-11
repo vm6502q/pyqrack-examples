@@ -165,8 +165,8 @@ def main():
     n_qubits = 8
     depth = 20
     hamming_n = 2048
-    t1 = 3.25
-    t2 = 1
+    t1 = 3.38
+    t2 = 1.25
 
     print("t1: " + str(t1))
     print("t2: " + str(t2))
