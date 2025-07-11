@@ -231,17 +231,21 @@ def main():
                 if J > 0:
                     bias.reverse()
             else:
-                p = 2 ** arg + J / abs(h) * (t / t2)
+                p = 2 ** (-1 - abs(h) / J) + J / abs(h) * (t / t2)
                 factor = 2 ** p
                 n = model / (n_qubits * 2)
                 tot_n = 0
                 for q in range(n_qubits + 1):
                     n = n / factor
+                    if n == float("inf"):
+                        tot_n = 1
+                        bias.append(1)
+                        bias += n_qubits * [0]
+                        if J > 0:
+                            bias.reverse()
+                        break
                     bias.append(n)
                     tot_n += n
-                # Normalize
-                for q in range(n_qubits + 1):
-                    bias[q] /= tot_n
 
             experiment_counts = dict(Counter(experiment.measure_shots(qubits, shots)))
 

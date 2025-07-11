@@ -167,6 +167,11 @@ def execute(circ, long_range_columns, long_range_rows, depth, J, h, dt):
         tot_n = 0
         for q in range(n_qubits + 1):
             n = n / factor
+            if n == float("inf"):
+                d_magnetization = 1
+                d_sqr_magnetization = 1
+                tot_n = 1
+                break
             m = (n_qubits - (q << 1)) / n_qubits
             d_magnetization += n * m
             d_sqr_magnetization += n * m * m
