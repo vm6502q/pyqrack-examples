@@ -126,7 +126,7 @@ def expit(x):
 
 def execute(circ, long_range_columns, long_range_rows, depth, J, h, dt):
     n_qubits = circ.width()
-    shots = 4096
+    shots = 2048
     qubits = list(range(n_qubits))
 
     qc = QuantumCircuit(n_qubits)

@@ -112,7 +112,7 @@ def expit(x):
 
 def execute(circ, long_range_columns, long_range_rows, depth, J, h, dt):
     n_qubits = circ.width()
-    shots = 4096
+    shots = 2048
     qubits = list(range(n_qubits))
 
     qc = QuantumCircuit(n_qubits)
@@ -192,7 +192,7 @@ def main():
     shots = 1024
     long_range_columns = 1
     long_range_rows = 4
-    mitiq_depth = 4
+    mitiq_depth = 3
     if len(sys.argv) > 1:
         n_qubits = int(sys.argv[1])
     if len(sys.argv) > 2:
@@ -307,7 +307,7 @@ def main():
                 basis_gates=QrackAceBackend.get_qiskit_basis_gates(),
             )
 
-            scale_count = (d << 1) + 1
+            scale_count = d + 1
             max_scale = 2
             factory = LinearFactory(
                 scale_factors=[
