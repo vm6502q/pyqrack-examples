@@ -224,16 +224,17 @@ def main():
         t = d * dt
         m = t / t1
         model = 1 - 1 / (1 + m)
-        p = 2 ** (-1 - abs(h) / J) + J / abs(h) * (t / t2)
-        factor = 2**p
-        if np.isclose(J, 0):
+        arg = -1 - abs(h) / J
+        if np.isclose(J, 0) or (arg >= 1024):
             bias = (n_qubits + 1) * [1 / (n_qubits + 1)]
-        elif np.isclose(h, 0) or np.isclose(factor, 0):
+        elif np.isclose(h, 0) or (arg < -1024):
             bias.append(1)
             bias += n_qubits * [0]
             if J > 0:
                 bias.reverse()
         else:
+            p = 2 ** arg + J / abs(h) * (t / t2)
+            factor = 2 ** p
             n = model / (n_qubits * 2)
             tot_n = 0
             for q in range(n_qubits + 1):

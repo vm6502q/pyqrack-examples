@@ -170,17 +170,18 @@ def main():
                 t = d * dt
                 m = t / t1
                 model = 1 - 1 / (1 + m)
-                p = 2 ** (-1 - abs(h) / J) + J / abs(h) * (t / t2)
-                factor = 2**p
+                arg = -1 - abs(h) / J
                 d_magnetization = 0
                 d_sqr_magnetization = 0
-                if np.isclose(J, 0):
+                if np.isclose(J, 0) or (arg >= 1024):
                     d_magnetization = 0
                     d_sqr_magnetization = 0
-                elif np.isclose(h, 0) or np.isclose(factor, 0):
+                elif np.isclose(h, 0) or (arg < -1024):
                     d_magnetization = 1 if J < 0 else -1
                     d_sqr_magnetization = 1
                 else:
+                    p = 2 ** arg + J / abs(h) * (t / t2)
+                    factor = 2 ** p
                     n = model / (n_qubits * 2)
                     tot_n = 0
                     for q in range(n_qubits + 1):
