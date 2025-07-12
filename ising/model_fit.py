@@ -205,7 +205,7 @@ def main():
         basis_gates=QrackSimulator.get_qiskit_basis_gates(),
     )
 
-    r_squared = 0
+    experiment_counts = {}
     for trial in range(trials):
         experiment = QrackSimulator(n_qubits)
         experiment.run_qiskit_circuit(qc)
@@ -244,30 +244,40 @@ def main():
                 for q in range(n_qubits + 1):
                     bias[q] /= tot_n
 
-            experiment_counts = dict(Counter(experiment.measure_shots(qubits, shots)))
+            counts = dict(Counter(experiment.measure_shots(qubits, shots)))
 
-            control = AerSimulator(method="statevector")
-            qc_aer = transpile(
-                qc_aer,
-                backend=control,
-            )
-            qc_aer_sv = qc_aer.copy()
-            qc_aer_sv.save_statevector()
-            job = control.run(qc_aer_sv)
-            control_probs = Statevector(job.result().get_statevector()).probabilities()
+            for key, value in counts.items():
+                experiment_counts[key] = experiment_counts.get(key, 0) + value / shots
 
-            result = calc_stats(
-                n_qubits,
-                control_probs,
-                experiment_counts,
-                bias,
-                model,
-                shots,
-                depth,
-                hamming_n,
-            )
+    for key in experiment_counts.keys():
+        experiment_counts[key] /= trials
 
-            r_squared += (1 - result["l2_similarity"]) ** 2
+    r_squared = 0
+    for d in range(1, depth + 1):
+        trotter_step(qc_aer, qubits, (n_rows, n_cols), J, h, dt)
+
+        control = AerSimulator(method="statevector")
+        qc_aer = transpile(
+            qc_aer,
+            backend=control,
+        )
+        qc_aer_sv = qc_aer.copy()
+        qc_aer_sv.save_statevector()
+        job = control.run(qc_aer_sv)
+        control_probs = Statevector(job.result().get_statevector()).probabilities()
+
+        result = calc_stats(
+            n_qubits,
+            control_probs,
+            experiment_counts,
+            bias,
+            model,
+            shots,
+            depth,
+            hamming_n,
+        )
+
+        r_squared += (1 - result["l2_similarity"]) ** 2
 
     r_squared = 1 - (r_squared ** (1 / 2)) / (depth * trials)
 
