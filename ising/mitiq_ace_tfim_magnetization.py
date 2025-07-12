@@ -146,7 +146,7 @@ def execute(circ, long_range_columns, long_range_rows, depth, J, h, dt):
 
     experiment.run_qiskit_circuit(qc)
 
-    t1 = 4.5
+    t1 = 4.375
     t2 = 0.1
     t = depth * dt
     m = t / t1
