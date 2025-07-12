@@ -23,7 +23,7 @@ from qiskit.providers.qrack import AceQasmSimulator
 
 from mitiq import zne
 from mitiq.zne.scaling.folding import fold_global
-from mitiq.zne.inference import LinearFactory
+from mitiq.zne.inference import RichardsonFactory
 
 
 def factor_width(width, is_transpose=False):
@@ -212,7 +212,7 @@ def main():
     print("Devices: " + str(devices))
 
     n_rows, n_cols = factor_width(n_qubits, False)
-    mitiq_shots = shots << 2
+    shots = 32768
 
     # Quantinuum settings
     J, h, dt = -1.0, 2.0, 0.25
@@ -305,9 +305,9 @@ def main():
                 basis_gates=QrackAceBackend.get_qiskit_basis_gates(),
             )
 
-            scale_count = d + 1
-            max_scale = 2
-            factory = LinearFactory(
+            scale_count = (d + 1) if d > 2 else 3
+            max_scale = 2 if d > 2 else (1.5 if d == 2 else 3)
+            factory = RichardsonFactory(
                 scale_factors=[
                     (1 + (max_scale - 1) * x / (scale_count - 1)) for x in range(0, scale_count)
                 ]

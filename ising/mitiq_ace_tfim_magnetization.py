@@ -24,7 +24,7 @@ from qiskit.circuit.library import RZZGate, RXGate
 
 from mitiq import zne
 from mitiq.zne.scaling.folding import fold_global
-from mitiq.zne.inference import LinearFactory
+from mitiq.zne.inference import RichardsonFactory
 
 
 # By Gemini (Google Search AI)
@@ -126,7 +126,7 @@ def expit(x):
 
 def execute(circ, long_range_columns, long_range_rows, depth, J, h, dt):
     n_qubits = circ.width()
-    shots = 4096
+    shots = 32768
     qubits = list(range(n_qubits))
 
     qc = QuantumCircuit(n_qubits)
@@ -229,9 +229,9 @@ def main():
         backend=noise_dummy,
     )
 
-    scale_count = depth + 1
-    max_scale = 2
-    factory = LinearFactory(
+    scale_count = (depth + 1) if depth > 2 else 3
+    max_scale = 2 if depth > 2 else (1.5 if depth == 2 else 3)
+    factory = RichardsonFactory(
         scale_factors=[(1 + (max_scale - 1) * x / (scale_count - 1)) for x in range(0, scale_count)]
     )
 
