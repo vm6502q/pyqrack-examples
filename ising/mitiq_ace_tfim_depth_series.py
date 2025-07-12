@@ -110,9 +110,8 @@ def expit(x):
     return 1 / (1 + np.exp(-x))
 
 
-def execute(circ, long_range_columns, long_range_rows, depth, J, h, dt):
+def execute(circ, long_range_columns, long_range_rows, depth, J, h, dt, shots):
     n_qubits = circ.width()
-    shots = 4096
     qubits = list(range(n_qubits))
 
     qc = QuantumCircuit(n_qubits)
@@ -199,8 +198,6 @@ def main():
         depth = int(sys.argv[2])
     if len(sys.argv) > 3:
         shots = int(sys.argv[3])
-    else:
-        shots = min(shots, 1 << (n_qubits + 2))
     if len(sys.argv) > 4:
         long_range_columns = int(sys.argv[4])
     if len(sys.argv) > 5:
@@ -215,6 +212,7 @@ def main():
     print("Devices: " + str(devices))
 
     n_rows, n_cols = factor_width(n_qubits, False)
+    mitiq_shots = shots << 2
 
     # Quantinuum settings
     J, h, dt = -1.0, 2.0, 0.25
@@ -263,7 +261,7 @@ def main():
     start = time.perf_counter()
 
     experiment.run_qiskit_circuit(qc)
-    experiment_samples = experiment.measure_shots(qubits, shots)
+    experiment_samples = experiment.measure_shots(qubits, mitiq_shots)
 
     magnetization = 0
     sqr_magnetization = 0
@@ -275,8 +273,8 @@ def main():
         m /= n_qubits
         magnetization += m
         sqr_magnetization += m * m
-    magnetization /= shots
-    sqr_magnetization /= shots
+    magnetization /= mitiq_shots
+    sqr_magnetization /= mitiq_shots
 
     if sqr_magnetization < min_sqr_mag:
         min_sqr_mag = sqr_magnetization
@@ -315,7 +313,7 @@ def main():
                 ]
             )
 
-            executor = lambda c: execute(c, long_range_columns, long_range_rows, d, J, h, dt)
+            executor = lambda c: execute(c, long_range_columns, long_range_rows, d, J, h, dt, mitiq_shots)
 
             sqr_magnetization = expit(
                 zne.execute_with_zne(circ, executor, scale_noise=fold_global, factory=factory)
