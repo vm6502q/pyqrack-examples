@@ -229,8 +229,8 @@ def main():
         backend=noise_dummy,
     )
 
-    scale_count = (depth + 1) if depth > 2 else 3
-    max_scale = 2 if depth > 2 else (1.5 if depth == 2 else 3)
+    scale_count = (depth + 1) if depth > 1 else 3
+    max_scale = 2 if depth > 1 else 3
     factory = RichardsonFactory(
         scale_factors=[(1 + (max_scale - 1) * x / (scale_count - 1)) for x in range(0, scale_count)]
     )
