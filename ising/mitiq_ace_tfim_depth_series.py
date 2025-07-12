@@ -313,7 +313,9 @@ def main():
                 ]
             )
 
-            executor = lambda c: execute(c, long_range_columns, long_range_rows, d, J, h, dt, mitiq_shots)
+            executor = lambda c: execute(
+                c, long_range_columns, long_range_rows, d, J, h, dt, mitiq_shots
+            )
 
             sqr_magnetization = expit(
                 zne.execute_with_zne(circ, executor, scale_noise=fold_global, factory=factory)

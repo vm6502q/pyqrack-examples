@@ -13,9 +13,9 @@ from qiskit.circuit.library import RZZGate, RXGate
 from qiskit.compiler import transpile
 from qiskit_aer.backends import AerSimulator
 from qiskit.quantum_info import Statevector
+from qiskit.transpiler import CouplingMap
 
-from pyqrack import QrackAceBackend
-from qiskit.providers.qrack import AceQasmSimulator
+from pyqrack import QrackSimulator
 
 
 def factor_width(width, is_transpose=False):
@@ -162,27 +162,15 @@ def top_n(n, a):
 
 
 def main():
-    n_qubits = 16
-    depth = 10
+    n_qubits = 8
+    depth = 20
     hamming_n = 2048
-    long_range_columns = 1
-    long_range_rows = 4
-    if len(sys.argv) > 1:
-        n_qubits = int(sys.argv[1])
-    if len(sys.argv) > 2:
-        depth = int(sys.argv[2])
-    if len(sys.argv) > 3:
-        hamming_n = int(sys.argv[3])
-    if len(sys.argv) > 4:
-        long_range_columns = int(sys.argv[4])
-    if len(sys.argv) > 5:
-        long_range_rows = int(sys.argv[5])
-    lcv = 7
-    devices = []
-    while len(sys.argv) > lcv:
-        devices.append(int(sys.argv[lcv]))
-        lcv += 1
-    print("Devices: " + str(devices))
+    trials = 20
+    t1 = 6.5
+    t2 = 2
+
+    print("t1: " + str(t1))
+    print("t2: " + str(t2))
 
     n_rows, n_cols = factor_width(n_qubits, False)
 
@@ -202,88 +190,88 @@ def main():
     # J, h, dt = -1.0, 1.0, 0.25
     # theta = -math.pi / 4
 
-    shots = max(1 << 14, 1 << (n_qubits + 2))
+    shots = 1 << (n_qubits + 2)
     qubits = list(range(n_qubits))
-
-    bias = []
-    t1 = 3.38
-    t2 = 1.25
-    t = depth * dt
-    m = t / t1
-    model = 1 - 1 / (1 + m)
-    arg = -h / J
-    factor = 2**p
-    if np.isclose(J, 0) or (arg >= 1024):
-        bias = (n_qubits + 1) * [1 / (n_qubits + 1)]
-    elif np.isclose(h, 0) or (arg < -1024):
-        bias.append(1)
-        bias += n_qubits * [0]
-        if J > 0:
-            bias.reverse()
-    else:
-        p = 2**arg - math.tanh(J / abs(h)) * math.log(1 + t / t2) / math.log(2)
-        factor = 2**p
-        n = model / (n_qubits * 2)
-        tot_n = 0
-        for q in range(n_qubits + 1):
-            n = n / factor
-            if n == float("inf"):
-                tot_n = 1
-                bias.append(1)
-                bias += n_qubits * [0]
-                if J > 0:
-                    bias.reverse()
-                break
-            bias.append(n)
-            tot_n += n
-        # Normalize
-        for q in range(n_qubits + 1):
-            bias[q] /= tot_n
 
     qc = QuantumCircuit(n_qubits)
     for q in range(n_qubits):
         qc.ry(theta, q)
-    for d in range(depth):
-        trotter_step(qc, qubits, (n_rows, n_cols), J, h, dt)
-    qc = transpile(
-        qc,
+    qc_aer = qc.copy()
+    step = QuantumCircuit(n_qubits)
+    trotter_step(step, qubits, (n_rows, n_cols), J, h, dt)
+    step = transpile(
+        step,
         optimization_level=3,
-        basis_gates=QrackAceBackend.get_qiskit_basis_gates(),
+        basis_gates=QrackSimulator.get_qiskit_basis_gates(),
     )
 
-    experiment = QrackAceBackend(
-        n_qubits,
-        long_range_columns=long_range_columns,
-        long_range_rows=long_range_rows,
-    )
-    # We've achieved the dream: load balancing between discrete and integrated accelerators!
-    for sim_id in range(min(len(experiment.sim), len(devices))):
-        experiment.sim[sim_id].set_device(devices[sim_id])
+    r_squared = 0
+    for trial in range(trials):
+        experiment = QrackSimulator(n_qubits)
+        experiment.run_qiskit_circuit(qc)
+        for d in range(1, depth + 1):
+            experiment.run_qiskit_circuit(step)
+            trotter_step(qc_aer, qubits, (n_rows, n_cols), J, h, dt)
 
-    experiment.run_qiskit_circuit(qc)
-    experiment_counts = dict(Counter(experiment.measure_shots(qubits, shots)))
+            bias = []
+            t = d * dt
+            m = t / t1
+            model = 1 - 1 / (1 + m)
+            arg = -h / J
+            if np.isclose(J, 0) or (arg >= 1024):
+                bias = (n_qubits + 1) * [1 / (n_qubits + 1)]
+            elif np.isclose(h, 0) or (arg < -1024):
+                bias.append(1)
+                bias += n_qubits * [0]
+                if J > 0:
+                    bias.reverse()
+            else:
+                p = 2**arg - math.tanh(J / abs(h)) * math.log(1 + t / t2) / math.log(2)
+                factor = 2**p
+                n = 1 / (n_qubits * 2)
+                tot_n = 0
+                for q in range(n_qubits + 1):
+                    n = n / factor
+                    if n == float("inf"):
+                        tot_n = 1
+                        bias.append(1)
+                        bias += n_qubits * [0]
+                        if J > 0:
+                            bias.reverse()
+                        break
+                    bias.append(n)
+                    tot_n += n
+                for q in range(n_qubits + 1):
+                    bias[q] /= tot_n
 
-    control = AerSimulator(method="statevector")
-    qc = transpile(
-        qc,
-        backend=control,
-    )
-    qc.save_statevector()
-    job = control.run(qc)
-    control_probs = Statevector(job.result().get_statevector()).probabilities()
+            experiment_counts = dict(Counter(experiment.measure_shots(qubits, shots)))
 
-    print(
-        calc_stats(
-            n_qubits,
-            control_probs,
-            experiment_counts,
-            bias,
-            model,
-            shots,
-            depth,
-            hamming_n,
-        )
-    )
+            control = AerSimulator(method="statevector")
+            qc_aer = transpile(
+                qc_aer,
+                backend=control,
+            )
+            qc_aer_sv = qc_aer.copy()
+            qc_aer_sv.save_statevector()
+            job = control.run(qc_aer_sv)
+            control_probs = Statevector(job.result().get_statevector()).probabilities()
+
+            result = calc_stats(
+                n_qubits,
+                control_probs,
+                experiment_counts,
+                bias,
+                model,
+                shots,
+                depth,
+                hamming_n,
+            )
+
+            r_squared += (1 - result["l2_similarity"]) ** 2
+
+    r_squared = 1 - (r_squared ** (1 / 2)) / (depth * trials)
+
+    print("R^2: " + str(r_squared))
 
     return 0
 
