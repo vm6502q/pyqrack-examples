@@ -153,14 +153,15 @@ def main():
                 t = d * dt
                 m = t / t1
                 model = 1 - 1 / (1 + m)
+                arg = -h / J
                 d_magnetization = 0
                 d_sqr_magnetization = 0
-                if np.isclose(h, 0):
-                    d_magnetization = 1
-                    d_sqr_magnetization = 1
-                elif np.isclose(J, 0):
+                if np.isclose(J, 0) or (arg >= 1024):
                     d_magnetization = 0
                     d_sqr_magnetization = 0
+                elif np.isclose(h, 0) or (arg < -1024):
+                    d_magnetization = 1 if J > 0 else -1
+                    d_sqr_magnetization = 1
                 else:
                     env = math.sqrt(t / t2)
                     p = 2**arg + math.tanh(J / abs(h)) * (env - math.cos(math.pi * t / (2 * abs(J))) / (1 + env))
