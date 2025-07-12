@@ -305,7 +305,7 @@ def main():
                 basis_gates=QrackAceBackend.get_qiskit_basis_gates(),
             )
 
-            scale_count = (d + 1) if depth > 1 else 3
+            scale_count = (d + 1) if d > 1 else 3
             max_scale = 2 if d > 1 else 3
             factory = LinearFactory(
                 scale_factors=[
