@@ -165,7 +165,7 @@ def main():
     n_qubits = 8
     depth = 20
     hamming_n = 2048
-    t1 = 3.38
+    t1 = 4.5
     t2 = 1.25
 
     print("t1: " + str(t1))
@@ -231,7 +231,7 @@ def main():
         else:
             p = 2**arg - math.tanh(J / abs(h)) * math.log(1 + t / t2) / math.log(2)
             factor = 2**p
-            n = model / (n_qubits * 2)
+            n = 1 / (n_qubits * 2)
             tot_n = 0
             for q in range(n_qubits + 1):
                 n = n / factor
@@ -244,6 +244,8 @@ def main():
                     break
                 bias.append(n)
                 tot_n += n
+            for q in range(n_qubits + 1):
+                bias[q] /= tot_n
 
         experiment_counts = dict(Counter(experiment.measure_shots(qubits, shots)))
 

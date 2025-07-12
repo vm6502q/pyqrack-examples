@@ -131,7 +131,7 @@ def execute(circ, long_range_columns, long_range_rows, depth, J, h, dt, shots):
 
     experiment.run_qiskit_circuit(qc)
 
-    t1 = 3.38
+    t1 = 4.5
     t2 = 1.25
     t = depth * dt
     m = t / t1
@@ -148,7 +148,7 @@ def execute(circ, long_range_columns, long_range_rows, depth, J, h, dt, shots):
     else:
         p = 2**arg - math.tanh(J / abs(h)) * math.log(1 + t / t2) / math.log(2)
         factor = 2**p
-        n = model / (n_qubits * 2)
+        n = 1 / (n_qubits * 2)
         tot_n = 0
         for q in range(n_qubits + 1):
             n = n / factor
@@ -322,7 +322,7 @@ def main():
             d_sqr_magnetization = 0
             model = 0
 
-            t1 = 3.38
+            t1 = 4.5
             t2 = 1.25
             t = d * dt
             m = t / t1
@@ -336,7 +336,7 @@ def main():
             else:
                 p = 2**arg - math.tanh(J / abs(h)) * math.log(1 + t / t2) / math.log(2)
                 factor = 2**p
-                n = model / (n_qubits * 2)
+                n = 1 / (n_qubits * 2)
                 tot_n = 0
                 for q in range(n_qubits + 1):
                     n = n / factor
