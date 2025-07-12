@@ -279,7 +279,7 @@ def main():
 
         r_squared += (1 - result["l2_similarity"]) ** 2
 
-    r_squared = 1 - (r_squared ** (1 / 2)) / (depth * trials)
+    r_squared = 1 - (r_squared ** (1 / 2)) / depth
 
     print("R^2: " + str(r_squared))
 
