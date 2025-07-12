@@ -85,7 +85,7 @@ def main():
     n_qubits = 16
     depth = 20
     shots = 32768
-    trials = 64
+    trials = 128
     if len(sys.argv) > 1:
         n_qubits = int(sys.argv[1])
     if len(sys.argv) > 2:
