@@ -165,7 +165,7 @@ def main():
                 experiment.run_qiskit_circuit(step)
 
                 t1 = 4.5
-                t2 = 0.75
+                t2 = 0.1
                 t = d * dt
                 m = t / t1
                 model = 1 - 1 / (1 + m)
@@ -179,7 +179,7 @@ def main():
                     d_magnetization = 1 if J < 0 else -1
                     d_sqr_magnetization = 1
                 else:
-                    p = 2**arg + math.tanh(J / abs(h)) * math.log(1 + t / t2) / math.log(2)
+                    p = 2**arg + math.tanh(J / abs(h)) * math.sqrt(t / t2)
                     factor = 2**p
                     n = 1 / (n_qubits * 2)
                     tot_n = 0
