@@ -24,7 +24,7 @@ from qiskit.circuit.library import RZZGate, RXGate
 
 from mitiq import zne
 from mitiq.zne.scaling.folding import fold_global
-from mitiq.zne.inference import RichardsonFactory
+from mitiq.zne.inference import LinearFactory
 
 
 # By Gemini (Google Search AI)
@@ -231,7 +231,7 @@ def main():
 
     scale_count = (depth + 1) if depth > 1 else 3
     max_scale = 2 if depth > 1 else 3
-    factory = RichardsonFactory(
+    factory = LinearFactory(
         scale_factors=[(1 + (max_scale - 1) * x / (scale_count - 1)) for x in range(0, scale_count)]
     )
 

@@ -23,7 +23,7 @@ from qiskit.providers.qrack import AceQasmSimulator
 
 from mitiq import zne
 from mitiq.zne.scaling.folding import fold_global
-from mitiq.zne.inference import RichardsonFactory
+from mitiq.zne.inference import LinearFactory
 
 
 def factor_width(width, is_transpose=False):
@@ -307,7 +307,7 @@ def main():
 
             scale_count = (d + 1) if depth > 1 else 3
             max_scale = 2 if d > 1 else 3
-            factory = RichardsonFactory(
+            factory = LinearFactory(
                 scale_factors=[
                     (1 + (max_scale - 1) * x / (scale_count - 1)) for x in range(0, scale_count)
                 ]
