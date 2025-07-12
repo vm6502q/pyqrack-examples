@@ -165,8 +165,8 @@ def main():
     depth = 20
     hamming_n = 2048
     trials = 20
-    t1 = 7.0
-    t2 = 0.5
+    t1 = 4.5
+    t2 = 2.2
 
     print("t1: " + str(t1))
     print("t2: " + str(t2))
@@ -212,37 +212,6 @@ def main():
             experiment.run_qiskit_circuit(step)
             trotter_step(qc_aer, qubits, (n_rows, n_cols), J, h, dt)
 
-            bias = []
-            t = d * dt
-            m = t / t1
-            model = 1 - 1 / (1 + m)
-            arg = -h / J
-            if np.isclose(J, 0) or (arg >= 1024):
-                bias = (n_qubits + 1) * [1 / (n_qubits + 1)]
-            elif np.isclose(h, 0) or (arg < -1024):
-                bias.append(1)
-                bias += n_qubits * [0]
-                if J > 0:
-                    bias.reverse()
-            else:
-                p = 2**arg + math.tanh(J / abs(h)) * math.log(1 + t / t2) / math.log(2)
-                factor = 2**p
-                n = 1 / (n_qubits * 2)
-                tot_n = 0
-                for q in range(n_qubits + 1):
-                    n = n / factor
-                    if n == float("inf"):
-                        tot_n = 1
-                        bias.append(1)
-                        bias += n_qubits * [0]
-                        if J > 0:
-                            bias.reverse()
-                        break
-                    bias.append(n)
-                    tot_n += n
-                for q in range(n_qubits + 1):
-                    bias[q] /= tot_n
-
             counts = dict(Counter(experiment.measure_shots(qubits, shots)))
 
             for key, value in counts.items():
@@ -265,6 +234,37 @@ def main():
         qc_aer_sv.save_statevector()
         job = control.run(qc_aer_sv)
         control_probs = Statevector(job.result().get_statevector()).probabilities()
+
+        bias = []
+        t = d * dt
+        m = t / t1
+        model = 1 - 1 / (1 + m)
+        arg = -h / J
+        if np.isclose(J, 0) or (arg >= 1024):
+            bias = (n_qubits + 1) * [1 / (n_qubits + 1)]
+        elif np.isclose(h, 0) or (arg < -1024):
+            bias.append(1)
+            bias += n_qubits * [0]
+            if J > 0:
+                bias.reverse()
+        else:
+            p = 2**arg - math.tanh(J / abs(h)) * math.log(1 + t / t2) / math.log(2)
+            factor = 2**p
+            n = 1 / (n_qubits * 2)
+            tot_n = 0
+            for q in range(n_qubits + 1):
+                n = n / factor
+                if n == float("inf"):
+                    tot_n = 1
+                    bias.append(1)
+                    bias += n_qubits * [0]
+                    if J > 0:
+                        bias.reverse()
+                    break
+                bias.append(n)
+                tot_n += n
+            for q in range(n_qubits + 1):
+                bias[q] /= tot_n
 
         result = calc_stats(
             n_qubits,

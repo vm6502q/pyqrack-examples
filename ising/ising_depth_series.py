@@ -81,11 +81,21 @@ def trotter_step(circ, qubits, lattice_shape, J, h, dt):
     return circ
 
 
+# By Gemini (Google Search AI)
+def int_to_bitstring(integer, length):
+    return bin(integer)[2:].zfill(length)
+
+
+# By Elara (OpenAI custom GPT)
+def hamming_distance(s1, s2, n):
+    return sum(ch1 != ch2 for ch1, ch2 in zip(int_to_bitstring(s1, n), int_to_bitstring(s2, n)))
+
+
 def main():
     n_qubits = 16
     depth = 20
     shots = 32768
-    trials = 128
+    trials = 32
     if len(sys.argv) > 1:
         n_qubits = int(sys.argv[1])
     if len(sys.argv) > 2:
@@ -96,6 +106,9 @@ def main():
         shots = min(shots, 1 << (n_qubits + 2))
     if len(sys.argv) > 4:
         trials = int(sys.argv[4])
+
+    t1 = 4.5
+    t2 = 2.2
 
     n_rows, n_cols = factor_width(n_qubits, False)
 
@@ -134,145 +147,106 @@ def main():
     results = []
     magnetizations = []
 
+    experiment_counts = [{}] * (depth + 1)
     for trial in range(trials):
-        magnetizations.append([])
         experiment = QrackSimulator(n_qubits)
-
-        start = time.perf_counter()
-
         experiment.run_qiskit_circuit(qc)
-        for d in depths:
-            d_magnetization = 0
-            d_sqr_magnetization = 0
-            model = 0
+        counts = dict(Counter(experiment.measure_shots(qubits, shots)))
+        for key, value in counts.items():
+            experiment_counts[0][key] = experiment_counts[0].get(key, 0) + value / shots
+        for d in range(1, depth + 1):
+            experiment.run_qiskit_circuit(step)
+            counts = dict(Counter(experiment.measure_shots(qubits, shots)))
+            for key, value in counts.items():
+                experiment_counts[d][key] = experiment_counts[d].get(key, 0) + value / shots
+
+    for experiment in experiment_counts:
+        for key in experiment.keys():
+            experiment[key] /= trials
+
+    for d in range(depth + 1):
+        bias = []
+        model = 0
+        if d > 0:
+            t = d * dt
+            m = t / t1
+            model = 1 - 1 / (1 + m)
+            arg = -h / J
+            if np.isclose(J, 0) or (arg >= 1024):
+                bias = (n_qubits + 1) * [1 / (n_qubits + 1)]
+            elif np.isclose(h, 0) or (arg < -1024):
+                bias.append(1)
+                bias += n_qubits * [0]
+                if J > 0:
+                    bias.reverse()
+            else:
+                p = 2**arg - math.tanh(J / abs(h)) * math.log(1 + t / t2) / math.log(2)
+                factor = 2**p
+                n = 1 / (n_qubits * 2)
+                tot_n = 0
+                for q in range(n_qubits + 1):
+                    n = n / factor
+                    if n == float("inf"):
+                        tot_n = 1
+                        bias.append(1)
+                        bias += n_qubits * [0]
+                        if J > 0:
+                            bias.reverse()
+                        break
+                    bias.append(n)
+                    tot_n += n
+                for q in range(n_qubits + 1):
+                    bias[q] /= tot_n
+
+        magnetization = 0
+        sqr_magnetization = 0
+        for key, value in experiment_counts[d].items():
             if d > 0:
-                experiment.run_qiskit_circuit(step)
+                hamming_weight = hamming_distance(key, 0, n_qubits)
+                weight = 1
+                combo_factor = n_qubits
+                for _ in range(hamming_weight):
+                    weight *= combo_factor
+                    combo_factor -= 1
+                value = (1 - model) * value + model * bias[hamming_weight] / weight
 
-                t1 = 7.0
-                t2 = 0.5
-                t = d * dt
-                m = t / t1
-                model = 1 - 1 / (1 + m)
-                arg = -h / J
-                d_magnetization = 0
-                d_sqr_magnetization = 0
-                if np.isclose(J, 0) or (arg >= 1024):
-                    d_magnetization = 0
-                    d_sqr_magnetization = 0
-                elif np.isclose(h, 0) or (arg < -1024):
-                    d_magnetization = 1 if J < 0 else -1
-                    d_sqr_magnetization = 1
-                else:
-                    p = 2**arg + math.tanh(J / abs(h)) * math.log(1 + t / t2) / math.log(2)
-                    factor = 2**p
-                    n = 1 / (n_qubits * 2)
-                    tot_n = 0
-                    for q in range(n_qubits + 1):
-                        n = n / factor
-                        if n == float("inf"):
-                            d_magnetization = 1
-                            d_sqr_magnetization = 1
-                            tot_n = 1
-                            break
-                        m = (n_qubits - q) / n_qubits
-                        d_magnetization += n * m
-                        d_sqr_magnetization += n * m * m
-                        tot_n += n
-                    d_magnetization /= tot_n
-                    d_sqr_magnetization /= tot_n
+            m = 0
+            for _ in range(n_qubits):
+                m += -1 if (key & 1) else 1
+                key >>= 1
+            m /= n_qubits
+            magnetization += m * value
+            sqr_magnetization += m * m * value
 
-            experiment_samples = experiment.measure_shots(qubits, shots)
+        if sqr_magnetization < min_sqr_mag:
+            min_sqr_mag = sqr_magnetization
 
-            magnetization = 0
-            sqr_magnetization = 0
-            for sample in experiment_samples:
-                m = 0
-                for _ in range(n_qubits):
-                    m += -1 if (sample & 1) else 1
-                    sample >>= 1
-                m /= n_qubits
-                magnetization += m
-                sqr_magnetization += m * m
-            magnetization /= shots
-            sqr_magnetization /= shots
+        results.append(
+            {
+                "width": n_qubits,
+                "depth": d,
+                "magnetization": magnetization,
+                "square_magnetization": sqr_magnetization,
+            }
+        )
+        magnetizations.append(sqr_magnetization)
 
-            magnetization = model * d_magnetization + (1 - model) * magnetization
-            sqr_magnetization = model * d_sqr_magnetization + (1 - model) * sqr_magnetization
+        print(results[-1])
 
-            if sqr_magnetization < min_sqr_mag:
-                min_sqr_mag = sqr_magnetization
+    # Plotting (contributed by Elara, an OpenAI custom GPT)
+    ylim = ((min_sqr_mag * 100) // 10) / 10
 
-            seconds = time.perf_counter() - start
-
-            results.append(
-                {
-                    "width": n_qubits,
-                    "depth": d,
-                    "trial": trial + 1,
-                    "magnetization": magnetization,
-                    "square_magnetization": sqr_magnetization,
-                    "seconds": seconds,
-                }
-            )
-            magnetizations[-1].append(sqr_magnetization)
-
-            print(results[-1])
-
-    if trials < 2:
-        # Plotting (contributed by Elara, an OpenAI custom GPT)
-        ylim = ((min_sqr_mag * 100) // 10) / 10
-
-        plt.plot(depths, magnetizations[0], marker="o", linestyle="-")
-        plt.title("Square Magnetization vs Trotter Depth (" + str(n_qubits) + " Qubits)")
-        plt.xlabel("Trotter Depth")
-        plt.ylabel("Square Magnetization")
-        plt.grid(True)
-        plt.xticks(depths)
-        plt.ylim(ylim, 1.0)  # Adjusting y-axis for clearer resolution
-        plt.show()
-
-        return 0
-
-    # Plot with error bands
-    mean_magnetization = np.mean(magnetizations, axis=0)
-    std_magnetization = np.std(magnetizations, axis=0, ddof=1)  # sample std dev
-    sem_magnetization = std_magnetization / np.sqrt(trials)
-
-    ylim = ((min(mean_magnetization) * 100) // 10) / 10
-
-    # 95% confidence interval multiplier (two-tailed)
-    confidence_level = 0.95
-    degrees_freedom = trials - 1
-    t_critical = dists.t.ppf((1 + confidence_level) / 2, df=degrees_freedom)
-    ci95_magnetization = t_critical * sem_magnetization
-
-    # Plot with 95% confidence intervals
     plt.figure(figsize=(14, 14))
-    plt.errorbar(
-        depths,
-        mean_magnetization,
-        yerr=ci95_magnetization,
-        fmt="-o",
-        capsize=5,
-        label="Mean ± 95% CI",
-    )
+    plt.plot(depths, magnetizations, marker="o", linestyle="-")
+    plt.title("Square Magnetization vs Trotter Depth (" + str(n_qubits) + " Qubits)")
     plt.xlabel("Trotter Depth")
     plt.ylabel("Square Magnetization")
-    plt.title(
-        "Square Magnetization vs Trotter Depth ("
-        + str(n_qubits)
-        + " Qubits, "
-        + str(trials)
-        + " Trials)\nWith Mean and 95% CI Error"
-    )
-    plt.ylim(ylim, 1.0)
     plt.grid(True)
-    plt.legend()
-    plt.tight_layout()
+    plt.xticks(depths)
+    plt.ylim(ylim, 1.0)  # Adjusting y-axis for clearer resolution
     plt.show()
 
     return 0
-
 
 if __name__ == "__main__":
     sys.exit(main())
