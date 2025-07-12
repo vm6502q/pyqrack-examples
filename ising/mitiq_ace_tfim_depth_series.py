@@ -191,7 +191,7 @@ def main():
     shots = 1024
     long_range_columns = 1
     long_range_rows = 4
-    mitiq_depth = 3
+    mitiq_depth = 2
     if len(sys.argv) > 1:
         n_qubits = int(sys.argv[1])
     if len(sys.argv) > 2:
@@ -325,7 +325,7 @@ def main():
             model = 0
 
             t1 = 4.5
-            t2 = 1.25
+            t2 = 0.75
             t = d * dt
             m = t / t1
             model = 1 - 1 / (1 + m)
@@ -336,7 +336,7 @@ def main():
             elif np.isclose(h, 0) or (arg < -1024):
                 d_sqr_magnetization = 1
             else:
-                p = 2**arg - math.tanh(J / abs(h)) * math.log(1 + t / t2) / math.log(2)
+                p = 2**arg + math.tanh(J / abs(h)) * math.log(1 + t / t2) / math.log(2)
                 factor = 2**p
                 n = 1 / (n_qubits * 2)
                 tot_n = 0
