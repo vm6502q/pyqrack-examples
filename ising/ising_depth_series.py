@@ -144,92 +144,66 @@ def main():
 
     depths = list(range(0, depth + 1))
     min_sqr_mag = 1
-    results = []
-    magnetizations = []
+    magnetizations = [0] * (depth + 1)
 
-    experiment_counts = [{}] * (depth + 1)
     for trial in range(trials):
         experiment = QrackSimulator(n_qubits)
         experiment.run_qiskit_circuit(qc)
-        for d in range(depth + 1):
+        for d in depths:
+            d_magnetization = 0
+            d_sqr_magnetization = 0
+            model = 0
             if d > 0:
                 experiment.run_qiskit_circuit(step)
-            counts = dict(Counter(experiment.measure_shots(qubits, shots)))
-            for key, value in counts.items():
-                experiment_counts[d][key] = experiment_counts[d].get(key, 0) + value
 
-    for experiment in experiment_counts:
-        for key in experiment.keys():
-            experiment[key] /= (shots * trials)
+                t1 = 4.5
+                t2 = 1.25
+                t = d * dt
+                m = t / t1
+                model = 1 - 1 / (1 + m)
+                arg = -h / J
+                d_sqr_magnetization = 0
+                if np.isclose(J, 0) or (arg >= 1024):
+                    d_sqr_magnetization = 0
+                elif np.isclose(h, 0) or (arg < -1024):
+                    d_sqr_magnetization = 1
+                else:
+                    p = 2**arg - math.tanh(J / abs(h)) * math.log(1 + t / t2) / math.log(2)
+                    factor = 2**p
+                    n = 1 / (n_qubits * 2)
+                    tot_n = 0
+                    for q in range(n_qubits + 1):
+                        n = n / factor
+                        if n == float("inf"):
+                            d_sqr_magnetization = 1
+                            tot_n = 1
+                            break
+                        m = (n_qubits - q) / n_qubits
+                        d_sqr_magnetization += n * m * m
+                        tot_n += n
+                    d_sqr_magnetization /= tot_n
 
-    for d in range(depth + 1):
-        bias = []
-        model = 0
-        if d > 0:
-            t = d * dt
-            m = t / t1
-            model = 1 - 1 / (1 + m)
-            arg = -h / J
-            if np.isclose(J, 0) or (arg >= 1024):
-                bias = (n_qubits + 1) * [1 / (n_qubits + 1)]
-            elif np.isclose(h, 0) or (arg < -1024):
-                bias.append(1)
-                bias += n_qubits * [0]
-                if J > 0:
-                    bias.reverse()
-            else:
-                p = 2**arg + math.tanh(J / abs(h)) * math.log(1 + t / t2) / math.log(2)
-                factor = 2**p
-                n = 1 / (n_qubits * 2)
-                tot_n = 0
-                for q in range(n_qubits + 1):
-                    n = n / factor
-                    if n == float("inf"):
-                        tot_n = 1
-                        bias.append(1)
-                        bias += n_qubits * [0]
-                        if J > 0:
-                            bias.reverse()
-                        break
-                    bias.append(n)
-                    tot_n += n
-                for q in range(n_qubits + 1):
-                    bias[q] /= tot_n
+            experiment_samples = experiment.measure_shots(qubits, shots)
 
-        magnetization = 0
-        sqr_magnetization = 0
-        for key, value in experiment_counts[d].items():
-            if d > 0:
-                hamming_weight = hamming_distance(key, 0, n_qubits)
-                weight = 1
-                combo_factor = n_qubits
-                for _ in range(hamming_weight):
-                    weight *= combo_factor
-                    combo_factor -= 1
-                value = (1 - model) * value + model * bias[hamming_weight] / weight
+            sqr_magnetization = 0
+            for sample in experiment_samples:
+                m = 0
+                for _ in range(n_qubits):
+                    m += -1 if (sample & 1) else 1
+                    sample >>= 1
+                m /= n_qubits
+                sqr_magnetization += m * m
+            sqr_magnetization /= shots
 
-            m = 0
-            for _ in range(n_qubits):
-                m += -1 if (key & 1) else 1
-                key >>= 1
-            m /= n_qubits
-            magnetization += m * value
-            sqr_magnetization += m * m * value
+            sqr_magnetization = model * d_sqr_magnetization + (1 - model) * sqr_magnetization
 
-        if sqr_magnetization < min_sqr_mag:
-            min_sqr_mag = sqr_magnetization
+            if sqr_magnetization < min_sqr_mag:
+                min_sqr_mag = sqr_magnetization
 
-        results.append(
-            {
-                "width": n_qubits,
-                "depth": d,
-                "magnetization": magnetization,
-                "square_magnetization": sqr_magnetization,
-            }
-        )
-        magnetizations.append(sqr_magnetization)
+            magnetizations[d] += sqr_magnetization
 
-        print(results[-1])
+    for i in range(len(magnetizations)):
+        magnetizations[i] /= trials
 
     # Plotting (contributed by Elara, an OpenAI custom GPT)
     ylim = ((min_sqr_mag * 100) // 10) / 10
