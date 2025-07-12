@@ -96,13 +96,12 @@ def calc_stats(n, ideal_probs, counts, bias, model, shots, depth, hamming_n):
         count /= shots
 
         hamming_weight = hamming_distance(i, 0, n)
-        if hamming_weight <= (n // 2):
-            weight = 1
-            combo_factor = n
-            for _ in range(hamming_weight):
-                weight *= combo_factor
-                combo_factor -= 1
-            count = (1 - model) * count + model * bias[hamming_weight] / weight
+        weight = 1
+        combo_factor = n
+        for _ in range(hamming_weight):
+            weight *= combo_factor
+            combo_factor -= 1
+        count = (1 - model) * count + model * bias[hamming_weight] / weight
 
         experiment[i] = int(count * shots)
 

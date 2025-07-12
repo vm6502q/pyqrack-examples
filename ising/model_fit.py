@@ -96,13 +96,12 @@ def calc_stats(n, ideal_probs, counts, bias, model, shots, depth, hamming_n):
         count /= shots
 
         hamming_weight = hamming_distance(i, 0, n)
-        if hamming_weight <= (n // 2):
-            weight = 1
-            combo_factor = n
-            for _ in range(hamming_weight):
-                weight *= combo_factor
-                combo_factor -= 1
-            count = (1 - model) * count + model * bias[hamming_weight] / weight
+        weight = 1
+        combo_factor = n
+        for _ in range(hamming_weight):
+            weight *= combo_factor
+            combo_factor -= 1
+        count = (1 - model) * count + model * bias[hamming_weight] / weight
 
         experiment[i] = int(count * shots)
 
@@ -205,10 +204,11 @@ def main():
         basis_gates=QrackSimulator.get_qiskit_basis_gates(),
     )
 
-    experiment_counts = {}
+    experiment_counts = []
     for trial in range(trials):
         experiment = QrackSimulator(n_qubits)
         experiment.run_qiskit_circuit(qc)
+        experiment_counts.append({})
         for d in range(1, depth + 1):
             experiment.run_qiskit_circuit(step)
             trotter_step(qc_aer, qubits, (n_rows, n_cols), J, h, dt)
@@ -247,13 +247,14 @@ def main():
             counts = dict(Counter(experiment.measure_shots(qubits, shots)))
 
             for key, value in counts.items():
-                experiment_counts[key] = experiment_counts.get(key, 0) + value / shots
+                experiment_counts[trial][key] = experiment_counts[trial].get(key, 0) + value / shots
 
-    for key in experiment_counts.keys():
-        experiment_counts[key] /= trials
+    for experiment in experiment_counts:
+        for key in experiment.keys():
+            experiment[key] /= trials
 
     r_squared = 0
-    for d in range(1, depth + 1):
+    for d in range(depth):
         trotter_step(qc_aer, qubits, (n_rows, n_cols), J, h, dt)
 
         control = AerSimulator(method="statevector")
@@ -269,7 +270,7 @@ def main():
         result = calc_stats(
             n_qubits,
             control_probs,
-            experiment_counts,
+            experiment_counts[d],
             bias,
             model,
             shots,
