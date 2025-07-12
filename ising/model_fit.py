@@ -204,11 +204,10 @@ def main():
         basis_gates=QrackSimulator.get_qiskit_basis_gates(),
     )
 
-    experiment_counts = []
+    experiment_counts = [{}] * depth
     for trial in range(trials):
         experiment = QrackSimulator(n_qubits)
         experiment.run_qiskit_circuit(qc)
-        experiment_counts.append({})
         for d in range(1, depth + 1):
             experiment.run_qiskit_circuit(step)
             trotter_step(qc_aer, qubits, (n_rows, n_cols), J, h, dt)
@@ -247,7 +246,7 @@ def main():
             counts = dict(Counter(experiment.measure_shots(qubits, shots)))
 
             for key, value in counts.items():
-                experiment_counts[trial][key] = experiment_counts[trial].get(key, 0) + value / shots
+                experiment_counts[d - 1][key] = experiment_counts[d - 1].get(key, 0) + value / shots
 
     for experiment in experiment_counts:
         for key in experiment.keys():
