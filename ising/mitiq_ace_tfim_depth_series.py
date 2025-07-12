@@ -191,7 +191,7 @@ def main():
     shots = 1024
     long_range_columns = 1
     long_range_rows = 4
-    mitiq_depth = 2
+    mitiq_depth = 1
     if len(sys.argv) > 1:
         n_qubits = int(sys.argv[1])
     if len(sys.argv) > 2:
@@ -212,7 +212,7 @@ def main():
     print("Devices: " + str(devices))
 
     n_rows, n_cols = factor_width(n_qubits, False)
-    mitiq_shots = 32768
+    mitiq_shots = shots << 4
 
     # Quantinuum settings
     J, h, dt = -1.0, 2.0, 0.25
