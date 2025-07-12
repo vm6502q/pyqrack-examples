@@ -151,18 +151,16 @@ def main():
     for trial in range(trials):
         experiment = QrackSimulator(n_qubits)
         experiment.run_qiskit_circuit(qc)
-        counts = dict(Counter(experiment.measure_shots(qubits, shots)))
-        for key, value in counts.items():
-            experiment_counts[0][key] = experiment_counts[0].get(key, 0) + value / shots
-        for d in range(1, depth + 1):
-            experiment.run_qiskit_circuit(step)
+        for d in range(depth + 1):
+            if d > 0:
+                experiment.run_qiskit_circuit(step)
             counts = dict(Counter(experiment.measure_shots(qubits, shots)))
             for key, value in counts.items():
-                experiment_counts[d][key] = experiment_counts[d].get(key, 0) + value / shots
+                experiment_counts[d][key] = experiment_counts[d].get(key, 0) + value
 
     for experiment in experiment_counts:
         for key in experiment.keys():
-            experiment[key] /= trials
+            experiment[key] /= (shots * trials)
 
     for d in range(depth + 1):
         bias = []
