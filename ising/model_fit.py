@@ -132,7 +132,7 @@ def calc_stats(n, ideal_probs, counts, bias, model, shots, depth, hamming_n):
 
     return {
         "qubits": n,
-        "depth": d,
+        "depth": depth,
         "l2_similarity": float(l2_similarity),
         "hog_prob": hog_prob,
         "xeb": xeb,
@@ -272,7 +272,7 @@ def main():
             bias,
             model,
             shots,
-            depth,
+            d,
             hamming_n,
         )
 
