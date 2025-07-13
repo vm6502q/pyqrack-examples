@@ -254,8 +254,6 @@ def main():
                     tot_n = 1
                     bias.append(1)
                     bias += n_qubits * [0]
-                    if J > 0:
-                        bias.reverse()
                     break
                 bias.append(n)
                 tot_n += n
