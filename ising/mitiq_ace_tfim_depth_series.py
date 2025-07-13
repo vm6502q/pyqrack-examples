@@ -362,8 +362,7 @@ def main():
                 if t < period:
                     f_t = 1 - x**2 / 24
                 else:
-                    f_t = math.sqrt(period / (2 * math.pi * t)) \
-                          * math.cos(x - math.pi / 4)
+                    f_t = math.sqrt(period / (2 * math.pi * t))  * math.cos(x - math.pi / 4)
                 p = 2 ** (lam - 1) - A * f_t
                 factor = 2**p
                 n = 1 / (n_qubits * 2)
