@@ -131,8 +131,8 @@ def execute(circ, long_range_columns, long_range_rows, depth, J, h, dt, shots):
 
     experiment.run_qiskit_circuit(qc)
 
-    t1 = 4.5
-    t2 = 0.75
+    t1 = 2.875
+    a1 = 5.5
     t = depth * dt
     m = t / t1
     model = 1 - 1 / (1 + m)
@@ -146,7 +146,9 @@ def execute(circ, long_range_columns, long_range_rows, depth, J, h, dt, shots):
         d_magnetization = 1 if J < 0 else -1
         d_sqr_magnetization = 1
     else:
-        p = 2**arg + math.tanh(J / abs(h)) * math.log(1 + t / t2) / math.log(2)
+        p = 2 ** (abs(h / J) - 1) - a1 * math.tanh(abs(J / h)) * (
+            math.cos(math.pi * t / (2 * J)) / (1 + math.sqrt(t / t1))
+        )
         factor = 2**p
         n = 1 / (n_qubits * 2)
         tot_n = 0
@@ -331,6 +333,8 @@ def main():
             d_sqr_magnetization = 0
             model = 0
 
+            t1 = 2.875
+            a1 = 5.5
             bias = []
             t = depth * dt
             m = t / t1
@@ -344,21 +348,7 @@ def main():
                 d_magnetization = 1 if J < 0 else -1
                 d_sqr_magnetization = 1
             else:
-                # Amplitude calculation contributed by ChatGPT o3 (based on Dan's guesswork):
-                # Sources:
-                # Iglói & Rieger, Phys. Rev. Lett. 85, 3233 (2000) – see Eq. (10) and the discussion right after it.
-                # Calabrese, Essler & Fagotti, Phys. Rev. Lett. 106, 227203 (2011) (and the long-form derivation in J. Stat. Mech. P07016 (2012)) – see Eq. (77) in the PRL and Eq. (111) in the JSTAT paper.
-                lam = abs(h / J)
-                sinθ = abs(math.sin(theta))
-                # distance from criticality
-                Δ = abs(lam - 1)
-                if lam >= 1:
-                    # paramagnetic side
-                    A = 0.5 * sinθ * math.sqrt(Δ) / math.sqrt(2 * math.pi * lam)
-                else:
-                    # ferromagnetic side
-                    A = 0.5 * sinθ * math.sqrt(Δ) / math.sqrt(2 * math.pi)
-                p = 2 ** (abs(h / J) - 1) - A * math.tanh(abs(J / h)) * (
+                p = 2 ** (abs(h / J) - 1) - a1 * math.tanh(abs(J / h)) * (
                     math.cos(math.pi * t / (2 * J)) / (1 + math.sqrt(t / t1))
                 )
                 factor = 2**p

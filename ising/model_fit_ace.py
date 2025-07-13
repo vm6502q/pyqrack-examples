@@ -170,6 +170,11 @@ def main():
     depth = 20
     hamming_n = 2048
     n_rows, n_cols = factor_width(n_qubits, False)
+    t1 = 2.875
+    a1 = 5.5
+
+    print("t1: " + str(t1))
+    print("a1: " + str(a1))
 
     # Quantinuum settings
     J, h, dt = -1.0, 2.0, 0.25
@@ -187,10 +192,8 @@ def main():
     # J, h, dt = -1.0, 1.0, 0.25
     # theta = -math.pi / 4
 
-    t1 = 3
     # analytic carrier period
     period = math.pi / (2 * abs(J))
-    print("t1: " + str(t1))
 
     shots = max(2048, 1 << (n_qubits + 2))
     qubits = list(range(n_qubits))
@@ -229,21 +232,7 @@ def main():
             bias.append(1)
             bias += n_qubits * [0]
         else:
-            # Amplitude calculation contributed by ChatGPT o3 (based on Dan's guesswork):
-            # Sources:
-            # Iglói & Rieger, Phys. Rev. Lett. 85, 3233 (2000) – see Eq. (10) and the discussion right after it.
-            # Calabrese, Essler & Fagotti, Phys. Rev. Lett. 106, 227203 (2011) (and the long-form derivation in J. Stat. Mech. P07016 (2012)) – see Eq. (77) in the PRL and Eq. (111) in the JSTAT paper.
-            lam = abs(h / J)
-            sinθ = abs(math.sin(theta))
-            # distance from criticality
-            Δ = abs(lam - 1)
-            if lam >= 1:
-                # paramagnetic side
-                A = 0.5 * sinθ * math.sqrt(Δ) / math.sqrt(2 * math.pi * lam)
-            else:
-                # ferromagnetic side
-                A = 0.5 * sinθ * math.sqrt(Δ) / math.sqrt(2 * math.pi)
-            p = 2 ** (abs(h / J) - 1) - A * math.tanh(abs(J / h)) * (
+            p = 2 ** (abs(h / J) - 1) - a1 * math.tanh(abs(J / h)) * (
                 math.cos(math.pi * t / (2 * J)) / (1 + math.sqrt(t / t1))
             )
             factor = 2**p
