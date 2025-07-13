@@ -230,7 +230,7 @@ def main():
     # J, h, dt = -1.0, 1.0, 0.25
     # theta = -math.pi / 4
 
-    t1 = 2.75
+    t1 = 3
     # analytic carrier period
     period = math.pi / (2 * abs(J))
 
@@ -324,7 +324,7 @@ def main():
             sqr_magnetization = expit(
                 zne.execute_with_zne(circ, executor, scale_noise=fold_global, factory=factory)
             )
-        elif d > 2:
+        elif d > 1:
             d_sqr_magnetization = 0
             model = 0
 

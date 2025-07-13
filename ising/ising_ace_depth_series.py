@@ -163,8 +163,8 @@ def main():
             model = 0
             if d > 0:
                 experiment.run_qiskit_circuit(step)
-            if d > 2:
-                t1 = 2.75
+            if d > 1:
+                t1 = 3
                 # analytic carrier period
                 period = math.pi / (2 * abs(J))
                 bias = []
