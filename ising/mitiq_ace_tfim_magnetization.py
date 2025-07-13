@@ -146,7 +146,7 @@ def execute(circ, long_range_columns, long_range_rows, depth, J, h, dt):
 
     experiment.run_qiskit_circuit(qc)
 
-    t1 = 2.375
+    t1 = 2.75
     # analytic carrier period
     period = math.pi / (2 * abs(J))
     bias = []

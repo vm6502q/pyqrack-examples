@@ -164,11 +164,13 @@ def main():
             if d > 0:
                 experiment.run_qiskit_circuit(step)
 
-                t1 = 2.5
-                t = d * dt
+                t1 = 2.75
+                # analytic carrier period
+                period = math.pi / (2 * abs(J))
+                bias = []
+                t = depth * dt
                 m = t / t1
                 model = 1 - 1 / (1 + m)
-                arg = abs(h / J) - 1
                 d_magnetization = 0
                 d_sqr_magnetization = 0
                 if np.isclose(J, 0):
@@ -178,20 +180,41 @@ def main():
                     d_magnetization = 1 if J < 0 else -1
                     d_sqr_magnetization = 1
                 else:
-                    p = 2 ** (abs(h / J) - 1) - math.tanh(abs(J / h)) * (
-                        math.cos(math.pi * t / (2 * J)) / (1 + math.sqrt(t / t1))
-                    )
+                    # Contributed by ChatGPT o3 (based on Dan's guesswork):
+                    # Sources:
+                    # Iglói & Rieger, Long-Range Correlations in the Nonequilibrium Quantum Relaxation of a Spin Chain, Phys. Rev. Lett. 85, 3233 (2000)
+                    # Calabrese, Essler & Fagotti, Quantum Quench in the Transverse-Field Ising Chain, Phys. Rev. Lett. 106, 227203 (2011)
+                    # Calabrese, Essler & Fagotti, Quantum Quench in the TFIC I: Time-evolution of order-parameter correlators, J. Stat. Mech. (2012) P07016
+                    # Calabrese, Essler & Fagotti, Quantum Quench in the TFIC II: Stationary State Properties, arXiv:1205.2211
+                    # Sengupta, Powell & Sachdev, Quench Dynamics Across Quantum Critical Points, Phys. Rev. A 69, 053616 (2004)
+                    lam = abs(h / J)
+                    sinθ = abs(math.sin(theta))
+                    # distance from criticality
+                    Δ = abs(lam - 1)
+                    if lam >= 1:
+                        # paramagnetic side
+                        A = 0.5 * sinθ * math.sqrt(Δ) / math.sqrt(2 * math.pi * lam)
+                    else:
+                        # ferromagnetic side
+                        A = 0.5 * sinθ * math.sqrt(Δ) / math.sqrt(2 * math.pi)
+                    x   = 4 * abs(J) * t
+                    if t < period:
+                        f_t = 1 - x**2 / 24
+                    else:
+                        f_t = math.sqrt(period / (2 * math.pi * t)) \
+                              * math.cos(x - math.pi / 4)
+                    p = 2 ** (lam - 1) - A * f_t
                     factor = 2**p
                     n = 1 / (n_qubits * 2)
                     tot_n = 0
                     for q in range(n_qubits + 1):
                         n = n / factor
                         if n == float("inf"):
-                            d_magnetization = 1
-                            d_sqr_magnetization = 1
                             tot_n = 1
+                            d_magnetization = 1 if J < 0 else 1
+                            d_sqr_magnetization = 1
                             break
-                        m = (n_qubits - q) / n_qubits
+                        m = (n_qubits - (q << 1)) / n_qubits
                         d_magnetization += n * m
                         d_sqr_magnetization += n * m * m
                         tot_n += n

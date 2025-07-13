@@ -230,7 +230,7 @@ def main():
     # J, h, dt = -1.0, 1.0, 0.25
     # theta = -math.pi / 4
 
-    t1 = 2.375
+    t1 = 2.75
     # analytic carrier period
     period = math.pi / (2 * abs(J))
 

@@ -182,7 +182,7 @@ def main():
     # J, h, dt = -1.0, 1.0, 0.25
     # theta = -math.pi / 4
 
-    t1 = 2.375
+    t1 = 2.75
     # analytic carrier period
     period = math.pi / (2 * abs(J))
     print("t1: " + str(t1))
@@ -225,6 +225,12 @@ def main():
             bias += n_qubits * [0]
         else:
             # Contributed by ChatGPT o3 (based on Dan's guesswork):
+            # Sources:
+            # Iglói & Rieger, Long-Range Correlations in the Nonequilibrium Quantum Relaxation of a Spin Chain, Phys. Rev. Lett. 85, 3233 (2000)
+            # Calabrese, Essler & Fagotti, Quantum Quench in the Transverse-Field Ising Chain, Phys. Rev. Lett. 106, 227203 (2011)
+            # Calabrese, Essler & Fagotti, Quantum Quench in the TFIC I: Time-evolution of order-parameter correlators, J. Stat. Mech. (2012) P07016
+            # Calabrese, Essler & Fagotti, Quantum Quench in the TFIC II: Stationary State Properties, arXiv:1205.2211
+            # Sengupta, Powell & Sachdev, Quench Dynamics Across Quantum Critical Points, Phys. Rev. A 69, 053616 (2004)
             lam = abs(h / J)
             sinθ = abs(math.sin(theta))
             # distance from criticality
@@ -235,6 +241,7 @@ def main():
             else:
                 # ferromagnetic side
                 A = 0.5 * sinθ * math.sqrt(Δ) / math.sqrt(2 * math.pi)
+            f_t = 0
             x   = 4 * abs(J) * t
             if t < period:
                 f_t = 1 - x**2 / 24
