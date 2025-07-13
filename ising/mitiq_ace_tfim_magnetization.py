@@ -146,7 +146,9 @@ def execute(circ, long_range_columns, long_range_rows, depth, J, h, dt):
 
     experiment.run_qiskit_circuit(qc)
 
-    t1 = 6.5
+    t1 = 2.375
+    # analytic carrier period
+    period = math.pi / (2 * abs(J))
     bias = []
     t = depth * dt
     m = t / t1
@@ -171,8 +173,13 @@ def execute(circ, long_range_columns, long_range_rows, depth, J, h, dt):
         else:
             # ferromagnetic side
             A = 0.5 * sinθ * math.sqrt(Δ) / math.sqrt(2 * math.pi)
-        f_t = math.cos(math.pi * t / (2 * J)) / (1 + math.sqrt(t / t1))
-        p = 2 ** (abs(h / J) - 1) - A * f_t
+        x   = 4 * abs(J) * t
+        if t < period:
+            f_t = 1 - x**2 / 24
+        else:
+            f_t = math.sqrt(period / (2 * math.pi * t)) \
+                  * math.cos(x - math.pi / 4)
+        p = 2 ** (lam - 1) - A * f_t
         factor = 2**p
         n = 1 / (n_qubits * 2)
         tot_n = 0

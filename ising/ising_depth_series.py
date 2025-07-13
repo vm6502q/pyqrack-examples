@@ -115,6 +115,11 @@ def main():
     # J, h, dt = -1.0, 1.0, 0.25
     # theta = -math.pi / 4
 
+    t1 = 2.375
+    # analytic carrier period
+    period = math.pi / (2 * abs(J))
+    print("t1: " + str(t1))
+
     qubits = list(range(n_qubits))
 
     qc = QuantumCircuit(n_qubits)
@@ -148,7 +153,6 @@ def main():
             if d > 0:
                 experiment.run_qiskit_circuit(step)
 
-                t1 = 6.0
                 bias = []
                 t = depth * dt
                 m = t / t1
@@ -173,8 +177,14 @@ def main():
                     else:
                         # ferromagnetic side
                         A = 0.5 * sinθ * math.sqrt(Δ) / math.sqrt(2 * math.pi)
-                    f_t = math.cos(math.pi * t / (2 * J)) / (1 + math.sqrt(t / t1))
-                    p = 2 ** (abs(h / J) - 1) - A * f_t
+                    f_t = 0
+                    x   = 4 * abs(J) * t
+                    if t < period:
+                        f_t = 1 - x**2 / 24
+                    else:
+                        f_t = math.sqrt(period / (2 * math.pi * t)) \
+                              * math.cos(x - math.pi / 4)
+                    p = 2 ** (lam - 1) - A * f_t
                     factor = 2**p
                     n = 1 / (n_qubits * 2)
                     tot_n = 0

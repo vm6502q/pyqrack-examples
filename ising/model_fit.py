@@ -165,9 +165,6 @@ def main():
     depth = 20
     hamming_n = 2048
     trials = 20
-    t1 = 6.0
-
-    print("t1: " + str(t1))
 
     n_rows, n_cols = factor_width(n_qubits, False)
 
@@ -186,6 +183,11 @@ def main():
     # Critical point (symmetry breaking)
     # J, h, dt = -1.0, 1.0, 0.25
     # theta = -math.pi / 4
+
+    t1 = 2.375
+    # analytic carrier period
+    period = math.pi / (2 * abs(J))
+    print("t1: " + str(t1))
 
     shots = max(65536, 1 << (n_qubits + 2))
     qubits = list(range(n_qubits))
@@ -254,8 +256,14 @@ def main():
             else:
                 # ferromagnetic side
                 A = 0.5 * sinθ * math.sqrt(Δ) / math.sqrt(2 * math.pi)
-            f_t = math.cos(math.pi * t / (2 * J)) / (1 + math.sqrt(t / t1))
-            p = 2 ** (abs(h / J) - 1) - A * f_t
+            f_t = 0
+            x   = 4 * abs(J) * t
+            if t < period:
+                f_t = 1 - x**2 / 24
+            else:
+                f_t = math.sqrt(period / (2 * math.pi * t)) \
+                      * math.cos(x - math.pi / 4)
+            p = 2 ** (lam - 1) - A * f_t
             factor = 2**p
             n = 1 / (n_qubits * 2)
             tot_n = 0
