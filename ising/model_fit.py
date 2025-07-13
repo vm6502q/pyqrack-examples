@@ -125,16 +125,14 @@ def calc_stats(n, ideal_probs, counts, bias, model, shots, depth, hamming_n):
 
     # By Elara (OpenAI custom GPT)
     # Compute Hamming distances between each ACE bitstring and its closest in control case
-    min_distances = [
-        min(hamming_distance(a, r, n) for r in con_top_n) for a in exp_top_n
-    ]
+    min_distances = [min(hamming_distance(a, r, n) for r in con_top_n) for a in exp_top_n]
     avg_hamming_distance = np.mean(min_distances)
 
     xeb = numer / denom
 
     return {
         "qubits": n,
-        "depth": depth,
+        "depth": d,
         "l2_similarity": float(l2_similarity),
         "hog_prob": hog_prob,
         "xeb": xeb,
@@ -151,9 +149,7 @@ def int_to_bitstring(integer, length):
 
 # By Elara (OpenAI custom GPT)
 def hamming_distance(s1, s2, n):
-    return sum(
-        ch1 != ch2 for ch1, ch2 in zip(int_to_bitstring(s1, n), int_to_bitstring(s2, n))
-    )
+    return sum(ch1 != ch2 for ch1, ch2 in zip(int_to_bitstring(s1, n), int_to_bitstring(s2, n)))
 
 
 # From https://stackoverflow.com/questions/13070461/get-indices-of-the-top-n-values-of-a-list#answer-38835860
@@ -170,7 +166,7 @@ def main():
     hamming_n = 2048
     trials = 20
     t1 = 2.375
-    a1 = 4.625
+    a1 = 4.75
 
     print("t1: " + str(t1))
     print("a1: " + str(a1))
@@ -219,9 +215,7 @@ def main():
             counts = dict(Counter(experiment.measure_shots(qubits, shots)))
 
             for key, value in counts.items():
-                experiment_counts[d - 1][key] = (
-                    experiment_counts[d - 1].get(key, 0) + value / shots
-                )
+                experiment_counts[d - 1][key] = experiment_counts[d - 1].get(key, 0) + value / shots
 
     for experiment in experiment_counts:
         for key in experiment.keys():
@@ -278,7 +272,7 @@ def main():
             bias,
             model,
             shots,
-            d,
+            depth,
             hamming_n,
         )
 

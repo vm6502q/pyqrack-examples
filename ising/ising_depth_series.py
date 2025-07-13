@@ -99,9 +99,6 @@ def main():
 
     n_rows, n_cols = factor_width(n_qubits, False)
 
-    t1 = 2.375
-    a1 = 4.625
-
     # Quantinuum settings
     J, h, dt = -1.0, 2.0, 0.25
     theta = math.pi / 18
@@ -117,9 +114,6 @@ def main():
     # Critical point (symmetry breaking)
     # J, h, dt = -1.0, 1.0, 0.25
     # theta = -math.pi / 4
-
-    # analytic carrier period
-    period = math.pi / (2 * abs(J))
 
     qubits = list(range(n_qubits))
 
@@ -154,40 +148,34 @@ def main():
             if d > 0:
                 experiment.run_qiskit_circuit(step)
 
-            bias = []
-            t = depth * dt
-            m = (t / t1) ** 2
-            model = 1 - 1 / (1 + m)
-            d_magnetization = 0
-            d_sqr_magnetization = 0
-            if np.isclose(J, 0):
+                t1 = 2.375
+                a1 = 4.75
+                t = d * dt
+                m = t / t1
+                model = 1 - 1 / (1 + m)
                 d_magnetization = 0
                 d_sqr_magnetization = 0
-            elif np.isclose(h, 0):
-                d_magnetization = 1 if J < 0 else -1
-                d_sqr_magnetization = 1
-            else:
-                p = 2 ** (abs(h / J) - 1) - a1 * math.tanh(abs(J / h)) * (
-                    math.cos(math.pi * t / (2 * J)) / (1 + math.sqrt(t / t1))
-                )
-                factor = 2**p
-                n = 1 / (n_qubits * 2)
-                tot_n = 0
-                for q in range(n_qubits + 1):
-                    n = n / factor
-                    if n == float("inf"):
-                        tot_n = 1
-                        d_magnetization = 1 if J < 0 else 1
-                        d_sqr_magnetization = 1
-                        break
-                    m = (n_qubits - (q << 1)) / n_qubits
-                    d_magnetization += n * m
-                    d_sqr_magnetization += n * m * m
-                    tot_n += n
-                d_magnetization /= tot_n
-                d_sqr_magnetization /= tot_n
-                if J > 0:
-                    d_magnetization = 1 - d_magnetization
+                if np.isclose(J, 0):
+                    d_magnetization = 0
+                    d_sqr_magnetization = 0
+                elif np.isclose(h, 0):
+                    d_magnetization = 1 if J > 0 else -1
+                    d_sqr_magnetization = 1
+                else:
+                    p = 2 ** (abs(h / J) - 1) - a1 * math.tanh(abs(J / h)) * (
+                        math.cos(math.pi * t / (2 * J)) / (1 + math.sqrt(t / t1))
+                    )
+                    tot_n = 0
+                    for q in range(n_qubits + 1):
+                        n = model / (n_qubits * (2 ** (p * (q + 1))))
+                        m = (n_qubits - (q << 1)) / n_qubits
+                        d_magnetization += n * m
+                        d_sqr_magnetization += n * m * m
+                        tot_n += n
+                    d_magnetization /= tot_n
+                    d_sqr_magnetization /= tot_n
+                    if J > 0:
+                        d_magnetization = 1 - d_magnetization
 
             experiment_samples = experiment.measure_shots(qubits, shots)
 
@@ -205,9 +193,7 @@ def main():
             sqr_magnetization /= shots
 
             magnetization = model * d_magnetization + (1 - model) * magnetization
-            sqr_magnetization = (
-                model * d_sqr_magnetization + (1 - model) * sqr_magnetization
-            )
+            sqr_magnetization = model * d_sqr_magnetization + (1 - model) * sqr_magnetization
 
             if sqr_magnetization < min_sqr_mag:
                 min_sqr_mag = sqr_magnetization
@@ -233,9 +219,7 @@ def main():
         ylim = ((min_sqr_mag * 100) // 10) / 10
 
         plt.plot(depths, magnetizations[0], marker="o", linestyle="-")
-        plt.title(
-            "Square Magnetization vs Trotter Depth (" + str(n_qubits) + " Qubits)"
-        )
+        plt.title("Square Magnetization vs Trotter Depth (" + str(n_qubits) + " Qubits)")
         plt.xlabel("Trotter Depth")
         plt.ylabel("Square Magnetization")
         plt.grid(True)

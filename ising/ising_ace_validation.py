@@ -13,9 +13,9 @@ from qiskit.circuit.library import RZZGate, RXGate
 from qiskit.compiler import transpile
 from qiskit_aer.backends import AerSimulator
 from qiskit.quantum_info import Statevector
-from qiskit.transpiler import CouplingMap
 
 from pyqrack import QrackAceBackend
+from qiskit.providers.qrack import AceQasmSimulator
 
 
 def factor_width(width, is_transpose=False):
@@ -96,12 +96,13 @@ def calc_stats(n, ideal_probs, counts, bias, model, shots, depth, hamming_n):
         count /= shots
 
         hamming_weight = hamming_distance(i, 0, n)
-        weight = 1
-        combo_factor = n
-        for _ in range(hamming_weight):
-            weight *= combo_factor
-            combo_factor -= 1
-        count = (1 - model) * count + model * bias[hamming_weight] / weight
+        if hamming_weight <= (n // 2):
+            weight = 1
+            combo_factor = n
+            for _ in range(hamming_weight):
+                weight *= combo_factor
+                combo_factor -= 1
+            count = (1 - model) * count + model * bias[hamming_weight] / weight
 
         experiment[i] = int(count * shots)
 
@@ -125,14 +126,16 @@ def calc_stats(n, ideal_probs, counts, bias, model, shots, depth, hamming_n):
 
     # By Elara (OpenAI custom GPT)
     # Compute Hamming distances between each ACE bitstring and its closest in control case
-    min_distances = [min(hamming_distance(a, r, n) for r in con_top_n) for a in exp_top_n]
+    min_distances = [
+        min(hamming_distance(a, r, n) for r in con_top_n) for a in exp_top_n
+    ]
     avg_hamming_distance = np.mean(min_distances)
 
     xeb = numer / denom
 
     return {
         "qubits": n,
-        "depth": d,
+        "depth": depth,
         "l2_similarity": float(l2_similarity),
         "hog_prob": hog_prob,
         "xeb": xeb,
@@ -149,7 +152,9 @@ def int_to_bitstring(integer, length):
 
 # By Elara (OpenAI custom GPT)
 def hamming_distance(s1, s2, n):
-    return sum(ch1 != ch2 for ch1, ch2 in zip(int_to_bitstring(s1, n), int_to_bitstring(s2, n)))
+    return sum(
+        ch1 != ch2 for ch1, ch2 in zip(int_to_bitstring(s1, n), int_to_bitstring(s2, n))
+    )
 
 
 # From https://stackoverflow.com/questions/13070461/get-indices-of-the-top-n-values-of-a-list#answer-38835860
@@ -161,14 +166,27 @@ def top_n(n, a):
 
 
 def main():
-    n_qubits = 8
-    depth = 20
+    n_qubits = 16
+    depth = 10
     hamming_n = 2048
-    t1 = 2.375
-    a1 = 4.75
-
-    print("t1: " + str(t1))
-    print("a1: " + str(a1))
+    long_range_columns = 1
+    long_range_rows = 4
+    if len(sys.argv) > 1:
+        n_qubits = int(sys.argv[1])
+    if len(sys.argv) > 2:
+        depth = int(sys.argv[2])
+    if len(sys.argv) > 3:
+        hamming_n = int(sys.argv[3])
+    if len(sys.argv) > 4:
+        long_range_columns = int(sys.argv[4])
+    if len(sys.argv) > 5:
+        long_range_rows = int(sys.argv[5])
+    lcv = 7
+    devices = []
+    while len(sys.argv) > lcv:
+        devices.append(int(sys.argv[lcv]))
+        lcv += 1
+    print("Devices: " + str(devices))
 
     n_rows, n_cols = factor_width(n_qubits, False)
 
@@ -188,78 +206,69 @@ def main():
     # J, h, dt = -1.0, 1.0, 0.25
     # theta = -math.pi / 4
 
-    shots = max(2048, 1 << (n_qubits + 2))
+    shots = max(1 << 14, 1 << (n_qubits + 2))
     qubits = list(range(n_qubits))
 
-    experiment = QrackAceBackend(
-        n_qubits,
-        long_range_columns=1,
-        long_range_rows=2,
-    )
+    bias = []
+    t1 = 1.5
+    t2 = 1.5
+    t = depth * dt
+    m = t / t1
+    model = 1 - 1 / (1 + m)
+    p = 2 ** (-1 - h / J) + J * t / (h * t2)
+    factor = 2**p
+    if np.isclose(J, 0):
+        bias = (n_qubits + 1) * [1 / (n_qubits + 1)]
+    elif np.isclose(h, 0) or np.isclose(factor, 0):
+        bias.append(1)
+        bias += n_qubits * [0]
+        if J > 0:
+            bias.reverse()
+    else:
+        n = model / (n_qubits * 2)
+        tot_n = 0
+        for q in range(n_qubits + 1):
+            n = n / factor
+            bias.append(n)
+            tot_n += n
+        # Normalize
+        for q in range(n_qubits + 1):
+            bias[q] /= tot_n
 
     qc = QuantumCircuit(n_qubits)
     for q in range(n_qubits):
         qc.ry(theta, q)
-    qc_aer = qc.copy()
-    step = QuantumCircuit(n_qubits)
-    trotter_step(step, qubits, (n_rows, n_cols), J, h, dt)
-    step = transpile(
-        step,
+    for d in range(depth):
+        trotter_step(qc, qubits, (n_rows, n_cols), J, h, dt)
+    qc = transpile(
+        qc,
         optimization_level=3,
         basis_gates=QrackAceBackend.get_qiskit_basis_gates(),
     )
 
+    experiment = QrackAceBackend(
+        n_qubits,
+        long_range_columns=long_range_columns,
+        long_range_rows=long_range_rows,
+    )
+    # We've achieved the dream: load balancing between discrete and integrated accelerators!
+    for sim_id in range(min(len(experiment.sim), len(devices))):
+        experiment.sim[sim_id].set_device(devices[sim_id])
+
     experiment.run_qiskit_circuit(qc)
-    r_squared = 0
-    for d in range(1, depth + 1):
-        experiment.run_qiskit_circuit(step)
-        trotter_step(qc_aer, qubits, (n_rows, n_cols), J, h, dt)
+    experiment_counts = dict(Counter(experiment.measure_shots(qubits, shots)))
 
-        bias = []
-        t = d * dt
-        m = t / t1
-        model = 1 - 1 / (1 + m)
-        if np.isclose(J, 0):
-            bias = (n_qubits + 1) * [1 / (n_qubits + 1)]
-        elif np.isclose(h, 0):
-            bias.append(1)
-            bias += n_qubits * [0]
-        else:
-            p = 2 ** (abs(h / J) - 1) - a1 * math.tanh(abs(J / h)) * (
-                math.cos(math.pi * t / (2 * J)) / (1 + math.sqrt(t / t1))
-            )
-            factor = 2**p
-            n = 1 / (n_qubits * 2)
-            tot_n = 0
-            for q in range(n_qubits + 1):
-                n = n / factor
-                if n == float("inf"):
-                    tot_n = 1
-                    bias.append(1)
-                    bias += n_qubits * [0]
-                    if J > 0:
-                        bias.reverse()
-                    break
-                bias.append(n)
-                tot_n += n
-            for q in range(n_qubits + 1):
-                bias[q] /= tot_n
-        if J > 0:
-            bias.reverse()
+    control = AerSimulator(method="statevector")
+    qc = transpile(
+        qc,
+        backend=control,
+    )
+    qc.save_statevector()
+    job = control.run(qc)
+    control_probs = Statevector(job.result().get_statevector()).probabilities()
 
-        experiment_counts = dict(Counter(experiment.measure_shots(qubits, shots)))
-
-        control = AerSimulator(method="statevector")
-        qc_aer = transpile(
-            qc_aer,
-            backend=control,
-        )
-        qc_aer_sv = qc_aer.copy()
-        qc_aer_sv.save_statevector()
-        job = control.run(qc_aer_sv)
-        control_probs = Statevector(job.result().get_statevector()).probabilities()
-
-        result = calc_stats(
+    print(
+        calc_stats(
             n_qubits,
             control_probs,
             experiment_counts,
@@ -269,12 +278,7 @@ def main():
             depth,
             hamming_n,
         )
-
-        r_squared += (1 - result["l2_similarity"]) ** 2
-
-    r_squared = 1 - (r_squared ** (1 / 2)) / depth
-
-    print("R^2: " + str(r_squared))
+    )
 
     return 0
 

@@ -146,14 +146,11 @@ def execute(circ, long_range_columns, long_range_rows, depth, J, h, dt):
 
     experiment.run_qiskit_circuit(qc)
 
-    t1 = 2.875
-    a1 = 5.5
-    # analytic carrier period
-    period = math.pi / (2 * abs(J))
-    bias = []
+    t1 = 2.375
+    a1 = 4.75
     t = depth * dt
     m = t / t1
-    model = 1 - 1 / (1 + m) if d > 1 else 0
+    model = 1 - 1 / (1 + m)
     d_magnetization = 0
     d_sqr_magnetization = 0
     if np.isclose(J, 0):
@@ -172,9 +169,9 @@ def execute(circ, long_range_columns, long_range_rows, depth, J, h, dt):
         for q in range(n_qubits + 1):
             n = n / factor
             if n == float("inf"):
-                tot_n = 1
-                d_magnetization = 1 if J < 0 else 1
+                d_magnetization = 1
                 d_sqr_magnetization = 1
+                tot_n = 1
                 break
             m = (n_qubits - (q << 1)) / n_qubits
             d_magnetization += n * m
@@ -238,22 +235,16 @@ def main():
     scale_count = (depth + 1) if depth > 1 else 3
     max_scale = 2 if depth > 1 else 3
     factory = LinearFactory(
-        scale_factors=[
-            (1 + (max_scale - 1) * x / (scale_count - 1)) for x in range(0, scale_count)
-        ]
+        scale_factors=[(1 + (max_scale - 1) * x / (scale_count - 1)) for x in range(0, scale_count)]
     )
 
-    executor = lambda c: execute(
-        c, long_range_columns, long_range_rows, depth, J, h, dt
-    )
+    executor = lambda c: execute(c, long_range_columns, long_range_rows, depth, J, h, dt)
 
     sqr_magnetization = expit(
         zne.execute_with_zne(circ, executor, scale_noise=fold_global, factory=factory)
     )
 
-    print(
-        {"width": n_qubits, "depth": depth, "square_magnetization": sqr_magnetization}
-    )
+    print({"width": n_qubits, "depth": depth, "square_magnetization": sqr_magnetization})
 
     return 0
 
