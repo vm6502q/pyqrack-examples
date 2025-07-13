@@ -234,7 +234,7 @@ def main():
         control_probs = Statevector(job.result().get_statevector()).probabilities()
 
         bias = []
-        t = depth * dt
+        t = d * dt
         m = t / t1
         model = 1 - 1 / (1 + m)
         if np.isclose(J, 0):
@@ -280,7 +280,7 @@ def main():
             bias,
             model,
             shots,
-            depth,
+            d,
             hamming_n,
         )
 

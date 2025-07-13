@@ -214,7 +214,7 @@ def main():
         trotter_step(qc_aer, qubits, (n_rows, n_cols), J, h, dt)
 
         bias = []
-        t = depth * dt
+        t = d * dt
         m = t / t1
         model = 1 - 1 / (1 + m)
         if np.isclose(J, 0):
@@ -272,7 +272,7 @@ def main():
             bias,
             model,
             shots,
-            depth,
+            d,
             hamming_n,
         )
 
