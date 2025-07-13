@@ -163,6 +163,12 @@ def execute(circ, long_range_columns, long_range_rows, depth, J, h, dt):
         d_sqr_magnetization = 1
     else:
         # Contributed by ChatGPT o3 (based on Dan's guesswork):
+        # Sources:
+        # Iglói & Rieger, Long-Range Correlations in the Nonequilibrium Quantum Relaxation of a Spin Chain, Phys. Rev. Lett. 85, 3233 (2000)
+        # Calabrese, Essler & Fagotti, Quantum Quench in the Transverse-Field Ising Chain, Phys. Rev. Lett. 106, 227203 (2011)
+        # Calabrese, Essler & Fagotti, Quantum Quench in the TFIC I: Time-evolution of order-parameter correlators, J. Stat. Mech. (2012) P07016
+        # Calabrese, Essler & Fagotti, Quantum Quench in the TFIC II: Stationary State Properties, arXiv:1205.2211
+        # Sengupta, Powell & Sachdev, Quench Dynamics Across Quantum Critical Points, Phys. Rev. A 69, 053616 (2004)
         lam = abs(h / J)
         sinθ = abs(math.sin(theta))
         # distance from criticality
