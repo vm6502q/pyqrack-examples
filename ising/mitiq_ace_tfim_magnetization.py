@@ -146,7 +146,8 @@ def execute(circ, long_range_columns, long_range_rows, depth, J, h, dt):
 
     experiment.run_qiskit_circuit(qc)
 
-    t1 = 2.5
+    t1 = 2.375
+    a1 = 4.75
     t = depth * dt
     m = t / t1
     model = 1 - 1 / (1 + m)
@@ -159,7 +160,7 @@ def execute(circ, long_range_columns, long_range_rows, depth, J, h, dt):
         d_magnetization = 1 if J < 0 else -1
         d_sqr_magnetization = 1
     else:
-        p = 2 ** (abs(h / J) - 1) - math.tanh(abs(J / h)) * (
+        p = 2 ** (abs(h / J) - 1) - a1 * math.tanh(abs(J / h)) * (
             math.cos(math.pi * t / (2 * J)) / (1 + math.sqrt(t / t1))
         )
         factor = 2**p
