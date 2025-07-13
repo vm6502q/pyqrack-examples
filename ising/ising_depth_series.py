@@ -148,12 +148,11 @@ def main():
             if d > 0:
                 experiment.run_qiskit_circuit(step)
 
-                t1 = 1.32
-                t2 = 0.083
+                t1 = 2.625
                 t = d * dt
                 m = t / t1
                 model = 1 - 1 / (1 + m)
-                arg = -h / J
+                arg = abs(h / J) - 1
                 d_magnetization = 0
                 d_sqr_magnetization = 0
                 if np.isclose(J, 0) or (arg >= 1024):
@@ -163,8 +162,7 @@ def main():
                     d_magnetization = 1 if J > 0 else -1
                     d_sqr_magnetization = 1
                 else:
-                    env = math.sqrt(t / t2)
-                    p = 2**arg + math.tanh(J / abs(h)) * (env - math.cos(math.pi * t / (2 * abs(J))) / (1 + env))
+                    p = 2**arg + math.tanh(abs(J / h)) * (math.cos(math.pi * t / (2 * J)) / (1 + math.sqrt(t / t1)))
                     tot_n = 0
                     for q in range(n_qubits + 1):
                         n = model / (n_qubits * (2 ** (p * (q + 1))))
@@ -174,6 +172,8 @@ def main():
                         tot_n += n
                     d_magnetization /= tot_n
                     d_sqr_magnetization /= tot_n
+                    if J > 0:
+                        d_magnetization = 1 - d_magnetization
 
             experiment_samples = experiment.measure_shots(qubits, shots)
 

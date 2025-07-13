@@ -324,20 +324,18 @@ def main():
             d_sqr_magnetization = 0
             model = 0
 
-            t1 = 4.2
-            t2 = 0.097
+            t1 = 2.5
             t = d * dt
             m = t / t1
             model = 1 - 1 / (1 + m)
-            arg = -h / J
+            arg = abs(h / J) - 1
             d_sqr_magnetization = 0
             if np.isclose(J, 0) or (arg >= 1024):
                 d_sqr_magnetization = 0
             elif np.isclose(h, 0) or (arg < -1024):
                 d_sqr_magnetization = 1
             else:
-                env = math.sqrt(t / t2)
-                p = 2**arg + math.tanh(J / abs(h)) * (env - math.cos(math.pi * t / (2 * abs(J))) / (1 + env))
+                p = 2**arg - math.tanh(abs(J / h)) * (math.cos(math.pi * t / (2 * J)) / (1 + math.sqrt(t / t1)))
                 factor = 2**p
                 n = 1 / (n_qubits * 2)
                 tot_n = 0
