@@ -95,13 +95,14 @@ def calc_stats(n, ideal_probs, counts, bias, model, shots, depth, hamming_n):
         count = counts[i] if i in counts else 0
         count /= shots
 
-        hamming_weight = hamming_distance(i, 0, n)
-        weight = 1
-        combo_factor = n
-        for _ in range(hamming_weight):
-            weight *= combo_factor
-            combo_factor -= 1
-        count = (1 - model) * count + model * bias[hamming_weight] / weight
+        if len(bias) > 0:
+            hamming_weight = hamming_distance(i, 0, n)
+            weight = 1
+            combo_factor = n
+            for _ in range(hamming_weight):
+                weight *= combo_factor
+                combo_factor -= 1
+            count = (1 - model) * count + model * bias[hamming_weight] / weight
 
         experiment[i] = int(count * shots)
 
@@ -184,7 +185,7 @@ def main():
     # J, h, dt = -1.0, 1.0, 0.25
     # theta = -math.pi / 4
 
-    t1 = 2.375
+    t1 = 2.625
     # analytic carrier period
     period = math.pi / (2 * abs(J))
     print("t1: " + str(t1))
@@ -238,13 +239,13 @@ def main():
         bias = []
         t = d * dt
         m = t / t1
-        model = 1 - 1 / (1 + m)
+        model = 1 - 1 / (1 + m) if d > 1 else 0
         if np.isclose(J, 0):
             bias = (n_qubits + 1) * [1 / (n_qubits + 1)]
         elif np.isclose(h, 0):
             bias.append(1)
             bias += n_qubits * [0]
-        else:
+        elif d > 1:
             # Contributed by ChatGPT o3 (based on Dan's guesswork):
             # Sources:
             # Iglói & Rieger, Long-Range Correlations in the Nonequilibrium Quantum Relaxation of a Spin Chain, Phys. Rev. Lett. 85, 3233 (2000)

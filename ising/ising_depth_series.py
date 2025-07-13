@@ -115,7 +115,7 @@ def main():
     # J, h, dt = -1.0, 1.0, 0.25
     # theta = -math.pi / 4
 
-    t1 = 2.375
+    t1 = 2.625
     # analytic carrier period
     period = math.pi / (2 * abs(J))
     print("t1: " + str(t1))
@@ -152,7 +152,7 @@ def main():
             model = 0
             if d > 0:
                 experiment.run_qiskit_circuit(step)
-            if d > 2:
+            if d > 1:
                 bias = []
                 t = depth * dt
                 m = t / t1
