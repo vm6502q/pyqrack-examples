@@ -114,7 +114,9 @@ if __name__ == "__main__":
     J_func = lambda t: generate_Jt(n_qubits, t)
     h_func = lambda t: generate_ht(n_qubits, t)
 
-    mag = simulate_tfim(J_func, h_func, n_qubits, lrr, lrc, n_steps, delta_t, theta, shots)
+    mag = simulate_tfim(
+        J_func, h_func, n_qubits, lrr, lrc, n_steps, delta_t, theta, shots
+    )
     ylim = ((min(mag) * 100) // 10) / 10
     plt.figure(figsize=(14, 14))
     plt.plot(list(range(1, n_steps + 1)), mag, marker="o", linestyle="-")

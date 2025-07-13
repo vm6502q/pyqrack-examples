@@ -313,7 +313,8 @@ def main():
             max_scale = 2 if d > 1 else 3
             factory = LinearFactory(
                 scale_factors=[
-                    (1 + (max_scale - 1) * x / (scale_count - 1)) for x in range(0, scale_count)
+                    (1 + (max_scale - 1) * x / (scale_count - 1))
+                    for x in range(0, scale_count)
                 ]
             )
 
@@ -322,9 +323,11 @@ def main():
             )
 
             sqr_magnetization = expit(
-                zne.execute_with_zne(circ, executor, scale_noise=fold_global, factory=factory)
+                zne.execute_with_zne(
+                    circ, executor, scale_noise=fold_global, factory=factory
+                )
             )
-        elif d > 1:
+        else:
             d_sqr_magnetization = 0
             model = 0
 
@@ -341,13 +344,10 @@ def main():
                 d_magnetization = 1 if J < 0 else -1
                 d_sqr_magnetization = 1
             else:
-                # Contributed by ChatGPT o3 (based on Dan's guesswork):
+                # Amplitude calculation contributed by ChatGPT o3 (based on Dan's guesswork):
                 # Sources:
-                # Iglói & Rieger, Long-Range Correlations in the Nonequilibrium Quantum Relaxation of a Spin Chain, Phys. Rev. Lett. 85, 3233 (2000)
-                # Calabrese, Essler & Fagotti, Quantum Quench in the Transverse-Field Ising Chain, Phys. Rev. Lett. 106, 227203 (2011)
-                # Calabrese, Essler & Fagotti, Quantum Quench in the TFIC I: Time-evolution of order-parameter correlators, J. Stat. Mech. (2012) P07016
-                # Calabrese, Essler & Fagotti, Quantum Quench in the TFIC II: Stationary State Properties, arXiv:1205.2211
-                # Sengupta, Powell & Sachdev, Quench Dynamics Across Quantum Critical Points, Phys. Rev. A 69, 053616 (2004)
+                # Iglói & Rieger, Phys. Rev. Lett. 85, 3233 (2000) – see Eq. (10) and the discussion right after it.
+                # Calabrese, Essler & Fagotti, Phys. Rev. Lett. 106, 227203 (2011) (and the long-form derivation in J. Stat. Mech. P07016 (2012)) – see Eq. (77) in the PRL and Eq. (111) in the JSTAT paper.
                 lam = abs(h / J)
                 sinθ = abs(math.sin(theta))
                 # distance from criticality
@@ -358,12 +358,9 @@ def main():
                 else:
                     # ferromagnetic side
                     A = 0.5 * sinθ * math.sqrt(Δ) / math.sqrt(2 * math.pi)
-                x   = 4 * abs(J) * t
-                if t < period:
-                    f_t = 1 - x**2 / 24
-                else:
-                    f_t = math.sqrt(period / (2 * math.pi * t))  * math.cos(x - math.pi / 4)
-                p = 2 ** (lam - 1) - A * f_t
+                p = 2 ** (abs(h / J) - 1) - A * math.tanh(abs(J / h)) * (
+                    math.cos(math.pi * t / (2 * J)) / (1 + math.sqrt(t / t1))
+                )
                 factor = 2**p
                 n = 1 / (n_qubits * 2)
                 tot_n = 0
@@ -399,7 +396,9 @@ def main():
         sqr_magnetization /= shots
 
         magnetization = model * d_magnetization + (1 - model) * magnetization
-        sqr_magnetization = model * d_sqr_magnetization + (1 - model) * sqr_magnetization
+        sqr_magnetization = (
+            model * d_sqr_magnetization + (1 - model) * sqr_magnetization
+        )
 
         seconds = time.perf_counter() - start
 

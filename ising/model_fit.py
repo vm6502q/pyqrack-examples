@@ -95,14 +95,13 @@ def calc_stats(n, ideal_probs, counts, bias, model, shots, depth, hamming_n):
         count = counts[i] if i in counts else 0
         count /= shots
 
-        if len(bias) > 0:
-            hamming_weight = hamming_distance(i, 0, n)
-            weight = 1
-            combo_factor = n
-            for _ in range(hamming_weight):
-                weight *= combo_factor
-                combo_factor -= 1
-            count = (1 - model) * count + model * bias[hamming_weight] / weight
+        hamming_weight = hamming_distance(i, 0, n)
+        weight = 1
+        combo_factor = n
+        for _ in range(hamming_weight):
+            weight *= combo_factor
+            combo_factor -= 1
+        count = (1 - model) * count + model * bias[hamming_weight] / weight
 
         experiment[i] = int(count * shots)
 
@@ -126,7 +125,9 @@ def calc_stats(n, ideal_probs, counts, bias, model, shots, depth, hamming_n):
 
     # By Elara (OpenAI custom GPT)
     # Compute Hamming distances between each ACE bitstring and its closest in control case
-    min_distances = [min(hamming_distance(a, r, n) for r in con_top_n) for a in exp_top_n]
+    min_distances = [
+        min(hamming_distance(a, r, n) for r in con_top_n) for a in exp_top_n
+    ]
     avg_hamming_distance = np.mean(min_distances)
 
     xeb = numer / denom
@@ -150,7 +151,9 @@ def int_to_bitstring(integer, length):
 
 # By Elara (OpenAI custom GPT)
 def hamming_distance(s1, s2, n):
-    return sum(ch1 != ch2 for ch1, ch2 in zip(int_to_bitstring(s1, n), int_to_bitstring(s2, n)))
+    return sum(
+        ch1 != ch2 for ch1, ch2 in zip(int_to_bitstring(s1, n), int_to_bitstring(s2, n))
+    )
 
 
 # From https://stackoverflow.com/questions/13070461/get-indices-of-the-top-n-values-of-a-list#answer-38835860
@@ -166,6 +169,9 @@ def main():
     depth = 20
     hamming_n = 2048
     trials = 20
+    t1 = 2.625
+
+    print("t1: " + str(t1))
 
     n_rows, n_cols = factor_width(n_qubits, False)
 
@@ -184,11 +190,6 @@ def main():
     # Critical point (symmetry breaking)
     # J, h, dt = -1.0, 1.0, 0.25
     # theta = -math.pi / 4
-
-    t1 = 2.625
-    # analytic carrier period
-    period = math.pi / (2 * abs(J))
-    print("t1: " + str(t1))
 
     shots = max(65536, 1 << (n_qubits + 2))
     qubits = list(range(n_qubits))
@@ -216,7 +217,9 @@ def main():
             counts = dict(Counter(experiment.measure_shots(qubits, shots)))
 
             for key, value in counts.items():
-                experiment_counts[d - 1][key] = experiment_counts[d - 1].get(key, 0) + value / shots
+                experiment_counts[d - 1][key] = (
+                    experiment_counts[d - 1].get(key, 0) + value / shots
+                )
 
     for experiment in experiment_counts:
         for key in experiment.keys():
@@ -239,20 +242,17 @@ def main():
         bias = []
         t = d * dt
         m = t / t1
-        model = 1 - 1 / (1 + m) if d > 1 else 0
+        model = 1 - 1 / (1 + m)
         if np.isclose(J, 0):
             bias = (n_qubits + 1) * [1 / (n_qubits + 1)]
         elif np.isclose(h, 0):
             bias.append(1)
             bias += n_qubits * [0]
-        elif d > 1:
-            # Contributed by ChatGPT o3 (based on Dan's guesswork):
+        else:
+            # Amplitude calculation contributed by ChatGPT o3 (based on Dan's guesswork):
             # Sources:
-            # Iglói & Rieger, Long-Range Correlations in the Nonequilibrium Quantum Relaxation of a Spin Chain, Phys. Rev. Lett. 85, 3233 (2000)
-            # Calabrese, Essler & Fagotti, Quantum Quench in the Transverse-Field Ising Chain, Phys. Rev. Lett. 106, 227203 (2011)
-            # Calabrese, Essler & Fagotti, Quantum Quench in the TFIC I: Time-evolution of order-parameter correlators, J. Stat. Mech. (2012) P07016
-            # Calabrese, Essler & Fagotti, Quantum Quench in the TFIC II: Stationary State Properties, arXiv:1205.2211
-            # Sengupta, Powell & Sachdev, Quench Dynamics Across Quantum Critical Points, Phys. Rev. A 69, 053616 (2004)
+            # Iglói & Rieger, Phys. Rev. Lett. 85, 3233 (2000) – see Eq. (10) and the discussion right after it.
+            # Calabrese, Essler & Fagotti, Phys. Rev. Lett. 106, 227203 (2011) (and the long-form derivation in J. Stat. Mech. P07016 (2012)) – see Eq. (77) in the PRL and Eq. (111) in the JSTAT paper.
             lam = abs(h / J)
             sinθ = abs(math.sin(theta))
             # distance from criticality
@@ -263,13 +263,9 @@ def main():
             else:
                 # ferromagnetic side
                 A = 0.5 * sinθ * math.sqrt(Δ) / math.sqrt(2 * math.pi)
-            f_t = 0
-            x   = 4 * abs(J) * t
-            if t < period:
-                f_t = 1 - x**2 / 24
-            else:
-                f_t = math.sqrt(period / (2 * math.pi * t)) * math.cos(x - math.pi / 4)
-            p = 2 ** (lam - 1) - A * f_t
+            p = 2 ** (abs(h / J) - 1) - A * math.tanh(abs(J / h)) * (
+                math.cos(math.pi * t / (2 * J)) / (1 + math.sqrt(t / t1))
+            )
             factor = 2**p
             n = 1 / (n_qubits * 2)
             tot_n = 0
@@ -284,8 +280,8 @@ def main():
                 tot_n += n
             for q in range(n_qubits + 1):
                 bias[q] /= tot_n
-            if J > 0:
-                bias.reverse()
+        if J > 0:
+            bias.reverse()
 
         result = calc_stats(
             n_qubits,

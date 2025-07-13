@@ -152,62 +152,55 @@ def main():
             model = 0
             if d > 0:
                 experiment.run_qiskit_circuit(step)
-            if d > 1:
-                bias = []
-                t = depth * dt
-                m = t / t1
-                model = 1 - 1 / (1 + m)
+
+            bias = []
+            t = depth * dt
+            m = (t / t1) ** 2
+            model = 1 - 1 / (1 + m)
+            d_magnetization = 0
+            d_sqr_magnetization = 0
+            if np.isclose(J, 0):
                 d_magnetization = 0
                 d_sqr_magnetization = 0
-                if np.isclose(J, 0):
-                    d_magnetization = 0
-                    d_sqr_magnetization = 0
-                elif np.isclose(h, 0):
-                    d_magnetization = 1 if J < 0 else -1
-                    d_sqr_magnetization = 1
+            elif np.isclose(h, 0):
+                d_magnetization = 1 if J < 0 else -1
+                d_sqr_magnetization = 1
+            else:
+                # Amplitude calculation contributed by ChatGPT o3 (based on Dan's guesswork):
+                # Sources:
+                # Iglói & Rieger, Phys. Rev. Lett. 85, 3233 (2000) – see Eq. (10) and the discussion right after it.
+                # Calabrese, Essler & Fagotti, Phys. Rev. Lett. 106, 227203 (2011) (and the long-form derivation in J. Stat. Mech. P07016 (2012)) – see Eq. (77) in the PRL and Eq. (111) in the JSTAT paper.
+                lam = abs(h / J)
+                sinθ = abs(math.sin(theta))
+                # distance from criticality
+                Δ = abs(lam - 1)
+                if lam >= 1:
+                    # paramagnetic side
+                    A = 0.5 * sinθ * math.sqrt(Δ) / math.sqrt(2 * math.pi * lam)
                 else:
-                    # Contributed by ChatGPT o3 (based on Dan's guesswork):
-                    # Sources:
-                    # Iglói & Rieger, Long-Range Correlations in the Nonequilibrium Quantum Relaxation of a Spin Chain, Phys. Rev. Lett. 85, 3233 (2000)
-                    # Calabrese, Essler & Fagotti, Quantum Quench in the Transverse-Field Ising Chain, Phys. Rev. Lett. 106, 227203 (2011)
-                    # Calabrese, Essler & Fagotti, Quantum Quench in the TFIC I: Time-evolution of order-parameter correlators, J. Stat. Mech. (2012) P07016
-                    # Calabrese, Essler & Fagotti, Quantum Quench in the TFIC II: Stationary State Properties, arXiv:1205.2211
-                    # Sengupta, Powell & Sachdev, Quench Dynamics Across Quantum Critical Points, Phys. Rev. A 69, 053616 (2004)
-                    lam = abs(h / J)
-                    sinθ = abs(math.sin(theta))
-                    # distance from criticality
-                    Δ = abs(lam - 1)
-                    if lam >= 1:
-                        # paramagnetic side
-                        A = 0.5 * sinθ * math.sqrt(Δ) / math.sqrt(2 * math.pi * lam)
-                    else:
-                        # ferromagnetic side
-                        A = 0.5 * sinθ * math.sqrt(Δ) / math.sqrt(2 * math.pi)
-                    f_t = 0
-                    x   = 4 * abs(J) * t
-                    if t < period:
-                        f_t = 1 - x**2 / 24
-                    else:
-                        f_t = math.sqrt(period / (2 * math.pi * t)) * math.cos(x - math.pi / 4)
-                    p = 2 ** (lam - 1) - A * f_t
-                    factor = 2**p
-                    n = 1 / (n_qubits * 2)
-                    tot_n = 0
-                    for q in range(n_qubits + 1):
-                        n = n / factor
-                        if n == float("inf"):
-                            tot_n = 1
-                            d_magnetization = 1 if J < 0 else 1
-                            d_sqr_magnetization = 1
-                            break
-                        m = (n_qubits - (q << 1)) / n_qubits
-                        d_magnetization += n * m
-                        d_sqr_magnetization += n * m * m
-                        tot_n += n
-                    d_magnetization /= tot_n
-                    d_sqr_magnetization /= tot_n
-                    if J > 0:
-                        d_magnetization = 1 - d_magnetization
+                    # ferromagnetic side
+                    A = 0.5 * sinθ * math.sqrt(Δ) / math.sqrt(2 * math.pi)
+                p = 2 ** (abs(h / J) - 1) - A * math.tanh(abs(J / h)) * (
+                    math.cos(math.pi * t / (2 * J)) / (1 + math.sqrt(t / t1))
+                )
+                factor = 2**p
+                n = 1 / (n_qubits * 2)
+                tot_n = 0
+                for q in range(n_qubits + 1):
+                    n = n / factor
+                    if n == float("inf"):
+                        tot_n = 1
+                        d_magnetization = 1 if J < 0 else 1
+                        d_sqr_magnetization = 1
+                        break
+                    m = (n_qubits - (q << 1)) / n_qubits
+                    d_magnetization += n * m
+                    d_sqr_magnetization += n * m * m
+                    tot_n += n
+                d_magnetization /= tot_n
+                d_sqr_magnetization /= tot_n
+                if J > 0:
+                    d_magnetization = 1 - d_magnetization
 
             experiment_samples = experiment.measure_shots(qubits, shots)
 
@@ -225,7 +218,9 @@ def main():
             sqr_magnetization /= shots
 
             magnetization = model * d_magnetization + (1 - model) * magnetization
-            sqr_magnetization = model * d_sqr_magnetization + (1 - model) * sqr_magnetization
+            sqr_magnetization = (
+                model * d_sqr_magnetization + (1 - model) * sqr_magnetization
+            )
 
             if sqr_magnetization < min_sqr_mag:
                 min_sqr_mag = sqr_magnetization
@@ -251,7 +246,9 @@ def main():
         ylim = ((min_sqr_mag * 100) // 10) / 10
 
         plt.plot(depths, magnetizations[0], marker="o", linestyle="-")
-        plt.title("Square Magnetization vs Trotter Depth (" + str(n_qubits) + " Qubits)")
+        plt.title(
+            "Square Magnetization vs Trotter Depth (" + str(n_qubits) + " Qubits)"
+        )
         plt.xlabel("Trotter Depth")
         plt.ylabel("Square Magnetization")
         plt.grid(True)
