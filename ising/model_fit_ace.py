@@ -164,8 +164,8 @@ def main():
     n_qubits = 8
     depth = 20
     hamming_n = 2048
-    t1 = 4.375
-    t2 = 0.1
+    t1 = 4.2
+    t2 = 0.097
 
     print("t1: " + str(t1))
     print("t2: " + str(t2))
@@ -188,7 +188,7 @@ def main():
     # J, h, dt = -1.0, 1.0, 0.25
     # theta = -math.pi / 4
 
-    shots = 1 << (n_qubits + 2)
+    shots = max(4096, 1 << (n_qubits + 2))
     qubits = list(range(n_qubits))
 
     experiment = QrackAceBackend(

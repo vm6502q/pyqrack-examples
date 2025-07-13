@@ -324,8 +324,8 @@ def main():
             d_sqr_magnetization = 0
             model = 0
 
-            t1 = 4.375
-            t2 = 0.1
+            t1 = 4.2
+            t2 = 0.097
             t = d * dt
             m = t / t1
             model = 1 - 1 / (1 + m)
