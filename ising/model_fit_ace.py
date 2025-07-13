@@ -164,11 +164,9 @@ def main():
     n_qubits = 8
     depth = 20
     hamming_n = 2048
-    t1 = 2.375
-    a1 = 4.75
+    t1 = 6.5
 
     print("t1: " + str(t1))
-    print("a1: " + str(a1))
 
     n_rows, n_cols = factor_width(n_qubits, False)
 
@@ -216,7 +214,7 @@ def main():
         trotter_step(qc_aer, qubits, (n_rows, n_cols), J, h, dt)
 
         bias = []
-        t = d * dt
+        t = depth * dt
         m = t / t1
         model = 1 - 1 / (1 + m)
         if np.isclose(J, 0):
@@ -225,9 +223,19 @@ def main():
             bias.append(1)
             bias += n_qubits * [0]
         else:
-            p = 2 ** (abs(h / J) - 1) - a1 * math.tanh(abs(J / h)) * (
-                math.cos(math.pi * t / (2 * J)) / (1 + math.sqrt(t / t1))
-            )
+            # Contributed by ChatGPT o3 (based on Dan's guesswork):
+            lam = abs(h / J)
+            sinθ = abs(math.sin(theta))
+            # distance from criticality
+            Δ = abs(lam - 1)
+            if lam >= 1:
+                # paramagnetic side
+                A = 0.5 * sinθ * math.sqrt(Δ) / math.sqrt(2 * math.pi * lam)
+            else:
+                # ferromagnetic side
+                A = 0.5 * sinθ * math.sqrt(Δ) / math.sqrt(2 * math.pi)
+            f_t = math.cos(math.pi * t / (2 * J)) / (1 + math.sqrt(t / t1))
+            p = 2 ** (abs(h / J) - 1) - A * f_t
             factor = 2**p
             n = 1 / (n_qubits * 2)
             tot_n = 0
@@ -237,15 +245,13 @@ def main():
                     tot_n = 1
                     bias.append(1)
                     bias += n_qubits * [0]
-                    if J > 0:
-                        bias.reverse()
                     break
                 bias.append(n)
                 tot_n += n
             for q in range(n_qubits + 1):
                 bias[q] /= tot_n
-        if J > 0:
-            bias.reverse()
+            if J > 0:
+                bias.reverse()
 
         experiment_counts = dict(Counter(experiment.measure_shots(qubits, shots)))
 

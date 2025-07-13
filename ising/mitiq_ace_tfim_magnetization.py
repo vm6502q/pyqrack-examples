@@ -146,8 +146,8 @@ def execute(circ, long_range_columns, long_range_rows, depth, J, h, dt):
 
     experiment.run_qiskit_circuit(qc)
 
-    t1 = 2.375
-    a1 = 4.75
+    t1 = 6.5
+    bias = []
     t = depth * dt
     m = t / t1
     model = 1 - 1 / (1 + m)
@@ -160,18 +160,28 @@ def execute(circ, long_range_columns, long_range_rows, depth, J, h, dt):
         d_magnetization = 1 if J < 0 else -1
         d_sqr_magnetization = 1
     else:
-        p = 2 ** (abs(h / J) - 1) - a1 * math.tanh(abs(J / h)) * (
-            math.cos(math.pi * t / (2 * J)) / (1 + math.sqrt(t / t1))
-        )
+        # Contributed by ChatGPT o3 (based on Dan's guesswork):
+        lam = abs(h / J)
+        sinθ = abs(math.sin(theta))
+        # distance from criticality
+        Δ = abs(lam - 1)
+        if lam >= 1:
+            # paramagnetic side
+            A = 0.5 * sinθ * math.sqrt(Δ) / math.sqrt(2 * math.pi * lam)
+        else:
+            # ferromagnetic side
+            A = 0.5 * sinθ * math.sqrt(Δ) / math.sqrt(2 * math.pi)
+        f_t = math.cos(math.pi * t / (2 * J)) / (1 + math.sqrt(t / t1))
+        p = 2 ** (abs(h / J) - 1) - A * f_t
         factor = 2**p
         n = 1 / (n_qubits * 2)
         tot_n = 0
         for q in range(n_qubits + 1):
             n = n / factor
             if n == float("inf"):
-                d_magnetization = 1
-                d_sqr_magnetization = 1
                 tot_n = 1
+                d_magnetization = 1 if J < 0 else 1
+                d_sqr_magnetization = 1
                 break
             m = (n_qubits - (q << 1)) / n_qubits
             d_magnetization += n * m
