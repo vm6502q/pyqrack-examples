@@ -324,7 +324,7 @@ def main():
             sqr_magnetization = expit(
                 zne.execute_with_zne(circ, executor, scale_noise=fold_global, factory=factory)
             )
-        else:
+        elif d > 2:
             d_sqr_magnetization = 0
             model = 0
 
@@ -382,6 +382,24 @@ def main():
                 d_sqr_magnetization /= tot_n
                 if J > 0:
                     d_magnetization = 1 - d_magnetization
+
+        experiment_samples = experiment.measure_shots(qubits, shots)
+
+        magnetization = 0
+        sqr_magnetization = 0
+        for sample in experiment_samples:
+            m = 0
+            for _ in range(n_qubits):
+                m += -1 if (sample & 1) else 1
+                sample >>= 1
+            m /= n_qubits
+            magnetization += m
+            sqr_magnetization += m * m
+        magnetization /= shots
+        sqr_magnetization /= shots
+
+        magnetization = model * d_magnetization + (1 - model) * magnetization
+        sqr_magnetization = model * d_sqr_magnetization + (1 - model) * sqr_magnetization
 
         seconds = time.perf_counter() - start
 

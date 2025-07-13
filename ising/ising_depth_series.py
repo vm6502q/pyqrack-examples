@@ -152,7 +152,7 @@ def main():
             model = 0
             if d > 0:
                 experiment.run_qiskit_circuit(step)
-
+            if d > 2:
                 bias = []
                 t = depth * dt
                 m = t / t1

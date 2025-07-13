@@ -152,7 +152,7 @@ def execute(circ, long_range_columns, long_range_rows, depth, J, h, dt):
     bias = []
     t = depth * dt
     m = t / t1
-    model = 1 - 1 / (1 + m)
+    model = 1 - 1 / (1 + m) if d > 2 else 0
     d_magnetization = 0
     d_sqr_magnetization = 0
     if np.isclose(J, 0):
@@ -161,7 +161,7 @@ def execute(circ, long_range_columns, long_range_rows, depth, J, h, dt):
     elif np.isclose(h, 0):
         d_magnetization = 1 if J < 0 else -1
         d_sqr_magnetization = 1
-    else:
+    elif d > 2:
         # Contributed by ChatGPT o3 (based on Dan's guesswork):
         # Sources:
         # Iglói & Rieger, Long-Range Correlations in the Nonequilibrium Quantum Relaxation of a Spin Chain, Phys. Rev. Lett. 85, 3233 (2000)
