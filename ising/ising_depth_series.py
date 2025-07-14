@@ -151,7 +151,7 @@ def main():
                 t1 = 1.875
                 t2 = 44.0
                 omega = 2.923
-                omega = math.pi
+
                 t = d * dt
                 m = t / t1
                 model = 1 - 1 / (1 + m)
