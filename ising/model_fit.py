@@ -169,9 +169,11 @@ def main():
     depth = 20
     hamming_n = 2048
     trials = 20
-    t1 = 2.375
+    t1 = 2.25
+    t2 = 6.75
 
     print("t1: " + str(t1))
+    print("t2: " + str(t2))
 
     n_rows, n_cols = factor_width(n_qubits, False)
 
@@ -251,7 +253,7 @@ def main():
             bias += n_qubits * [0]
         else:
             p = (2 ** arg) * (
-                1 - math.cos(math.pi * t / (2 * J)) / (1 + math.sqrt(t / t1))
+                1 - math.cos(math.pi * t / (2 * J)) / (1 + math.sqrt(t / t2))
             )
             factor = 2**p
             n = 1 / (n_qubits * 2)
