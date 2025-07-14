@@ -162,7 +162,7 @@ def execute(circ, long_range_columns, long_range_rows, depth, J, h, dt):
         d_sqr_magnetization = 1
     else:
         p = (2 ** arg) * (
-            1 - math.cos(math.pi * t / (2 * J)) / (1 + math.sqrt(t / t2))
+            1 - math.cos(J * omega * t) / (1 + math.sqrt(t / t2))
         )
         factor = 2**p
         n = 1 / (n_qubits * 2)

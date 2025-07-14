@@ -131,7 +131,9 @@ def execute(circ, long_range_columns, long_range_rows, depth, J, h, dt, shots):
 
     experiment.run_qiskit_circuit(qc)
 
-    t1 = 3.25
+    t1 = 3.0
+    t2 = 6.75
+    omega = math.pi / 2
     t = depth * dt
     m = t / t1
     model = 1 - 1 / (1 + m)
@@ -146,7 +148,7 @@ def execute(circ, long_range_columns, long_range_rows, depth, J, h, dt, shots):
         d_sqr_magnetization = 1
     else:
         p = 2 ** (abs(h / J) - 1) * (
-            1 - math.cos(math.pi * t / (2 * J)) / (1 + math.sqrt(t / t1))
+            1 - math.cos(J * omega * t) / (1 + math.sqrt(t / t2))
         )
         factor = 2**p
         n = 1 / (n_qubits * 2)
@@ -330,6 +332,7 @@ def main():
 
             t1 = 3.0
             t2 = 6.75
+            omega = math.pi / 2
             t = d * dt
             m = t / t1
             model = 1 - 1 / (1 + m)
@@ -341,7 +344,7 @@ def main():
                 d_sqr_magnetization = 1
             else:
                 p = (2 ** arg) * (
-                    1 - math.cos(math.pi * t / (2 * J)) / (1 + math.sqrt(t / t2))
+                    1 - math.cos(J * omega * t) / (1 + math.sqrt(t / t2))
                 )
                 factor = 2**p
                 n = 1 / (n_qubits * 2)

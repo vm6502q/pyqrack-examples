@@ -170,9 +170,11 @@ def main():
     hamming_n = 2048
     t1 = 3.0
     t2 = 6.75
+    omega = math.pi / 2
 
     print("t1: " + str(t1))
     print("t2: " + str(t2))
+    print("omega: " + str(omega))
 
     n_rows, n_cols = factor_width(n_qubits, False)
 
@@ -231,7 +233,7 @@ def main():
             bias += n_qubits * [0]
         else:
             p = (2 ** arg) * (
-                1 - math.cos(math.pi * t / (2 * J)) / (1 + math.sqrt(t / t2))
+                1 - math.cos(J * omega * t) / (1 + math.sqrt(t / t2))
             )
             factor = 2**p
             n = 1 / (n_qubits * 2)

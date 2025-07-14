@@ -150,6 +150,7 @@ def main():
 
                 t1 = 2.25
                 t2 = 6.75
+                omega = math.pi
                 t = d * dt
                 m = t / t1
                 model = 1 - 1 / (1 + m)
@@ -164,7 +165,7 @@ def main():
                     d_sqr_magnetization = 1
                 else:
                     p = (2 ** arg) * (
-                        1 - math.cos(math.pi * t / (2 * J)) / (1 + math.sqrt(t / t2))
+                        1 - math.cos(J * omega * t) / (1 + math.sqrt(t / t2))
                     )
                     tot_n = 0
                     for q in range(n_qubits + 1):
