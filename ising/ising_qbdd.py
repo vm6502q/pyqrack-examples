@@ -117,7 +117,13 @@ def main():
     sim.run_qiskit_circuit(qc, shots=0)
     result = sim.m_all()
 
-    print("Trotter steps: " + str(depth) + ", seconds: " + str(time.perf_counter() - start) + ".")
+    print(
+        "Trotter steps: "
+        + str(depth)
+        + ", seconds: "
+        + str(time.perf_counter() - start)
+        + "."
+    )
     print("Result: " + str(result))
 
     return 0
