@@ -125,16 +125,14 @@ def calc_stats(n, ideal_probs, counts, bias, model, shots, depth, hamming_n):
 
     # By Elara (OpenAI custom GPT)
     # Compute Hamming distances between each ACE bitstring and its closest in control case
-    min_distances = [
-        min(hamming_distance(a, r, n) for r in con_top_n) for a in exp_top_n
-    ]
+    min_distances = [min(hamming_distance(a, r, n) for r in con_top_n) for a in exp_top_n]
     avg_hamming_distance = np.mean(min_distances)
 
     xeb = numer / denom
 
     return {
         "qubits": n,
-        "depth": depth,
+        "depth": d,
         "l2_similarity": float(l2_similarity),
         "hog_prob": hog_prob,
         "xeb": xeb,
@@ -151,9 +149,7 @@ def int_to_bitstring(integer, length):
 
 # By Elara (OpenAI custom GPT)
 def hamming_distance(s1, s2, n):
-    return sum(
-        ch1 != ch2 for ch1, ch2 in zip(int_to_bitstring(s1, n), int_to_bitstring(s2, n))
-    )
+    return sum(ch1 != ch2 for ch1, ch2 in zip(int_to_bitstring(s1, n), int_to_bitstring(s2, n)))
 
 
 # From https://stackoverflow.com/questions/13070461/get-indices-of-the-top-n-values-of-a-list#answer-38835860
@@ -168,9 +164,11 @@ def main():
     n_qubits = 8
     depth = 20
     hamming_n = 2048
-    t1 = 0.375
+    t1 = 2.375
+    a1 = 4.75
 
     print("t1: " + str(t1))
+    print("a1: " + str(a1))
 
     n_rows, n_cols = factor_width(n_qubits, False)
 
@@ -227,9 +225,8 @@ def main():
             bias.append(1)
             bias += n_qubits * [0]
         else:
-            p = 2 ** (abs(h / J) - 1) - math.tanh(abs(J / h)) * (
-                math.sqrt(t / t1)
-                - math.cos(math.pi * t / (2 * J)) / (1 + math.sqrt(t / t1))
+            p = 2 ** (abs(h / J) - 1) - a1 * math.tanh(abs(J / h)) * (
+                math.cos(math.pi * t / (2 * J)) / (1 + math.sqrt(t / t1))
             )
             factor = 2**p
             n = 1 / (n_qubits * 2)
@@ -269,7 +266,7 @@ def main():
             bias,
             model,
             shots,
-            d,
+            depth,
             hamming_n,
         )
 
