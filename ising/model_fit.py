@@ -170,7 +170,7 @@ def main():
     hamming_n = 2048
     trials = 20
     t1 = 1.875
-    t2 = 32.0
+    t2 = 44.0
     omega = 2.923
 
     print("t1: " + str(t1))
