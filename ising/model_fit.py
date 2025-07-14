@@ -166,10 +166,8 @@ def main():
     hamming_n = 2048
     trials = 20
     t1 = 2.375
-    a1 = 4.75
 
     print("t1: " + str(t1))
-    print("a1: " + str(a1))
 
     n_rows, n_cols = factor_width(n_qubits, False)
 
@@ -245,9 +243,7 @@ def main():
             bias.append(1)
             bias += n_qubits * [0]
         else:
-            p = 2 ** (abs(h / J) - 1) - a1 * math.tanh(abs(J / h)) * (
-                math.cos(math.pi * t / (2 * J)) / (1 + math.sqrt(t / t1))
-            )
+            p = 2 ** (abs(h / J) - 1) * (1 - math.cos(math.pi * t / (2 * J)) / (1 + math.sqrt(t / t1)))
             factor = 2**p
             n = 1 / (n_qubits * 2)
             tot_n = 0
