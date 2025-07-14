@@ -169,8 +169,8 @@ def main():
     depth = 20
     hamming_n = 2048
     trials = 20
-    t1 = 1.875
-    t2 = 50.0
+    t1 = 1.91
+    t2 = 48.2
     omega = math.pi
 
     print("t1: " + str(t1))
