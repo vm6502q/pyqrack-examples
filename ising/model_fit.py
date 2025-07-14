@@ -248,20 +248,26 @@ def main():
             p = 2 ** (abs(h / J) - 1) - a1 * math.tanh(abs(J / h)) * (
                 math.cos(math.pi * t / (2 * J)) / (1 + math.sqrt(t / t1))
             )
-            factor = 2**p
-            n = 1 / (n_qubits * 2)
-            tot_n = 0
-            for q in range(n_qubits + 1):
-                n = n / factor
-                if n == float("inf"):
-                    tot_n = 1
-                    bias.append(1)
-                    bias += n_qubits * [0]
-                    break
-                bias.append(n)
-                tot_n += n
-            for q in range(n_qubits + 1):
-                bias[q] /= tot_n
+            if p >= 1024:
+                bias = (n_qubits + 1) * [1 / (n_qubits + 1)]
+            elif p < 1024:
+                bias.append(1)
+                bias += n_qubits * [0]
+            else:
+                factor = 2**p
+                n = 1 / (n_qubits * 2)
+                tot_n = 0
+                for q in range(n_qubits + 1):
+                    n = n / factor
+                    if n == float("inf"):
+                        tot_n = 1
+                        bias.append(1)
+                        bias += n_qubits * [0]
+                        break
+                    bias.append(n)
+                    tot_n += n
+                for q in range(n_qubits + 1):
+                    bias[q] /= tot_n
         if J > 0:
             bias.reverse()
 
