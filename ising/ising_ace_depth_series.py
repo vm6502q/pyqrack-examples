@@ -164,8 +164,7 @@ def main():
             if d > 0:
                 experiment.run_qiskit_circuit(step)
 
-                t1 = 3.0
-                a1 = 5.0
+                t1 = 3.25
                 t = d * dt
                 m = t / t1
                 model = 1 - 1 / (1 + m)
@@ -179,8 +178,8 @@ def main():
                     d_magnetization = 1 if J < 0 else -1
                     d_sqr_magnetization = 1
                 else:
-                    p = 2 ** (abs(h / J) - 1) - a1 * math.tanh(abs(J / h)) * (
-                        math.cos(math.pi * t / (2 * J)) / (1 + math.sqrt(t / t1))
+                    p = 2 ** (abs(h / J) - 1) * (
+                        1 - math.cos(math.pi * t / (2 * J)) / (1 + math.sqrt(t / t1))
                     )
                     factor = 2**p
                     n = 1 / (n_qubits * 2)
@@ -217,7 +216,9 @@ def main():
             sqr_magnetization /= shots
 
             magnetization = model * d_magnetization + (1 - model) * magnetization
-            sqr_magnetization = model * d_sqr_magnetization + (1 - model) * sqr_magnetization
+            sqr_magnetization = (
+                model * d_sqr_magnetization + (1 - model) * sqr_magnetization
+            )
 
             if sqr_magnetization < min_sqr_mag:
                 min_sqr_mag = sqr_magnetization
@@ -244,7 +245,9 @@ def main():
 
         plt.figure(figsize=(14, 14))
         plt.plot(depths, magnetizations[0], marker="o", linestyle="-")
-        plt.title("Square Magnetization vs Trotter Depth (" + str(n_qubits) + " Qubits)")
+        plt.title(
+            "Square Magnetization vs Trotter Depth (" + str(n_qubits) + " Qubits)"
+        )
         plt.xlabel("Trotter Depth")
         plt.ylabel("Square Magnetization")
         plt.grid(True)

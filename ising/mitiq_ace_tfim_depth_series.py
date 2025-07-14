@@ -131,8 +131,7 @@ def execute(circ, long_range_columns, long_range_rows, depth, J, h, dt, shots):
 
     experiment.run_qiskit_circuit(qc)
 
-    t1 = 3.0
-    a1 = 5.0
+    t1 = 3.25
     t = depth * dt
     m = t / t1
     model = 1 - 1 / (1 + m)
@@ -146,8 +145,8 @@ def execute(circ, long_range_columns, long_range_rows, depth, J, h, dt, shots):
         d_magnetization = 1 if J < 0 else -1
         d_sqr_magnetization = 1
     else:
-        p = 2 ** (abs(h / J) - 1) - a1 * math.tanh(abs(J / h)) * (
-            math.cos(math.pi * t / (2 * J)) / (1 + math.sqrt(t / t1))
+        p = 2 ** (abs(h / J) - 1) * (
+            1 - math.cos(math.pi * t / (2 * J)) / (1 + math.sqrt(t / t1))
         )
         factor = 2**p
         n = 1 / (n_qubits * 2)
@@ -311,7 +310,8 @@ def main():
             max_scale = 2 if d > 1 else 3
             factory = LinearFactory(
                 scale_factors=[
-                    (1 + (max_scale - 1) * x / (scale_count - 1)) for x in range(0, scale_count)
+                    (1 + (max_scale - 1) * x / (scale_count - 1))
+                    for x in range(0, scale_count)
                 ]
             )
 
@@ -320,14 +320,15 @@ def main():
             )
 
             sqr_magnetization = expit(
-                zne.execute_with_zne(circ, executor, scale_noise=fold_global, factory=factory)
+                zne.execute_with_zne(
+                    circ, executor, scale_noise=fold_global, factory=factory
+                )
             )
         else:
             d_sqr_magnetization = 0
             model = 0
 
-            t1 = 3.0
-            a1 = 5.0
+            t1 = 3.25
             t = d * dt
             m = t / t1
             model = 1 - 1 / (1 + m)
@@ -337,8 +338,8 @@ def main():
             elif np.isclose(h, 0):
                 d_sqr_magnetization = 1
             else:
-                p = 2 ** (abs(h / J) - 1) - a1 * math.tanh(abs(J / h)) * (
-                    math.cos(math.pi * t / (2 * J)) / (1 + math.sqrt(t / t1))
+                p = 2 ** (abs(h / J) - 1) * (
+                    1 - math.cos(math.pi * t / (2 * J)) / (1 + math.sqrt(t / t1))
                 )
                 factor = 2**p
                 n = 1 / (n_qubits * 2)
@@ -367,7 +368,9 @@ def main():
                     sqr_magnetization += m * m
                 sqr_magnetization /= shots
 
-                sqr_magnetization = model * d_sqr_magnetization + (1 - model) * sqr_magnetization
+                sqr_magnetization = (
+                    model * d_sqr_magnetization + (1 - model) * sqr_magnetization
+                )
 
         seconds = time.perf_counter() - start
 
