@@ -171,14 +171,14 @@ def main():
                 arg = abs(h / J) - 1
                 d_magnetization = 0
                 d_sqr_magnetization = 0
-                if np.isclose(J, 0):
+                if np.isclose(J, 0) or (arg >= 1024):
                     d_magnetization = 0
                     d_sqr_magnetization = 0
                 elif np.isclose(h, 0):
                     d_magnetization = 1 if J < 0 else -1
                     d_sqr_magnetization = 1
                 else:
-                    p = 2 ** (abs(h / J) - 1) * (
+                    p = (2 ** arg) * (
                         1 - math.cos(math.pi * t / (2 * J)) / (1 + math.sqrt(t / t1))
                     )
                     factor = 2**p

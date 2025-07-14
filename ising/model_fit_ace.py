@@ -220,14 +220,15 @@ def main():
         bias = []
         t = d * dt
         m = t / t1
+        arg = abs(h / J) - 1
         model = 1 - 1 / (1 + m)
-        if np.isclose(J, 0):
+        if np.isclose(J, 0) or (arg >= 1024):
             bias = (n_qubits + 1) * [1 / (n_qubits + 1)]
         elif np.isclose(h, 0):
             bias.append(1)
             bias += n_qubits * [0]
         else:
-            p = 2 ** (abs(h / J) - 1) * (
+            p = (2 ** arg) * (
                 1 - math.cos(math.pi * t / (2 * J)) / (1 + math.sqrt(t / t1))
             )
             factor = 2**p

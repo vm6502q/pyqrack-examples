@@ -149,20 +149,20 @@ def main():
                 experiment.run_qiskit_circuit(step)
 
                 t1 = 2.375
-                a1 = 4.75
                 t = d * dt
                 m = t / t1
                 model = 1 - 1 / (1 + m)
+                arg = abs(h / J) - 1
                 d_magnetization = 0
                 d_sqr_magnetization = 0
-                if np.isclose(J, 0):
+                if np.isclose(J, 0) or (arg >= 1024):
                     d_magnetization = 0
                     d_sqr_magnetization = 0
                 elif np.isclose(h, 0):
                     d_magnetization = 1 if J > 0 else -1
                     d_sqr_magnetization = 1
                 else:
-                    p = 2 ** (abs(h / J) - 1) * (
+                    p = (2 ** arg) * (
                         1 - math.cos(math.pi * t / (2 * J)) / (1 + math.sqrt(t / t1))
                     )
                     tot_n = 0
