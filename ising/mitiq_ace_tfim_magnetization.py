@@ -146,8 +146,8 @@ def execute(circ, long_range_columns, long_range_rows, depth, J, h, dt):
 
     experiment.run_qiskit_circuit(qc)
 
-    t1 = 2.875
-    t2 = 48.0
+    t1 = 2.89
+    t2 = 47.9
     omega = math.pi / 2
     t = depth * dt
     m = t / t1

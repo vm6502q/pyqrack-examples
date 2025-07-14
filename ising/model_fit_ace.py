@@ -168,8 +168,8 @@ def main():
     n_qubits = 8
     depth = 20
     hamming_n = 2048
-    t1 = 2.875
-    t2 = 48.0
+    t1 = 2.89
+    t2 = 47.9
     omega = math.pi / 2
 
     print("t1: " + str(t1))

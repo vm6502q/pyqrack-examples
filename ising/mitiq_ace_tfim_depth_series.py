@@ -131,8 +131,8 @@ def execute(circ, long_range_columns, long_range_rows, depth, J, h, dt, shots):
 
     experiment.run_qiskit_circuit(qc)
 
-    t1 = 2.875
-    t2 = 48.0
+    t1 = 2.89
+    t2 = 47.9
     omega = math.pi / 2
     t = depth * dt
     m = t / t1
@@ -330,8 +330,8 @@ def main():
             d_sqr_magnetization = 0
             model = 0
 
-            t1 = 2.875
-            t2 = 48.0
+            t1 = 2.89
+            t2 = 47.9
             omega = math.pi / 2
             t = d * dt
             m = t / t1

@@ -164,8 +164,8 @@ def main():
             if d > 0:
                 experiment.run_qiskit_circuit(step)
 
-                t1 = 2.875
-                t2 = 48.0
+                t1 = 2.89
+                t2 = 47.9
                 omega = math.pi / 2
                 t = d * dt
                 m = t / t1
