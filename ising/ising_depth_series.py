@@ -165,7 +165,7 @@ def main():
                     d_magnetization = 1 if J > 0 else -1
                     d_sqr_magnetization = 1
                 else:
-                    p = (2 ** arg) * (
+                    p = (2**arg) * (
                         1 - math.cos(J * omega * t) / (1 + math.sqrt(t / t2))
                     )
                     tot_n = 0

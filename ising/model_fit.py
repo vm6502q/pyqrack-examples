@@ -254,9 +254,7 @@ def main():
             bias.append(1)
             bias += n_qubits * [0]
         else:
-            p = (2 ** arg) * (
-                1 - math.cos(J * omega * t) / (1 + math.sqrt(t / t2))
-            )
+            p = (2**arg) * (1 - math.cos(J * omega * t) / (1 + math.sqrt(t / t2)))
             factor = 2**p
             n = 1 / (n_qubits * 2)
             tot_n = 0
