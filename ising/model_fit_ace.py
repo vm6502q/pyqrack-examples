@@ -169,8 +169,8 @@ def main():
     depth = 20
     hamming_n = 2048
     t1 = 2.875
-    t2 = 43.0
-    omega = 1.45
+    t2 = 48.0
+    omega = math.pi / 2
 
     print("t1: " + str(t1))
     print("t2: " + str(t2))
@@ -232,7 +232,9 @@ def main():
             bias.append(1)
             bias += n_qubits * [0]
         else:
-            p = (2**arg) * (1 - math.cos(J * omega * t) / (1 + math.sqrt(t / t2)))
+            p = (2**arg) * (
+                1 - math.cos(abs(J) * omega * t - math.pi / 4) / (1 + math.sqrt(t / t2))
+            )
             factor = 2**p
             n = 1 / (n_qubits * 2)
             tot_n = 0

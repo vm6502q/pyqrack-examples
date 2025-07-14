@@ -149,9 +149,8 @@ def main():
                 experiment.run_qiskit_circuit(step)
 
                 t1 = 1.875
-                t2 = 44.0
-                omega = 2.923
-
+                t2 = 50.0
+                omega = math.pi
                 t = d * dt
                 m = t / t1
                 model = 1 - 1 / (1 + m)
@@ -166,7 +165,9 @@ def main():
                     d_sqr_magnetization = 1
                 else:
                     p = (2**arg) * (
-                        1 - math.cos(J * omega * t) / (1 + math.sqrt(t / t2))
+                        1
+                        - math.cos(abs(J) * omega * t - math.pi / 4)
+                        / (1 + math.sqrt(t / t2))
                     )
                     tot_n = 0
                     for q in range(n_qubits + 1):
