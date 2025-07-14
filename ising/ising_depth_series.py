@@ -165,24 +165,17 @@ def main():
                     p = 2 ** (abs(h / J) - 1) - a1 * math.tanh(abs(J / h)) * (
                         math.cos(math.pi * t / (2 * J)) / (1 + math.sqrt(t / t1))
                     )
-                    if p >= 1024:
-                        d_magnetization = 0
-                        d_sqr_magnetization = 0
-                    elif p < 1024:
-                        d_magnetization = 1 if J > 0 else -1
-                        d_sqr_magnetization = 1
-                    else:
-                        tot_n = 0
-                        for q in range(n_qubits + 1):
-                            n = model / (n_qubits * (2 ** (p * (q + 1))))
-                            m = (n_qubits - (q << 1)) / n_qubits
-                            d_magnetization += n * m
-                            d_sqr_magnetization += n * m * m
-                            tot_n += n
-                        d_magnetization /= tot_n
-                        d_sqr_magnetization /= tot_n
-                        if J > 0:
-                            d_magnetization = 1 - d_magnetization
+                    tot_n = 0
+                    for q in range(n_qubits + 1):
+                        n = model / (n_qubits * (2 ** (p * (q + 1))))
+                        m = (n_qubits - (q << 1)) / n_qubits
+                        d_magnetization += n * m
+                        d_sqr_magnetization += n * m * m
+                        tot_n += n
+                    d_magnetization /= tot_n
+                    d_sqr_magnetization /= tot_n
+                    if J > 0:
+                        d_magnetization = 1 - d_magnetization
 
             experiment_samples = experiment.measure_shots(qubits, shots)
 
