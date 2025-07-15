@@ -164,21 +164,6 @@ def top_n(n, a):
     return np.argsort(a)[-n:]
 
 
-def calc_magnetization_from_probs(n_qubits, counts):
-    magnetization = 0
-    sqr_magnetization = 0
-    for key, value in counts.items():
-        m = 0
-        for _ in range(n_qubits):
-            m += -1 if (key & 1) else 1
-            key >>= 1
-        m /= n_qubits
-        magnetization += value * m
-        sqr_magnetization += value * m * m
-
-    return magnetization, sqr_magnetization
-
-
 def main():
     n_qubits = 8
     depth = 20
@@ -301,6 +286,8 @@ def main():
                     d_sqr_magnetization += n * m * m
                     bias.append(n)
                     tot_n += n
+                d_magnetization /= tot_n
+                d_sqr_magnetization /= tot_n
                 for q in range(n_qubits + 1):
                     bias[q] /= tot_n
         if J > 0:
@@ -320,7 +307,17 @@ def main():
 
         r_squared += (1 - result["l2_similarity"]) ** 2
 
-        magnetization, sqr_magnetization = calc_magnetization_from_probs(n_qubits, experiment_probs[d])
+        magnetization = 0
+        sqr_magnetization = 0
+        for key, value in experiment_probs[d].items():
+            m = 0
+            for _ in range(n_qubits):
+                m += -1 if (key & 1) else 1
+                key >>= 1
+            m /= n_qubits
+            magnetization += value * m
+            sqr_magnetization += value * m * m
+
         magnetization = model * d_magnetization + (1 - model) * magnetization
         sqr_magnetization = (
             model * d_sqr_magnetization + (1 - model) * sqr_magnetization
@@ -328,10 +325,11 @@ def main():
 
         c_magnetization, c_sqr_magnetization = 0, 0
         for p in range(1 << n_qubits):
+            perm = p
             m = 0
             for _ in range(n_qubits):
-                m += -1 if (p & 1) else 1
-                p >>= 1
+                m += -1 if (perm & 1) else 1
+                perm >>= 1
             m /= n_qubits
             c_magnetization += control_probs[p] * m
             c_sqr_magnetization += control_probs[p] * m * m
