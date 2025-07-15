@@ -148,11 +148,11 @@ def main():
             if d > 0:
                 experiment.run_qiskit_circuit(step)
 
-                t1 = 0.213
-                t2 = 2.21
+                t1 = 0.127
+                t2 = 2.76
                 omega = 3.25
                 t = d * dt
-                model = (1 - 1 / (1 + (t / t1) ** 2)) if t1 > 0 else 1
+                model = (1 - 1 / (1 + t / t1)) if t1 > 0 else 1
                 if np.isclose(h, 0):
                     d_magnetization = 1
                     d_sqr_magnetization = 1

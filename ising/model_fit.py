@@ -169,8 +169,8 @@ def main():
     depth = 20
     hamming_n = 2048
     trials = 20
-    t1 = 0.213
-    t2 = 2.21
+    t1 = 0.127
+    t2 = 2.76
     omega = 3.25
 
     print("t1: " + str(t1))
@@ -247,7 +247,7 @@ def main():
 
         bias = []
         t = d * dt
-        model = (1 - 1 / (1 + (t / t1) ** 2)) if t1 > 0 else 1
+        model = (1 - 1 / (1 + t / t1)) if t1 > 0 else 1
         d_magnetization = 0
         d_sqr_magnetization = 0
         if np.isclose(h, 0):
