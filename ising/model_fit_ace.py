@@ -168,6 +168,7 @@ def main():
     n_qubits = 8
     depth = 20
     hamming_n = 2048
+    trials = 1
     t1 = 0.131
     t2 = 2.70
     omega = 1.625
@@ -197,11 +198,6 @@ def main():
     shots = max(2048, 1 << (n_qubits + 2))
     qubits = list(range(n_qubits))
 
-    experiment = QrackAceBackend(
-        n_qubits,
-        long_range_columns=1,
-        long_range_rows=2,
-    )
 
     qc = QuantumCircuit(n_qubits)
     for q in range(n_qubits):
@@ -215,47 +211,35 @@ def main():
         basis_gates=QrackAceBackend.get_qiskit_basis_gates(),
     )
 
-    experiment.run_qiskit_circuit(qc)
-    r_squared = 0
-    for d in range(1, depth + 1):
-        experiment.run_qiskit_circuit(step)
-        trotter_step(qc_aer, qubits, (n_rows, n_cols), J, h, dt)
-
-        bias = []
-        t = d * dt
-        m = t / t1
-        model = 1 - 1 / (1 + m)
-        if np.isclose(h, 0):
-            bias.append(1)
-            bias += n_qubits * [0]
-        elif np.isclose(J, 0):
-            bias = (n_qubits + 1) * [1 / (n_qubits + 1)]
-        else:
-            p = (2 ** (abs(J / h) - 1)) * (
-                1 - math.cos(abs(J) * omega * t - math.pi / 4) / (1 + math.sqrt(t / t2))
+    experiment_probs = [{}] * depth
+    if t1 > 0:
+        for trial in range(trials):
+            experiment = experiment = QrackAceBackend(
+                n_qubits,
+                long_range_columns=1,
+                long_range_rows=2,
             )
-            if p >= 1024:
-                bias.append(1)
-                bias += n_qubits * [0]
-            else:
-                factor = 2**p
-                n = 1 / (n_qubits * 2)
-                tot_n = 0
-                for q in range(n_qubits + 1):
-                    n = n / factor
-                    if n == float("inf"):
-                        tot_n = 1
-                        bias.append(1)
-                        bias += n_qubits * [0]
-                        break
-                    bias.append(n)
-                    tot_n += n
-                for q in range(n_qubits + 1):
-                    bias[q] /= tot_n
-        if J > 0:
-            bias.reverse()
+            experiment.run_qiskit_circuit(qc)
+            for d in range(1, depth + 1):
+                experiment.run_qiskit_circuit(step)
+                trotter_step(qc_aer, qubits, (n_rows, n_cols), J, h, dt)
 
-        experiment_counts = dict(Counter(experiment.measure_shots(qubits, shots)))
+                counts = dict(Counter(experiment.measure_shots(qubits, shots)))
+
+                for key, value in counts.items():
+                    experiment_probs[d - 1][key] = (
+                        experiment_probs[d - 1].get(key, 0) + value / shots
+                    )
+
+        for experiment in experiment_probs:
+            for key in experiment.keys():
+                experiment[key] /= trials
+
+    r_squared = 0
+    ss = 0
+    ssr = 0
+    for d in range(depth):
+        trotter_step(qc_aer, qubits, (n_rows, n_cols), J, h, dt)
 
         control = AerSimulator(method="statevector")
         qc_aer = transpile(
@@ -267,22 +251,105 @@ def main():
         job = control.run(qc_aer_sv)
         control_probs = Statevector(job.result().get_statevector()).probabilities()
 
+        bias = []
+        t = d * dt
+        model = (1 - 1 / (1 + t / t1)) if t1 > 0 else 1
+        d_magnetization = 0
+        d_sqr_magnetization = 0
+        if np.isclose(h, 0):
+            d_magnetization = 1
+            d_sqr_magnetization = 1
+            bias.append(1)
+            bias += n_qubits * [0]
+        elif np.isclose(J, 0):
+            d_magnetization = 0
+            d_sqr_magnetization = 0
+            bias = (n_qubits + 1) * [1 / (n_qubits + 1)]
+        else:
+            p = (2 ** (abs(J / h) - 1)) * (
+                1 - math.cos(abs(J) * omega * t - math.pi / 4) / (1 + math.sqrt(t / t2))
+            )
+            if p >= 1024:
+                d_magnetization = 1
+                d_sqr_magnetization = 1
+                bias.append(1)
+                bias += n_qubits * [0]
+            else:
+                factor = 2**p
+                n = 1 / (n_qubits * 2)
+                tot_n = 0
+                for q in range(n_qubits + 1):
+                    n = n / factor
+                    if n == float("inf"):
+                        d_magnetization = 1
+                        d_sqr_magnetization = 1
+                        tot_n = 1
+                        bias.append(1)
+                        bias += n_qubits * [0]
+                        break
+                    m = (n_qubits - (q << 1)) / n_qubits
+                    d_magnetization += n * m
+                    d_sqr_magnetization += n * m * m
+                    bias.append(n)
+                    tot_n += n
+                d_magnetization /= tot_n
+                d_sqr_magnetization /= tot_n
+                for q in range(n_qubits + 1):
+                    bias[q] /= tot_n
+        if J > 0:
+            bias.reverse()
+            d_magnetization = 2 - (d_magnetization + 1)
+
         result = calc_stats(
             n_qubits,
             control_probs,
-            experiment_counts,
+            experiment_probs[d],
             bias,
             model,
             shots,
-            depth,
+            d,
             hamming_n,
         )
 
         r_squared += (1 - result["l2_similarity"]) ** 2
 
-    r_squared = 1 - (r_squared ** (1 / 2)) / depth
+        magnetization = 0
+        sqr_magnetization = 0
+        for key, value in experiment_probs[d].items():
+            m = 0
+            for _ in range(n_qubits):
+                m += -1 if (key & 1) else 1
+                key >>= 1
+            m /= n_qubits
+            magnetization += value * m
+            sqr_magnetization += value * m * m
 
-    print("R^2: " + str(r_squared))
+        magnetization = model * d_magnetization + (1 - model) * magnetization
+        sqr_magnetization = (
+            model * d_sqr_magnetization + (1 - model) * sqr_magnetization
+        )
+
+        c_magnetization, c_sqr_magnetization = 0, 0
+        for p in range(1 << n_qubits):
+            perm = p
+            m = 0
+            for _ in range(n_qubits):
+                m += -1 if (perm & 1) else 1
+                perm >>= 1
+            m /= n_qubits
+            c_magnetization += control_probs[p] * m
+            c_sqr_magnetization += control_probs[p] * m * m
+
+        ss += c_sqr_magnetization ** 2
+        ssr += (c_sqr_magnetization - sqr_magnetization) ** 2
+
+    r_squared = 1 - r_squared / depth
+    rmse = (ssr / depth) ** (1/2)
+    sm_r_squared = 1 - (ssr / ss)
+
+    print("L2 norm R^2: " + str(r_squared))
+    print("Square magnetization RMSE: " + str(rmse))
+    print("Square magnetization R^2: " + str(sm_r_squared))
 
     return 0
 
