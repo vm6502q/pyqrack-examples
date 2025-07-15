@@ -151,35 +151,38 @@ def main():
                 t1 = 1.91
                 t2 = 48.2
                 omega = math.pi
-                t = d * dt
-                m = t / t1
-                model = 1 - 1 / (1 + m)
-                arg = abs(h / J) - 1
-                d_magnetization = 0
-                d_sqr_magnetization = 0
-                if np.isclose(J, 0) or (arg >= 1024):
+                if np.isclose(h, 0):
+                    d_magnetization = 1
+                    d_sqr_magnetization = 1
+                elif np.isclose(J, 0):
                     d_magnetization = 0
                     d_sqr_magnetization = 0
-                elif np.isclose(h, 0):
-                    d_magnetization = 1 if J > 0 else -1
-                    d_sqr_magnetization = 1
                 else:
-                    p = (2**arg) * (
-                        1
-                        - math.cos(abs(J) * omega * t - math.pi / 4)
-                        / (1 + math.sqrt(t / t2))
+                    p = (2**(abs(J / h) - 1)) * (
+                        1 - math.cos(abs(J) * omega * t - math.pi / 4) / (1 + math.sqrt(t / t2))
                     )
-                    tot_n = 0
-                    for q in range(n_qubits + 1):
-                        n = model / (n_qubits * (2 ** (p * (q + 1))))
-                        m = (n_qubits - (q << 1)) / n_qubits
-                        d_magnetization += n * m
-                        d_sqr_magnetization += n * m * m
-                        tot_n += n
-                    d_magnetization /= tot_n
-                    d_sqr_magnetization /= tot_n
-                    if J > 0:
-                        d_magnetization = 1 - d_magnetization
+                    if (p >= 1024):
+                        d_magnetization = 1
+                        d_sqr_magnetization = 1
+                    else:
+                        factor = 2**p
+                        n = 1 / (n_qubits * 2)
+                        tot_n = 0
+                        for q in range(n_qubits + 1):
+                            n = n / factor
+                            if n == float("inf"):
+                                d_magnetization = 1
+                                d_sqr_magnetization = 1
+                                tot_n = 1
+                                break
+                            m = (n_qubits - q) / n_qubits
+                            d_magnetization += n * m
+                            d_sqr_magnetization += n * m * m
+                            tot_n += n
+                        d_magnetization /= tot_n
+                        d_sqr_magnetization /= tot_n
+                if J > 0:
+                    d_magnetization = 2 - (d_magnetization + 1)
 
             experiment_samples = experiment.measure_shots(qubits, shots)
 

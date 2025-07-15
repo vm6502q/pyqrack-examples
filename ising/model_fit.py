@@ -184,11 +184,11 @@ def main():
     theta = math.pi / 18
 
     # Pure ferromagnetic
-    # J, h, dt = -1.0, 0.0, 0.25
+    # J, h, dt = -1.0, 0.01, 0.25
     # theta = 0
 
     # Pure transverse field
-    # J, h, dt = 0.0, 2.0, 0.25
+    # J, h, dt = -0.01, 2.0, 0.25
     # theta = -math.pi / 2
 
     # Critical point (symmetry breaking)
@@ -246,31 +246,34 @@ def main():
         bias = []
         t = d * dt
         m = t / t1
-        arg = abs(h / J) - 1
         model = 1 - 1 / (1 + m)
-        if np.isclose(J, 0) or (arg >= 1024):
-            bias = (n_qubits + 1) * [1 / (n_qubits + 1)]
-        elif np.isclose(h, 0):
+        if np.isclose(h, 0):
             bias.append(1)
             bias += n_qubits * [0]
+        elif np.isclose(J, 0):
+            bias = (n_qubits + 1) * [1 / (n_qubits + 1)]
         else:
-            p = (2**arg) * (
+            p = (2**(abs(J / h) - 1)) * (
                 1 - math.cos(abs(J) * omega * t - math.pi / 4) / (1 + math.sqrt(t / t2))
             )
-            factor = 2**p
-            n = 1 / (n_qubits * 2)
-            tot_n = 0
-            for q in range(n_qubits + 1):
-                n = n / factor
-                if n == float("inf"):
-                    tot_n = 1
-                    bias.append(1)
-                    bias += n_qubits * [0]
-                    break
-                bias.append(n)
-                tot_n += n
-            for q in range(n_qubits + 1):
-                bias[q] /= tot_n
+            if (p >= 1024):
+                bias.append(1)
+                bias += n_qubits * [0]
+            else:
+                factor = 2**p
+                n = 1 / (n_qubits * 2)
+                tot_n = 0
+                for q in range(n_qubits + 1):
+                    n = n / factor
+                    if n == float("inf"):
+                        tot_n = 1
+                        bias.append(1)
+                        bias += n_qubits * [0]
+                        break
+                    bias.append(n)
+                    tot_n += n
+                for q in range(n_qubits + 1):
+                    bias[q] /= tot_n
         if J > 0:
             bias.reverse()
 
