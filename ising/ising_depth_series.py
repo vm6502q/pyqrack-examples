@@ -151,6 +151,7 @@ def main():
                 t1 = 0.127
                 t2 = 2.76
                 omega = 3.25
+                t = d * dt
                 model = (1 - 1 / (1 + t / t1)) if t1 > 0 else 1
                 if np.isclose(h, 0):
                     d_magnetization = 1
