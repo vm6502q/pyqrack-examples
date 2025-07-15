@@ -337,7 +337,7 @@ def main():
         rmse += (c_sqr_magnetization - sqr_magnetization) ** 2
 
     r_squared = 1 - (r_squared ** (1 / 2)) / depth
-    rmse /= depth
+    rmse = (rmse / depth) ** (1/2)
 
     print("L2 norm R^2: " + str(r_squared))
     print("Square magnetization RMSE: " + str(rmse))
