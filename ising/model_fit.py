@@ -231,7 +231,8 @@ def main():
                 experiment[key] /= trials
 
     r_squared = 0
-    rmse = 0
+    ss = 0
+    ssr = 0
     for d in range(depth):
         trotter_step(qc_aer, qubits, (n_rows, n_cols), J, h, dt)
 
@@ -334,13 +335,16 @@ def main():
             c_magnetization += control_probs[p] * m
             c_sqr_magnetization += control_probs[p] * m * m
 
-        rmse += (c_sqr_magnetization - sqr_magnetization) ** 2
+        ss += c_sqr_magnetization ** 2
+        ssr += (c_sqr_magnetization - sqr_magnetization) ** 2
 
-    r_squared = 1 - (r_squared ** (1 / 2)) / depth
-    rmse = (rmse / depth) ** (1/2)
+    r_squared = 1 - r_squared / depth
+    rmse = (ssr / depth) ** (1/2)
+    sm_r_squared = 1 - (ssr / ss)
 
     print("L2 norm R^2: " + str(r_squared))
     print("Square magnetization RMSE: " + str(rmse))
+    print("Square magnetization R^2: " + str(sm_r_squared))
 
     return 0
 
