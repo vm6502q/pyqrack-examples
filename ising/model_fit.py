@@ -253,10 +253,10 @@ def main():
         elif np.isclose(J, 0):
             bias = (n_qubits + 1) * [1 / (n_qubits + 1)]
         else:
-            p = (2**(abs(J / h) - 1)) * (
+            p = (2 ** (abs(J / h) - 1)) * (
                 1 - math.cos(abs(J) * omega * t - math.pi / 4) / (1 + math.sqrt(t / t2))
             )
-            if (p >= 1024):
+            if p >= 1024:
                 bias.append(1)
                 bias += n_qubits * [0]
             else:

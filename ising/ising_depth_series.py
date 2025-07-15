@@ -160,10 +160,12 @@ def main():
                     d_magnetization = 0
                     d_sqr_magnetization = 0
                 else:
-                    p = (2**(abs(J / h) - 1)) * (
-                        1 - math.cos(abs(J) * omega * t - math.pi / 4) / (1 + math.sqrt(t / t2))
+                    p = (2 ** (abs(J / h) - 1)) * (
+                        1
+                        - math.cos(abs(J) * omega * t - math.pi / 4)
+                        / (1 + math.sqrt(t / t2))
                     )
-                    if (p >= 1024):
+                    if p >= 1024:
                         d_magnetization = 1
                         d_sqr_magnetization = 1
                     else:
