@@ -169,9 +169,9 @@ def main():
     depth = 20
     hamming_n = 2048
     trials = 20
-    t1 = 1.91
-    t2 = 48.2
-    omega = math.pi
+    t1 = 0.127
+    t2 = 2.76
+    omega = 3.25
 
     print("t1: " + str(t1))
     print("t2: " + str(t2))
@@ -211,23 +211,24 @@ def main():
     )
 
     experiment_counts = [{}] * depth
-    for trial in range(trials):
-        experiment = QrackSimulator(n_qubits)
-        experiment.run_qiskit_circuit(qc)
-        for d in range(1, depth + 1):
-            experiment.run_qiskit_circuit(step)
-            trotter_step(qc_aer, qubits, (n_rows, n_cols), J, h, dt)
+    if t1 > 0:
+        for trial in range(trials):
+            experiment = QrackSimulator(n_qubits)
+            experiment.run_qiskit_circuit(qc)
+            for d in range(1, depth + 1):
+                experiment.run_qiskit_circuit(step)
+                trotter_step(qc_aer, qubits, (n_rows, n_cols), J, h, dt)
 
-            counts = dict(Counter(experiment.measure_shots(qubits, shots)))
+                counts = dict(Counter(experiment.measure_shots(qubits, shots)))
 
-            for key, value in counts.items():
-                experiment_counts[d - 1][key] = (
-                    experiment_counts[d - 1].get(key, 0) + value / shots
-                )
+                for key, value in counts.items():
+                    experiment_counts[d - 1][key] = (
+                        experiment_counts[d - 1].get(key, 0) + value / shots
+                    )
 
-    for experiment in experiment_counts:
-        for key in experiment.keys():
-            experiment[key] /= trials
+        for experiment in experiment_counts:
+            for key in experiment.keys():
+                experiment[key] /= trials
 
     r_squared = 0
     for d in range(depth):
@@ -245,8 +246,7 @@ def main():
 
         bias = []
         t = d * dt
-        m = t / t1
-        model = 1 - 1 / (1 + m)
+        model = (1 - 1 / (1 + t / t1)) if t1 > 0 else 1
         if np.isclose(h, 0):
             bias.append(1)
             bias += n_qubits * [0]
