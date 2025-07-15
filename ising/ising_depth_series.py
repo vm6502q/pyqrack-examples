@@ -177,7 +177,7 @@ def main():
                                 d_sqr_magnetization = 1
                                 tot_n = 1
                                 break
-                            m = (n_qubits - q << 1) / n_qubits
+                            m = (n_qubits - (q << 1)) / n_qubits
                             d_magnetization += n * m
                             d_sqr_magnetization += n * m * m
                             tot_n += n
