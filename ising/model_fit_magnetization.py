@@ -14,7 +14,7 @@ def magnetization_model(depths, dt, n_qubits, J, h, t2, omega):
     results = []
     for d in depths:
         t = d * dt
-        arg = abs(h / J) - 1
+        arg = abs(J / h) - 2
         # Cases
         if np.isclose(J, 0) or (arg >= 1024):
             results.append(0.0)
