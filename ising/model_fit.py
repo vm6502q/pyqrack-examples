@@ -167,7 +167,7 @@ def main():
     n_qubits = 8
     depth = 20
     hamming_n = 2048
-    t1 = 0.068
+    t1 = 0.25
     # Alternatively:
     # t1 = 0
     t2 = 1.876
@@ -254,7 +254,7 @@ def main():
 
         bias = []
         t = d * dt
-        model = (1 - 1 / (1 + t / t1)) if (t1 > 0) else (0 if d == 0 else 1)
+        model = (1 - 1 / (1 + (t / t1) ** 2)) if (t1 > 0) else (0 if d == 0 else 1)
         d_magnetization = 0
         d_sqr_magnetization = 0
         if np.isclose(h, 0):
