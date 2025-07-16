@@ -99,6 +99,12 @@ def main():
 
     n_rows, n_cols = factor_width(n_qubits, False)
 
+    t1 = 0.000976562
+    t2 = 0.000976562
+    # Alternatively:
+    # t1 = 0
+    # t2 = 0.00390625
+
     # Quantinuum settings
     J, h, dt = -1.0, 2.0, 0.25
     theta = math.pi / 18
@@ -140,17 +146,16 @@ def main():
 
         start = time.perf_counter()
 
-        experiment.run_qiskit_circuit(qc)
+        if t1 > 0:
+            experiment.run_qiskit_circuit(qc)
         for d in depths:
             d_magnetization = 0
             d_sqr_magnetization = 0
             model = 0
             if d > 0:
-                experiment.run_qiskit_circuit(step)
+                if t1 > 0:
+                    experiment.run_qiskit_circuit(step)
 
-                t1 = 0.127
-                t2 = 2.76
-                omega = 3.25
                 t = d * dt
                 model = (1 - 1 / (1 + t / t1)) if t1 > 0 else 1
                 if np.isclose(h, 0):
@@ -160,10 +165,18 @@ def main():
                     d_magnetization = 0
                     d_sqr_magnetization = 0
                 else:
-                    p = (2 ** (abs(J / h) - 1)) * (
-                        1
-                        - math.cos(abs(J) * omega * t - math.pi / 4)
-                        / (1 + math.sqrt(t / t2))
+                    p = (
+                        (
+                            (2 ** abs(J / h))
+                            * (
+                                1
+                                - math.cos(-J * math.pi * t / 2 - math.pi / 4)
+                                / (1 + math.sqrt(t / t2))
+                            )
+                            - 1
+                        )
+                        if t2 > 0
+                        else 2 ** abs(J / h)
                     )
                     if p >= 1024:
                         d_magnetization = 1
@@ -188,25 +201,28 @@ def main():
                 if J > 0:
                     d_magnetization = 2 - (d_magnetization + 1)
 
-            experiment_samples = experiment.measure_shots(qubits, shots)
+            if t1 > 0:
+                experiment_samples = experiment.measure_shots(qubits, shots)
+                magnetization = 0
+                sqr_magnetization = 0
+                for sample in experiment_samples:
+                    m = 0
+                    for _ in range(n_qubits):
+                        m += -1 if (sample & 1) else 1
+                        sample >>= 1
+                    m /= n_qubits
+                    magnetization += m
+                    sqr_magnetization += m * m
+                magnetization /= shots
+                sqr_magnetization /= shots
 
-            magnetization = 0
-            sqr_magnetization = 0
-            for sample in experiment_samples:
-                m = 0
-                for _ in range(n_qubits):
-                    m += -1 if (sample & 1) else 1
-                    sample >>= 1
-                m /= n_qubits
-                magnetization += m
-                sqr_magnetization += m * m
-            magnetization /= shots
-            sqr_magnetization /= shots
-
-            magnetization = model * d_magnetization + (1 - model) * magnetization
-            sqr_magnetization = (
-                model * d_sqr_magnetization + (1 - model) * sqr_magnetization
-            )
+                magnetization = model * d_magnetization + (1 - model) * magnetization
+                sqr_magnetization = (
+                    model * d_sqr_magnetization + (1 - model) * sqr_magnetization
+                )
+            else:
+                magnetization = d_magnetization
+                sqr_magnetization = d_sqr_magnetization
 
             if sqr_magnetization < min_sqr_mag:
                 min_sqr_mag = sqr_magnetization
