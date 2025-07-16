@@ -6,6 +6,7 @@ import numpy as np
 import pymc as pm
 import arviz as az
 
+
 # ---------------------------------------
 # Forward model as a function
 # ---------------------------------------
@@ -22,7 +23,9 @@ def magnetization_model(depths, dt, n_qubits, J, h, t2, omega):
             results.append(1.0)
             continue
         # Use pm.math for symbolic operations:
-        cos_term = 1 - pm.math.cos(J * omega * t) / (1 + pm.math.sqrt(t / t2))
+        cos_term = 1 + pm.math.cos(-J * omega * math.pi * t + math.pi / 4) / (
+            1 + pm.math.sqrt(t / t2)
+        )
         p = (2**arg) * cos_term
         # Build bias distribution
         tot_n = 0
@@ -30,29 +33,54 @@ def magnetization_model(depths, dt, n_qubits, J, h, t2, omega):
         for q in range(n_qubits + 1):
             n = 1 / (n_qubits * (2 ** (p * (q + 1))))
             m_val = (n_qubits - (q << 1)) / n_qubits
-            d_sqr_magnetization = d_sqr_magnetization + n * m_val * m_val
+            d_sqr_magnetization = d_sqr_magnetization + n * m_val
             tot_n = tot_n + n
         d_sqr_magnetization = d_sqr_magnetization / tot_n
         results.append(d_sqr_magnetization)
     return pm.math.stack(results)
 
+
 # ---------------------------------------
 # Experimental data
 # ---------------------------------------
-depths = list(range(1, 21))          # array of step depths
+depths = list(range(1, 21))  # array of step depths
 dt = 0.25
 n_qubits = 16
 J = -1.0
 h = 2.0
-observed_data = np.array([0.5694789886474609, 0.24667930603027344, 0.3176431655883789, 0.4545888900756836, 0.5567941665649414, 0.5712404251098633, 0.48934125900268555, 0.35924434661865234, 0.38236379623413086, 0.5766105651855469, 0.5362677574157715, 0.3728461265563965, 0.36491823196411133, 0.4830970764160156, 0.6482367515563965, 0.5671916007995605, 0.3771247863769531, 0.3405575752258301, 0.38635730743408203, 0.4950547218322754])      # measured mean-square magnetization
+# measured mean magnetization
+observed_data = np.array(
+    [
+        0.5331096613947364,
+        0.5658914819681634,
+        0.49161339327452086,
+        0.26643838719925717,
+        -0.1362218164168863,
+        -0.5142552509805076,
+        -0.7123630163195086,
+        -0.7984574151694762,
+        -0.8345986591490068,
+        -0.8438618054926229,
+        -0.8316324273198081,
+        -0.7921954916336735,
+        -0.7035495007623623,
+        -0.5142552509805076,
+        -0.18417067474298626,
+        0.16099531526478772,
+        0.3631407695775524,
+        0.4196483558435873,
+        0.35127212227883103,
+        0.13906518757606115,
+    ]
+)
 
 # ---------------------------------------
 # Bayesian fitting with PyMC
 # ---------------------------------------
 with pm.Model() as model:
     # Priors
-    t2 = pm.Uniform("t2", lower=0.125, upper=512)
-    omega = pm.Uniform("omega", lower=0.0, upper=2 * math.pi)
+    t2 = pm.Uniform("t2", lower=0.125, upper=2)
+    omega = pm.Uniform("omega", lower=0.0, upper=2)
 
     # Forward model
     mu = magnetization_model(depths, dt, n_qubits, J, h, t2, omega)
@@ -62,14 +90,9 @@ with pm.Model() as model:
 
     # Sampling
     trace = pm.sample(
-        draws=2000,
-        tune=1000,
-        chains=4,
-        target_accept=0.9,
-        random_seed=42
+        draws=2000, tune=1000, chains=4, target_accept=0.9, random_seed=42
     )
 
 # Posterior summary
 print(az.summary(trace, var_names=["t2", "omega"]))
 az.plot_trace(trace, var_names=["t2", "omega"])
-

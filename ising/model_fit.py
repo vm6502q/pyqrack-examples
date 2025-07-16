@@ -169,15 +169,17 @@ def main():
     hamming_n = 2048
     trials = 20
     t1 = 0
-    t2 = 263.956
-    omega = 2.638
+    t2 = 1.112
+    omega = 2
 
     if len(sys.argv) > 1:
         n_qubits = int(sys.argv[1])
 
     print("t1: " + str(t1))
     print("t2: " + str(t2))
-    print("omega:" + str(omega))
+    print("omega / pi:" + str(omega))
+
+    omega *= math.pi
 
     n_rows, n_cols = factor_width(n_qubits, False)
 
@@ -263,17 +265,11 @@ def main():
             d_sqr_magnetization = 0
             bias = (n_qubits + 1) * [1 / (n_qubits + 1)]
         else:
-            p = (
-                (
-                    (2 ** (abs(J / h) - 1))
-                    * (
-                        1
-                        + math.cos(-J * omega * t - math.pi / 4)
-                        / ((1 + math.sqrt(t / t2)) if t2 > 0 else 1)
-                    )
-                    - 1
-                )
-            )
+            p = (2 ** (abs(J / h) - 1)) * (
+                1
+                + math.cos(-J * omega * t + math.pi / 4)
+                / ((1 + math.sqrt(t / t2)) if t2 > 0 else 1)
+            ) - 1
             if p >= 1024:
                 d_magnetization = 1
                 d_sqr_magnetization = 1

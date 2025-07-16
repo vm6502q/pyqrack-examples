@@ -87,8 +87,8 @@ def main():
     shots = 32768
 
     t1 = 0
-    t2 = 263.956
-    omega = 2.638
+    t2 = 1.112
+    omega = 2 * math.pi
 
     trials = 128 if t1 > 0 else 1
     if len(sys.argv) > 1:
@@ -168,7 +168,7 @@ def main():
                             (2 ** (abs(J / h) - 1))
                             * (
                                 1
-                                + math.cos(-J * math.pi * t / 2 - math.pi / 4)
+                                + math.cos(-J * omega * t / 2 + math.pi / 4)
                                 / ((1 + math.sqrt(t / t2)) if t2 > 0 else 1)
                             )
                             - 1
