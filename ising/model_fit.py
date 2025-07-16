@@ -169,13 +169,17 @@ def main():
     depth = 20
     hamming_n = 2048
     trials = 20
-    t1 = 0.127
-    t2 = 2.76
-    omega = 3.25
+    t1 = 0.000976562
+    t2 = 0.000976562
+    # Alternatively:
+    # t1 = 0
+    # t2 = 0.00390625
+
+    if len(sys.argv) > 1:
+        n_qubits = int(sys.argv[1])
 
     print("t1: " + str(t1))
     print("t2: " + str(t2))
-    print("omega: " + str(omega))
 
     n_rows, n_cols = factor_width(n_qubits, False)
 
@@ -261,8 +265,18 @@ def main():
             d_sqr_magnetization = 0
             bias = (n_qubits + 1) * [1 / (n_qubits + 1)]
         else:
-            p = (2 ** (abs(J / h) - 1)) * (
-                1 - math.cos(abs(J) * omega * t - math.pi / 4) / (1 + math.sqrt(t / t2))
+            p = (
+                (
+                    (2 ** abs(J / h))
+                    * (
+                        1
+                        - math.cos(-J * math.pi * t / 2 - math.pi / 4)
+                        / (1 + math.sqrt(t / t2))
+                    )
+                    - 1
+                )
+                if t2 > 0
+                else 2 ** abs(J / h)
             )
             if p >= 1024:
                 d_magnetization = 1
@@ -308,21 +322,25 @@ def main():
 
         r_squared += (1 - result["l2_similarity"]) ** 2
 
-        magnetization = 0
-        sqr_magnetization = 0
-        for key, value in experiment_probs[d].items():
-            m = 0
-            for _ in range(n_qubits):
-                m += -1 if (key & 1) else 1
-                key >>= 1
-            m /= n_qubits
-            magnetization += value * m
-            sqr_magnetization += value * m * m
+        if t1 > 0:
+            magnetization = 0
+            sqr_magnetization = 0
+            for key, value in experiment_probs[d].items():
+                m = 0
+                for _ in range(n_qubits):
+                    m += -1 if (key & 1) else 1
+                    key >>= 1
+                m /= n_qubits
+                magnetization += value * m
+                sqr_magnetization += value * m * m
 
-        magnetization = model * d_magnetization + (1 - model) * magnetization
-        sqr_magnetization = (
-            model * d_sqr_magnetization + (1 - model) * sqr_magnetization
-        )
+            magnetization = model * d_magnetization + (1 - model) * magnetization
+            sqr_magnetization = (
+                model * d_sqr_magnetization + (1 - model) * sqr_magnetization
+            )
+        else:
+            magnetization = d_magnetization
+            sqr_magnetization = d_sqr_magnetization
 
         c_magnetization, c_sqr_magnetization = 0, 0
         for p in range(1 << n_qubits):
@@ -335,11 +353,11 @@ def main():
             c_magnetization += control_probs[p] * m
             c_sqr_magnetization += control_probs[p] * m * m
 
-        ss += c_sqr_magnetization ** 2
+        ss += c_sqr_magnetization**2
         ssr += (c_sqr_magnetization - sqr_magnetization) ** 2
 
     r_squared = 1 - r_squared / depth
-    rmse = (ssr / depth) ** (1/2)
+    rmse = (ssr / depth) ** (1 / 2)
     sm_r_squared = 1 - (ssr / ss)
 
     print("L2 norm R^2: " + str(r_squared))
