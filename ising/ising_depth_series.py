@@ -86,7 +86,9 @@ def main():
     depth = 20
     shots = 32768
 
-    t1 = 0
+    t1 = 0.068
+    # Alternatively:
+    # t1 = 0
     t2 = 1.876
     omega = 1.608 * math.pi
 

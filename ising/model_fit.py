@@ -167,7 +167,9 @@ def main():
     n_qubits = 8
     depth = 20
     hamming_n = 2048
-    t1 = 0
+    t1 = 0.068
+    # Alternatively:
+    # t1 = 0
     t2 = 1.876
     omega = 1.608
     trials = 20 if t1 > 0 else 1
@@ -177,7 +179,7 @@ def main():
 
     print("t1: " + str(t1))
     print("t2: " + str(t2))
-    print("omega / pi:" + str(omega))
+    print("omega / pi: " + str(omega))
 
     omega *= math.pi
 
