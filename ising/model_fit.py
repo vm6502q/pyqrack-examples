@@ -168,8 +168,8 @@ def main():
     depth = 20
     hamming_n = 2048
     t1 = 0
-    t2 = 2.13
-    omega = 3
+    t2 = 1
+    omega = 1.6
     trials = 20 if t1 > 0 else 1
 
     if len(sys.argv) > 1:
@@ -266,12 +266,12 @@ def main():
             bias = (n_qubits + 1) * [1 / (n_qubits + 1)]
         else:
             p = (
-                (2 ** (abs(J / h) - 2))
+                ((2 ** (abs(J / h) - 1))
                 * (
                     1
                     + math.cos(-J * omega * t / 2 - math.pi / 4)
                     / ((1 + math.sqrt(t / t2)) if t2 > 0 else 1)
-                )
+                ) - 1 / 2)
                 if t2 > 0
                 else 2 ** abs(J / h)
             )

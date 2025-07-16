@@ -14,7 +14,7 @@ def magnetization_model(depths, dt, n_qubits, J, h, t2, omega):
     results = []
     for d in depths:
         t = d * dt
-        arg = abs(J / h) - 2
+        arg = abs(J / h) - 1
         # Cases
         if np.isclose(J, 0) or (arg >= 1024):
             results.append(0.0)
@@ -26,7 +26,7 @@ def magnetization_model(depths, dt, n_qubits, J, h, t2, omega):
         cos_term = 1 + pm.math.cos(-J * omega * math.pi * t - math.pi / 4) / (
             1 + pm.math.sqrt(t / t2)
         )
-        p = (2**arg) * cos_term
+        p = (2**arg) * cos_term - 1 / 2
         # Build bias distribution
         tot_n = 0
         d_sqr_magnetization = 0
@@ -80,7 +80,7 @@ observed_data = np.array(
 with pm.Model() as model:
     # Priors
     t2 = pm.Uniform("t2", lower=0.125, upper=4)
-    omega = pm.Uniform("omega", lower=2.7, upper=3.3)
+    omega = pm.Uniform("omega", lower=1.3, upper=1.9)
 
     # Forward model
     mu = magnetization_model(depths, dt, n_qubits, J, h, t2, omega)
