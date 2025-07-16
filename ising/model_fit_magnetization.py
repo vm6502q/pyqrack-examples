@@ -51,7 +51,7 @@ observed_data = np.array([0.5694789886474609, 0.24667930603027344, 0.31764316558
 # ---------------------------------------
 with pm.Model() as model:
     # Priors
-    log2_t2 = pm.Uniform("log2_t2", lower=-512, upper=512)
+    log2_t2 = pm.Uniform("log2_t2", lower=-4, upper=512)
     omega = pm.Uniform("omega", lower=0.0, upper=2 * math.pi)
 
     # Transform to actual parameters
