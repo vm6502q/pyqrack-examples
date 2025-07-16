@@ -87,7 +87,7 @@ def main():
     shots = 32768
 
     t1 = 0
-    t2 = 2.13
+    t2 = 1
     omega = 3 * math.pi
 
     trials = 128 if t1 > 0 else 1
@@ -164,12 +164,12 @@ def main():
                     d_sqr_magnetization = 0
                 else:
                     p = (
-                        (2 ** (abs(J / h) - 2))
+                        ((2 ** (abs(J / h) - 1))
                         * (
                             1
                             + math.cos(-J * omega * t / 2 - math.pi / 4)
                             / ((1 + math.sqrt(t / t2)) if t2 > 0 else 1)
-                        )
+                        ) - 1 / 2)
                         if t2 > 0
                         else 2 ** abs(J / h)
                     )
