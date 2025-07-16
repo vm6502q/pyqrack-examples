@@ -86,12 +86,9 @@ def main():
     depth = 20
     shots = 32768
 
-    t1 = 0.125
-    t2 = 3
-    omega = 0.855 * math.pi
-    # Alternatively:
-    # t1 = 0
-    # t2 = 0.000000001
+    t1 = 0
+    t2 = 263.956
+    omega = 2.638
 
     trials = 128 if t1 > 0 else 1
     if len(sys.argv) > 1:

@@ -51,11 +51,8 @@ observed_data = np.array([0.5694789886474609, 0.24667930603027344, 0.31764316558
 # ---------------------------------------
 with pm.Model() as model:
     # Priors
-    log2_t2 = pm.Uniform("log2_t2", lower=-4, upper=512)
+    t2 = pm.Uniform("t2", lower=0.125, upper=512)
     omega = pm.Uniform("omega", lower=0.0, upper=2 * math.pi)
-
-    # Transform to actual parameters
-    t2 = pm.Deterministic("t2", 2.0 ** log2_t2)
 
     # Forward model
     mu = magnetization_model(depths, dt, n_qubits, J, h, t2, omega)
