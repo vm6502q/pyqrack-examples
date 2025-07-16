@@ -1,5 +1,4 @@
 # Ising model Trotterization as interpreted by (OpenAI GPT) Elara
-# Run ./experiment.sh
 
 import math
 import numpy as np
@@ -169,8 +168,8 @@ def main():
     depth = 20
     hamming_n = 2048
     trials = 20
-    t1 = 0
-    t2 = 0
+    t1 = 1.0
+    t2 = 1.0
     omega = 0.855 * math.pi
 
     if len(sys.argv) > 1:

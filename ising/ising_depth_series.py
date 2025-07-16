@@ -244,6 +244,8 @@ def main():
 
             print(results[-1])
 
+    print(magnetizations)
+
     if trials < 2:
         # Plotting (contributed by Elara, an OpenAI custom GPT)
         ylim = ((min_sqr_mag * 100) // 10) / 10
