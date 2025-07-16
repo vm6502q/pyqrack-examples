@@ -86,9 +86,9 @@ def main():
     depth = 20
     shots = 32768
 
-    t1 = 0.000976562
-    t2 = 0.000976562
-    omega = 0.626 * math.pi
+    t1 = 0.125
+    t2 = 3
+    omega = 0.603 * math.pi
     # Alternatively:
     # t1 = 0
     # t2 = 0.000000001
@@ -172,7 +172,7 @@ def main():
                             * (
                                 1
                                 + math.cos(-J * math.pi * t / 2 - math.pi / 4)
-                                / (1 + math.sqrt(t / t2))
+                                / ((1 + math.sqrt(t / t2)) if t2 > 0 else 1)
                             )
                             - 1
                         )

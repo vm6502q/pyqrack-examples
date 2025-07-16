@@ -169,12 +169,9 @@ def main():
     depth = 20
     hamming_n = 2048
     trials = 20
-    t1 = 0.000976562
-    t2 = 0.000976562
-    omega = 0.626 * math.pi
-    # Alternatively:
-    # t1 = 0
-    # t2 = 0.000000001
+    t1 = 0.125
+    t2 = 3
+    omega = 0.603 * math.pi
 
     if len(sys.argv) > 1:
         n_qubits = int(sys.argv[1])
@@ -273,12 +270,10 @@ def main():
                     * (
                         1
                         + math.cos(-J * omega * t - math.pi / 4)
-                        / (1 + math.sqrt(t / t2))
+                        / ((1 + math.sqrt(t / t2)) if t2 > 0 else 1)
                     )
                     - 1
                 )
-                if t2 > 0
-                else 2 ** abs(J / h)
             )
             if p >= 1024:
                 d_magnetization = 1
