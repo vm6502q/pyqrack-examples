@@ -79,8 +79,8 @@ observed_data = np.array(
 # ---------------------------------------
 with pm.Model() as model:
     # Priors
-    t2 = pm.Uniform("t2", lower=0.125, upper=2)
-    omega = pm.Uniform("omega", lower=0.0, upper=2)
+    t2 = pm.Uniform("t2", lower=0.125, upper=4)
+    omega = pm.Uniform("omega", lower=1.5, upper=2.5)
 
     # Forward model
     mu = magnetization_model(depths, dt, n_qubits, J, h, t2, omega)
