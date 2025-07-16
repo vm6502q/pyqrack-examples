@@ -9,10 +9,12 @@ import arviz as az
 # ---------------------------------------
 # Forward model as a function
 # ---------------------------------------
-def magnetization_model(depths, dt, n_qubits, J, h, t2, omega):
+def magnetization_model(depths, dt, n_qubits, J, h, t1, t2, omega):
     results = []
     for d in depths:
         t = d * dt
+        m = t / t1
+        model = 1 - 1 / (1 + m)
         arg = abs(h / J) - 1
         # Cases
         if np.isclose(J, 0) or (arg >= 1024):
@@ -28,7 +30,7 @@ def magnetization_model(depths, dt, n_qubits, J, h, t2, omega):
         tot_n = 0
         d_sqr_magnetization = 0
         for q in range(n_qubits + 1):
-            n = 1 / (n_qubits * (2 ** (p * (q + 1))))
+            n = model / (n_qubits * (2 ** (p * (q + 1))))
             m_val = (n_qubits - (q << 1)) / n_qubits
             d_sqr_magnetization = d_sqr_magnetization + n * m_val * m_val
             tot_n = tot_n + n
@@ -51,10 +53,12 @@ observed_data = np.array([0.5694789886474609, 0.24667930603027344, 0.31764316558
 # ---------------------------------------
 with pm.Model() as model:
     # Priors
-    log2_t2 = pm.Normal("log2_t2", mu=0.0, sigma=3.0)
-    omega = pm.Uniform("omega", lower=0.0, upper=2 * math.pi)
+    log2_t1 = pm.Uniform("log2_t1", lower=-1024, upper=1024)
+    log2_t2 = pm.Uniform("log2_t2", lower=-1024, upper=1024)
+    omega = pm.Uniform("omega", lower=0.0, upper=2.0 * np.pi)
 
     # Transform to actual parameters
+    t1 = pm.Deterministic("t1", 2.0 ** log2_t1)
     t2 = pm.Deterministic("t2", 2.0 ** log2_t2)
 
     # Forward model
@@ -63,7 +67,7 @@ with pm.Model() as model:
     n_qubits = 56
     J = -1.0
     h = 2.0
-    mu = magnetization_model(depths, dt, n_qubits, J, h, t2, omega)
+    mu = magnetization_model(depths, dt, n_qubits, J, h, t1, t2, omega)
 
     # Likelihood
     pm.Normal("likelihood", mu=mu, observed=observed_data)
