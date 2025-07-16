@@ -269,7 +269,7 @@ def main():
         else:
             p = (
                 (
-                    (2 ** abs(J / h) - 1)
+                    (2 ** abs(J / h))
                     * (
                         1
                         + math.cos(-J * omega * t - math.pi / 4)
