@@ -169,8 +169,8 @@ def main():
     hamming_n = 2048
     trials = 20
     t1 = 0
-    t2 = 1.112
-    omega = 2
+    t2 = 2.200
+    omega = 1.997
 
     if len(sys.argv) > 1:
         n_qubits = int(sys.argv[1])

@@ -87,8 +87,8 @@ def main():
     shots = 32768
 
     t1 = 0
-    t2 = 1.112
-    omega = 2 * math.pi
+    t2 = 2.200
+    omega = 1.997 * math.pi
 
     trials = 128 if t1 > 0 else 1
     if len(sys.argv) > 1:
@@ -240,8 +240,6 @@ def main():
             magnetizations[-1].append(sqr_magnetization)
 
             print(results[-1])
-
-    print(magnetizations)
 
     if trials < 2:
         # Plotting (contributed by Elara, an OpenAI custom GPT)
