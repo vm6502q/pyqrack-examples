@@ -168,7 +168,7 @@ def main():
     depth = 20
     hamming_n = 2048
     t1 = 0
-    t2 = 2.132
+    t2 = 2.13
     omega = 3
     trials = 20 if t1 > 0 else 1
 

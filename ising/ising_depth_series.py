@@ -87,7 +87,7 @@ def main():
     shots = 32768
 
     t1 = 0
-    t2 = 2.132
+    t2 = 2.13
     omega = 3 * math.pi
 
     trials = 128 if t1 > 0 else 1
