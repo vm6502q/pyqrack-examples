@@ -167,10 +167,10 @@ def main():
     n_qubits = 8
     depth = 20
     hamming_n = 2048
-    trials = 20
     t1 = 0
     t2 = 2.200
     omega = 1.997
+    trials = 20 if t1 > 0 else 1
 
     if len(sys.argv) > 1:
         n_qubits = int(sys.argv[1])
