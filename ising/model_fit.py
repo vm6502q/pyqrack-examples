@@ -267,7 +267,7 @@ def main():
         else:
             p = (2 ** (abs(J / h) - 1)) * (
                 1
-                + math.cos(-J * omega * t + math.pi / 4)
+                + math.cos(-J * omega * t - math.pi / 4)
                 / ((1 + math.sqrt(t / t2)) if t2 > 0 else 1)
             ) - 1
             if p >= 1024:

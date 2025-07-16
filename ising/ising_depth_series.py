@@ -168,7 +168,7 @@ def main():
                             (2 ** (abs(J / h) - 1))
                             * (
                                 1
-                                + math.cos(-J * omega * t / 2 + math.pi / 4)
+                                + math.cos(-J * omega * t / 2 - math.pi / 4)
                                 / ((1 + math.sqrt(t / t2)) if t2 > 0 else 1)
                             )
                             - 1

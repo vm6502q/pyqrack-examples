@@ -23,7 +23,7 @@ def magnetization_model(depths, dt, n_qubits, J, h, t2, omega):
             results.append(1.0)
             continue
         # Use pm.math for symbolic operations:
-        cos_term = 1 + pm.math.cos(-J * omega * math.pi * t + math.pi / 4) / (
+        cos_term = 1 + pm.math.cos(-J * omega * math.pi * t - math.pi / 4) / (
             1 + pm.math.sqrt(t / t2)
         )
         p = (2**arg) * cos_term
