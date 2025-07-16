@@ -88,7 +88,7 @@ def main():
 
     t1 = 0.125
     t2 = 3
-    omega = 0.603 * math.pi
+    omega = 0.855 * math.pi
     # Alternatively:
     # t1 = 0
     # t2 = 0.000000001

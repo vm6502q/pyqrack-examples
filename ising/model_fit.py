@@ -171,7 +171,7 @@ def main():
     trials = 20
     t1 = 0
     t2 = 0
-    omega = 0.391 * math.pi
+    omega = 0.855 * math.pi
 
     if len(sys.argv) > 1:
         n_qubits = int(sys.argv[1])
