@@ -55,18 +55,14 @@ with pm.Model() as model:
     # Priors
     log2_t1 = pm.Uniform("log2_t1", lower=-1024, upper=1024)
     log2_t2 = pm.Uniform("log2_t2", lower=-1024, upper=1024)
-    omega = pm.Uniform("omega", lower=0.0, upper=2.0 * np.pi)
+    omega = 0.855 * math.pi
 
     # Transform to actual parameters
     t1 = pm.Deterministic("t1", 2.0 ** log2_t1)
     t2 = pm.Deterministic("t2", 2.0 ** log2_t2)
 
     # Forward model
-    
-    dt = 0.25
-    n_qubits = 56
-    J = -1.0
-    h = 2.0
+
     mu = magnetization_model(depths, dt, n_qubits, J, h, t1, t2, omega)
 
     # Likelihood
