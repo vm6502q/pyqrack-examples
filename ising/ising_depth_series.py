@@ -88,9 +88,10 @@ def main():
 
     t1 = 0.000976562
     t2 = 0.000976562
+    omega = 0.626 * math.pi
     # Alternatively:
     # t1 = 0
-    # t2 = 0.00390625
+    # t2 = 0.000000001
 
     trials = 128 if t1 > 0 else 1
     if len(sys.argv) > 1:
@@ -157,7 +158,7 @@ def main():
                     experiment.run_qiskit_circuit(step)
 
                 t = d * dt
-                model = (1 - 1 / (1 + t / t1)) if (t1 > 0) or (d == 0) else 1
+                model = (1 - 1 / (1 + t / t1)) if (t1 > 0) else (0 if d == 0 else 1)
                 if np.isclose(h, 0):
                     d_magnetization = 1
                     d_sqr_magnetization = 1
@@ -170,7 +171,7 @@ def main():
                             (2 ** abs(J / h))
                             * (
                                 1
-                                - math.cos(-J * math.pi * t / 2 - math.pi / 4)
+                                + math.cos(-J * math.pi * t / 2 - math.pi / 4)
                                 / (1 + math.sqrt(t / t2))
                             )
                             - 1

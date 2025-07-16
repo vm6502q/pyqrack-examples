@@ -171,15 +171,17 @@ def main():
     trials = 20
     t1 = 0.000976562
     t2 = 0.000976562
+    omega = 0.626 * math.pi
     # Alternatively:
     # t1 = 0
-    # t2 = 0.00390625
+    # t2 = 0.000000001
 
     if len(sys.argv) > 1:
         n_qubits = int(sys.argv[1])
 
     print("t1: " + str(t1))
     print("t2: " + str(t2))
+    print("omega:" + str(omega))
 
     n_rows, n_cols = factor_width(n_qubits, False)
 
@@ -252,7 +254,7 @@ def main():
 
         bias = []
         t = d * dt
-        model = (1 - 1 / (1 + t / t1)) if (t1 > 0) or (d == 0) else 1
+        model = (1 - 1 / (1 + t / t1)) if (t1 > 0) else (0 if d == 0 else 1)
         d_magnetization = 0
         d_sqr_magnetization = 0
         if np.isclose(h, 0):
@@ -270,7 +272,7 @@ def main():
                     (2 ** abs(J / h))
                     * (
                         1
-                        - math.cos(-J * math.pi * t / 2 - math.pi / 4)
+                        + math.cos(-J * omega * t - math.pi / 4)
                         / (1 + math.sqrt(t / t2))
                     )
                     - 1
