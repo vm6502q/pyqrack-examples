@@ -169,7 +169,7 @@ def main():
     hamming_n = 2048
     t1 = 0
     t2 = 2.200
-    omega = 1.997
+    omega = 2
     trials = 20 if t1 > 0 else 1
 
     if len(sys.argv) > 1:
