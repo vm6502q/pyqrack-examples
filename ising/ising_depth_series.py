@@ -88,7 +88,7 @@ def main():
 
     t1 = 0
     t2 = 2.132
-    omega = 2.703 * math.pi
+    omega = 3 * math.pi
 
     trials = 128 if t1 > 0 else 1
     if len(sys.argv) > 1:
