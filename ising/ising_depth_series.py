@@ -85,7 +85,14 @@ def main():
     n_qubits = 16
     depth = 20
     shots = 32768
-    trials = 128
+
+    t1 = 0.000976562
+    t2 = 0.000976562
+    # Alternatively:
+    # t1 = 0
+    # t2 = 0.00390625
+
+    trials = 128 if t1 > 0 else 1
     if len(sys.argv) > 1:
         n_qubits = int(sys.argv[1])
     if len(sys.argv) > 2:
@@ -98,12 +105,6 @@ def main():
         trials = int(sys.argv[4])
 
     n_rows, n_cols = factor_width(n_qubits, False)
-
-    t1 = 0.000976562
-    t2 = 0.000976562
-    # Alternatively:
-    # t1 = 0
-    # t2 = 0.00390625
 
     # Quantinuum settings
     J, h, dt = -1.0, 2.0, 0.25
@@ -146,8 +147,7 @@ def main():
 
         start = time.perf_counter()
 
-        if t1 > 0:
-            experiment.run_qiskit_circuit(qc)
+        experiment.run_qiskit_circuit(qc)
         for d in depths:
             d_magnetization = 0
             d_sqr_magnetization = 0
@@ -157,7 +157,7 @@ def main():
                     experiment.run_qiskit_circuit(step)
 
                 t = d * dt
-                model = (1 - 1 / (1 + t / t1)) if t1 > 0 else 1
+                model = (1 - 1 / (1 + t / t1)) if (t1 > 0) or (d == 0) else 1
                 if np.isclose(h, 0):
                     d_magnetization = 1
                     d_sqr_magnetization = 1
@@ -201,7 +201,7 @@ def main():
                 if J > 0:
                     d_magnetization = 2 - (d_magnetization + 1)
 
-            if t1 > 0:
+            if (d == 0) or (t1 > 0):
                 experiment_samples = experiment.measure_shots(qubits, shots)
                 magnetization = 0
                 sqr_magnetization = 0

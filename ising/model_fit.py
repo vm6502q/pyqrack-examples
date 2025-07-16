@@ -252,7 +252,7 @@ def main():
 
         bias = []
         t = d * dt
-        model = (1 - 1 / (1 + t / t1)) if t1 > 0 else 1
+        model = (1 - 1 / (1 + t / t1)) if (t1 > 0) or (d == 0) else 1
         d_magnetization = 0
         d_sqr_magnetization = 0
         if np.isclose(h, 0):
@@ -322,7 +322,7 @@ def main():
 
         r_squared += (1 - result["l2_similarity"]) ** 2
 
-        if t1 > 0:
+        if (d == 0) or (t1 > 0):
             magnetization = 0
             sqr_magnetization = 0
             for key, value in experiment_probs[d].items():
