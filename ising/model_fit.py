@@ -77,9 +77,12 @@ def trotter_step(circ, qubits, lattice_shape, J, h, dt):
     return circ
 
 
-def calc_stats(n, ideal_probs, counts, bias, model, shots, depth, hamming_n):
+def calc_stats(
+    n_rows, n_cols, ideal_probs, counts, bias, model, shots, depth, hamming_n
+):
     # For QV, we compare probabilities of (ideal) "heavy outputs."
     # If the probability is above 2/3, the protocol certifies/passes the qubit width.
+    n = n_rows * n_cols
     n_pow = 2**n
     threshold = statistics.median(ideal_probs)
     u_u = statistics.mean(ideal_probs)
@@ -100,7 +103,12 @@ def calc_stats(n, ideal_probs, counts, bias, model, shots, depth, hamming_n):
         for _ in range(hamming_weight):
             weight *= combo_factor
             combo_factor -= 1
-        count = (1 - model) * count + model * bias[hamming_weight] / weight
+        normed_closeness = closeness_like_bits(
+            i, n_rows, n_cols
+        ) / expected_closeness_weight(n_rows, n_cols, hamming_weight)
+        count = (1 - model) * count + model * normed_closeness * bias[
+            hamming_weight
+        ] / weight
 
         experiment[i] = int(count * shots)
 
@@ -146,6 +154,55 @@ def calc_stats(n, ideal_probs, counts, bias, model, shots, depth, hamming_n):
 # By Gemini (Google Search AI)
 def int_to_bitstring(integer, length):
     return bin(integer)[2:].zfill(length)
+
+
+# Drafted by Elara (OpenAI custom GPT), improved by Dan Strano
+def closeness_like_bits(perm, n_rows, n_cols):
+    """
+    Compute closeness-of-like-bits metric C(state) for a given bitstring on an LxL toroidal grid.
+
+    Parameters:
+        perm: integer representing basis state, bit-length n_rows * n_cols
+        n_rows: row count of torus
+        n_cols: column count of torus
+
+    Returns:
+        normalized_closeness: float, in [-1, +1]
+            +1 means all neighbors are like-like, -1 means all neighbors are unlike
+    """
+    # reshape the bitstring into LxL grid
+    bitstring = list(int_to_bitstring(perm, n_rows * n_cols))
+    grid = np.array(bitstring).reshape((n_rows, n_cols))
+    total_edges = 0
+    like_count = 0
+
+    # iterate over each site, count neighbors (right and down to avoid double-count)
+    for i in range(n_rows):
+        for j in range(n_cols):
+            s = grid[i, j]
+
+            # right neighbor (wrap around)
+            s_right = grid[i, (j + 1) % n_cols]
+            like_count += 1 if s == s_right else -1
+            total_edges += 1
+
+            # down neighbor (wrap around)
+            s_down = grid[(i + 1) % n_rows, j]
+            like_count += 1 if s == s_down else -1
+            total_edges += 1
+
+    # normalize
+    normalized_closeness = like_count / total_edges
+    return normalized_closeness
+
+
+# By Elara (OpenAI custom GPT)
+def expected_closeness_weight(n_rows, n_cols, hamming_weight):
+    L = n_rows * n_cols
+    same_pairs = math.comb(hamming_weight, 2) + math.comb(L - hamming_weight, 2)
+    total_pairs = math.comb(L, 2)
+    mu_k = same_pairs / total_pairs
+    return 2 * mu_k - 1  # normalized closeness in [-1,1]
 
 
 # By Elara (OpenAI custom GPT)
@@ -323,7 +380,8 @@ def main():
             d_magnetization = -d_magnetization
 
         result = calc_stats(
-            n_qubits,
+            n_rows,
+            n_cols,
             control_probs,
             experiment_probs[d],
             bias,
