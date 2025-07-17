@@ -10,7 +10,7 @@ import arviz as az
 # ---------------------------------------
 # Forward model as a function
 # ---------------------------------------
-def magnetization_model(depths, dt, n_qubits, J, h, t2, omega):
+def magnetization_model(depths, dt, n_qubits, J, h, theta, t2, omega):
     results = []
     for d in depths:
         t = d * dt
@@ -49,6 +49,7 @@ dt = 0.25
 n_qubits = 16
 J = -1.0
 h = 2.0
+theta = math.pi / 18
 # measured mean magnetization
 observed_data = np.array(
     [
@@ -84,7 +85,7 @@ with pm.Model() as model:
     omega = pm.Uniform("omega", lower=1.3, upper=1.7)
 
     # Forward model
-    mu = magnetization_model(depths, dt, n_qubits, J, h, t2, omega)
+    mu = magnetization_model(depths, dt, n_qubits, J, h, theta, t2, omega)
 
     # Likelihood
     pm.Normal("likelihood", mu=mu, observed=observed_data)
