@@ -176,6 +176,8 @@ def main():
 
     if len(sys.argv) > 1:
         n_qubits = int(sys.argv[1])
+    if len(sys.argv) > 2:
+        depth = int(sys.argv[2])
 
     print("t1: " + str(t1))
     print("t2: " + str(t2))
