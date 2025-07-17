@@ -92,7 +92,7 @@ def main():
     t2 = 1
     omega = 1.5 * math.pi
 
-    trials = 16 if t1 > 0 else 1
+    trials = 32 if t1 > 0 else 1
     if len(sys.argv) > 1:
         n_qubits = int(sys.argv[1])
     if len(sys.argv) > 2:
