@@ -86,7 +86,7 @@ def main():
     depth = 20
     shots = 32768
 
-    t1 = 0.21
+    t1 = 0.25
     # Alternatively:
     # t1 = 0
     t2 = 1
@@ -157,7 +157,7 @@ def main():
                     experiment.run_qiskit_circuit(step)
 
                 t = d * dt
-                model = (1 - 1 / (1 + (t / t1) ** 2)) if (t1 > 0) else (0 if d == 0 else 1)
+                model = (1 - 1 / math.exp(t / t1)) if (t1 > 0) else (0 if d == 0 else 1)
                 if np.isclose(h, 0):
                     d_magnetization = 1
                     d_sqr_magnetization = 1
