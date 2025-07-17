@@ -254,7 +254,7 @@ def main():
 
         bias = []
         t = d * dt
-        model = (1 - 1 / (math.exp(t / t1))) if (t1 > 0) else (0 if d == 0 else 1)
+        model = (1 - 1 / math.exp(t / t1)) if (t1 > 0) else (0 if d == 0 else 1)
         d_magnetization = 0
         d_sqr_magnetization = 0
         if np.isclose(h, 0):
