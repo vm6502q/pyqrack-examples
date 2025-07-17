@@ -92,7 +92,7 @@ def main():
     t2 = 1
     omega = 1.5 * math.pi
 
-    trials = 128 if t1 > 0 else 1
+    trials = 16 if t1 > 0 else 1
     if len(sys.argv) > 1:
         n_qubits = int(sys.argv[1])
     if len(sys.argv) > 2:
@@ -200,7 +200,7 @@ def main():
                 if J > 0:
                     d_magnetization = 2 - (d_magnetization + 1)
 
-            if (d == 0) or (t1 > 0):
+            if (d == 0) or (model < 0.99):
                 experiment_samples = experiment.measure_shots(qubits, shots)
                 magnetization = 0
                 sqr_magnetization = 0

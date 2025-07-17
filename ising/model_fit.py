@@ -172,7 +172,7 @@ def main():
     # t1 = 0
     t2 = 1
     omega = 1.5
-    trials = 20 if t1 > 0 else 1
+    trials = 8 if t1 > 0 else 1
 
     if len(sys.argv) > 1:
         n_qubits = int(sys.argv[1])
@@ -323,7 +323,7 @@ def main():
 
         r_squared += (1 - result["l2_similarity"]) ** 2
 
-        if (d == 0) or (t1 > 0):
+        if (d == 0) or (model < 0.99):
             magnetization = 0
             sqr_magnetization = 0
             for key, value in experiment_probs[d].items():
