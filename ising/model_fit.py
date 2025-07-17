@@ -267,11 +267,12 @@ def main():
             d_sqr_magnetization = 0
             bias = (n_qubits + 1) * [1 / (n_qubits + 1)]
         else:
+            cos_theta = math.cos(theta / 2)
             p = (
                 ((2 ** (abs(J / h) - 1))
                 * (
                     1
-                    + math.cos(-J * omega * t / 2)
+                    + cos_theta * math.cos(-J * omega * t / 2)
                     / ((1 + math.sqrt(t / t2)) if t2 > 0 else 1)
                 ) - 1 / 2)
                 if t2 > 0
