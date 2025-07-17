@@ -86,13 +86,13 @@ def main():
     depth = 20
     shots = 32768
 
-    t1 = 0.025
+    t1 = 0.08
     # Alternatively:
     # t1 = 0
     t2 = 1
     omega = 1.5 * math.pi
 
-    trials = 2 if t1 > 0 else 1
+    trials = 4 if t1 > 0 else 1
     if len(sys.argv) > 1:
         n_qubits = int(sys.argv[1])
     if len(sys.argv) > 2:
