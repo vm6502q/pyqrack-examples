@@ -103,9 +103,8 @@ def calc_stats(
         for _ in range(hamming_weight):
             weight *= combo_factor
             combo_factor -= 1
-        normed_closeness = closeness_like_bits(
-            i, n_rows, n_cols
-        ) / expected_closeness_weight(n_rows, n_cols, hamming_weight)
+        expected_closeness = expected_closeness_weight(n_rows, n_cols, hamming_weight)
+        normed_closeness = (1 + closeness_like_bits(i, n_rows, n_cols)) / (1 + expected_closeness)
         count = (1 - model) * count + model * normed_closeness * bias[
             hamming_weight
         ] / weight
