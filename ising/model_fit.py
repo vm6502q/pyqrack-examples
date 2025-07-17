@@ -167,25 +167,12 @@ def main():
     n_qubits = 8
     depth = 20
     hamming_n = 2048
-    t1 = 0.08
+    t1 = 0
     # Alternatively:
     # t1 = 0
     t2 = 1
     omega = 1.5
     trials = 2 if t1 > 0 else 1
-
-    if len(sys.argv) > 1:
-        n_qubits = int(sys.argv[1])
-    if len(sys.argv) > 2:
-        depth = int(sys.argv[2])
-
-    print("t1: " + str(t1))
-    print("t2: " + str(t2))
-    print("omega / pi: " + str(omega))
-
-    omega *= math.pi
-
-    n_rows, n_cols = factor_width(n_qubits, False)
 
     # Quantinuum settings
     J, h, dt = -1.0, 2.0, 0.25
@@ -206,6 +193,23 @@ def main():
     # J, h, dt = -1.0, 1.0, 0.25
     # theta = -math.pi / 4
     # delta_theta = math.pi / 4
+
+    if len(sys.argv) > 1:
+        n_qubits = int(sys.argv[1])
+    if len(sys.argv) > 2:
+        depth = int(sys.argv[2])
+    if len(sys.argv) > 3:
+        dt = float(sys.argv[3])
+    if len(sys.argv) > 4:
+        t1 = float(sys.argv[4])
+
+    print("t1: " + str(t1))
+    print("t2: " + str(t2))
+    print("omega / pi: " + str(omega))
+
+    omega *= math.pi
+
+    n_rows, n_cols = factor_width(n_qubits, False)
 
     shots = max(65536, 1 << (n_qubits + 2))
     qubits = list(range(n_qubits))
