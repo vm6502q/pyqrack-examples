@@ -165,6 +165,7 @@ def main():
                     d_magnetization = 0
                     d_sqr_magnetization = 0
                 else:
+                    # ChatGPT o3 suggested this cos_theta correction.
                     cos_theta = math.cos(theta / 2)
                     p = (
                         ((2 ** (abs(J / h) - 1))

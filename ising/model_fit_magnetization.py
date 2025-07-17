@@ -22,7 +22,7 @@ def magnetization_model(depths, dt, n_qubits, J, h, theta, t2, omega):
         elif np.isclose(h, 0):
             results.append(1.0)
             continue
-        # Use pm.math for symbolic operations:
+        # ChatGPT o3 suggested this cos_theta correction.
         cos_theta = math.cos(theta / 2)
         cos_term = 1 +  cos_theta * pm.math.cos(-J * omega * math.pi * t) / (
             1 + pm.math.sqrt(t / t2)
