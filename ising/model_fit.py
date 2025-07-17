@@ -268,7 +268,7 @@ def main():
             bias = (n_qubits + 1) * [1 / (n_qubits + 1)]
         else:
             # ChatGPT o3 suggested this cos_theta correction.
-            cos_theta = math.cos(theta / 2)
+            cos_theta = math.cos(theta)
             p = (
                 (
                     (2 ** (abs(J / h) - 1))
@@ -289,11 +289,9 @@ def main():
                 bias.append(1)
                 bias += n_qubits * [0]
             else:
-                factor = 2**p
-                n = 1 / (n_qubits * 2)
                 tot_n = 0
                 for q in range(n_qubits + 1):
-                    n = n / factor
+                    n = 1 / (n_qubits * (2 ** (p * q)))
                     if n == float("inf"):
                         d_magnetization = 1
                         d_sqr_magnetization = 1
@@ -312,7 +310,7 @@ def main():
                     bias[q] /= tot_n
         if J > 0:
             bias.reverse()
-            d_magnetization = 2 - (d_magnetization + 1)
+            d_magnetization = -d_magnetization
 
         result = calc_stats(
             n_qubits,

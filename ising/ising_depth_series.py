@@ -166,7 +166,7 @@ def main():
                     d_sqr_magnetization = 0
                 else:
                     # ChatGPT o3 suggested this cos_theta correction.
-                    cos_theta = math.cos(theta / 2)
+                    cos_theta = math.cos(theta)
                     p = (
                         (
                             (2 ** (abs(J / h) - 1))
@@ -185,11 +185,9 @@ def main():
                         d_magnetization = 1
                         d_sqr_magnetization = 1
                     else:
-                        factor = 2**p
-                        n = 1 / (n_qubits * 2)
                         tot_n = 0
                         for q in range(n_qubits + 1):
-                            n = n / factor
+                            n = 1 / (n_qubits * (2 ** (p * q)))
                             if n == float("inf"):
                                 d_magnetization = 1
                                 d_sqr_magnetization = 1
@@ -202,7 +200,7 @@ def main():
                         d_magnetization /= tot_n
                         d_sqr_magnetization /= tot_n
                 if J > 0:
-                    d_magnetization = 2 - (d_magnetization + 1)
+                    d_magnetization = -d_magnetization
 
             if (d == 0) or (model < 0.99):
                 experiment_samples = experiment.measure_shots(qubits, shots)
