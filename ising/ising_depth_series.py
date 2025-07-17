@@ -168,12 +168,16 @@ def main():
                     # ChatGPT o3 suggested this cos_theta correction.
                     cos_theta = math.cos(theta / 2)
                     p = (
-                        ((2 ** (abs(J / h) - 1))
-                        * (
-                            1
-                            + cos_theta * math.cos(-J * omega * t)
-                            / ((1 + math.sqrt(t / t2)) if t2 > 0 else 1)
-                        ) - 1 / 2)
+                        (
+                            (2 ** (abs(J / h) - 1))
+                            * (
+                                1
+                                + cos_theta
+                                * math.cos(-J * omega * t)
+                                / ((1 + math.sqrt(t / t2)) if t2 > 0 else 1)
+                            )
+                            - 1 / 2
+                        )
                         if t2 > 0
                         else 2 ** abs(J / h)
                     )

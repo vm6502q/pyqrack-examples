@@ -24,7 +24,7 @@ def magnetization_model(depths, dt, n_qubits, J, h, theta, t2, omega):
             continue
         # ChatGPT o3 suggested this cos_theta correction.
         cos_theta = math.cos(theta / 2)
-        cos_term = 1 +  cos_theta * pm.math.cos(-J * omega * math.pi * t) / (
+        cos_term = 1 + cos_theta * pm.math.cos(-J * omega * math.pi * t) / (
             1 + pm.math.sqrt(t / t2)
         )
         p = (2**arg) * cos_term - 1 / 2
