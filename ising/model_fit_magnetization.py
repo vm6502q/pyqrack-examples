@@ -10,7 +10,7 @@ import arviz as az
 # ---------------------------------------
 # Forward model as a function
 # ---------------------------------------
-def magnetization_model(depths, dt, n_qubits, J, h, theta, t2, omega):
+def magnetization_model(depths, dt, n_qubits, J, h, delta_theta, t2, omega):
     results = []
     for d in depths:
         t = d * dt
@@ -23,8 +23,8 @@ def magnetization_model(depths, dt, n_qubits, J, h, theta, t2, omega):
             results.append(1.0)
             continue
         # ChatGPT o3 suggested this cos_theta correction.
-        cos_theta = math.cos(theta / 2)
-        cos_term = 1 + cos_theta * pm.math.cos(-J * omega * math.pi * t) / (
+        sin_delta_theta = math.sin(delta_theta)
+        cos_term = 1 + sin_delta_theta * pm.math.cos(-J * omega * math.pi * t) / (
             1 + pm.math.sqrt(t / t2)
         )
         p = (2**arg) * cos_term - 1 / 2
@@ -49,7 +49,7 @@ dt = 0.25
 n_qubits = 16
 J = -1.0
 h = 2.0
-theta = math.pi / 18
+delta_theta = 2 * math.pi / 9
 # measured mean magnetization
 observed_data = np.array(
     [
@@ -85,7 +85,7 @@ with pm.Model() as model:
     omega = pm.Uniform("omega", lower=1.3, upper=1.7)
 
     # Forward model
-    mu = magnetization_model(depths, dt, n_qubits, J, h, theta, t2, omega)
+    mu = magnetization_model(depths, dt, n_qubits, J, h, delta_theta, t2, omega)
 
     # Likelihood
     pm.Normal("likelihood", mu=mu, observed=observed_data)

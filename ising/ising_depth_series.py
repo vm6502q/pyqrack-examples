@@ -109,18 +109,22 @@ def main():
     # Quantinuum settings
     J, h, dt = -1.0, 2.0, 0.25
     theta = math.pi / 18
+    delta_theta = 2 * math.pi / 9
 
     # Pure ferromagnetic
     # J, h, dt = -1.0, 0.0, 0.25
     # theta = 0
+    # delta_theta = 0
 
     # Pure transverse field
     # J, h, dt = 0.0, 2.0, 0.25
     # theta = -math.pi / 2
+    # delta_theta = 0
 
     # Critical point (symmetry breaking)
     # J, h, dt = -1.0, 1.0, 0.25
     # theta = -math.pi / 4
+    # delta_theta = math.pi / 4
 
     qubits = list(range(n_qubits))
 
@@ -166,13 +170,13 @@ def main():
                     d_sqr_magnetization = 0
                 else:
                     # ChatGPT o3 suggested this cos_theta correction.
-                    cos_theta = math.cos(theta)
+                    sin_delta_theta = math.sin(delta_theta)
                     p = (
                         (
                             (2 ** (abs(J / h) - 1))
                             * (
                                 1
-                                + cos_theta
+                                + sin_delta_theta
                                 * math.cos(-J * omega * t)
                                 / ((1 + math.sqrt(t / t2)) if t2 > 0 else 1)
                             )
