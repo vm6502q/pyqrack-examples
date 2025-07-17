@@ -167,11 +167,11 @@ def main():
     n_qubits = 8
     depth = 20
     hamming_n = 2048
-    t1 = 0.25
+    t1 = 0.23
     # Alternatively:
     # t1 = 0
-    t2 = 1.876
-    omega = 1.608
+    t2 = 1.843
+    omega = 1.5
     trials = 20 if t1 > 0 else 1
 
     if len(sys.argv) > 1:
@@ -271,7 +271,7 @@ def main():
                 ((2 ** (abs(J / h) - 1))
                 * (
                     1
-                    + math.cos(-J * omega * t / 2 - math.pi / 4)
+                    + math.cos(-J * omega * t / 2)
                     / ((1 + math.sqrt(t / t2)) if t2 > 0 else 1)
                 ) - 1 / 2)
                 if t2 > 0

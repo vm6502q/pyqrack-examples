@@ -23,7 +23,7 @@ def magnetization_model(depths, dt, n_qubits, J, h, t2, omega):
             results.append(1.0)
             continue
         # Use pm.math for symbolic operations:
-        cos_term = 1 + pm.math.cos(-J * omega * math.pi * t - math.pi / 4) / (
+        cos_term = 1 + pm.math.cos(-J * omega * math.pi * t) / (
             1 + pm.math.sqrt(t / t2)
         )
         p = (2**arg) * cos_term - 1 / 2
@@ -80,7 +80,7 @@ observed_data = np.array(
 with pm.Model() as model:
     # Priors
     t2 = pm.Uniform("t2", lower=0.125, upper=4)
-    omega = pm.Uniform("omega", lower=1.3, upper=1.9)
+    omega = pm.Uniform("omega", lower=1.3, upper=1.7)
 
     # Forward model
     mu = magnetization_model(depths, dt, n_qubits, J, h, t2, omega)
