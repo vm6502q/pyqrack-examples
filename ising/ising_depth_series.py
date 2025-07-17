@@ -86,10 +86,10 @@ def main():
     depth = 20
     shots = 32768
 
-    t1 = 0.23
+    t1 = 0.21
     # Alternatively:
     # t1 = 0
-    t2 = 1.843
+    t2 = 1
     omega = 1.5 * math.pi
 
     trials = 128 if t1 > 0 else 1

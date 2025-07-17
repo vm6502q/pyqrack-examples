@@ -167,10 +167,10 @@ def main():
     n_qubits = 8
     depth = 20
     hamming_n = 2048
-    t1 = 0.23
+    t1 = 0.21
     # Alternatively:
     # t1 = 0
-    t2 = 1.843
+    t2 = 1
     omega = 1.5
     trials = 20 if t1 > 0 else 1
 
