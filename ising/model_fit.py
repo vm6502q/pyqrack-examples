@@ -91,6 +91,7 @@ def calc_stats(
     diff_sqr = 0
     sum_hog_counts = 0
     experiment = [0] * n_pow
+    # total = 0
     for i in range(n_pow):
         ideal = ideal_probs[i]
 
@@ -99,12 +100,12 @@ def calc_stats(
 
         hamming_weight = hamming_distance(i, 0, n)
         expected_closeness = expected_closeness_weight(n_rows, n_cols, hamming_weight)
-        normed_closeness = (
-            (1 + closeness_like_bits(i, n_rows, n_cols)) / (1 + expected_closeness)
-        ) ** 8
-        count = (1 - model) * count + model * bias[hamming_weight] / math.comb(
+        normed_closeness = (1 + closeness_like_bits(i, n_rows, n_cols)) / (1 + expected_closeness)
+        count = (1 - model) * count + model * normed_closeness * bias[hamming_weight] / math.comb(
             n, hamming_weight
         )
+
+        # total += count
 
         experiment[i] = int(count * shots)
 
@@ -134,6 +135,8 @@ def calc_stats(
     avg_hamming_distance = np.mean(min_distances)
 
     xeb = numer / denom
+
+    # print("Distribution total: " + str(total))
 
     return {
         "qubits": n,
