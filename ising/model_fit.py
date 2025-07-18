@@ -284,7 +284,7 @@ def main():
     shots = max(65536, 1 << (n_qubits + 2))
     qubits = list(range(n_qubits))
 
-    # Set the initial temperature by theta and transpile one Trotter step.
+    # Set the initial temperature by theta.
     qc = QuantumCircuit(n_qubits)
     for q in range(n_qubits):
         qc.ry(theta, q)
