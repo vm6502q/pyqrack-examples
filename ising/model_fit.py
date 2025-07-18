@@ -431,7 +431,7 @@ def main():
         # Add up the square residuals:
         r_squared += (1 - result["l2_similarity"]) ** 2
 
-        if (d == 0) or (model < 0.99):
+        if (model < 0.99):
             # Mix in the conventional simulation component.
             magnetization = 0
             sqr_magnetization = 0
