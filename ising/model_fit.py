@@ -371,7 +371,7 @@ def main():
                     * (
                         1
                         + sin_delta_theta
-                        * math.cos(-J * omega * t / 2)
+                        * math.cos(-J * omega * t)
                         / ((1 + math.sqrt(t / t2)) if t2 > 0 else 1)
                     )
                     - 1 / 2
