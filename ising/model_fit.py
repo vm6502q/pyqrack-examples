@@ -98,16 +98,13 @@ def calc_stats(
         count /= shots
 
         hamming_weight = hamming_distance(i, 0, n)
-        weight = 1
-        combo_factor = n
-        for _ in range(hamming_weight):
-            weight *= combo_factor
-            combo_factor -= 1
         expected_closeness = expected_closeness_weight(n_rows, n_cols, hamming_weight)
-        normed_closeness = ((1 + closeness_like_bits(i, n_rows, n_cols)) / (1 + expected_closeness)) ** 8
-        count = (1 - model) * count + model * normed_closeness * bias[
-            hamming_weight
-        ] / weight
+        normed_closeness = (
+            (1 + closeness_like_bits(i, n_rows, n_cols)) / (1 + expected_closeness)
+        ) ** 8
+        count = (1 - model) * count + model * bias[hamming_weight] / math.comb(
+            n, hamming_weight
+        )
 
         experiment[i] = int(count * shots)
 
