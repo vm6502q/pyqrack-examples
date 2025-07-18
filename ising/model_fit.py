@@ -344,7 +344,7 @@ def main():
         # The mean-field ground state is encapsulated as a multiplier on the geometric series exponent.
         # Additionally, this same mean-field exponent is the amplitude of time-dependent oscillation (also in the geometric series exponent).
         bias = []
-        t = d * dt
+        t = (d + 1) * dt
         # Determine how to weight closed-form vs. conventional simulation contributions:
         model = (1 - 1 / math.exp(t / t1)) if (t1 > 0) else (0 if d == 0 else 1)
         d_magnetization = 0
