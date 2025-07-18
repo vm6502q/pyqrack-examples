@@ -470,7 +470,8 @@ def main():
         ssr += (c_sqr_magnetization - sqr_magnetization) ** 2
 
     # R^2 and RMSE are elementary and standard measures of goodness-of-fit with simple definitions.
-    r_squared = 1 - r_squared / depth
+    # Ideal marginal probability would be 1.0, each depth step. Squared and summed, that's depth+1.
+    r_squared = 1 - r_squared / (depth + 1)
     rmse = (ssr / depth) ** (1 / 2)
     sm_r_squared = 1 - (ssr / ss)
 
