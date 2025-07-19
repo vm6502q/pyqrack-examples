@@ -302,7 +302,7 @@ def main():
     )
 
     # If we're using conventional simulation in the approximation model, collect samples over the depth series.
-    experiment_probs = [{}] * depth
+    experiment_probs = [{}] * (depth + 1)
     if t1 > 0:
         for trial in range(trials):
             experiment = QrackSimulator(n_qubits)
@@ -325,9 +325,10 @@ def main():
     r_squared = 0
     ss = 0
     ssr = 0
-    for d in range(depth):
+    for d in range(depth + 1):
         # For each depth step, we append an additional Trotter step to Aer's circuit.
-        trotter_step(qc_aer, qubits, (n_rows, n_cols), J, h, dt)
+        if d > 0:
+            trotter_step(qc_aer, qubits, (n_rows, n_cols), J, h, dt)
 
         # Run the Trotterized simulation with Aer and get the marginal probabilities.
         control = AerSimulator(method="statevector")
@@ -344,7 +345,7 @@ def main():
         # The mean-field ground state is encapsulated as a multiplier on the geometric series exponent.
         # Additionally, this same mean-field exponent is the amplitude of time-dependent oscillation (also in the geometric series exponent).
         bias = []
-        t = (d + 1) * dt
+        t = d * dt
         # Determine how to weight closed-form vs. conventional simulation contributions:
         model = (1 - 1 / math.exp(t / t1)) if (t1 > 0) else 1
         d_magnetization = 0
@@ -471,7 +472,7 @@ def main():
 
     # R^2 and RMSE are elementary and standard measures of goodness-of-fit with simple definitions.
     # Ideal marginal probability would be 1.0, each depth step. Squared and summed, that's depth.
-    r_squared = 1 - r_squared / depth
+    r_squared = 1 - r_squared / (depth + 1)
     rmse = (ssr / depth) ** (1 / 2)
     sm_r_squared = 1 - (ssr / ss)
 
