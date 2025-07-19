@@ -83,9 +83,7 @@ def trotter_step(circ, qubits, lattice_shape, J, h, dt):
 
 
 # Calculate various statistics based on comparison between ideal (Trotterized) and approximate (continuum) measurement distributions.
-def calc_stats(
-    n_rows, n_cols, ideal_probs, counts, bias, model, shots, depth, hamming_n
-):
+def calc_stats(n_rows, n_cols, ideal_probs, counts, bias, model, shots, depth):
     # For QV, we compare probabilities of (ideal) "heavy outputs."
     # If the probability is above 2/3, the protocol certifies/passes the qubit width.
     n = n_rows * n_cols
@@ -138,16 +136,6 @@ def calc_stats(
     l2_similarity = 1 - diff_sqr ** (1 / 2)
     hog_prob = sum_hog_counts / shots
 
-    exp_top_n = top_n(hamming_n, experiment)
-    con_top_n = top_n(hamming_n, ideal_probs)
-
-    # By Elara (OpenAI custom GPT)
-    # Compute Hamming distances between each ACE bitstring and its closest in control case
-    min_distances = [
-        min(hamming_distance(a, r, n) for r in con_top_n) for a in exp_top_n
-    ]
-    avg_hamming_distance = np.mean(min_distances)
-
     xeb = numer / denom
 
     # This should be ~1.0, if we're properly normalized.
@@ -159,9 +147,6 @@ def calc_stats(
         "l2_similarity": float(l2_similarity),
         "hog_prob": hog_prob,
         "xeb": xeb,
-        "hamming_distance_n": min(hamming_n, n_pow >> 1),
-        "hamming_distance_set_avg": float(avg_hamming_distance),
-        "hamming_fidelity_heuristic": 1 - 2 * float(avg_hamming_distance) / n,
     }
 
 
@@ -237,7 +222,6 @@ def top_n(n, a):
 def main():
     n_qubits = 8
     depth = 20
-    hamming_n = 2048
     t1 = 0
     t2 = 1
     omega = 1.5
@@ -270,18 +254,21 @@ def main():
         dt = float(sys.argv[3])
     if len(sys.argv) > 4:
         t1 = float(sys.argv[4])
-
-    trials = 2 if t1 > 0 else 1
+    if len(sys.argv) > 5:
+        shots = int(sys.argv[5])
+    else:
+        shots = max(65536, 1 << (n_qubits + 2))
+    if len(sys.argv) > 6:
+        trials = int(sys.argv[6])
+    else:
+        trials = 8 if t1 > 0 else 1
 
     print("t1: " + str(t1))
     print("t2: " + str(t2))
     print("omega / pi: " + str(omega))
 
     omega *= math.pi
-
     n_rows, n_cols = factor_width(n_qubits, False)
-
-    shots = max(65536, 1 << (n_qubits + 2))
     qubits = list(range(n_qubits))
 
     # Set the initial temperature by theta.
@@ -426,13 +413,12 @@ def main():
             model,
             shots,
             d,
-            hamming_n,
         )
 
         # Add up the square residuals:
         r_squared += (1 - result["l2_similarity"]) ** 2
 
-        if (model < 0.99):
+        if model < 0.99:
             # Mix in the conventional simulation component.
             magnetization = 0
             sqr_magnetization = 0
