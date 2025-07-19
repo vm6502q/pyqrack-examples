@@ -307,9 +307,9 @@ def main():
         for trial in range(trials):
             experiment = QrackSimulator(n_qubits)
             experiment.run_qiskit_circuit(qc)
-            for d in range(1, depth + 1):
-                experiment.run_qiskit_circuit(step)
-                trotter_step(qc_aer, qubits, (n_rows, n_cols), J, h, dt)
+            for d in range(depth + 1):
+                if d > 0:
+                    experiment.run_qiskit_circuit(step)
 
                 counts = dict(Counter(experiment.measure_shots(qubits, shots)))
 
