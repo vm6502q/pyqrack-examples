@@ -17,10 +17,10 @@ def magnetization_model(depths, dt, n_qubits, J, h, delta_theta, t2, omega):
         arg = abs(J / h) - 1
         # Cases
         if np.isclose(J, 0) or (arg >= 1024):
-            results.append(0.0)
+            results.append(1.0)
             continue
         elif np.isclose(h, 0):
-            results.append(1.0)
+            results.append(0.0)
             continue
         # ChatGPT o3 suggested this cos_theta correction.
         sin_delta_theta = math.sin(delta_theta)
