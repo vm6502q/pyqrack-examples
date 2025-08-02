@@ -231,7 +231,7 @@ print(str(n_qubits) + " qubits...")
 qubit_hamiltonian = jordan_wigner(fermionic_hamiltonian)
 
 # Step 4: Setup ansatz and simulator
-def hybrid_tfim_vqe(qubit_hamiltonian, n_qubits, dev=None):
+def hybrid_tfim_vqe(qubit_hamiltonian, n_qubits, dev=None, is_near_clifford=False):
     """
     Estimate energy from TFIM-predicted RY angles.
     """
@@ -260,12 +260,24 @@ def hybrid_tfim_vqe(qubit_hamiltonian, n_qubits, dev=None):
 
     hamiltonian = qml.Hamiltonian(coeffs, observables)
 
+    if is_near_clifford:
+        # @qjit
+        @qml.qnode(dev)
+        def circuit(theta): #, delta):
+            for i in range(n_qubits):
+                qml.H(wires=i)
+                qml.RZ(np.pi / 2 + theta[i], wires=i)
+                qml.H(wires=1)
+                # qml.RY(delta[i], wires=i)
+            return qml.expval(hamiltonian)
+
+        return circuit
+
     # @qjit
     @qml.qnode(dev)
     def circuit(theta): #, delta):
         for i in range(n_qubits):
-            if theta[i]:
-                qml.X(wires=i)
+            qml.RY(np.pi / 2 + theta[i], wires=i)
             # qml.RY(delta[i], wires=i)
         return qml.expval(hamiltonian)
 
@@ -275,16 +287,25 @@ dev = qml.device("qrack.simulator", wires=n_qubits)
 circuit = hybrid_tfim_vqe(qubit_hamiltonian, n_qubits, dev)
 
 # Step 6: Bootstrap!
-theta = np.zeros(n_qubits, dtype=bool, requires_grad="False")
-# delta = np.zeros(n_qubits)
+theta = np.zeros(n_qubits, requires_grad="False")
 min_energy = circuit(theta)
 for i in range(n_qubits):
-    theta[i] = True
-    energy = circuit(theta) #, delta)
+    angle = 0
+
+    theta[i] = -np.pi / 2
+    energy = circuit(theta)
     if energy < min_energy:
         min_energy = energy
-    else:
-        theta[i] = False
+        angle = -np.pi / 2
+
+    theta[i] = np.pi / 2
+    energy = circuit(theta)
+    if energy < min_energy:
+        min_energy = energy
+        angle = np.pi / 2
+
+    theta[i] = angle
+
     print(f"Step {i+1}: Energy = {min_energy}")
 
 print(f"Bootstrap Ground State Energy: {min_energy} Ha")
