@@ -287,7 +287,7 @@ def bootstrap_step(circuit, theta, i):
     return i, energy, theta[i]
 
 # Threaded bootstrap loop
-def threaded_bootstrap(circuit, n_qubits, max_iter=10):
+def threaded_bootstrap(circuit, n_qubits, max_iter=30):
     theta = np.zeros(n_qubits)
     min_energy = circuit(theta)
     converged = False
@@ -300,7 +300,10 @@ def threaded_bootstrap(circuit, n_qubits, max_iter=10):
             futures = {executor.submit(bootstrap_step, circuit, theta.copy(), i): i for i in range(n_qubits)}
             results = []
             for future in concurrent.futures.as_completed(futures):
-                i, energy, flipped = future.result()
+                results.append(future.result())
+            results.sort(key=lambda x: x[1])
+            for r in results:
+                i, energy, flipped = r[0], r[1], r[2]
                 if energy < min_energy:
                     theta[i] = flipped
                     min_energy = energy
