@@ -4,7 +4,7 @@
 
 import pennylane as qml
 from pennylane import numpy as np
-from catalyst import qjit
+# from catalyst import qjit
 
 import openfermion as of
 from openfermionpyscf import run_pyscf
@@ -260,7 +260,7 @@ def hybrid_tfim_vqe(qubit_hamiltonian, n_qubits, dev=None):
 
     hamiltonian = qml.Hamiltonian(coeffs, observables)
 
-    @qjit
+    # @qjit
     @qml.qnode(dev)
     def circuit(theta): #, delta):
         for i in range(n_qubits):
