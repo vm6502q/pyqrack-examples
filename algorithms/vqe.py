@@ -262,7 +262,7 @@ def hybrid_tfim_vqe(qubit_hamiltonian, n_qubits, dev=None):
 
     # @qjit
     @qml.qnode(dev)
-    def circuit(theta): #, delta):
+    def circuit(theta):
         for i in range(n_qubits):
             if theta[i]:
                 qml.X(wires=i)
@@ -270,7 +270,7 @@ def hybrid_tfim_vqe(qubit_hamiltonian, n_qubits, dev=None):
 
     # @qjit
     @qml.qnode(dev)
-    def circuit_mid(theta): #, delta):
+    def circuit_mid(theta):
         for i in range(n_qubits):
             qml.RY(theta[i], wires=i)
         return qml.expval(hamiltonian)
