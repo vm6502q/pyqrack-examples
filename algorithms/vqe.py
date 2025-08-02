@@ -269,69 +269,21 @@ def hybrid_tfim_vqe(qubit_hamiltonian, n_qubits, dev=None):
 
     return circuit
 
-dev = qml.device("qrack.simulator", wires=n_qubits)
+dev = qml.device("qrack.simulator", wires=n_qubits, isSchmidtDecompose=False, isStabilizerHybrid=True)
 circuit = hybrid_tfim_vqe(qubit_hamiltonian, n_qubits, dev)
 
 # Step 6: Bootstrap!
-theta = [
-    np.full(n_qubits, 0.0, dtype=float, requires_grad="False"),
-    np.full(n_qubits, np.pi, dtype=float, requires_grad="False"),
-    np.full(n_qubits, np.pi / 2, dtype=float, requires_grad="False"),
-]
-min_energy = [
-    circuit(theta[0]),
-    circuit(theta[1]),
-    circuit(theta[2]),
-]
-
-print("\nFrom all False...")
+theta = np.zeros(n_qubits, dtype=float, requires_grad="False")
+min_energy = circuit(theta)
 for i in range(n_qubits):
-    theta[0][i] = np.pi
-    energy = circuit(theta[0])
-    if energy < min_energy[0]:
-        min_energy[0] = energy
+    theta[i] = np.pi
+    energy = circuit(theta)
+    if energy < min_energy:
+        min_energy = energy
     else:
-        theta[0][i] = 0.0
-    print(f"Step {i+1}: Energy = {min_energy[0]}")
+        theta[i] = 0.0
+    print(f"Step {i+1}: Energy = {min_energy}")
 
-print("\nFrom all True...")
-for i in range(n_qubits):
-    theta[1][i] = 0.0
-    energy = circuit(theta[1])
-    if energy < min_energy[1]:
-        min_energy[1] = energy
-    else:
-        theta[1][i] = np.pi
-    print(f"Step {i+1}: Energy = {min_energy[1]}")
-
-print("\nFrom center...")
-for i in range(n_qubits):
-    angle = np.pi / 2
-
-    theta[2][i] = 0
-    energy = circuit(theta[2])
-    if energy < min_energy[2]:
-        min_energy[2] = energy
-        angle = 0
-
-    theta[2][i] = np.pi
-    energy = circuit(theta[2])
-    if energy < min_energy[2]:
-        min_energy[2] = energy
-        angle = np.pi
-
-    theta[2][i] = angle
-
-    print(f"Step {i+1}: Energy = {min_energy[2]}")
-
-opt_energy = min(min_energy)
-if opt_energy == min_energy[0]:
-    params = theta[0]
-elif opt_energy == min_energy[1]:
-    params = theta[1]
-else:
-    params = theta[2]
-
-print(f"\nBootstrap Ground State Energy: {opt_energy} Ha")
+print(f"\nBootstrap Ground State Energy: {min_energy} Ha")
 print("Bootstrap parameters:")
-print(params)
+print(theta)
