@@ -4,7 +4,7 @@
 
 import pennylane as qml
 from pennylane import numpy as np
-# from catalyst import qjit
+from catalyst import qjit
 
 import openfermion as of
 from openfermionpyscf import run_pyscf
@@ -39,7 +39,7 @@ charge = 0  # Excess +/- elementary charge, beyond multiplicity
 
 # Lithium (and lighter):
 
-geometry = [('Li', (0.0, 0.0, 0.0)), ('H', (0.0, 0.0, 15.9))]  # LiH Molecule
+# geometry = [('Li', (0.0, 0.0, 0.0)), ('H', (0.0, 0.0, 15.9))]  # LiH Molecule
 
 # Carbon (and lighter):
 
@@ -69,7 +69,7 @@ geometry = [('Li', (0.0, 0.0, 0.0)), ('H', (0.0, 0.0, 15.9))]  # LiH Molecule
 # geometry = [('O', (0.0, 0.0, 0.0)), ('H', (0.0, 0.0, 9.6))]  # OH- Radical
 # geometry = [('O', (0.0000, 0.0000, 0.0000)), ('H', (0.7586, 0.0000, 0.5043)),  ('H', (-0.7586, 0.0000, 0.5043))]  # H2O Molecule
 # geometry = [('C', (0.0000, 0.0000, 0.0000)), ('O', (0.0000, 0.0000, 1.128))]  # CO Molecule
-# geometry = [('C', (0.0000, 0.0000, 0.0000)), ('O', (0.0000, 0.0000, 1.16)), ('O', (0.0000, 0.0000, -1.16))]  # CO2 Molecule
+geometry = [('C', (0.0000, 0.0000, 0.0000)), ('O', (0.0000, 0.0000, 1.16)), ('O', (0.0000, 0.0000, -1.16))]  # CO2 Molecule
 # geometry = [('O', (0.0, 0.0, 0.0)), ('N', (0.0, 0.0, 1.55))]  # NO Molecule
 # geometry = [('O', (0.0, 0.0, 0.0)), ('N', (0.0, 0.0, 11.5))]  # NO+ Radical
 
@@ -260,13 +260,13 @@ def hybrid_tfim_vqe(qubit_hamiltonian, n_qubits, dev=None):
 
     hamiltonian = qml.Hamiltonian(coeffs, observables)
 
-    # @qjit
+    @qjit
     @qml.qnode(dev)
-    def circuit(theta, delta):
+    def circuit(theta): #, delta):
         for i in range(n_qubits):
             if theta[i]:
                 qml.X(wires=i)
-            qml.RY(delta[i], wires=i)
+            # qml.RY(delta[i], wires=i)
         return qml.expval(hamiltonian)
 
     return circuit
@@ -276,11 +276,11 @@ circuit = hybrid_tfim_vqe(qubit_hamiltonian, n_qubits, dev)
 
 # Step 6: Bootstrap!
 theta = np.zeros(n_qubits, dtype=bool, requires_grad="False")
-delta = np.zeros(n_qubits)
-min_energy = circuit(theta, delta)
+# delta = np.zeros(n_qubits)
+min_energy = circuit(theta)
 for i in range(n_qubits):
     theta[i] = True
-    energy = circuit(theta, delta)
+    energy = circuit(theta) #, delta)
     if energy < min_energy:
         min_energy = energy
     else:
