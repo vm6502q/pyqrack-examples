@@ -31,7 +31,7 @@ charge = 0  # Excess +/- elementary charge, beyond multiplicity
 
 # Hydrogen (and lighter):
 
-# geometry = [("H", (0.0, 0.0, 0.0)), ("H", (0.0, 0.0, 0.74))]  # H2 Molecule
+geometry = [("H", (0.0, 0.0, 0.0)), ("H", (0.0, 0.0, 0.74))]  # H2 Molecule
 
 # Helium (and lighter):
 
@@ -39,7 +39,7 @@ charge = 0  # Excess +/- elementary charge, beyond multiplicity
 
 # Lithium (and lighter):
 
-# geometry = [('Li', (0.0, 0.0, 0.0)), ('H', (0.0, 0.0, 15.9))]  # LiH Molecule
+geometry = [('Li', (0.0, 0.0, 0.0)), ('H', (0.0, 0.0, 15.9))]  # LiH Molecule
 
 # Carbon (and lighter):
 
@@ -69,7 +69,7 @@ charge = 0  # Excess +/- elementary charge, beyond multiplicity
 # geometry = [('O', (0.0, 0.0, 0.0)), ('H', (0.0, 0.0, 9.6))]  # OH- Radical
 # geometry = [('O', (0.0000, 0.0000, 0.0000)), ('H', (0.7586, 0.0000, 0.5043)),  ('H', (-0.7586, 0.0000, 0.5043))]  # H2O Molecule
 # geometry = [('C', (0.0000, 0.0000, 0.0000)), ('O', (0.0000, 0.0000, 1.128))]  # CO Molecule
-geometry = [('C', (0.0000, 0.0000, 0.0000)), ('O', (0.0000, 0.0000, 1.16)), ('O', (0.0000, 0.0000, -1.16))]  # CO2 Molecule
+# geometry = [('C', (0.0000, 0.0000, 0.0000)), ('O', (0.0000, 0.0000, 1.16)), ('O', (0.0000, 0.0000, -1.16))]  # CO2 Molecule
 # geometry = [('O', (0.0, 0.0, 0.0)), ('N', (0.0, 0.0, 1.55))]  # NO Molecule
 # geometry = [('O', (0.0, 0.0, 0.0)), ('N', (0.0, 0.0, 11.5))]  # NO+ Radical
 
@@ -271,7 +271,7 @@ def hybrid_tfim_vqe(qubit_hamiltonian, n_qubits, dev=None):
 
     return circuit
 
-dev = qml.device("qrack.simulator", wires=n_qubits, shots=8192)
+dev = qml.device("qrack.simulator", wires=n_qubits)
 circuit = hybrid_tfim_vqe(qubit_hamiltonian, n_qubits, dev)
 
 # Step 6: Bootstrap!
