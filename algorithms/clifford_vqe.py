@@ -38,7 +38,7 @@ charge = 0  # Excess +/- elementary charge, beyond multiplicity
 
 # Lithium (and lighter):
 
-geometry = [('Li', (0.0, 0.0, 0.0)), ('H', (0.0, 0.0, 15.9))]  # LiH Molecule
+# geometry = [('Li', (0.0, 0.0, 0.0)), ('H', (0.0, 0.0, 15.9))]  # LiH Molecule
 
 # Carbon (and lighter):
 
@@ -56,12 +56,12 @@ geometry = [('Li', (0.0, 0.0, 0.0)), ('H', (0.0, 0.0, 15.9))]  # LiH Molecule
 # geometry = [('N', (0.0, 0.0, 0.0)), ('N', (0.0, 0.0, 10.9))]  # N2 Molecule
 
 # Ammonia:
-# geometry = [
-#     ('N', (0.0000, 0.0000, 0.0000)),  # Nitrogen at center
-#     ('H', (0.9400, 0.0000, -0.3200)),  # Hydrogen 1
-#     ('H', (-0.4700, 0.8130, -0.3200)), # Hydrogen 2
-#     ('H', (-0.4700, -0.8130, -0.3200)) # Hydrogen 3
-# ]
+geometry = [
+    ('N', (0.0000, 0.0000, 0.0000)),  # Nitrogen at center
+    ('H', (0.9400, 0.0000, -0.3200)),  # Hydrogen 1
+    ('H', (-0.4700, 0.8130, -0.3200)), # Hydrogen 2
+    ('H', (-0.4700, -0.8130, -0.3200)) # Hydrogen 3
+]
 
 # Oxygen (and lighter):
 
