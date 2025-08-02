@@ -262,10 +262,11 @@ def hybrid_tfim_vqe(qubit_hamiltonian, n_qubits, dev=None):
 
     # @qjit
     @qml.qnode(dev)
-    def circuit(theta):
+    def circuit(theta, delta):
         for i in range(n_qubits):
             if theta[i]:
                 qml.X(wires=i)
+            qml.RY(delta[i], wires=i)
         return qml.expval(hamiltonian)
 
     return circuit
@@ -274,17 +275,33 @@ dev = qml.device("qrack.simulator", wires=n_qubits)
 circuit = hybrid_tfim_vqe(qubit_hamiltonian, n_qubits, dev)
 
 # Step 6: Bootstrap!
-weights = np.ones(n_qubits, dtype=bool, requires_grad="False")
-min_energy = circuit(weights)
+theta = np.ones(n_qubits, dtype=bool, requires_grad="False")
+delta = np.zeros(n_qubits)
+min_energy = circuit(theta, delta)
 for i in range(n_qubits):
-    weights[i] = False
-    energy = circuit(weights)
+    theta[i] = False
+    energy = circuit(theta, delta)
     if energy < min_energy:
         min_energy = energy
     else:
-        weights[i] = True
+        theta[i] = True
     print(f"Step {i+1}: Energy = {min_energy}")
 
 print(f"Bootstrap Ground State Energy: {min_energy} Ha")
 print("Bootstrap parameters:")
-print(weights)
+print(theta)
+
+# Step 7: Finish calculating energy expectation value with VQE
+opt = qml.AdamOptimizer(stepsize=(np.pi / 15))
+best_delta = delta.copy()
+for i in range(n_qubits):
+    delta = opt.step(lambda d: circuit(theta, d), delta)
+    energy = circuit(theta, delta)
+    print(f"Step {i+1}: Energy = {energy}")
+    if energy < min_energy:
+        min_energy = energy
+        best_delta = delta.copy()
+
+print(f"Optimized Ground State Energy: {min_energy} Ha")
+print("Optimized parameters:")
+print(best_delta)
