@@ -4,9 +4,12 @@
 
 import pennylane as qml
 from pennylane import numpy as np
+# from catalyst import qjit
+
 import openfermion as of
 from openfermionpyscf import run_pyscf
 from openfermion.transforms import jordan_wigner
+
 
 # Step 0: Set environment variables (before running script)
 
@@ -221,82 +224,70 @@ geometry = [("H", (0.0, 0.0, 0.0)), ("H", (0.0, 0.0, 0.74))]  # H2 Molecule
 molecule = of.MolecularData(geometry, basis, multiplicity, charge)
 molecule = run_pyscf(molecule, run_scf=True, run_fci=True)
 fermionic_hamiltonian = molecule.get_molecular_hamiltonian()
+n_qubits = molecule.n_qubits  # Auto-detect qubit count
+print(str(n_qubits) + " qubits...")
 
 # Step 3: Convert to Qubit Hamiltonian (Jordan-Wigner)
 qubit_hamiltonian = jordan_wigner(fermionic_hamiltonian)
 
-# Step 4: Extract Qubit Terms for PennyLane
-coeffs = []
-observables = []
-n_qubits = molecule.n_qubits  # Auto-detect qubit count
-print(str(n_qubits) + " qubits...")
+# Step 4: Setup ansatz and simulator
+def hybrid_tfim_vqe(qubit_hamiltonian, n_qubits, dev=None):
+    """
+    Estimate energy from TFIM-predicted RY angles.
+    """
+    if dev is None:
+        dev = qml.device("lightning.qubit", wires=n_qubits)
 
-for term, coefficient in qubit_hamiltonian.terms.items():
-    pauli_operators = []
-    for qubit_idx, pauli in term:
-        if pauli == "X":
-            pauli_operators.append(qml.PauliX(qubit_idx))
-        elif pauli == "Y":
-            pauli_operators.append(qml.PauliY(qubit_idx))
-        elif pauli == "Z":
-            pauli_operators.append(qml.PauliZ(qubit_idx))
-    if pauli_operators:
-        observable = pauli_operators[0]
-        for op in pauli_operators[1:]:
-            observable = observable @ op
-        observables.append(observable)
-    else:
-        observables.append(qml.Identity(0))  # Default identity if no operators
-    coeffs.append(qml.numpy.array(coefficient, requires_grad=False))
+    coeffs = []
+    observables = []
+    for term, coefficient in qubit_hamiltonian.terms.items():
+        pauli_operators = []
+        for qubit_idx, pauli in term:
+            if pauli == "X":
+                pauli_operators.append(qml.PauliX(qubit_idx))
+            elif pauli == "Y":
+                pauli_operators.append(qml.PauliY(qubit_idx))
+            elif pauli == "Z":
+                pauli_operators.append(qml.PauliZ(qubit_idx))
+        if pauli_operators:
+            observable = pauli_operators[0]
+            for op in pauli_operators[1:]:
+                observable = observable @ op
+            observables.append(observable)
+        else:
+            observables.append(qml.Identity(0))  # Default identity if no operators
+        coeffs.append(qml.numpy.array(coefficient, requires_grad=False))
 
-hamiltonian = qml.Hamiltonian(coeffs, observables)
+    hamiltonian = qml.Hamiltonian(coeffs, observables)
 
-# Step 5: Define Qrack Backend
-dev = qml.device(
-    "qrack.simulator", wires=n_qubits, isTensorNetwork=False
-)  # Replace with "default.qubit" for CPU test
+    # @qjit
+    @qml.qnode(dev)
+    def circuit(theta):
+        for i in range(n_qubits):
+            if theta[i]:
+                qml.X(wires=i)
+                qml.Z(wires=i)
+        for i in range(n_qubits - 1):
+            qml.CZ(wires=[i, i + 1])
+        return qml.expval(hamiltonian)
 
+    return circuit
 
-# Step 6: Define a Simple Variational Ansatz
-def ansatz(params, wires):
-    # qml.BasisState(np.array([0] * len(wires)), wires=wires)  # Initialize |000...0>
-    for i in range(len(wires)):
-        qml.Hadamard(wires=i)
-        qml.RZ(params[i], wires=i)
-        qml.Hadamard(wires=i)
-        # The above is the near-Clifford equivalent of just RY:
-        # qml.RY(params[i], wires=i)
-    for i in range(len(wires) - 1):
-        qml.CNOT(wires=[i, i + 1])
-    # OPTIONAL: Second layer to ansatz
-    # for i in range(len(wires)):
-    #     qml.Hadamard(wires=i)
-    #     qml.RZ(params[len(wires) + i], wires=i)
-    #     qml.Hadamard(wires=i)
-    #     # The above is the near-Clifford equivalent of just RY:
-    #     # qml.RY(params[len(wires) + i], wires=i)
-    # for i in range(len(wires) - 1):
-    #     qml.CNOT(wires=[i, i + 1])
+dev = qml.device("qrack.simulator", wires=n_qubits)
+circuit = hybrid_tfim_vqe(qubit_hamiltonian, n_qubits, dev)
 
+# Step 6: Bootstrap!
+weights = np.ones(n_qubits, dtype=bool, requires_grad="False")
+min_energy = circuit(weights)
+# for i in range(n_qubits):
+#     weights[i] = False
+#     energy = circuit(weights)
+#     if energy < min_energy:
+#         min_energy = energy
+#     else:
+#         weights[i] = True
+#     print(f"Step {i+1}: Energy = {min_energy}")
 
-# Step 7: Cost Function for VQE (Expectation of Hamiltonian)
-@qml.qnode(dev)
-def circuit(params):
-    ansatz(params, wires=range(n_qubits))
-    return qml.expval(hamiltonian)  # Scalar cost function
-
-
-# Step 8: Optimize the Energy
-opt = qml.AdamOptimizer(stepsize=0.1)
-theta = np.random.randn(n_qubits, requires_grad=True)  # Single-layer ansatz
-# theta = np.random.randn(2 * n_qubits, requires_grad=True)  # Double-layer ansatz
-num_steps = 100
-
-for step in range(num_steps):
-    theta = opt.step(circuit, theta)
-    energy = circuit(theta)  # Compute energy at new parameters
-    print(f"Step {step+1}: Energy = {energy} Ha")
-
-print(f"Optimized Ground State Energy: {energy} Ha")
-print("Optimized parameters:")
-print(theta)
+print(f"Bootstrap Ground State Energy: {min_energy} Ha")
+print("Bootstrap parameters:")
+print(weights)
