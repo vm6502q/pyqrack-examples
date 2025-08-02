@@ -266,6 +266,9 @@ def hybrid_tfim_vqe(qubit_hamiltonian, n_qubits, dev=None):
         for i in range(n_qubits):
             if theta[i]:
                 qml.X(wires=i)
+                qml.Z(wires=i)
+        for i in range(n_qubits - 1):
+            qml.CZ(wires=[i, i + 1])
         return qml.expval(hamiltonian)
 
     return circuit
@@ -276,14 +279,14 @@ circuit = hybrid_tfim_vqe(qubit_hamiltonian, n_qubits, dev)
 # Step 6: Bootstrap!
 weights = np.ones(n_qubits, dtype=bool, requires_grad="False")
 min_energy = circuit(weights)
-# for i in range(n_qubits):
-#     weights[i] = False
-#     energy = circuit(weights)
-#     if energy < min_energy:
-#         min_energy = energy
-#     else:
-#         weights[i] = True
-#     print(f"Step {i+1}: Energy = {min_energy}")
+for i in range(n_qubits):
+    weights[i] = False
+    energy = circuit(weights)
+    if energy < min_energy:
+        min_energy = energy
+    else:
+        weights[i] = True
+    print(f"Step {i+1}: Energy = {min_energy}")
 
 print(f"Bootstrap Ground State Energy: {min_energy} Ha")
 print("Bootstrap parameters:")
