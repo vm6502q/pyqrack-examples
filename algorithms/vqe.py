@@ -266,7 +266,8 @@ def hybrid_tfim_vqe(qubit_hamiltonian, n_qubits, dev=None):
         for i in range(n_qubits):
             if theta[i]:
                 qml.X(wires=i)
-            qml.RY(delta[i], wires=i)
+            if not np.isclose(delta[i], 0):
+                qml.RY(delta[i], wires=i)
         return qml.expval(hamiltonian)
 
     return circuit
