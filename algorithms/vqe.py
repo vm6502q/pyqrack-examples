@@ -268,40 +268,78 @@ def hybrid_tfim_vqe(qubit_hamiltonian, n_qubits, dev=None):
                 qml.X(wires=i)
         return qml.expval(hamiltonian)
 
-    return circuit
+    # @qjit
+    @qml.qnode(dev)
+    def circuit_mid(theta): #, delta):
+        for i in range(n_qubits):
+            qml.RY(theta[i], wires=i)
+        return qml.expval(hamiltonian)
+
+    return circuit, circuit_mid
 
 dev = qml.device("qrack.simulator", wires=n_qubits)
-circuit = hybrid_tfim_vqe(qubit_hamiltonian, n_qubits, dev)
+circuit, circuit_m = hybrid_tfim_vqe(qubit_hamiltonian, n_qubits, dev)
 
 # Step 6: Bootstrap!
-theta_0 = np.zeros(n_qubits, dtype=bool, requires_grad="False")
-energy_0 = circuit(theta_0)
+theta = [
+    np.zeros(n_qubits, dtype=bool, requires_grad="False"),
+    np.ones(n_qubits, dtype=bool, requires_grad="False"),
+    np.full(n_qubits, np.pi / 2, dtype=float, requires_grad="False"),
+]
+min_energy = [
+    circuit(theta[0]),
+    circuit(theta[1]),
+    circuit_m(theta[2]),
+]
 
-theta_1 = np.ones(n_qubits, dtype=bool, requires_grad="False")
-energy_1 = circuit(theta_1)
-
-print("From all False...")
+print("\nFrom all False...")
 for i in range(n_qubits):
-    theta_0[i] = True
-    energy = circuit(theta_0) #, delta)
-    if energy < energy_0:
-        energy_0 = energy
+    theta[0][i] = True
+    energy = circuit(theta[0])
+    if energy < min_energy[0]:
+        min_energy[0] = energy
     else:
-        theta_0[i] = False
-    print(f"Step {i+1}: Energy = {energy_0}")
+        theta[0][i] = False
+    print(f"Step {i+1}: Energy = {min_energy[0]}")
 
-print("From all True...")
+print("\nFrom all True...")
 for i in range(n_qubits):
-    theta_1[i] = True
-    energy = circuit(theta_1) #, delta)
-    if energy < energy_1:
-        energy_1 = energy
+    theta[1][i] = True
+    energy = circuit(theta[1])
+    if energy < min_energy[1]:
+        min_energy[1] = energy
     else:
-        theta_1[i] = False
-    print(f"Step {i+1}: Energy = {energy_1}")
+        theta[1][i] = False
+    print(f"Step {i+1}: Energy = {min_energy[1]}")
 
-min_energy = min(energy_0, energy_1)
+print("\nFrom center...")
+for i in range(n_qubits):
+    angle = np.pi / 2
 
-print(f"Bootstrap Ground State Energy: {min_energy} Ha")
+    theta[2][i] = 0
+    energy = circuit_m(theta[2])
+    if energy < min_energy[2]:
+        min_energy[2] = energy
+        angle = 0
+
+    theta[2][i] = np.pi
+    energy = circuit_m(theta[2])
+    if energy < min_energy[2]:
+        min_energy[2] = energy
+        angle = np.pi
+
+    theta[2][i] = angle
+
+    print(f"Step {i+1}: Energy = {min_energy[2]}")
+
+opt_energy = min(min_energy)
+if opt_energy == min_energy[0]:
+    params = theta[0]
+elif opt_energy == min_energy[1]:
+    params = theta[1]
+else:
+    params = theta[2]
+
+print(f"\nBootstrap Ground State Energy: {opt_energy} Ha")
 print("Bootstrap parameters:")
-print(theta_0 if min_energy == energy_0 else theta_1)
+print(params)
