@@ -266,7 +266,6 @@ def hybrid_tfim_vqe(qubit_hamiltonian, n_qubits, dev=None):
         for i in range(n_qubits):
             if theta[i]:
                 qml.X(wires=i)
-            # qml.RY(delta[i], wires=i)
         return qml.expval(hamiltonian)
 
     return circuit
@@ -275,33 +274,34 @@ dev = qml.device("qrack.simulator", wires=n_qubits)
 circuit = hybrid_tfim_vqe(qubit_hamiltonian, n_qubits, dev)
 
 # Step 6: Bootstrap!
-theta = np.zeros(n_qubits, dtype=bool, requires_grad="False")
-# delta = np.zeros(n_qubits)
-min_energy = circuit(theta)
+theta_0 = np.zeros(n_qubits, dtype=bool, requires_grad="False")
+energy_0 = circuit(theta_0)
+
+theta_1 = np.ones(n_qubits, dtype=bool, requires_grad="False")
+energy_1 = circuit(theta_1)
+
+print("From all False...")
 for i in range(n_qubits):
-    theta[i] = True
-    energy = circuit(theta) #, delta)
-    if energy < min_energy:
-        min_energy = energy
+    theta_0[i] = True
+    energy = circuit(theta_0) #, delta)
+    if energy < energy_0:
+        energy_0 = energy
     else:
-        theta[i] = False
-    print(f"Step {i+1}: Energy = {min_energy}")
+        theta_0[i] = False
+    print(f"Step {i+1}: Energy = {energy_0}")
+
+print("From all True...")
+for i in range(n_qubits):
+    theta_1[i] = True
+    energy = circuit(theta_1) #, delta)
+    if energy < energy_1:
+        energy_1 = energy
+    else:
+        theta_1[i] = False
+    print(f"Step {i+1}: Energy = {energy_1}")
+
+min_energy = min(energy_0, energy_1)
 
 print(f"Bootstrap Ground State Energy: {min_energy} Ha")
 print("Bootstrap parameters:")
-print(theta)
-
-# Step 7: Finish calculating energy expectation value with VQE
-# opt = qml.AdamOptimizer(stepsize=(np.pi / 15))
-# best_delta = delta.copy()
-# for i in range(n_qubits):
-#     delta = opt.step(lambda d: circuit(theta, d), delta)
-#     energy = circuit(theta, delta)
-#     print(f"Step {i+1}: Energy = {energy}")
-#     if energy < min_energy:
-#         min_energy = energy
-#         best_delta = delta.copy()
-
-# print(f"Optimized Ground State Energy: {min_energy} Ha")
-# print("Optimized parameters:")
-# print(best_delta)
+print(theta_0 if min_energy == energy_0 else theta_1)
