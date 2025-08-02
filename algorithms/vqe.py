@@ -31,7 +31,7 @@ charge = 0  # Excess +/- elementary charge, beyond multiplicity
 
 # Hydrogen (and lighter):
 
-geometry = [("H", (0.0, 0.0, 0.0)), ("H", (0.0, 0.0, 0.74))]  # H2 Molecule
+# geometry = [("H", (0.0, 0.0, 0.0)), ("H", (0.0, 0.0, 0.74))]  # H2 Molecule
 
 # Helium (and lighter):
 
@@ -39,7 +39,7 @@ geometry = [("H", (0.0, 0.0, 0.0)), ("H", (0.0, 0.0, 0.74))]  # H2 Molecule
 
 # Lithium (and lighter):
 
-# geometry = [('Li', (0.0, 0.0, 0.0)), ('H', (0.0, 0.0, 15.9))]  # LiH Molecule
+geometry = [('Li', (0.0, 0.0, 0.0)), ('H', (0.0, 0.0, 15.9))]  # LiH Molecule
 
 # Carbon (and lighter):
 
@@ -271,20 +271,20 @@ def hybrid_tfim_vqe(qubit_hamiltonian, n_qubits, dev=None):
 
     return circuit
 
-dev = qml.device("qrack.simulator", wires=n_qubits)
-circuit = hybrid_tfim_vqe(qubit_hamiltonian, n_qubits, dev)
+# dev = qml.device("qrack.simulator", wires=n_qubits)
+circuit = hybrid_tfim_vqe(qubit_hamiltonian, n_qubits)
 
 # Step 6: Bootstrap!
-theta = np.ones(n_qubits, dtype=bool, requires_grad="False")
+theta = np.zeros(n_qubits, dtype=bool, requires_grad="False")
 delta = np.zeros(n_qubits)
 min_energy = circuit(theta, delta)
 for i in range(n_qubits):
-    theta[i] = False
+    theta[i] = True
     energy = circuit(theta, delta)
     if energy < min_energy:
         min_energy = energy
     else:
-        theta[i] = True
+        theta[i] = False
     print(f"Step {i+1}: Energy = {min_energy}")
 
 print(f"Bootstrap Ground State Energy: {min_energy} Ha")
