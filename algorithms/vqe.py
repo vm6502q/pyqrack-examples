@@ -4,7 +4,7 @@
 
 import pennylane as qml
 from pennylane import numpy as np
-# from catalyst import qjit
+from catalyst import qjit
 
 import openfermion as of
 from openfermionpyscf import run_pyscf
@@ -31,7 +31,7 @@ charge = 0  # Excess +/- elementary charge, beyond multiplicity
 
 # Hydrogen (and lighter):
 
-geometry = [("H", (0.0, 0.0, 0.0)), ("H", (0.0, 0.0, 0.74))]  # H2 Molecule
+# geometry = [("H", (0.0, 0.0, 0.0)), ("H", (0.0, 0.0, 0.74))]  # H2 Molecule
 
 # Helium (and lighter):
 
@@ -260,56 +260,48 @@ def hybrid_tfim_vqe(qubit_hamiltonian, n_qubits, dev=None):
 
     hamiltonian = qml.Hamiltonian(coeffs, observables)
 
-    # @qjit
+    @qjit
     @qml.qnode(dev)
     def circuit(theta):
-        for i in range(n_qubits):
-            if theta[i]:
-                qml.X(wires=i)
-        return qml.expval(hamiltonian)
-
-    # @qjit
-    @qml.qnode(dev)
-    def circuit_mid(theta):
         for i in range(n_qubits):
             qml.RY(theta[i], wires=i)
         return qml.expval(hamiltonian)
 
-    return circuit, circuit_mid
+    return circuit
 
 dev = qml.device("qrack.simulator", wires=n_qubits)
-circuit, circuit_m = hybrid_tfim_vqe(qubit_hamiltonian, n_qubits, dev)
+circuit = hybrid_tfim_vqe(qubit_hamiltonian, n_qubits, dev)
 
 # Step 6: Bootstrap!
 theta = [
-    np.zeros(n_qubits, dtype=bool, requires_grad="False"),
-    np.ones(n_qubits, dtype=bool, requires_grad="False"),
+    np.full(n_qubits, 0.0, dtype=float, requires_grad="False"),
+    np.full(n_qubits, np.pi, dtype=float, requires_grad="False"),
     np.full(n_qubits, np.pi / 2, dtype=float, requires_grad="False"),
 ]
 min_energy = [
     circuit(theta[0]),
     circuit(theta[1]),
-    circuit_m(theta[2]),
+    circuit(theta[2]),
 ]
 
 print("\nFrom all False...")
 for i in range(n_qubits):
-    theta[0][i] = True
+    theta[0][i] = np.pi
     energy = circuit(theta[0])
     if energy < min_energy[0]:
         min_energy[0] = energy
     else:
-        theta[0][i] = False
+        theta[0][i] = 0.0
     print(f"Step {i+1}: Energy = {min_energy[0]}")
 
 print("\nFrom all True...")
 for i in range(n_qubits):
-    theta[1][i] = True
+    theta[1][i] = 0.0
     energy = circuit(theta[1])
     if energy < min_energy[1]:
         min_energy[1] = energy
     else:
-        theta[1][i] = False
+        theta[1][i] = np.pi
     print(f"Step {i+1}: Energy = {min_energy[1]}")
 
 print("\nFrom center...")
@@ -317,13 +309,13 @@ for i in range(n_qubits):
     angle = np.pi / 2
 
     theta[2][i] = 0
-    energy = circuit_m(theta[2])
+    energy = circuit(theta[2])
     if energy < min_energy[2]:
         min_energy[2] = energy
         angle = 0
 
     theta[2][i] = np.pi
-    energy = circuit_m(theta[2])
+    energy = circuit(theta[2])
     if energy < min_energy[2]:
         min_energy[2] = energy
         angle = np.pi
