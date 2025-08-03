@@ -49,13 +49,13 @@ charge = 0  # Excess +/- elementary charge, beyond multiplicity
 # Carbon (and lighter):
 
 # Methane (CH4):
-geometry = [
-    ('C', (0.0000, 0.0000, 0.0000)),  # Central carbon
-    ('H', (1.0900, 0.0000, 0.0000)),  # Hydrogen 1
-    ('H', (-0.3630, 1.0270, 0.0000)),  # Hydrogen 2
-    ('H', (-0.3630, -0.5130, 0.8890)),  # Hydrogen 3
-    ('H', (-0.3630, -0.5130, -0.8890))  # Hydrogen 4
-]
+# geometry = [
+#     ('C', (0.0000, 0.0000, 0.0000)),  # Central carbon
+#     ('H', (1.0900, 0.0000, 0.0000)),  # Hydrogen 1
+#     ('H', (-0.3630, 1.0270, 0.0000)),  # Hydrogen 2
+#     ('H', (-0.3630, -0.5130, 0.8890)),  # Hydrogen 3
+#     ('H', (-0.3630, -0.5130, -0.8890))  # Hydrogen 4
+# ]
 
 # Nitrogen (and lighter):
 
@@ -133,11 +133,11 @@ geometry = [
 # ]
 
 # Sulfur dioxide (major volcanic gas and pollutant):
-# geometry = [
-#     ('S', (0.0000, 0.0000, 0.0000)),  # Sulfur at center
-#     ('O', (1.4300, 0.0000, 0.0000)),  # Oxygen 1
-#     ('O', (-1.4300 * np.cos(np.deg2rad(119)), 1.4300 * np.sin(np.deg2rad(119)), 0.0000))  # Oxygen 2
-# ]
+geometry = [
+    ('S', (0.0000, 0.0000, 0.0000)),  # Sulfur at center
+    ('O', (1.4300, 0.0000, 0.0000)),  # Oxygen 1
+    ('O', (-1.4300 * np.cos(np.deg2rad(119)), 1.4300 * np.sin(np.deg2rad(119)), 0.0000))  # Oxygen 2
+]
 
 # Sulfur trioxide (key in acid rain, forms H₂SO₄):
 # geometry = [
@@ -235,11 +235,33 @@ print(str(n_qubits) + " qubits...")
 # Step 3: Convert to Qubit Hamiltonian (Jordan-Wigner)
 qubit_hamiltonian = jordan_wigner(fermionic_hamiltonian)
 
-# Step 4: Setup ansatz and simulator
-def hybrid_tfim_vqe(qubit_hamiltonian, n_qubits):
-    """
-    Estimate energy from TFIM-predicted RY angles.
-    """
+# Step 4: Bootstrap!
+
+# Parallelization by Elara (OpenAI custom GPT):
+def bootstrap_step(hamiltonian, dev, theta, i):
+    """Try flipping the i-th qubit and return new theta and energy if improved."""
+    local_theta = theta.copy()
+    local_theta[i] = not local_theta[i]
+
+    @qml.qnode(dev)
+    def circuit(theta):
+        for i in range(n_qubits):
+            if theta[i]:
+                qml.X(wires=i)
+        return qml.expval(hamiltonian)
+    
+    energy = circuit(local_theta)
+    return i, energy, local_theta[i]
+
+# Threaded bootstrap loop
+def threaded_bootstrap(qubit_hamiltonian, n_qubits, max_iter=10):
+    theta = np.random.randint(0, 1, n_qubits)
+    best_theta = theta.copy()
+    min_energy = 0
+    orig_energy = 0
+    converged = False
+    iter_count = 0
+
     coeffs = []
     observables = []
     for term, coefficient in qubit_hamiltonian.terms.items():
@@ -260,52 +282,31 @@ def hybrid_tfim_vqe(qubit_hamiltonian, n_qubits):
             observables.append(qml.Identity(0))  # Default identity if no operators
         coeffs.append(qml.numpy.array(coefficient, requires_grad=False))
 
-    hamiltonian = qml.Hamiltonian(coeffs, observables)
+    qubit_hamiltonian = qml.Hamiltonian(coeffs, observables)
 
+    dev = qml.device("default.clifford", wires=n_qubits)
+    @qml.qnode(dev)
     def circuit(theta):
         for i in range(n_qubits):
             if theta[i]:
                 qml.X(wires=i)
-        return qml.expval(hamiltonian)
-
-    return circuit
-
-
-circuit = hybrid_tfim_vqe(qubit_hamiltonian, n_qubits)
-
-# Step 6: Bootstrap!
-
-# Parallelization by Elara (OpenAI custom GPT):
-def bootstrap_step(circuit, theta, i):
-    """Try flipping the i-th qubit and return new theta and energy if improved."""
-    local_theta = theta.copy()
-    local_theta[i] = not local_theta[i]
-    energy = circuit(local_theta)
-    return i, energy, local_theta[i]
-
-# Threaded bootstrap loop
-def threaded_bootstrap(circuit, n_qubits, max_iter=10):
-    theta = np.random.randint(0, 1, n_qubits)
-    best_theta = theta.copy()
-    min_energy = 0
-    orig_energy = 0
-    converged = False
-    iter_count = 0
+        return qml.expval(qubit_hamiltonian)
 
     while not converged and iter_count < max_iter:
         print(f"\nBootstrap Iteration {iter_count+1}:")
         converged = True
         orig_theta = theta.copy()
-        with concurrent.futures.ThreadPoolExecutor(max_workers=os.cpu_count()) as executor:
+        with concurrent.futures.ProcessPoolExecutor(max_workers=os.cpu_count()) as executor:
             futures = {
                 executor.submit(
                     bootstrap_step,
-                    qml.QNode(circuit, device = qml.device("default.clifford", wires=n_qubits)),
+                    qubit_hamiltonian,
+                    qml.device("default.clifford", wires=n_qubits),
                     orig_theta,
                     i
                 ): i for i in range(n_qubits)
             }
-            orig_energy = qml.QNode(circuit, device = qml.device("default.clifford", wires=n_qubits))(orig_theta)
+            orig_energy = circuit(orig_theta)
             if orig_energy < min_energy:
                 min_energy = orig_energy
                 best_theta = orig_theta.copy()
@@ -333,7 +334,7 @@ def threaded_bootstrap(circuit, n_qubits, max_iter=10):
     return best_theta, min_energy
 
 # Run threaded bootstrap
-theta, min_energy = threaded_bootstrap(circuit, n_qubits)
+theta, min_energy = threaded_bootstrap(qubit_hamiltonian, n_qubits)
 
 print(f"\nFinal Bootstrap Ground State Energy: {min_energy} Ha")
 print("Final Bootstrap Parameters:")
