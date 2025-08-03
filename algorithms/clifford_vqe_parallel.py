@@ -320,5 +320,5 @@ def threaded_bootstrap(circuit, n_qubits, max_iter=30):
 theta, min_energy = threaded_bootstrap(circuit, n_qubits)
 
 print(f"\nFinal Bootstrap Ground State Energy: {min_energy} Ha")
-print("Final Bootstrap Parameters:")
-print(theta)
+# print("Final Bootstrap Parameters:")
+# print(theta)
