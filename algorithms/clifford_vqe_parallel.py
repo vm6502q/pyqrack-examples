@@ -289,7 +289,7 @@ def bootstrap_step(circuit, theta, i):
 
 # Threaded bootstrap loop
 def threaded_bootstrap(circuit, n_qubits, max_iter=30):
-    theta = np.zeros(n_qubits)
+    theta = np.random.randint(0, 1, n_qubits)
     best_theta = theta.copy()
     min_energy = 0
     orig_energy = 0
