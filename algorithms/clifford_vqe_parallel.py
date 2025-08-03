@@ -41,7 +41,7 @@ charge = 0  # Excess +/- elementary charge, beyond multiplicity
 
 # Lithium (and lighter):
 
-# geometry = [('Li', (0.0, 0.0, 0.0)), ('H', (0.0, 0.0, 15.9))]  # LiH Molecule
+geometry = [('Li', (0.0, 0.0, 0.0)), ('H', (0.0, 0.0, 15.9))]  # LiH Molecule
 
 # Carbon (and lighter):
 
@@ -130,11 +130,11 @@ charge = 0  # Excess +/- elementary charge, beyond multiplicity
 # ]
 
 # Sulfur dioxide (major volcanic gas and pollutant):
-geometry = [
-    ('S', (0.0000, 0.0000, 0.0000)),  # Sulfur at center
-    ('O', (1.4300, 0.0000, 0.0000)),  # Oxygen 1
-    ('O', (-1.4300 * np.cos(np.deg2rad(119)), 1.4300 * np.sin(np.deg2rad(119)), 0.0000))  # Oxygen 2
-]
+# geometry = [
+#     ('S', (0.0000, 0.0000, 0.0000)),  # Sulfur at center
+#     ('O', (1.4300, 0.0000, 0.0000)),  # Oxygen 1
+#     ('O', (-1.4300 * np.cos(np.deg2rad(119)), 1.4300 * np.sin(np.deg2rad(119)), 0.0000))  # Oxygen 2
+# ]
 
 # Sulfur trioxide (key in acid rain, forms H₂SO₄):
 # geometry = [
@@ -252,9 +252,8 @@ def bootstrap_worker(args):
     energy = circuit(local_theta)
     return i, energy, local_theta[i]
 
-def multiprocessing_bootstrap(hamiltonian, n_qubits, max_iter=5):
-    theta = np.random.randint(0, 1, n_qubits)
-    best_theta = theta.copy()
+def multiprocessing_bootstrap(hamiltonian, n_qubits, max_iter=100):
+    best_theta = np.random.randint(0, 1, n_qubits)
     min_energy = 0
     converged = False
     iter_count = 0
@@ -293,30 +292,21 @@ def multiprocessing_bootstrap(hamiltonian, n_qubits, max_iter=5):
     while not converged and iter_count < max_iter:
         print(f"\nBootstrap Iteration {iter_count + 1}:")
         converged = True
-        orig_theta = theta.copy()
-        orig_energy = circuit(orig_theta)
-
-        if orig_energy < min_energy:
-            min_energy = orig_energy
-            best_theta = orig_theta.copy()
+        theta = best_theta.copy()
 
         with multiprocessing.Pool(processes=os.cpu_count()) as pool:
-            args = [(qubit_hamiltonian, orig_theta, i, n_qubits) for i in range(n_qubits)]
+            args = [(qubit_hamiltonian, theta, i, n_qubits) for i in range(n_qubits)]
             results = pool.map(bootstrap_worker, args)
 
-        results.sort(key=lambda r: -r[1])
-        for i, energy, flipped in results:
-            if energy < orig_energy:
-                theta[i] = flipped
-                orig_energy = energy
-                if energy < min_energy:
-                    min_energy = orig_energy
-                    best_theta = orig_theta.copy()
-                    best_theta[i] = flipped
-                converged = False
-                print(f"  Qubit {i} flip accepted. New energy: {min_energy}")
-            else:
-                print(f"  Qubit {i} flip rejected.")
+        results.sort(key=lambda r: r[1])
+        i, energy, flipped = results[0]
+        if energy < min_energy:
+            min_energy = energy
+            best_theta[i] = flipped
+            converged = False
+            print(f"  Qubit {i} flip accepted. New energy: {min_energy}")
+        else:
+            print(f"  Qubit flips all rejected.")
 
         iter_count += 1
 
