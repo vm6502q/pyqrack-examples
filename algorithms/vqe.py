@@ -269,8 +269,8 @@ def hybrid_tfim_vqe(qubit_hamiltonian, n_qubits, dev=None):
 
     return circuit
 
-dev = qml.device("qrack.simulator", wires=n_qubits, isSchmidtDecompose=False, isStabilizerHybrid=True)
-circuit = hybrid_tfim_vqe(qubit_hamiltonian, n_qubits, dev)
+# dev = qml.device("qrack.simulator", wires=n_qubits, isSchmidtDecompose=False, isStabilizerHybrid=True)
+circuit = hybrid_tfim_vqe(qubit_hamiltonian, n_qubits)
 
 # Step 6: Bootstrap!
 theta = np.zeros(n_qubits, dtype=float, requires_grad="False")
