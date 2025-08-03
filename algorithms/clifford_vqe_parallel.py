@@ -253,11 +253,6 @@ def bootstrap_worker(args):
     return i, energy, local_theta[i]
 
 def multiprocessing_bootstrap(hamiltonian, n_qubits):
-    best_theta = np.random.randint(0, 1, n_qubits)
-    min_energy = 0
-    converged = False
-    iter_count = 0
-
     coeffs = []
     observables = []
     for term, coefficient in hamiltonian.terms.items():
@@ -288,6 +283,11 @@ def multiprocessing_bootstrap(hamiltonian, n_qubits):
             if theta[i]:
                 qml.X(wires=i)
         return qml.expval(qubit_hamiltonian)
+
+    best_theta = np.random.randint(1, size=n_qubits)
+    min_energy = circuit(best_theta)
+    converged = False
+    iter_count = 0
 
     while not converged:
         print(f"\nBootstrap Iteration {iter_count + 1}:")
