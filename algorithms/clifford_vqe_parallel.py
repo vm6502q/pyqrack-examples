@@ -282,9 +282,10 @@ circuit = hybrid_tfim_vqe(qubit_hamiltonian, n_qubits, dev)
 # Parallelization by Elara (OpenAI custom GPT):
 def bootstrap_step(circuit, theta, i):
     """Try flipping the i-th qubit and return new theta and energy if improved."""
-    theta[i] = not theta[i]
-    energy = circuit(theta)
-    return i, energy, theta[i]
+    local_theta = orig_theta.copy()
+    local_theta[i] = not local_theta[i]
+    energy = circuit(local_theta)
+    return i, energy, local_theta[i]
 
 # Threaded bootstrap loop
 def threaded_bootstrap(circuit, n_qubits, max_iter=30):
@@ -299,8 +300,8 @@ def threaded_bootstrap(circuit, n_qubits, max_iter=30):
         print(f"\nBootstrap Iteration {iter_count+1}:")
         converged = True
         with concurrent.futures.ThreadPoolExecutor(max_workers=os.cpu_count()) as executor:
-            futures = {executor.submit(bootstrap_step, circuit, theta.copy(), i): i for i in range(n_qubits)}
             orig_theta = theta.copy()
+            futures = {executor.submit(bootstrap_step, circuit, orig_theta, i): i for i in range(n_qubits)}
             orig_energy = circuit(theta)
             if orig_energy < min_energy:
                 min_energy = orig_energy
