@@ -308,7 +308,7 @@ def multiprocessing_bootstrap(hamiltonian, n_qubits):
             converged = False
             print(f"  Qubit {i} flip accepted. New energy: {min_energy}")
         else:
-            print(f"  Qubit flips all rejected.")
+            print(f"  Qubit flips all rejected.\n")
 
         iter_count += 1
 
@@ -324,7 +324,7 @@ def multiprocessing_bootstrap(hamiltonian, n_qubits):
 
     best_delta = np.zeros(n_qubits, dtype=float, requires_grad=True)
     delta = best_delta.copy()
-    opt = qml.AdamOptimizer(stepsize=(np.pi / 15))
+    opt = qml.AdamOptimizer(stepsize=(np.pi / 30))
     num_steps = 100
     for step in range(num_steps):
         delta = opt.step(lambda delta: circuit(best_theta, delta), delta)
