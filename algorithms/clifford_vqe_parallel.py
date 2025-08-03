@@ -302,7 +302,7 @@ def threaded_bootstrap(circuit, n_qubits, max_iter=30):
             futures = {executor.submit(bootstrap_step, circuit, theta.copy(), i): i for i in range(n_qubits)}
             orig_theta = theta.copy()
             orig_energy = circuit(theta)
-            if energy < min_energy:
+            if orig_energy < min_energy:
                 min_energy = orig_energy
                 best_theta = orig_theta.copy()
             results = []
