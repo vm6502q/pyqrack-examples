@@ -9,11 +9,8 @@ import openfermion as of
 from openfermionpyscf import run_pyscf
 from openfermion.transforms import jordan_wigner
 
-import concurrent.futures
+import multiprocessing
 import os
-
-# Reuse earlier parts of script...
-from functools import partial
 
 
 # Step 0: Set environment variables (before running script)
@@ -238,33 +235,33 @@ qubit_hamiltonian = jordan_wigner(fermionic_hamiltonian)
 # Step 4: Bootstrap!
 
 # Parallelization by Elara (OpenAI custom GPT):
-def bootstrap_step(hamiltonian, dev, theta, i):
-    """Try flipping the i-th qubit and return new theta and energy if improved."""
+def bootstrap_worker(args):
+    hamiltonian, theta, i, n_qubits = args
     local_theta = theta.copy()
     local_theta[i] = not local_theta[i]
 
+    dev = qml.device("default.clifford", wires=n_qubits)
+
     @qml.qnode(dev)
     def circuit(theta):
-        for i in range(n_qubits):
-            if theta[i]:
-                qml.X(wires=i)
+        for j in range(n_qubits):
+            if theta[j]:
+                qml.X(wires=j)
         return qml.expval(hamiltonian)
-    
+
     energy = circuit(local_theta)
     return i, energy, local_theta[i]
 
-# Threaded bootstrap loop
-def threaded_bootstrap(qubit_hamiltonian, n_qubits, max_iter=10):
+def multiprocessing_bootstrap(hamiltonian, n_qubits, max_iter=10):
     theta = np.random.randint(0, 1, n_qubits)
     best_theta = theta.copy()
     min_energy = 0
-    orig_energy = 0
     converged = False
     iter_count = 0
 
     coeffs = []
     observables = []
-    for term, coefficient in qubit_hamiltonian.terms.items():
+    for term, coefficient in hamiltonian.terms.items():
         pauli_operators = []
         for qubit_idx, pauli in term:
             if pauli == "X":
@@ -285,6 +282,7 @@ def threaded_bootstrap(qubit_hamiltonian, n_qubits, max_iter=10):
     qubit_hamiltonian = qml.Hamiltonian(coeffs, observables)
 
     dev = qml.device("default.clifford", wires=n_qubits)
+
     @qml.qnode(dev)
     def circuit(theta):
         for i in range(n_qubits):
@@ -293,48 +291,39 @@ def threaded_bootstrap(qubit_hamiltonian, n_qubits, max_iter=10):
         return qml.expval(qubit_hamiltonian)
 
     while not converged and iter_count < max_iter:
-        print(f"\nBootstrap Iteration {iter_count+1}:")
+        print(f"\nBootstrap Iteration {iter_count + 1}:")
         converged = True
         orig_theta = theta.copy()
-        with concurrent.futures.ProcessPoolExecutor(max_workers=os.cpu_count()) as executor:
-            futures = {
-                executor.submit(
-                    bootstrap_step,
-                    qubit_hamiltonian,
-                    qml.device("default.clifford", wires=n_qubits),
-                    orig_theta,
-                    i
-                ): i for i in range(n_qubits)
-            }
-            orig_energy = circuit(orig_theta)
-            if orig_energy < min_energy:
-                min_energy = orig_energy
-                best_theta = orig_theta.copy()
-            results = []
-            for future in concurrent.futures.as_completed(futures):
-                results.append(future.result())
-            results.sort(key=lambda r: -r[1])
-            for r in results:
-                i, energy, flipped = r[0], r[1], r[2]
-                if energy < orig_energy:
-                    theta[i] = flipped
-                    orig_energy = energy
-                    if energy < min_energy:
-                        min_energy = orig_energy
-                        best_theta = orig_theta.copy()
-                        # Just this one bit is flipped, from orig_theta this iteration.
-                        best_theta[i] = flipped
-                    converged = False
-                    print(f"  Qubit {i} flip accepted. New energy: {min_energy}")
-                else:
-                    print(f"  Qubit {i} flip rejected.")
+        orig_energy = circuit(orig_theta)
+
+        if orig_energy < min_energy:
+            min_energy = orig_energy
+            best_theta = orig_theta.copy()
+
+        with multiprocessing.Pool(processes=os.cpu_count()) as pool:
+            args = [(qubit_hamiltonian, orig_theta, i, n_qubits) for i in range(n_qubits)]
+            results = pool.map(bootstrap_worker, args)
+
+        results.sort(key=lambda r: -r[1])
+        for i, energy, flipped in results:
+            if energy < orig_energy:
+                theta[i] = flipped
+                orig_energy = energy
+                if energy < min_energy:
+                    min_energy = orig_energy
+                    best_theta = orig_theta.copy()
+                    best_theta[i] = flipped
+                converged = False
+                print(f"  Qubit {i} flip accepted. New energy: {min_energy}")
+            else:
+                print(f"  Qubit {i} flip rejected.")
 
         iter_count += 1
 
     return best_theta, min_energy
 
 # Run threaded bootstrap
-theta, min_energy = threaded_bootstrap(qubit_hamiltonian, n_qubits)
+theta, min_energy = multiprocessing_bootstrap(qubit_hamiltonian, n_qubits)
 
 print(f"\nFinal Bootstrap Ground State Energy: {min_energy} Ha")
 print("Final Bootstrap Parameters:")
