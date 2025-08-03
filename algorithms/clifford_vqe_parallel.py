@@ -289,6 +289,7 @@ def bootstrap_step(circuit, theta, i):
 # Threaded bootstrap loop
 def threaded_bootstrap(circuit, n_qubits, max_iter=30):
     theta = np.zeros(n_qubits)
+    best_theta = theta.copy()
     min_energy = 0
     orig_energy = 0
     converged = False
@@ -307,6 +308,7 @@ def threaded_bootstrap(circuit, n_qubits, max_iter=30):
                     orig_energy = energy
                     if energy < min_energy:
                         min_energy = orig_energy
+                        best_theta = theta.copy()
                     converged = False
                     print(f"  Qubit {i} flip accepted. New energy: {min_energy}")
                 else:
@@ -314,11 +316,11 @@ def threaded_bootstrap(circuit, n_qubits, max_iter=30):
 
         iter_count += 1
 
-    return theta, min_energy
+    return best_theta, min_energy
 
 # Run threaded bootstrap
 theta, min_energy = threaded_bootstrap(circuit, n_qubits)
 
 print(f"\nFinal Bootstrap Ground State Energy: {min_energy} Ha")
-# print("Final Bootstrap Parameters:")
-# print(theta)
+print("Final Bootstrap Parameters:")
+print(theta)
