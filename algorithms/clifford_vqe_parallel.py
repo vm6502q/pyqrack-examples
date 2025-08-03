@@ -9,7 +9,7 @@ import openfermion as of
 from openfermionpyscf import run_pyscf
 from openfermion.transforms import jordan_wigner
 
-import concurrent.futures
+import multiprocessing
 import os
 
 
@@ -26,9 +26,7 @@ import os
 basis = "sto-3g"  # Minimal Basis Set
 # basis = '6-31g'  # Larger basis set
 # basis = 'cc-pVDZ' # Even larger basis set!
-multiplicity = (
-    1  # singlet, closed shell, all electrons are paired (neutral molecules with full valence)
-)
+multiplicity = 1  # singlet, closed shell, all electrons are paired (neutral molecules with full valence)
 # multiplicity = 2  # doublet, one unpaired electron (ex.: OH- radical)
 # multiplicity = 3  # triplet, two unpaired electrons (ex.: O2)
 charge = 0  # Excess +/- elementary charge, beyond multiplicity
@@ -43,7 +41,7 @@ charge = 0  # Excess +/- elementary charge, beyond multiplicity
 
 # Lithium (and lighter):
 
-geometry = [("Li", (0.0, 0.0, 0.0)), ("H", (0.0, 0.0, 15.9))]  # LiH Molecule
+# geometry = [('Li', (0.0, 0.0, 0.0)), ('H', (0.0, 0.0, 15.9))]  # LiH Molecule
 
 # Carbon (and lighter):
 
@@ -132,11 +130,11 @@ geometry = [("Li", (0.0, 0.0, 0.0)), ("H", (0.0, 0.0, 15.9))]  # LiH Molecule
 # ]
 
 # Sulfur dioxide (major volcanic gas and pollutant):
-# geometry = [
-#     ('S', (0.0000, 0.0000, 0.0000)),  # Sulfur at center
-#     ('O', (1.4300, 0.0000, 0.0000)),  # Oxygen 1
-#     ('O', (-1.4300 * np.cos(np.deg2rad(119)), 1.4300 * np.sin(np.deg2rad(119)), 0.0000))  # Oxygen 2
-# ]
+geometry = [
+    ('S', (0.0000, 0.0000, 0.0000)),  # Sulfur at center
+    ('O', (1.4300, 0.0000, 0.0000)),  # Oxygen 1
+    ('O', (-1.4300 * np.cos(np.deg2rad(119)), 1.4300 * np.sin(np.deg2rad(119)), 0.0000))  # Oxygen 2
+]
 
 # Sulfur trioxide (key in acid rain, forms H₂SO₄):
 # geometry = [
@@ -236,7 +234,6 @@ qubit_hamiltonian = jordan_wigner(fermionic_hamiltonian)
 
 # Step 4: Bootstrap!
 
-
 # Parallelization by Elara (OpenAI custom GPT):
 def bootstrap_worker(args):
     hamiltonian, theta, i, n_qubits = args
@@ -255,26 +252,7 @@ def bootstrap_worker(args):
     energy = circuit(local_theta)
     return i, energy, local_theta[i]
 
-
-# Parallelization by Elara (OpenAI custom GPT):
-def bootstrap_step(hamiltonian, dev, theta, i):
-    """Try flipping the i-th qubit and return new theta and energy if improved."""
-    local_theta = theta.copy()
-    local_theta[i] = not local_theta[i]
-
-    @qml.qnode(dev)
-    def circuit(theta):
-        for i in range(n_qubits):
-            if theta[i]:
-                qml.X(wires=i)
-        return qml.expval(hamiltonian)
-
-    energy = circuit(local_theta)
-    return i, energy, local_theta[i]
-
-
-# Threaded bootstrap loop
-def threaded_bootstrap(qubit_hamiltonian, n_qubits, max_iter=5):
+def multiprocessing_bootstrap(hamiltonian, n_qubits, max_iter=5):
     theta = np.random.randint(0, 1, n_qubits)
     best_theta = theta.copy()
     min_energy = 0
@@ -283,7 +261,7 @@ def threaded_bootstrap(qubit_hamiltonian, n_qubits, max_iter=5):
 
     coeffs = []
     observables = []
-    for term, coefficient in qubit_hamiltonian.terms.items():
+    for term, coefficient in hamiltonian.terms.items():
         pauli_operators = []
         for qubit_idx, pauli in term:
             if pauli == "X":
@@ -313,53 +291,39 @@ def threaded_bootstrap(qubit_hamiltonian, n_qubits, max_iter=5):
         return qml.expval(qubit_hamiltonian)
 
     while not converged and iter_count < max_iter:
-        print(f"\nBootstrap Iteration {iter_count+1}:")
+        print(f"\nBootstrap Iteration {iter_count + 1}:")
         converged = True
         orig_theta = theta.copy()
-        with concurrent.futures.ProcessPoolExecutor(max_workers=(os.cpu_count() - 1)) as executor:
-            futures = {
-                executor.submit(
-                    bootstrap_step,
-                    qubit_hamiltonian,
-                    qml.device("default.clifford", wires=n_qubits),
-                    orig_theta,
-                    i,
-                ): i
-                for i in range(n_qubits)
-            }
+        orig_energy = circuit(orig_theta)
 
-            orig_energy = circuit(orig_theta)
-            if orig_energy < min_energy:
-                min_energy = orig_energy
-                best_theta = orig_theta.copy()
+        if orig_energy < min_energy:
+            min_energy = orig_energy
+            best_theta = orig_theta.copy()
 
-            results = []
-            for future in concurrent.futures.as_completed(futures):
-                results.append(future.result())
-            results.sort(key=lambda r: -r[1])
+        with multiprocessing.Pool(processes=os.cpu_count()) as pool:
+            args = [(qubit_hamiltonian, orig_theta, i, n_qubits) for i in range(n_qubits)]
+            results = pool.map(bootstrap_worker, args)
 
-            for r in results:
-                i, energy, flipped = r[0], r[1], r[2]
-                if energy < orig_energy:
-                    theta[i] = flipped
-                    orig_energy = energy
-                    if energy < min_energy:
-                        min_energy = orig_energy
-                        # Just this one bit is flipped, from orig_theta, for exact min_energy reproduction.
-                        best_theta = orig_theta.copy()
-                        best_theta[i] = flipped
-                    converged = False
-                    print(f"  Qubit {i} flip accepted. New energy: {min_energy}")
-                else:
-                    print(f"  Qubit {i} flip rejected.")
+        results.sort(key=lambda r: -r[1])
+        for i, energy, flipped in results:
+            if energy < orig_energy:
+                theta[i] = flipped
+                orig_energy = energy
+                if energy < min_energy:
+                    min_energy = orig_energy
+                    best_theta = orig_theta.copy()
+                    best_theta[i] = flipped
+                converged = False
+                print(f"  Qubit {i} flip accepted. New energy: {min_energy}")
+            else:
+                print(f"  Qubit {i} flip rejected.")
 
         iter_count += 1
 
     return best_theta, min_energy
 
-
 # Run threaded bootstrap
-theta, min_energy = threaded_bootstrap(qubit_hamiltonian, n_qubits)
+theta, min_energy = multiprocessing_bootstrap(qubit_hamiltonian, n_qubits)
 
 print(f"\nFinal Bootstrap Ground State Energy: {min_energy} Ha")
 print("Final Bootstrap Parameters:")
