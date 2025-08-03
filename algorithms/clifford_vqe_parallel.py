@@ -282,7 +282,7 @@ circuit = hybrid_tfim_vqe(qubit_hamiltonian, n_qubits, dev)
 # Parallelization by Elara (OpenAI custom GPT):
 def bootstrap_step(circuit, theta, i):
     """Try flipping the i-th qubit and return new theta and energy if improved."""
-    local_theta = orig_theta.copy()
+    local_theta = theta.copy()
     local_theta[i] = not local_theta[i]
     energy = circuit(local_theta)
     return i, energy, local_theta[i]
