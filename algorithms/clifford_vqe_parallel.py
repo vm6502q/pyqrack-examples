@@ -44,18 +44,18 @@ charge = 0  # Excess +/- elementary charge, beyond multiplicity
 
 # Lithium (and lighter):
 
-geometry = [('Li', (0.0, 0.0, 0.0)), ('H', (0.0, 0.0, 15.9))]  # LiH Molecule
+# geometry = [('Li', (0.0, 0.0, 0.0)), ('H', (0.0, 0.0, 15.9))]  # LiH Molecule
 
 # Carbon (and lighter):
 
 # Methane (CH4):
-# geometry = [
-#     ('C', (0.0000, 0.0000, 0.0000)),  # Central carbon
-#     ('H', (1.0900, 0.0000, 0.0000)),  # Hydrogen 1
-#     ('H', (-0.3630, 1.0270, 0.0000)),  # Hydrogen 2
-#     ('H', (-0.3630, -0.5130, 0.8890)),  # Hydrogen 3
-#     ('H', (-0.3630, -0.5130, -0.8890))  # Hydrogen 4
-# ]
+geometry = [
+    ('C', (0.0000, 0.0000, 0.0000)),  # Central carbon
+    ('H', (1.0900, 0.0000, 0.0000)),  # Hydrogen 1
+    ('H', (-0.3630, 1.0270, 0.0000)),  # Hydrogen 2
+    ('H', (-0.3630, -0.5130, 0.8890)),  # Hydrogen 3
+    ('H', (-0.3630, -0.5130, -0.8890))  # Hydrogen 4
+]
 
 # Nitrogen (and lighter):
 
@@ -300,12 +300,12 @@ def threaded_bootstrap(circuit, n_qubits, max_iter=10):
             futures = {
                 executor.submit(
                     bootstrap_step,
-                    qml.QNode(circuit, device = qml.device("qrack.stabilizer", wires=n_qubits)),
+                    qml.QNode(circuit, device = qml.device("default.clifford", wires=n_qubits)),
                     orig_theta,
                     i
                 ): i for i in range(n_qubits)
             }
-            orig_energy = qml.QNode(circuit, device = qml.device("qrack.stabilizer", wires=n_qubits))(orig_theta)
+            orig_energy = qml.QNode(circuit, device = qml.device("default.clifford", wires=n_qubits))(orig_theta)
             if orig_energy < min_energy:
                 min_energy = orig_energy
                 best_theta = orig_theta.copy()
