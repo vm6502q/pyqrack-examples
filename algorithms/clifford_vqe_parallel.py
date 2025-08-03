@@ -284,7 +284,7 @@ def multiprocessing_bootstrap(hamiltonian, n_qubits):
                 qml.X(wires=i)
         return qml.expval(qubit_hamiltonian)
 
-    best_theta = np.random.randint(1, size=n_qubits)
+    best_theta = np.random.randint(2, size=n_qubits)
     min_energy = circuit(best_theta)
     converged = False
     iter_count = 0
