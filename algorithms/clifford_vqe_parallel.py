@@ -236,13 +236,10 @@ print(str(n_qubits) + " qubits...")
 qubit_hamiltonian = jordan_wigner(fermionic_hamiltonian)
 
 # Step 4: Setup ansatz and simulator
-def hybrid_tfim_vqe(qubit_hamiltonian, n_qubits, dev=None):
+def hybrid_tfim_vqe(qubit_hamiltonian, n_qubits):
     """
     Estimate energy from TFIM-predicted RY angles.
     """
-    if dev is None:
-        dev = qml.device("lightning.qubit", wires=n_qubits)
-
     coeffs = []
     observables = []
     for term, coefficient in qubit_hamiltonian.terms.items():
@@ -265,7 +262,6 @@ def hybrid_tfim_vqe(qubit_hamiltonian, n_qubits, dev=None):
 
     hamiltonian = qml.Hamiltonian(coeffs, observables)
 
-    @qml.qnode(dev)
     def circuit(theta):
         for i in range(n_qubits):
             if theta[i]:
@@ -274,8 +270,8 @@ def hybrid_tfim_vqe(qubit_hamiltonian, n_qubits, dev=None):
 
     return circuit
 
-dev = qml.device("qrack.stabilizer", wires=n_qubits)
-circuit = hybrid_tfim_vqe(qubit_hamiltonian, n_qubits, dev)
+
+circuit = hybrid_tfim_vqe(qubit_hamiltonian, n_qubits)
 
 # Step 6: Bootstrap!
 
@@ -299,10 +295,17 @@ def threaded_bootstrap(circuit, n_qubits, max_iter=30):
     while not converged and iter_count < max_iter:
         print(f"\nBootstrap Iteration {iter_count+1}:")
         converged = True
+        orig_theta = theta.copy()
         with concurrent.futures.ThreadPoolExecutor(max_workers=os.cpu_count()) as executor:
-            orig_theta = theta.copy()
-            futures = {executor.submit(bootstrap_step, circuit, orig_theta, i): i for i in range(n_qubits)}
-            orig_energy = circuit(theta)
+            futures = {
+                executor.submit(
+                    bootstrap_step,
+                    qml.QNode(circuit, device = qml.device("qrack.stabilizer", wires=n_qubits)),
+                    orig_theta,
+                    i
+                ): i for i in range(n_qubits)
+            }
+            orig_energy = qml.QNode(circuit, device = qml.device("qrack.stabilizer", wires=n_qubits))(orig_theta)
             if orig_energy < min_energy:
                 min_energy = orig_energy
                 best_theta = orig_theta.copy()
