@@ -240,8 +240,8 @@ def bootstrap_worker(args):
     local_theta = theta.copy()
     local_theta[i] = not local_theta[i]
 
-    # dev = qml.device("default.clifford", wires=n_qubits)
-    dev = qml.device("qrack.simulator", wires=n_qubits, isSchmidtDecompose=False, isStabilizerHybrid=True)
+    dev = qml.device("default.clifford", wires=n_qubits)
+    # dev = qml.device("qrack.simulator", wires=n_qubits, isSchmidtDecompose=False, isStabilizerHybrid=True)
 
     @qml.qnode(dev)
     def circuit(theta):
@@ -276,8 +276,7 @@ def multiprocessing_bootstrap(hamiltonian, n_qubits):
 
     qubit_hamiltonian = qml.Hamiltonian(coeffs, observables)
 
-    # dev = qml.device("default.clifford", wires=n_qubits)
-    dev = qml.device("qrack.simulator", wires=n_qubits, isSchmidtDecompose=False, isStabilizerHybrid=True)
+    dev = qml.device("default.clifford", wires=n_qubits)
 
     @qml.qnode(dev)
     def circuit(theta):
@@ -311,6 +310,8 @@ def multiprocessing_bootstrap(hamiltonian, n_qubits):
             print(f"  Qubit flips all rejected.\n")
 
         iter_count += 1
+
+    dev = qml.device("qrack.simulator", wires=n_qubits, isSchmidtDecompose=False, isStabilizerHybrid=True)
 
     @qml.qnode(dev)
     def circuit(theta, delta):
