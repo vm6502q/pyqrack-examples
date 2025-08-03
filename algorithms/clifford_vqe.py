@@ -9,6 +9,9 @@ import openfermion as of
 from openfermionpyscf import run_pyscf
 from openfermion.transforms import jordan_wigner
 
+import multiprocessing
+import os
+
 
 # Step 0: Set environment variables (before running script)
 
@@ -38,7 +41,7 @@ charge = 0  # Excess +/- elementary charge, beyond multiplicity
 
 # Lithium (and lighter):
 
-# geometry = [('Li', (0.0, 0.0, 0.0)), ('H', (0.0, 0.0, 15.9))]  # LiH Molecule
+geometry = [('Li', (0.0, 0.0, 0.0)), ('H', (0.0, 0.0, 15.9))]  # LiH Molecule
 
 # Carbon (and lighter):
 
@@ -56,12 +59,12 @@ charge = 0  # Excess +/- elementary charge, beyond multiplicity
 # geometry = [('N', (0.0, 0.0, 0.0)), ('N', (0.0, 0.0, 10.9))]  # N2 Molecule
 
 # Ammonia:
-geometry = [
-    ('N', (0.0000, 0.0000, 0.0000)),  # Nitrogen at center
-    ('H', (0.9400, 0.0000, -0.3200)),  # Hydrogen 1
-    ('H', (-0.4700, 0.8130, -0.3200)), # Hydrogen 2
-    ('H', (-0.4700, -0.8130, -0.3200)) # Hydrogen 3
-]
+# geometry = [
+#     ('N', (0.0000, 0.0000, 0.0000)),  # Nitrogen at center
+#     ('H', (0.9400, 0.0000, -0.3200)),  # Hydrogen 1
+#     ('H', (-0.4700, 0.8130, -0.3200)), # Hydrogen 2
+#     ('H', (-0.4700, -0.8130, -0.3200)) # Hydrogen 3
+# ]
 
 # Oxygen (and lighter):
 
@@ -229,17 +232,31 @@ print(str(n_qubits) + " qubits...")
 # Step 3: Convert to Qubit Hamiltonian (Jordan-Wigner)
 qubit_hamiltonian = jordan_wigner(fermionic_hamiltonian)
 
-# Step 4: Setup ansatz and simulator
-def hybrid_tfim_vqe(qubit_hamiltonian, n_qubits, dev=None):
-    """
-    Estimate energy from TFIM-predicted RY angles.
-    """
-    if dev is None:
-        dev = qml.device("lightning.qubit", wires=n_qubits)
+# Step 4: Bootstrap!
 
+# Parallelization by Elara (OpenAI custom GPT):
+def bootstrap_worker(args):
+    hamiltonian, theta, i, n_qubits = args
+    local_theta = theta.copy()
+    local_theta[i] = not local_theta[i]
+
+    # dev = qml.device("default.clifford", wires=n_qubits)
+    dev = qml.device("qrack.simulator", wires=n_qubits, isSchmidtDecompose=False, isStabilizerHybrid=True)
+
+    @qml.qnode(dev)
+    def circuit(theta):
+        for j in range(n_qubits):
+            if theta[j]:
+                qml.X(wires=j)
+        return qml.expval(hamiltonian)
+
+    energy = circuit(local_theta)
+    return i, energy, local_theta[i]
+
+def multiprocessing_bootstrap(hamiltonian, n_qubits):
     coeffs = []
     observables = []
-    for term, coefficient in qubit_hamiltonian.terms.items():
+    for term, coefficient in hamiltonian.terms.items():
         pauli_operators = []
         for qubit_idx, pauli in term:
             if pauli == "X":
@@ -257,32 +274,49 @@ def hybrid_tfim_vqe(qubit_hamiltonian, n_qubits, dev=None):
             observables.append(qml.Identity(0))  # Default identity if no operators
         coeffs.append(qml.numpy.array(coefficient, requires_grad=False))
 
-    hamiltonian = qml.Hamiltonian(coeffs, observables)
+    qubit_hamiltonian = qml.Hamiltonian(coeffs, observables)
+
+    # dev = qml.device("default.clifford", wires=n_qubits)
+    dev = qml.device("qrack.simulator", wires=n_qubits, isSchmidtDecompose=False, isStabilizerHybrid=True)
 
     @qml.qnode(dev)
     def circuit(theta):
         for i in range(n_qubits):
             if theta[i]:
                 qml.X(wires=i)
-        return qml.expval(hamiltonian)
+        return qml.expval(qubit_hamiltonian)
 
-    return circuit
+    best_theta = np.random.randint(2, size=n_qubits)
+    min_energy = circuit(best_theta)
+    converged = False
+    iter_count = 0
 
-dev = qml.device("qrack.stabilizer", wires=n_qubits)
-circuit = hybrid_tfim_vqe(qubit_hamiltonian, n_qubits, dev)
+    while not converged:
+        print(f"\nBootstrap Iteration {iter_count + 1}:")
+        converged = True
+        theta = best_theta.copy()
 
-# Step 6: Bootstrap!
-theta = np.zeros(n_qubits, dtype=bool, requires_grad="False")
-min_energy = circuit(theta)
-for i in range(n_qubits):
-    theta[i] = True
-    energy = circuit(theta)
-    if energy < min_energy:
-        min_energy = energy
-    else:
-        theta[i] = False
-    print(f"Step {i+1}: Energy = {min_energy}")
+        with multiprocessing.Pool(processes=os.cpu_count()) as pool:
+            args = [(qubit_hamiltonian, theta, i, n_qubits) for i in range(n_qubits)]
+            results = pool.map(bootstrap_worker, args)
 
-print(f"\nBootstrap Ground State Energy: {min_energy} Ha")
-print("Bootstrap parameters:")
+        results.sort(key=lambda r: r[1])
+        i, energy, flipped = results[0]
+        if energy < min_energy:
+            min_energy = energy
+            best_theta[i] = flipped
+            converged = False
+            print(f"  Qubit {i} flip accepted. New energy: {min_energy}")
+        else:
+            print(f"  Qubit flips all rejected.")
+
+        iter_count += 1
+
+    return best_theta, min_energy
+
+# Run threaded bootstrap
+theta, min_energy = multiprocessing_bootstrap(qubit_hamiltonian, n_qubits)
+
+print(f"\nFinal Bootstrap Ground State Energy: {min_energy} Ha")
+print("Final Bootstrap Parameters:")
 print(theta)
