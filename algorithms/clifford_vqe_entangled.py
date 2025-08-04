@@ -321,6 +321,7 @@ def multiprocessing_bootstrap(hamiltonian, n_qubits):
             qml.RY(delta[i], wires=i)
         for i in range(n_qubits-1):
             qml.CZ(wires=[i, i+1])
+        qml.CZ(wires=[n_qubits-1, 0])
         return qml.expval(qubit_hamiltonian)
 
     best_delta = np.zeros(n_qubits, dtype=float, requires_grad=True)
