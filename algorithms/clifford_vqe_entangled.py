@@ -325,7 +325,7 @@ def multiprocessing_bootstrap(hamiltonian, n_qubits):
 
     best_delta = np.zeros(n_qubits, dtype=float, requires_grad=True)
     delta = best_delta.copy()
-    opt = qml.AdamOptimizer(stepsize=(np.pi / 180))
+    opt = qml.AdamOptimizer(stepsize=(np.pi / 1800)) #one tenth a degree
     num_steps = 100
     for step in range(num_steps):
         delta = opt.step(lambda delta: circuit(best_theta, delta), delta)
