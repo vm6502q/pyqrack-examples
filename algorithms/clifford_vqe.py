@@ -276,8 +276,7 @@ def multiprocessing_bootstrap(hamiltonian, n_qubits):
 
     qubit_hamiltonian = qml.Hamiltonian(coeffs, observables)
 
-    dev = qml.device("default.clifford", wires=n_qubits)
-    # dev = qml.device("qrack.simulator", wires=n_qubits, isSchmidtDecompose=False, isStabilizerHybrid=True)
+    dev = qml.device("qrack.stabilizer", wires=n_qubits)
 
     @qml.qnode(dev)
     def circuit(theta):
