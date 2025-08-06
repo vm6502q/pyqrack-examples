@@ -280,7 +280,12 @@ def multiprocessing_bootstrap(hamiltonian, n_qubits):
 
     qubit_hamiltonian = qml.Hamiltonian(coeffs, observables)
 
-    dev = qml.device("qrack.stabilizer", wires=n_qubits)
+    # Fastest at low qubit counts, but can be very memory intensive:
+    dev = qml.device("default.clifford", wires=n_qubits)
+    # Good compromise between very low memory usage and decent speed:
+    # dev = qml.device("qrack.stabilizer", wires=n_qubits)
+    # Schmidt-decomposed, and does Clifford+RZ gate set:
+    # dev = qml.device("qrack.simulator", wires=n_qubits, isSchmidtDecompose=False, isStabilizerHybrid=True)
 
     @qml.qnode(dev)
     def circuit(theta):
