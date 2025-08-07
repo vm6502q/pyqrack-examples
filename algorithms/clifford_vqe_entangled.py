@@ -245,7 +245,7 @@ def bootstrap_worker(args):
     # Good compromise between very low memory usage and decent speed:
     # dev = qml.device("qrack.stabilizer", wires=n_qubits)
     # Schmidt-decomposed, and does Clifford+RZ gate set:
-    # dev = qml.device("qrack.simulator", wires=n_qubits, isSchmidtDecompose=False, isStabilizerHybrid=True)
+    # dev = qml.device("qrack.simulator", wires=n_qubits, isTensorNetwork=False, isSchmidtDecompose=False, isStabilizerHybrid=True)
 
     @qml.qnode(dev)
     def circuit(theta):
@@ -285,7 +285,7 @@ def multiprocessing_bootstrap(hamiltonian, n_qubits):
     # Good compromise between very low memory usage and decent speed:
     # dev = qml.device("qrack.stabilizer", wires=n_qubits)
     # Schmidt-decomposed, and does Clifford+RZ gate set:
-    # dev = qml.device("qrack.simulator", wires=n_qubits, isSchmidtDecompose=False, isStabilizerHybrid=True)
+    # dev = qml.device("qrack.simulator", wires=n_qubits, isTensorNetwork=False, isSchmidtDecompose=False, isStabilizerHybrid=True)
 
     @qml.qnode(dev)
     def circuit(theta):
@@ -321,7 +321,7 @@ def multiprocessing_bootstrap(hamiltonian, n_qubits):
         iter_count += 1
 
     # Schmidt-decomposed, and does Clifford+RZ gate set:
-    dev = qml.device("qrack.simulator", wires=n_qubits, isSchmidtDecompose=False, isStabilizerHybrid=True)
+    dev = qml.device("qrack.simulator", wires=n_qubits, isTensorNetwork=False, isSchmidtDecompose=False, isStabilizerHybrid=True)
 
     @qml.qnode(dev)
     def circuit(theta, delta):
