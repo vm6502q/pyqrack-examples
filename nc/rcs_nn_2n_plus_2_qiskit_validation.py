@@ -219,7 +219,7 @@ def bench_qrack(n_qubits, hamming_n):
                 break
 
 
-def calc_stats(ideal_probs, counts, shots, depth, hamming_n):
+def calc_stats(ideal_probs, counts, shots, depth, ncrp, hamming_n):
     # For QV, we compare probabilities of (ideal) "heavy outputs."
     # If the probability is above 2/3, the protocol certifies/passes the qubit width.
     n_pow = len(ideal_probs)
