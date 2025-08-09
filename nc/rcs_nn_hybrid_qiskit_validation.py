@@ -172,11 +172,11 @@ def bench_qrack(width, depth, trials):
             )
             # Round to nearest Clifford circuit
             experiment_nc.set_ncrp(1.0)
-            nc_circ = transpile(circ, basis_gates=basis_gates)
+            nc_circ = transpile(circ, optimization_level=3, basis_gates=basis_gates)
             experiment_nc.run_qiskit_circuit(nc_circ)
 
             experiment_ace = QrackSimulator(width)
-            ace_circ = transpile(circ, basis_gates=QrackSimulator.get_qiskit_basis_gates())
+            ace_circ = transpile(circ, optimization_level=3, basis_gates=QrackSimulator.get_qiskit_basis_gates())
             experiment_ace.run_qiskit_circuit(ace_circ)
 
             circ_aer = transpile(circ, backend=control)
