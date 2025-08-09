@@ -7,6 +7,8 @@ import random
 import sys
 import time
 
+from qiskit import QuantumCircuit
+
 from pyqrack import QrackSimulator, Pauli
 
 
@@ -59,12 +61,14 @@ def bench_qrack(n_qubits, ncrp):
             t = unused_bits.pop()
             experiment.mcx([c], t)
 
-        samples = experiment.measure_shots(all_bits, 1)
+        clone = experiment.clone()
+        clone.m_all()
 
         print(
             {
                 "qubits": n_qubits,
                 "ncrp": ncrp,
+                "fidelity": clone.get_unitary_fidelity(),
                 "depth": d + 1,
                 "seconds": time.perf_counter() - start,
             }

@@ -3,20 +3,12 @@
 
 import math
 import random
-import statistics
 import sys
 import time
 
-from collections import Counter
-
-from scipy.stats import binom
+from qiskit import QuantumCircuit
 
 from pyqrack import QrackSimulator
-
-from qiskit import QuantumCircuit
-from qiskit.compiler import transpile
-from qiskit_aer.backends import AerSimulator
-from qiskit.quantum_info import Statevector
 
 
 def factor_width(width):
@@ -178,12 +170,14 @@ def bench_qrack(width, ncrp):
         experiment.set_ncrp(ncrp)
         experiment.run_qiskit_circuit(circ)
 
-        samples = experiment.measure_shots(all_bits, 1)
+        clone = experiment.clone()
+        clone.m_all()
 
         print(
             {
                 "qubits": n_qubits,
                 "ncrp": ncrp,
+                "fidelity": clone.get_unitary_fidelity(),
                 "depth": d + 1,
                 "seconds": time.perf_counter() - start,
             }
