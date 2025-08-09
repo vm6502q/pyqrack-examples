@@ -105,7 +105,7 @@ def build_dataset(widths, depth_factor=1, samples_per_width=32):
 # ─────────────────────────────
 # Train
 # ─────────────────────────────
-def train_repair(widths=[8], depth_factor=1, samples_per_width=32, epochs=100, lr=1e-3):
+def train_repair(widths=[4], depth_factor=1, samples_per_width=24, epochs=128, lr=1e-3):
     X, Y = build_dataset(widths, depth_factor, samples_per_width)
     model = BasisRepairNet(feature_dim=X.shape[1])
     optimizer = optim.Adam(model.parameters(), lr=lr)
@@ -120,7 +120,8 @@ def train_repair(widths=[8], depth_factor=1, samples_per_width=32, epochs=100, l
         loss = loss_fn(pred, Y_t)
         loss.backward()
         optimizer.step()
-        print(f"[Epoch {epoch}] Loss: {loss.item():.6f}")
+        if (epoch % (epochs // 10)) == 0:
+            print(f"[Epoch {epoch}] Loss: {loss.item():.6f}")
 
     return model
 
@@ -145,24 +146,37 @@ def repair_distribution(model, nc, ace):
     return repaired
 
 # ─────────────────────────────
-# HOG probability
+# Stats
 # ─────────────────────────────
 def hog_probability(probs_ideal, probs_test):
     median_prob = np.median(probs_ideal)
     heavy_outputs = {i for i, p in enumerate(probs_ideal) if p > median_prob}
     return sum(probs_test[i] for i in heavy_outputs)
 
+def fidelity(probs_ideal, probs_test):
+    return 1.0 - sum((i - t) ** 2 for i, t in zip(probs_ideal, probs_test)) ** (1/2)
+
+def cross_entropy(probs_ideal, probs_test):
+    u_u = np.mean(probs_ideal)
+    denom = 0.0
+    numer = 0.0
+    for ideal, test in zip(probs_ideal, probs_test):
+        denom += (ideal - u_u) ** 2
+        numer += (ideal - u_u) * (test - u_u)
+
+    return numer / denom
+
 # ─────────────────────────────
 # Demo
 # ─────────────────────────────
 if __name__ == "__main__":
     # Train on small widths
-    model = train_repair(widths=[3, 4, 5], depth_factor=1, samples_per_width=32, epochs=32)
+    model = train_repair(widths=[5, 6, 7], depth_factor=1, samples_per_width=24, epochs=128)
 
     torch.save(model.state_dict(), "repair_net_scalable.pt")
 
     # Test on different width (never seen in training)
-    test_width = 6
+    test_width = 8
     nc, ace, gold = generate_distributions(test_width, test_width)
 
     repaired = repair_distribution(model, nc, ace)
@@ -170,4 +184,11 @@ if __name__ == "__main__":
     print(f"HOG (NC):       {hog_probability(gold, nc):.4f}")
     print(f"HOG (ACE):      {hog_probability(gold, ace):.4f}")
     print(f"HOG (Repaired): {hog_probability(gold, repaired):.4f}")
-
+    print()
+    print(f"Fidelity (NC):       {fidelity(gold, nc):.4f}")
+    print(f"Fidelity (ACE):      {fidelity(gold, ace):.4f}")
+    print(f"Fidelity (Repaired): {fidelity(gold, repaired):.4f}")
+    print()
+    print(f"XEB (NC):       {cross_entropy(gold, nc):.4f}")
+    print(f"XEB (ACE):      {cross_entropy(gold, ace):.4f}")
+    print(f"XEB (Repaired): {cross_entropy(gold, repaired):.4f}")
