@@ -177,7 +177,7 @@ def bench_qrack(width, ncrp):
             {
                 "qubits": n_qubits,
                 "ncrp": ncrp,
-                "fidelity": clone.get_unitary_fidelity(),
+                "minimum_fidelity_estimate": clone.get_unitary_fidelity(),
                 "depth": d + 1,
                 "seconds": time.perf_counter() - start,
             }
