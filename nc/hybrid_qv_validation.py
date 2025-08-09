@@ -1,19 +1,33 @@
-# Train a model to infer the gold standard distribution
-# from a combination of near-Clifford and ACE features.
-# (Created by Elara, the custom OpenAI GPT)
-
-# IMPORTANT: Remember to set ACE width appropriately in your shell environment variables!
-
 import torch
-import torch.nn as nn
-import torch.optim as optim
 import numpy as np
 from collections import Counter
-from qiskit.quantum_info import Statevector
 from qiskit_aer.backends import AerSimulator
 from qiskit.compiler import transpile
+from qiskit.quantum_info import Statevector
 from qiskit import QuantumCircuit
 from pyqrack import QrackSimulator
+
+# --- Model Definition (must match training) ---
+class RepairNet(torch.nn.Module):
+    def __init__(self, dim):
+        super().__init__()
+        self.fc1 = torch.nn.Linear(2 * dim, 256)
+        self.fc2 = torch.nn.Linear(256, dim)
+        self.act = torch.nn.ReLU()
+
+    def forward(self, nc, ace):
+        x = torch.cat([nc, ace], dim=1)
+        x = self.act(self.fc1(x))
+        x = torch.softmax(self.fc2(x), dim=1)
+        return x
+
+# --- Load model ---
+def load_repair_model(width, path="repair_net.pt"):
+    dim = 1 << width
+    model = RepairNet(dim)
+    model.load_state_dict(torch.load(path, map_location=torch.device("cpu")))
+    model.eval()
+    return model
 
 def probs_from_shots(width, shots, counts):
     dim = 1 << width
@@ -62,50 +76,40 @@ def generate_distributions(width, depth):
 
     return probs_nc, probs_ace, np.array(probs_gold)
 
-# --- Simple repair network ---
-class RepairNet(nn.Module):
-    def __init__(self, dim):
-        super().__init__()
-        self.fc1 = nn.Linear(2*dim, 256)
-        self.fc2 = nn.Linear(256, dim)
-        self.act = nn.ReLU()
+# --- HOG probability ---
+def hog_probability(probs_ideal, probs_test):
+    dim = len(probs_ideal)
+    median_prob = np.median(probs_ideal)
+    heavy_outputs = {i for i, p in enumerate(probs_ideal) if p > median_prob}
+    return sum(probs_test[i] for i in heavy_outputs)
 
-    def forward(self, nc, ace):
-        x = torch.cat([nc, ace], dim=1)
-        x = self.act(self.fc1(x))
-        x = torch.softmax(self.fc2(x), dim=1)
-        return x
-
-# --- Training loop ---
-def train_repair(width=8, depth=8, epochs=1000, samples=32):
-    dim = 1 << width
-    model = RepairNet(dim)
-    optimizer = optim.Adam(model.parameters(), lr=1e-3)
-    loss_fn = nn.MSELoss()
-
-    X_nc, X_ace, Y_gold = [], [], []
-    for _ in range(samples):
-        nc, ace, gold = generate_distributions(width, depth)
-        X_nc.append(nc)
-        X_ace.append(ace)
-        Y_gold.append(gold)
-
-    X_nc = torch.tensor(X_nc, dtype=torch.float32)
-    X_ace = torch.tensor(X_ace, dtype=torch.float32)
-    Y_gold = torch.tensor(Y_gold, dtype=torch.float32)
-
-    for epoch in range(epochs):
-        optimizer.zero_grad()
-        pred = model(X_nc, X_ace)
-        loss = loss_fn(pred, Y_gold)
-        loss.backward()
-        optimizer.step()
-        if epoch % 100 == 0:
-            print(f"Epoch {epoch}, Loss: {loss.item():.6f}")
-
-    return model
-
+# --- Main test ---
 if __name__ == "__main__":
-    model = train_repair(width=8, depth=8)
-    torch.save(model.state_dict(), "repair_net.pt")
+    width = 8
+    depth = width  # "square" for quantum volume
+
+    print("Width = Depth = " + str(width))
+
+    # Load trained model
+    model = load_repair_model(width)
+
+    # Get distributions
+    nc, ace, gold = generate_distributions(width, depth)
+
+    # Model inference
+    nc_t = torch.tensor(nc, dtype=torch.float32).unsqueeze(0)
+    ace_t = torch.tensor(ace, dtype=torch.float32).unsqueeze(0)
+    repaired = model(nc_t, ace_t).detach().numpy().squeeze()
+
+    # HOG probability
+    hog_ml = hog_probability(gold, repaired)
+    hog_nc = hog_probability(gold, nc)
+    hog_ace = hog_probability(gold, ace)
+    hog_hybrid = hog_probability(gold, 0.5 * nc + 0.5 * ace)
+
+    print(f"Heavy Output Generation Probability:")
+    print(f"  Near-Clifford: {hog_nc:.4f}")
+    print(f"  ACE:           {hog_ace:.4f}")
+    print(f"  50/50 Hybrid:  {hog_hybrid:.4f}")
+    print(f"  ML-Repaired:   {hog_ml:.4f}")
 
