@@ -77,7 +77,7 @@ class RepairNet(nn.Module):
         return x
 
 # --- Training loop ---
-def train_repair(width=4, depth=4, epochs=1000, samples=200):
+def train_repair(width=8, depth=8, epochs=1000, samples=32):
     dim = 1 << width
     model = RepairNet(dim)
     optimizer = optim.Adam(model.parameters(), lr=1e-3)
@@ -106,6 +106,6 @@ def train_repair(width=4, depth=4, epochs=1000, samples=200):
     return model
 
 if __name__ == "__main__":
-    model = train_repair(width=4, depth=4)
+    model = train_repair(width=8, depth=8)
     torch.save(model.state_dict(), "repair_net.pt")
 
