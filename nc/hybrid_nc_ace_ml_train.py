@@ -16,9 +16,9 @@ from qiskit import QuantumCircuit
 from pyqrack import QrackSimulator
 
 def probs_from_shots(width, shots, counts):
-    dims = 1 << width
-    probs = [0.0] * dims
-    for i in range(dims):
+    dim = 1 << width
+    probs = [0.0] * dim
+    for i in range(dim):
         if i in counts:
             probs[i] = counts[i] / shots 
 
@@ -50,7 +50,7 @@ def generate_distributions(width, depth):
     ace = QrackSimulator(width)
     ace_circ = transpile(circ, basis_gates=QrackSimulator.get_qiskit_basis_gates())
     samples_ace = dict(Counter(ace.measure_shots(qubits, shots)))
-    probs_ace = np.array(probs_from_shots(width, shots, samples_nc))
+    probs_ace = np.array(probs_from_shots(width, shots, samples_ace))
 
     # Gold standard
     backend = AerSimulator(method="statevector")
@@ -76,7 +76,7 @@ class RepairNet(nn.Module):
         return x
 
 # --- Training loop ---
-def train_repair(width=8, depth=8, epochs=1000, samples=200):
+def train_repair(width=4, depth=4, epochs=1000, samples=200):
     dim = 1 << width
     model = RepairNet(dim)
     optimizer = optim.Adam(model.parameters(), lr=1e-3)
@@ -105,6 +105,6 @@ def train_repair(width=8, depth=8, epochs=1000, samples=200):
     return model
 
 if __name__ == "__main__":
-    model = train_repair(width=8, depth=8)
+    model = train_repair(width=4, depth=4)
     torch.save(model.state_dict(), "repair_net.pt")
 
