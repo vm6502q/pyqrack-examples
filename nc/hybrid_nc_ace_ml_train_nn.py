@@ -35,6 +35,65 @@ class BasisRepairNet(nn.Module):
 # ─────────────────────────────
 # Generate ACE, NC, Gold for width/depth
 # ─────────────────────────────
+def factor_width(width):
+    col_len = int(np.floor(np.sqrt(width)))
+    while ((width // col_len) * col_len) != width:
+        col_len -= 1
+    row_len = width // col_len
+    if col_len == 1:
+        raise Exception("ERROR: Can't simulate prime number width!")
+
+    return (row_len, col_len)
+
+def cx(sim, q1, q2):
+    sim.cx(q1, q2)
+
+def cy(sim, q1, q2):
+    sim.cy(q1, q2)
+
+def cz(sim, q1, q2):
+    sim.cz(q1, q2)
+
+
+def acx(sim, q1, q2):
+    sim.x(q1)
+    sim.cx(q1, q2)
+    sim.x(q1)
+
+def acy(sim, q1, q2):
+    sim.x(q1)
+    sim.cy(q1, q2)
+    sim.x(q1)
+
+def acz(sim, q1, q2):
+    sim.x(q1)
+    sim.cz(q1, q2)
+    sim.x(q1)
+
+def swap(sim, q1, q2):
+    sim.swap(q1, q2)
+
+def iswap(sim, q1, q2):
+    sim.iswap(q1, q2)
+
+def iiswap(sim, q1, q2):
+    sim.iswap(q1, q2)
+    sim.iswap(q1, q2)
+    sim.iswap(q1, q2)
+
+def pswap(sim, q1, q2):
+    sim.cz(q1, q2)
+    sim.swap(q1, q2)
+
+def mswap(sim, q1, q2):
+    sim.swap(q1, q2)
+    sim.cz(q1, q2)
+
+def nswap(sim, q1, q2):
+    sim.cz(q1, q2)
+    sim.swap(q1, q2)
+    sim.cz(q1, q2)
+
 def probs_from_shots(width, shots, counts):
     dim = 1 << width
     probs = [0.0] * dim
@@ -46,17 +105,42 @@ def probs_from_shots(width, shots, counts):
 def generate_distributions(width, depth):
     shots = 1 << (width + 2)
     qubits = list(range(width))
+    gateSequence = [0, 3, 2, 1, 2, 1, 0, 3]
+    two_bit_gates = swap, pswap, mswap, nswap, iswap, iiswap, cx, cy, cz, acx, acy, acz
+    row_len, col_len = factor_width(width)
 
     # Make random nearest-neighbor RCS
     circ = QuantumCircuit(width)
     for d in range(depth):
         for i in range(width):
             circ.u(*np.random.uniform(0, 2*np.pi, 3), i)
-        unused = list(range(width))
-        np.random.shuffle(unused)
-        while len(unused) > 1:
-            c, t = unused.pop(), unused.pop()
-            circ.cx(c, t)
+
+            gate = gateSequence.pop(0)
+            gateSequence.append(gate)
+            for row in range(1, row_len, 2):
+                for col in range(col_len):
+                    temp_row = row
+                    temp_col = col
+                    temp_row = temp_row + (1 if (gate & 2) else -1)
+                    temp_col = temp_col + (1 if (gate & 1) else 0)
+
+                    if temp_row < 0:
+                        temp_row = temp_row + row_len
+                    if temp_col < 0:
+                        temp_col = temp_col + col_len
+                    if temp_row >= row_len:
+                        temp_row = temp_row - row_len
+                    if temp_col >= col_len:
+                        temp_col = temp_col - col_len
+
+                    b1 = row * row_len + col
+                    b2 = temp_row * row_len + temp_col
+
+                    if (b1 >= width) or (b2 >= width):
+                        continue
+
+                    g = np.random.choice(two_bit_gates)
+                    g(circ, b1, b2)
 
     # Near-Clifford
     nc = QrackSimulator(width, isTensorNetwork=False, isSchmidtDecompose=False, isStabilizerHybrid=True)
@@ -105,7 +189,7 @@ def build_dataset(widths, depth_factor=1, samples_per_width=32):
 # ─────────────────────────────
 # Train
 # ─────────────────────────────
-def train_repair(widths=[5, 6, 7], depth_factor=1, samples_per_width=12, epochs=128, lr=1e-3):
+def train_repair(widths=[6, 8, 9], depth_factor=1, samples_per_width=12, epochs=64, lr=1e-3):
     X, Y = build_dataset(widths, depth_factor, samples_per_width)
     model = BasisRepairNet(feature_dim=X.shape[1])
     optimizer = optim.Adam(model.parameters(), lr=lr)
@@ -179,12 +263,12 @@ def cross_entropy(probs_ideal, probs_test):
 # ─────────────────────────────
 if __name__ == "__main__":
     # Train on small widths
-    model = train_repair(widths=[5, 6, 7], depth_factor=1, samples_per_width=12, epochs=128)
+    model = train_repair(widths=[4], depth_factor=1, samples_per_width=30, epochs=64)
 
-    torch.save(model.state_dict(), "repair_net_scalable.pt")
+    torch.save(model.state_dict(), "repair_net_nn.pt")
 
     # Test on different width (never seen in training)
-    test_width = 8
+    test_width = 6
     nc, ace, gold = generate_distributions(test_width, test_width)
 
     repaired = repair_distribution(model, nc, ace)
