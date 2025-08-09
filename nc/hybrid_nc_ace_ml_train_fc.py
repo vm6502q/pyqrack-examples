@@ -105,7 +105,7 @@ def build_dataset(widths, depth_factor=1, samples_per_width=32):
 # ─────────────────────────────
 # Train
 # ─────────────────────────────
-def train_repair(widths=[5, 6, 7], depth_factor=1, samples_per_width=12, epochs=64, lr=1e-3):
+def train_repair(widths=[5, 6, 7], depth_factor=1, samples_per_width=30, epochs=64, lr=1e-3):
     X, Y = build_dataset(widths, depth_factor, samples_per_width)
     model = BasisRepairNet(feature_dim=X.shape[1])
     optimizer = optim.Adam(model.parameters(), lr=lr)
