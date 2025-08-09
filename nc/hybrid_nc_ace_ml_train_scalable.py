@@ -84,7 +84,7 @@ def generate_distributions(width, depth):
 # ─────────────────────────────
 # Build training data
 # ─────────────────────────────
-def build_dataset(widths, depth_factor=1, samples_per_width=128):
+def build_dataset(widths, depth_factor=1, samples_per_width=32):
     features, targets = [], []
     for w in widths:
         d = w * depth_factor
@@ -105,7 +105,7 @@ def build_dataset(widths, depth_factor=1, samples_per_width=128):
 # ─────────────────────────────
 # Train
 # ─────────────────────────────
-def train_repair(widths=[8], depth_factor=1, samples_per_width=128, epochs=100, lr=1e-3):
+def train_repair(widths=[8], depth_factor=1, samples_per_width=32, epochs=100, lr=1e-3):
     X, Y = build_dataset(widths, depth_factor, samples_per_width)
     model = BasisRepairNet(feature_dim=X.shape[1])
     optimizer = optim.Adam(model.parameters(), lr=lr)
@@ -157,12 +157,12 @@ def hog_probability(probs_ideal, probs_test):
 # ─────────────────────────────
 if __name__ == "__main__":
     # Train on small widths
-    model = train_repair(widths=[8], depth_factor=1, samples_per_width=128, epochs=32)
+    model = train_repair(widths=[3, 4, 5], depth_factor=1, samples_per_width=32, epochs=32)
 
     torch.save(model.state_dict(), "repair_net_scalable.pt")
 
     # Test on different width (never seen in training)
-    test_width = 7
+    test_width = 6
     nc, ace, gold = generate_distributions(test_width, test_width)
 
     repaired = repair_distribution(model, nc, ace)
