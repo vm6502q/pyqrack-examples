@@ -1,5 +1,4 @@
-# How good are Google's own "patch circuits" and "elided circuits" as a direct XEB approximation to full Sycamore circuits?
-# (Are they better than the 2019 Sycamore hardware?)
+# How well can we approximate a general universal case of RCS with approximate near-Clifford simulation?
 
 import math
 import random
