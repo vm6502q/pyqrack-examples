@@ -266,11 +266,11 @@ def calc_stats(ideal_probs, counts, shots, depth, ncrp, hamming_n):
         "qubits": n,
         "ncrp": ncrp,
         "depth": depth,
-        "l2_similarity": l2_similarity,
-        "xeb": xeb,
-        "hog_prob": hog_prob,
+        "l2_similarity": float(l2_similarity),
+        "xeb": float(xeb),
+        "hog_prob": float(hog_prob),
         "hamming_distance_n": min(hamming_n, n_pow >> 1),
-        "hamming_distance_set_avg": avg_hamming_distance,
+        "hamming_distance_set_avg": float(avg_hamming_distance),
     }
 
 
