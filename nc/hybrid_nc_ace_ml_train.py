@@ -20,7 +20,8 @@ def probs_from_shots(width, shots, counts):
     probs = [0.0] * dim
     for i in range(dim):
         if i in counts:
-            probs[i] = counts[i] / shots 
+            probs[i] = counts[i] / shots
+    return probs
 
 # --- Your circuit generation from the benchmark script ---
 def generate_distributions(width, depth):
