@@ -105,11 +105,11 @@ def build_dataset(widths, depth_factor=1, samples_per_width=32):
 # ─────────────────────────────
 # Train
 # ─────────────────────────────
-def train_repair(widths=[4], depth_factor=1, samples_per_width=24, epochs=128, lr=1e-3):
+def train_repair(widths=[5, 6, 7], depth_factor=1, samples_per_width=12, epochs=128, lr=1e-3):
     X, Y = build_dataset(widths, depth_factor, samples_per_width)
     model = BasisRepairNet(feature_dim=X.shape[1])
     optimizer = optim.Adam(model.parameters(), lr=lr)
-    loss_fn = nn.MSELoss()
+    loss_fn = nn.KLDivLoss(reduction="batchmean")
 
     X_t = torch.tensor(X)
     Y_t = torch.tensor(Y)
@@ -117,9 +117,17 @@ def train_repair(widths=[4], depth_factor=1, samples_per_width=24, epochs=128, l
     for epoch in range(epochs):
         optimizer.zero_grad()
         pred = model(X_t)
-        loss = loss_fn(pred, Y_t)
+
+        # Normalize predictions and targets to valid distributions
+        pred_norm = pred / (pred.sum() + 1e-12)
+        target_norm = Y_t / (Y_t.sum() + 1e-12)
+
+        # Convert predictions to log space for KLDivLoss
+        loss = loss_fn(torch.log(pred_norm + 1e-12), target_norm)
+
         loss.backward()
         optimizer.step()
+
         if (epoch % (epochs // 10)) == 0:
             print(f"[Epoch {epoch}] Loss: {loss.item():.6f}")
 
@@ -171,7 +179,7 @@ def cross_entropy(probs_ideal, probs_test):
 # ─────────────────────────────
 if __name__ == "__main__":
     # Train on small widths
-    model = train_repair(widths=[5, 6, 7], depth_factor=1, samples_per_width=24, epochs=128)
+    model = train_repair(widths=[5, 6, 7], depth_factor=1, samples_per_width=12, epochs=128)
 
     torch.save(model.state_dict(), "repair_net_scalable.pt")
 
