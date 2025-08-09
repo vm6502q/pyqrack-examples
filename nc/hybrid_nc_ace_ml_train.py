@@ -77,7 +77,7 @@ class RepairNet(nn.Module):
         return x
 
 # --- Training loop ---
-def train_repair(width=8, depth=8, epochs=1000, samples=32):
+def train_repair(width=8, depth=8, epochs=100, samples=32):
     dim = 1 << width
     model = RepairNet(dim)
     optimizer = optim.Adam(model.parameters(), lr=1e-3)
@@ -100,7 +100,7 @@ def train_repair(width=8, depth=8, epochs=1000, samples=32):
         loss = loss_fn(pred, Y_gold)
         loss.backward()
         optimizer.step()
-        if epoch % 100 == 0:
+        if epoch % 10 == 0:
             print(f"Epoch {epoch}, Loss: {loss.item():.6f}")
 
     return model

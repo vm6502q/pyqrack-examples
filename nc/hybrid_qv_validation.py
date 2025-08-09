@@ -101,6 +101,8 @@ if __name__ == "__main__":
     ace_t = torch.tensor(ace, dtype=torch.float32).unsqueeze(0)
     repaired = model(nc_t, ace_t).detach().numpy().squeeze()
 
+    torch.save(repaired.state_dict(), "repair_net_scalable.pt")
+
     # HOG probability
     hog_ml = hog_probability(gold, repaired)
     hog_nc = hog_probability(gold, nc)
