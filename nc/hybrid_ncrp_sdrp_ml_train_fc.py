@@ -177,17 +177,21 @@ if __name__ == "__main__":
     # Test on different width (never seen in training)
     test_width = 6
     nc, sdrp, gold = generate_distributions(test_width, test_width)
+    mixed = [(nc[i] + sdrp[i]) / 2 for i in range(len(nc))]
 
     repaired = repair_distribution(model, nc, sdrp)
 
     print(f"HOG (NCRP):     {hog_probability(gold, nc):.4f}")
     print(f"HOG (SDRP):     {hog_probability(gold, sdrp):.4f}")
+    print(f"HOG (50/50):    {hog_probability(gold, mixed):.4f}")
     print(f"HOG (Repaired): {hog_probability(gold, repaired):.4f}")
     print()
     print(f"Fidelity (NCRP):     {fidelity(gold, nc):.4f}")
     print(f"Fidelity (SDRP):     {fidelity(gold, sdrp):.4f}")
+    print(f"Fidelity (50/50):    {fidelity(gold, mixed):.4f}")
     print(f"Fidelity (Repaired): {fidelity(gold, repaired):.4f}")
     print()
     print(f"XEB (NCRP):     {cross_entropy(gold, nc):.4f}")
     print(f"XEB (SDRP):     {cross_entropy(gold, sdrp):.4f}")
+    print(f"XEB (50/50):    {cross_entropy(gold, mixed):.4f}")
     print(f"XEB (Repaired): {cross_entropy(gold, repaired):.4f}")
