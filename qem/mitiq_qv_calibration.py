@@ -34,7 +34,7 @@ def calc_stats(ideal_probs, counts, shots):
     threshold = statistics.median(ideal_probs)
     u_u = statistics.mean(ideal_probs)
     diff_sqr = 0
-    proj_sqr = 0
+    z_fidelity = 0
     numer = 0
     denom = 0
     sum_hog_counts = 0
@@ -48,7 +48,7 @@ def calc_stats(ideal_probs, counts, shots):
 
         # L2 distance
         diff_sqr += (ideal - exp) ** 2
-        proj_sqr += (exp if ideal > exp else ideal)
+        z_fidelity += (exp if ideal > exp else ideal)
 
         # XEB / EPLG
         denom += (ideal - u_u) ** 2
@@ -59,7 +59,6 @@ def calc_stats(ideal_probs, counts, shots):
             sum_hog_counts += count
 
     l2_difference = diff_sqr ** (1 / 2)
-    z_fidelity = proj_sqr
     hog_prob = sum_hog_counts / shots
     xeb = numer / denom
 

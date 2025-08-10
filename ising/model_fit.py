@@ -93,6 +93,7 @@ def calc_stats(n_rows, n_cols, ideal_probs, counts, bias, model, shots, depth):
     numer = 0
     denom = 0
     diff_sqr = 0
+    z_fidelity = 0
     sum_hog_counts = 0
     experiment = [0] * n_pow
     # total = 0
@@ -127,15 +128,15 @@ def calc_stats(n_rows, n_cols, ideal_probs, counts, bias, model, shots, depth):
 
         # L2 distance
         diff_sqr += (ideal - count) ** 2
+        z_fidelity += exp if ideal > exp else ideal
 
         # XEB / EPLG
         ideal_centered = ideal - u_u
         denom += ideal_centered * ideal_centered
         numer += ideal_centered * (count - u_u)
 
-    l2_similarity = 1 - diff_sqr ** (1 / 2)
+    l2_difference = diff_sqr ** (1 / 2)
     hog_prob = sum_hog_counts / shots
-
     xeb = numer / denom
 
     # This should be ~1.0, if we're properly normalized.
@@ -144,7 +145,8 @@ def calc_stats(n_rows, n_cols, ideal_probs, counts, bias, model, shots, depth):
     return {
         "qubits": n,
         "depth": depth,
-        "l2_similarity": float(l2_similarity),
+        "l2_difference": float(l2_difference),
+        "z_fidelity": float(z_fidelity),
         "hog_prob": hog_prob,
         "xeb": xeb,
     }
