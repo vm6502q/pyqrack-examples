@@ -113,7 +113,7 @@ def bench_qrack(n_qubits, hamming_n):
 
             if ((stop - start) > (2 * min_time)) or (
                 (d > 0)
-                and ((results["l2_similarity"] >= 1.0) or (results["xeb"] >= 1.0))
+                and ((results["l2_difference"] <= 0.0) or (results["xeb"] >= 1.0))
             ):
                 # This has become too costly (or too accurate) to try lower rounding parameters:
                 break
