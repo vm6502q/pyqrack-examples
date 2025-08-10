@@ -418,7 +418,7 @@ def main():
         )
 
         # Add up the square residuals:
-        r_squared += (1 - result["l2_similarity"]) ** 2
+        r_squared += (1.0 - result["z_fidelity"]) ** 2
 
         if model < 0.99:
             # Mix in the conventional simulation component.
