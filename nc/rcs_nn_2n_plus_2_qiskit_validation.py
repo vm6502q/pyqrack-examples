@@ -213,7 +213,7 @@ def bench_qrack(n_qubits, hamming_n):
 
             if ((stop - start) > (2 * min_time)) or (
                 (d > 0)
-                and ((results["l2_similarity"] >= 1.0) or (results["xeb"] >= 1.0))
+                and ((results["l2_difference"] <= 0.0) or (results["xeb"] >= 1.0))
             ):
                 # This has become too costly (or too accurate) to try lower rounding parameters:
                 break
@@ -227,6 +227,7 @@ def calc_stats(ideal_probs, counts, shots, depth, ncrp, hamming_n):
     threshold = statistics.median(ideal_probs)
     u_u = statistics.mean(ideal_probs)
     diff_sqr = 0
+    proj_sqr = 0
     numer = 0
     denom = 0
     sum_hog_counts = 0
@@ -234,21 +235,24 @@ def calc_stats(ideal_probs, counts, shots, depth, ncrp, hamming_n):
     for i in range(n_pow):
         count = counts[i] if i in counts else 0
         ideal = ideal_probs[i]
+        exp = count / shots
 
         experiment[i] = count
 
         # L2 distance
-        diff_sqr += (ideal - (count / shots)) ** 2
+        diff_sqr += (ideal - exp) ** 2
+        proj_sqr += (ideal if ideal > exp else exp) ** 2
 
         # XEB / EPLG
         denom += (ideal - u_u) ** 2
-        numer += (ideal - u_u) * ((count / shots) - u_u)
+        numer += (ideal - u_u) * (exp - u_u)
 
         # QV / HOG
         if ideal > threshold:
             sum_hog_counts += count
 
-    l2_similarity = 1 - diff_sqr ** (1 / 2)
+    l2_difference = diff_sqr ** (1 / 2)
+    z_fidelity = proj_sqr ** (1 / 2)
     hog_prob = sum_hog_counts / shots
     xeb = numer / denom
 
@@ -264,9 +268,9 @@ def calc_stats(ideal_probs, counts, shots, depth, ncrp, hamming_n):
 
     return {
         "qubits": n,
-        "ncrp": ncrp,
         "depth": depth,
-        "l2_similarity": float(l2_similarity),
+        "l2_difference": float(l2_difference),
+        "z_fidelity": float(z_fidelity),
         "xeb": float(xeb),
         "hog_prob": float(hog_prob),
         "hamming_distance_n": min(hamming_n, n_pow >> 1),

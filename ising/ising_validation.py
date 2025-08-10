@@ -84,16 +84,16 @@ def calc_stats(n, ideal_probs, counts, bias, model, shots, depth, hamming_n):
     n_pow = 2**n
     threshold = statistics.median(ideal_probs)
     u_u = statistics.mean(ideal_probs)
+    diff_sqr = 0
+    proj_sqr = 0
     numer = 0
     denom = 0
-    diff_sqr = 0
     sum_hog_counts = 0
     experiment = [0] * n_pow
     for i in range(n_pow):
-        ideal = ideal_probs[i]
-
         count = counts[i] if i in counts else 0
-        count /= shots
+        ideal = ideal_probs[i]
+        exp = count / shots
 
         hamming_weight = hamming_distance(i, 0, n)
         if hamming_weight <= (n // 2):
@@ -102,24 +102,26 @@ def calc_stats(n, ideal_probs, counts, bias, model, shots, depth, hamming_n):
             for _ in range(hamming_weight):
                 weight *= combo_factor
                 combo_factor -= 1
-            count = (1 - model) * count + model * bias[hamming_weight] / weight
+            count = (1 - model) * exp + model * bias[hamming_weight] / weight
 
-        experiment[i] = int(count * shots)
+        experiment[i] = count
+
+        # L2 distance
+        diff_sqr += (ideal - exp) ** 2
+        proj_sqr += (ideal if ideal > exp else exp) ** 2
+
+        # XEB / EPLG
+        denom += (ideal - u_u) ** 2
+        numer += (ideal - u_u) * (exp - u_u)
 
         # QV / HOG
         if ideal > threshold:
-            sum_hog_counts += count * shots
+            sum_hog_counts += count
 
-        # L2 distance
-        diff_sqr += (ideal - count) ** 2
-
-        # XEB / EPLG
-        ideal_centered = ideal - u_u
-        denom += ideal_centered * ideal_centered
-        numer += ideal_centered * (count - u_u)
-
-    l2_similarity = 1 - diff_sqr ** (1 / 2)
+    l2_difference = diff_sqr ** (1 / 2)
+    z_fidelity = proj_sqr ** (1 / 2)
     hog_prob = sum_hog_counts / shots
+    xeb = numer / denom
 
     exp_top_n = top_n(hamming_n, experiment)
     con_top_n = top_n(hamming_n, ideal_probs)
@@ -131,19 +133,16 @@ def calc_stats(n, ideal_probs, counts, bias, model, shots, depth, hamming_n):
     ]
     avg_hamming_distance = np.mean(min_distances)
 
-    xeb = numer / denom
-
     return {
         "qubits": n,
         "depth": depth,
-        "l2_similarity": float(l2_similarity),
-        "hog_prob": hog_prob,
-        "xeb": xeb,
+        "l2_difference": float(l2_difference),
+        "z_fidelity": float(z_fidelity),
+        "xeb": float(xeb),
+        "hog_prob": float(hog_prob),
         "hamming_distance_n": min(hamming_n, n_pow >> 1),
         "hamming_distance_set_avg": float(avg_hamming_distance),
-        "hamming_fidelity_heuristic": 1 - 2 * float(avg_hamming_distance) / n,
     }
-
 
 # By Gemini (Google Search AI)
 def int_to_bitstring(integer, length):

@@ -34,6 +34,7 @@ def calc_stats(ideal_probs, counts, shots):
     threshold = statistics.median(ideal_probs)
     u_u = statistics.mean(ideal_probs)
     diff_sqr = 0
+    proj_sqr = 0
     numer = 0
     denom = 0
     sum_hog_counts = 0
@@ -41,26 +42,30 @@ def calc_stats(ideal_probs, counts, shots):
     for i in range(n_pow):
         count = counts[i] if i in counts else 0
         ideal = ideal_probs[i]
+        exp = count / shots
 
         experiment[i] = count
 
         # L2 distance
-        diff_sqr += (ideal - (count / shots)) ** 2
+        diff_sqr += (ideal - exp) ** 2
+        proj_sqr += (ideal if ideal > exp else exp) ** 2
 
         # XEB / EPLG
         denom += (ideal - u_u) ** 2
-        numer += (ideal - u_u) * ((count / shots) - u_u)
+        numer += (ideal - u_u) * (exp - u_u)
 
         # QV / HOG
         if ideal > threshold:
             sum_hog_counts += count
 
-    l2_similarity = 1 - diff_sqr ** (1 / 2)
+    l2_difference = diff_sqr ** (1 / 2)
+    z_fidelity = proj_sqr ** (1 / 2)
     hog_prob = sum_hog_counts / shots
     xeb = numer / denom
 
     return {
-        "l2_similarity": l2_similarity,
+        "l2_difference": l2_difference,
+        "z_fidelity": z_fidelity,
         "xeb": xeb,
         "hog_prob": hog_prob,
     }
@@ -136,7 +141,7 @@ def execute(circ):
     # So as not to exceed floor at 0.0 and ceiling at 1.0, (assuming 0 < p < 1,)
     # we mitigate its logit function value (https://en.wikipedia.org/wiki/Logit)
     # return logit(stats['hog_prob'])
-    return logit(stats["l2_similarity"])
+    return logit(stats["z_fidelity"])
 
 
 def main():
