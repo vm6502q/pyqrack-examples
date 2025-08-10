@@ -96,11 +96,11 @@ def nswap(sim, q1, q2):
 
 def bench_qrack(width, ncrp):
     # This is a "nearest-neighbor" coupler random circuit.
-    lcv_range = range(n_qubits)
+    lcv_range = range(width)
     all_bits = list(lcv_range)
 
-    rz_count = (n_qubits + 1) << 1
-    rz_opportunities = n_qubits * n_qubits * 3
+    rz_count = (width + 1) << 1
+    rz_opportunities = width * width * 3
     rz_positions = []
     while len(rz_positions) < rz_count:
         rz_position = random.randint(0, rz_opportunities - 1)
@@ -111,7 +111,7 @@ def bench_qrack(width, ncrp):
     # Nearest-neighbor couplers:
     gateSequence = [0, 3, 2, 1, 2, 1, 0, 3]
     two_bit_gates = swap, pswap, mswap, nswap, iswap, iiswap, cx, cy, cz, acx, acy, acz
-    row_len, col_len = factor_width(n_qubits)
+    row_len, col_len = factor_width(width)
 
     qc = QuantumCircuit(width)
     gate_count = 0
@@ -158,7 +158,7 @@ def bench_qrack(width, ncrp):
                     continue
 
                 g = random.choice(two_bit_gates)
-                g(circ, b1, b2)
+                g(qc, b1, b2)
 
         experiment = QrackSimulator(
             width,
@@ -168,14 +168,14 @@ def bench_qrack(width, ncrp):
         )
         # Round to nearest Clifford circuit
         experiment.set_ncrp(ncrp)
-        experiment.run_qiskit_circuit(circ)
+        experiment.run_qiskit_circuit(qc)
 
         clone = experiment.clone()
         clone.m_all()
 
         print(
             {
-                "qubits": n_qubits,
+                "qubits": width,
                 "ncrp": ncrp,
                 "minimum_fidelity_estimate": clone.get_unitary_fidelity(),
                 "depth": d + 1,
