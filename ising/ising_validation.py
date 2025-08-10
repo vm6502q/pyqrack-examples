@@ -108,7 +108,7 @@ def calc_stats(n, ideal_probs, counts, bias, model, shots, depth, hamming_n):
 
         # L2 distance
         diff_sqr += (ideal - exp) ** 2
-        proj_sqr += (ideal if ideal > exp else exp) ** 2
+        proj_sqr += (exp if ideal > exp else ideal) ** 2
 
         # XEB / EPLG
         denom += (ideal - u_u) ** 2
