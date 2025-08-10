@@ -62,14 +62,20 @@ def generate_distributions(width, depth):
     nc_circ = transpile(circ, basis_gates=["rz","h","x","y","z","sx","sxdg","s","sdg","t","tdg","cx","cy","cz","swap","iswap"])
     nc.run_qiskit_circuit(nc_circ)
     samples_nc = dict(Counter(nc.measure_shots(qubits, shots)))
+    del nc
+    del nc_circ
     probs_nc = np.array(probs_from_shots(width, shots, samples_nc))
+    del samples_nc
 
     # SDRP
     sdrp = QrackSimulator(width)
     sdrp.set_sdrp(2.0)
     sdrp_circ = transpile(circ, basis_gates=QrackSimulator.get_qiskit_basis_gates())
     samples_sdrp = dict(Counter(sdrp.measure_shots(qubits, shots)))
+    del sdrp
+    del sdrp_circ
     probs_sdrp = np.array(probs_from_shots(width, shots, samples_sdrp))
+    del samples_sdrp
 
     # Gold standard
     backend = AerSimulator(method="statevector")
@@ -104,7 +110,7 @@ def build_dataset(widths, depth_factor=1, samples_per_width=32):
 # ─────────────────────────────
 # Train
 # ─────────────────────────────
-def train_repair(widths=[4], depth_factor=1, samples_per_width=96, epochs=256, lr=1e-3):
+def train_repair(widths=[2, 3, 4], depth_factor=1, samples_per_width=80, epochs=144, lr=1e-3):
     X, Y = build_dataset(widths, depth_factor, samples_per_width)
     model = BasisRepairNet(feature_dim=X.shape[1])
     optimizer = optim.Adam(model.parameters(), lr=lr)
@@ -170,7 +176,7 @@ def cross_entropy(probs_ideal, probs_test):
 # ─────────────────────────────
 if __name__ == "__main__":
     # Train on small widths
-    model = train_repair(widths=[4], depth_factor=1, samples_per_width=96, epochs=256)
+    model = train_repair(widths=[2, 3, 4], depth_factor=1, samples_per_width=80, epochs=144)
 
     torch.save(model.state_dict(), "repair_net_nn.pt")
 
