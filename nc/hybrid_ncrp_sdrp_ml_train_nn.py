@@ -101,7 +101,7 @@ def probs_from_shots(width, shots, counts):
     return probs
 
 def generate_distributions(width, depth):
-    shots = 1 << (width + 2)
+    shots = max(8192, 1 << (width + 2))
     qubits = list(range(width))
     gateSequence = [0, 3, 2, 1, 2, 1, 0, 3]
     two_bit_gates = swap, pswap, mswap, nswap, iswap, iiswap, cx, cy, cz, acx, acy, acz

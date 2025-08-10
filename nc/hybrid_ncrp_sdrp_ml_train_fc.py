@@ -42,7 +42,7 @@ def probs_from_shots(width, shots, counts):
     return probs
 
 def generate_distributions(width, depth):
-    shots = 1 << (width + 2)
+    shots = max(8192, 1 << (width + 2))
     qubits = list(range(width))
 
     # Make random nearest-neighbor RCS
