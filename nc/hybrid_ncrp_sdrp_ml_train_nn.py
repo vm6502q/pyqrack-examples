@@ -188,7 +188,7 @@ def build_dataset(widths, depth_factor=1, samples_per_width=32):
 # ─────────────────────────────
 # Train
 # ─────────────────────────────
-def train_repair(widths=[4], depth_factor=1, samples_per_width=128, epochs=128, lr=1e-3):
+def train_repair(widths=[4], depth_factor=1, samples_per_width=128, epochs=256, lr=1e-3):
     X, Y = build_dataset(widths, depth_factor, samples_per_width)
     model = BasisRepairNet(feature_dim=X.shape[1])
     optimizer = optim.Adam(model.parameters(), lr=lr)
@@ -262,7 +262,7 @@ def cross_entropy(probs_ideal, probs_test):
 # ─────────────────────────────
 if __name__ == "__main__":
     # Train on small widths
-    model = train_repair(widths=[4], depth_factor=1, samples_per_width=128, epochs=128)
+    model = train_repair(widths=[4], depth_factor=1, samples_per_width=128, epochs=256)
 
     torch.save(model.state_dict(), "repair_net_nn.pt")
 
