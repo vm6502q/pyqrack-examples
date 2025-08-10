@@ -225,7 +225,7 @@ def calc_stats(ideal_probs, counts, shots, depth, hamming_n):
 
         # L2 distance
         diff_sqr += (ideal - exp) ** 2
-        proj_sqr += (exp if ideal > exp else ideal) ** 2
+        proj_sqr += (exp if ideal > exp else ideal)
 
         # XEB / EPLG
         denom += (ideal - u_u) ** 2
@@ -236,7 +236,7 @@ def calc_stats(ideal_probs, counts, shots, depth, hamming_n):
             sum_hog_counts += count
 
     l2_difference = diff_sqr ** (1 / 2)
-    z_fidelity = proj_sqr ** (1 / 2)
+    z_fidelity = proj_sqr
     hog_prob = sum_hog_counts / shots
     xeb = numer / denom
 
