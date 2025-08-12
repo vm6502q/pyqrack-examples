@@ -39,7 +39,7 @@ charge = 0  # Excess +/- elementary charge, beyond multiplicity
 
 # Lithium (and lighter):
 
-# geometry = [('Li', (0.0, 0.0, 0.0)), ('H', (0.0, 0.0, 15.9))]  # LiH Molecule
+geometry = [('Li', (0.0, 0.0, 0.0)), ('H', (0.0, 0.0, 15.9))]  # LiH Molecule
 
 # Carbon (and lighter):
 
@@ -160,10 +160,10 @@ charge = 0  # Excess +/- elementary charge, beyond multiplicity
 # ]
 
 # Potassium chloride (biologically important):
-geometry = [
-    ('K', (0.0000, 0.0000, 0.0000)),
-    ('Cl', (2.6700, 0.0000, 0.0000))
-]
+# geometry = [
+#     ('K', (0.0000, 0.0000, 0.0000)),
+#     ('Cl', (2.6700, 0.0000, 0.0000))
+# ]
 
 # Calcium chloride:
 # geometry = [
@@ -231,7 +231,7 @@ print(str(n_qubits) + " qubits...")
 qubit_hamiltonian = jordan_wigner(fermionic_hamiltonian)
 
 # Step 4: Bootstrap!
-def compute_energy(theta_bits, hamiltonian):
+def compute_energy(theta_bits, z_hamiltonian):
     """
     Computes the exact expectation value of a Hamiltonian on a computational basis state.
 
@@ -244,11 +244,7 @@ def compute_energy(theta_bits, hamiltonian):
     """
     energy = 0.0
 
-    for paulis, coeff in hamiltonian.terms.items():
-        # Skip if any X or Y in term
-        if any(op in ("X", "Y") for _, op in paulis):
-            continue
-
+    for paulis, coeff in z_hamiltonian:
         # Z/I terms → product of ±1 from computational basis bits
         value = 1
         for qubit, op in paulis:
@@ -280,9 +276,16 @@ def multiprocessing_bootstrap(hamiltonian, n_qubits):
     coeffs = []
     observables = []
     best_theta = np.random.randint(2, size=n_qubits)
-    min_energy = compute_energy(best_theta, hamiltonian)
     improved = True
     iter_count = 0
+
+    z_hamiltonian = []
+    for paulis, coeff in hamiltonian.terms.items():
+        # Skip if any X or Y in term
+        if not any(op in ("X", "Y") for _, op in paulis):
+            z_hamiltonian.append((paulis, coeff))
+
+    min_energy = compute_energy(best_theta, z_hamiltonian)
 
     while improved:
         improved = False
@@ -293,7 +296,7 @@ def multiprocessing_bootstrap(hamiltonian, n_qubits):
             theta = best_theta.copy()
 
             with multiprocessing.Pool(processes=os.cpu_count()) as pool:
-                args = [(hamiltonian, theta, i, n_qubits) for i in range(n_qubits)]
+                args = [(z_hamiltonian, theta, i, n_qubits) for i in range(n_qubits)]
                 results = pool.map(bootstrap_worker, args)
 
             results.sort(key=lambda r: r[1])
@@ -315,7 +318,7 @@ def multiprocessing_bootstrap(hamiltonian, n_qubits):
         theta = best_theta.copy()
 
         with multiprocessing.Pool(processes=os.cpu_count()) as pool:
-            args = [(hamiltonian, theta, i, j, n_qubits) for j in range(i + 1, n_qubits) for i in range(n_qubits) ]
+            args = [(z_hamiltonian, theta, i, j, n_qubits) for j in range(i + 1, n_qubits) for i in range(n_qubits) ]
             results = pool.map(bootstrap_worker_2qb, args)
 
         results.sort(key=lambda r: r[1])
