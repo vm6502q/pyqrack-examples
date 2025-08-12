@@ -267,30 +267,61 @@ def bootstrap_worker(args):
 
     return i, energy, local_theta[i]
 
+def bootstrap_worker_2qb(args):
+    hamiltonian, theta, i, j, n_qubits = args
+    local_theta = theta.copy()
+    local_theta[i] = not local_theta[i]
+    local_theta[j] = not local_theta[j]
+    energy = compute_energy(local_theta, hamiltonian)
+
+    return i, energy, local_theta[i]
+
 def multiprocessing_bootstrap(hamiltonian, n_qubits):
     coeffs = []
     observables = []
     best_theta = np.random.randint(2, size=n_qubits)
     min_energy = compute_energy(best_theta, hamiltonian)
-    converged = False
+    improved = True
     iter_count = 0
 
-    while not converged:
+    while improved:
+        improved = False
+        improved_1qb = True
+        while improved_1qb:
+            improved_1qb = False
+            print(f"\nBootstrap Iteration {iter_count + 1}:")
+            theta = best_theta.copy()
+
+            with multiprocessing.Pool(processes=os.cpu_count()) as pool:
+                args = [(hamiltonian, theta, i, n_qubits) for i in range(n_qubits)]
+                results = pool.map(bootstrap_worker, args)
+
+            results.sort(key=lambda r: r[1])
+            i, energy, flipped = results[0]
+            if energy < min_energy:
+                min_energy = energy
+                best_theta[i] = flipped
+                improved_1qb = True
+                print(f"  Qubit {i} flip accepted. New energy: {min_energy}")
+            else:
+                print(f"  Qubit flips all rejected.")
+
+            iter_count += 1
+
         print(f"\nBootstrap Iteration {iter_count + 1}:")
-        converged = True
         theta = best_theta.copy()
 
         with multiprocessing.Pool(processes=os.cpu_count()) as pool:
-            args = [(hamiltonian, theta, i, n_qubits) for i in range(n_qubits)]
-            results = pool.map(bootstrap_worker, args)
+            args = [(hamiltonian, theta, i, j, n_qubits) for j in range(i + 1, n_qubits) for i in range(n_qubits) ]
+            results = pool.map(bootstrap_worker_2qb, args)
 
         results.sort(key=lambda r: r[1])
         i, energy, flipped = results[0]
         if energy < min_energy:
             min_energy = energy
             best_theta[i] = flipped
-            converged = False
-            print(f"  Qubit {i} flip accepted. New energy: {min_energy}")
+            improved = True
+            print(f"  Qubit {i} and {j} flip accepted. New energy: {min_energy}")
         else:
             print(f"  Qubit flips all rejected.")
 
