@@ -39,7 +39,7 @@ charge = 0  # Excess +/- elementary charge, beyond multiplicity
 
 # Lithium (and lighter):
 
-geometry = [('Li', (0.0, 0.0, 0.0)), ('H', (0.0, 0.0, 15.9))]  # LiH Molecule
+# geometry = [('Li', (0.0, 0.0, 0.0)), ('H', (0.0, 0.0, 15.9))]  # LiH Molecule
 
 # Carbon (and lighter):
 
@@ -160,10 +160,10 @@ geometry = [('Li', (0.0, 0.0, 0.0)), ('H', (0.0, 0.0, 15.9))]  # LiH Molecule
 # ]
 
 # Potassium chloride (biologically important):
-# geometry = [
-#     ('K', (0.0000, 0.0000, 0.0000)),
-#     ('Cl', (2.6700, 0.0000, 0.0000))
-# ]
+geometry = [
+    ('K', (0.0000, 0.0000, 0.0000)),
+    ('Cl', (2.6700, 0.0000, 0.0000))
+]
 
 # Calcium chloride:
 # geometry = [
@@ -307,6 +307,9 @@ def multiprocessing_bootstrap(hamiltonian, n_qubits):
                 print(f"  Qubit flips all rejected.")
 
             iter_count += 1
+
+        if n_qubits < 2:
+            break
 
         print(f"\nBootstrap Iteration {iter_count + 1}:")
         theta = best_theta.copy()
