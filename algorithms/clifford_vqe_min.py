@@ -166,11 +166,11 @@ geometry = [('Li', (0.0, 0.0, 0.0)), ('H', (0.0, 0.0, 15.9))]  # LiH Molecule
 # ]
 
 # Calcium chloride:
-# geometry = [
-#     ('Ca', (0.0000, 0.0000, 0.0000)),
-#     ('Cl', (2.7800, 0.0000, 0.0000)),
-#     ('Cl', (-2.7800, 0.0000, 0.0000))
-# ]
+geometry = [
+    ('Ca', (0.0000, 0.0000, 0.0000)),
+    ('Cl', (2.7800, 0.0000, 0.0000)),
+    ('Cl', (-2.7800, 0.0000, 0.0000))
+]
 
 # Diatomic halogens:
 
@@ -266,7 +266,7 @@ def bootstrap_worker(args):
 
     return indices, energy, flipped
 
-def multiprocessing_bootstrap(hamiltonian, n_qubits):
+def multiprocessing_bootstrap(hamiltonian):
     z_hamiltonian = []
     z_qubits = set()
     for paulis, coeff in hamiltonian.terms.items():
@@ -376,7 +376,7 @@ def multiprocessing_bootstrap(hamiltonian, n_qubits):
     return best_theta, min_energy
 
 # Run threaded bootstrap
-theta, min_energy = multiprocessing_bootstrap(qubit_hamiltonian, n_qubits)
+theta, min_energy = multiprocessing_bootstrap(qubit_hamiltonian)
 
 print(f"\nFinal Bootstrap Ground State Energy: {min_energy} Ha")
 print("Final Bootstrap Parameters:")
