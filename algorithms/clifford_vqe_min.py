@@ -268,6 +268,7 @@ def bootstrap_worker(args):
 
 def multiprocessing_bootstrap(hamiltonian, n_qubits):
     z_hamiltonian = []
+    qubit_has_z = [False] * n_qubits
     for paulis, coeff in hamiltonian.terms.items():
         # Skip if any X or Y in term
         if any(op in ("X", "Y") for _, op in paulis):
@@ -276,8 +277,10 @@ def multiprocessing_bootstrap(hamiltonian, n_qubits):
         q = []
         for qubit, op in paulis:
             # Z/I terms: keep only Z
-            if op == "Z":
-                q.append(qubit)
+            if op != "Z":
+                continue
+            q.append(qubit)
+            qubit_has_z[qubit] = True
 
         z_hamiltonian.append((q, coeff))
 
@@ -297,7 +300,11 @@ def multiprocessing_bootstrap(hamiltonian, n_qubits):
                 theta = best_theta.copy()
 
                 with multiprocessing.Pool(processes=os.cpu_count()) as pool:
-                    args = [(z_hamiltonian, theta, (i,), n_qubits) for i in range(n_qubits)]
+                    args = []
+                    for i in range(n_qubits):
+                        if not qubit_has_z[i]:
+                            continue
+                        args.append((z_hamiltonian, theta, (i,), n_qubits))
                     results = pool.map(bootstrap_worker, args)
 
                 results.sort(key=lambda r: r[1])
@@ -320,7 +327,14 @@ def multiprocessing_bootstrap(hamiltonian, n_qubits):
             theta = best_theta.copy()
 
             with multiprocessing.Pool(processes=os.cpu_count()) as pool:
-                args = [(z_hamiltonian, theta, (i, j), n_qubits) for j in range(i + 1, n_qubits) for i in range(n_qubits) ]
+                args = []
+                for i in range(n_qubits):
+                    if not qubit_has_z[i]:
+                        continue
+                    for j in range(i + 1, n_qubits):
+                        if not qubit_has_z[j]:
+                            continue
+                        args.append((z_hamiltonian, theta, (i, j), n_qubits))
                 results = pool.map(bootstrap_worker, args)
 
             results.sort(key=lambda r: r[1])
@@ -345,9 +359,15 @@ def multiprocessing_bootstrap(hamiltonian, n_qubits):
         with multiprocessing.Pool(processes=os.cpu_count()) as pool:
             args = []
             for i in range(n_qubits):
+                if not qubit_has_z[i]:
+                    continue
                 for j in range(i + 1, n_qubits):
+                    if not qubit_has_z[j]:
+                        continue
                     for k in range(j + 1, n_qubits):
-                        args = [(z_hamiltonian, theta, (i, j, k), n_qubits)]
+                        if not qubit_has_z[k]:
+                            continue
+                        args.append((z_hamiltonian, theta, (i, j, k), n_qubits))
             results = pool.map(bootstrap_worker, args)
 
         results.sort(key=lambda r: r[1])
