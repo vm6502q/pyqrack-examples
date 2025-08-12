@@ -256,7 +256,7 @@ def compute_energy(theta_bits, z_hamiltonian):
 
 # Parallelization by Elara (OpenAI custom GPT):
 def bootstrap_worker(args):
-    z_hamiltonian, theta, indices, n_qubits = args
+    z_hamiltonian, theta, indices = args
     local_theta = theta.copy()
     flipped = []
     for i in indices:
@@ -304,7 +304,7 @@ def multiprocessing_bootstrap(hamiltonian, n_qubits):
                 with multiprocessing.Pool(processes=os.cpu_count()) as pool:
                     args = []
                     for i in range(n_qubits):
-                        args.append((z_hamiltonian, theta, (z_qubits[i],), n_qubits))
+                        args.append((z_hamiltonian, theta, (z_qubits[i],)))
                     results = pool.map(bootstrap_worker, args)
 
                 results.sort(key=lambda r: r[1])
@@ -330,7 +330,7 @@ def multiprocessing_bootstrap(hamiltonian, n_qubits):
                 args = []
                 for i in range(n_qubits):
                     for j in range(i + 1, n_qubits):
-                        args.append((z_hamiltonian, theta, (z_qubits[i], z_qubits[j]), n_qubits))
+                        args.append((z_hamiltonian, theta, (z_qubits[i], z_qubits[j])))
                 results = pool.map(bootstrap_worker, args)
 
             results.sort(key=lambda r: r[1])
@@ -357,7 +357,7 @@ def multiprocessing_bootstrap(hamiltonian, n_qubits):
             for i in range(n_qubits):
                 for j in range(i + 1, n_qubits):
                     for k in range(j + 1, n_qubits):
-                        args.append((z_hamiltonian, theta, (z_qubits[i], z_qubits[j], z_qubits[k]), n_qubits))
+                        args.append((z_hamiltonian, theta, (z_qubits[i], z_qubits[j], z_qubits[k])))
             results = pool.map(bootstrap_worker, args)
 
         results.sort(key=lambda r: r[1])
