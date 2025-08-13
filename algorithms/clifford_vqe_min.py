@@ -329,8 +329,8 @@ def bootstrap_worker(args):
     return indices, energy, flipped
 
 def multiprocessing_bootstrap(z_hamiltonian, z_qubits):
-    n_qubits = len(z_qubits)
     best_theta = np.random.randint(2, size=n_qubits)
+    n_qubits = len(z_qubits)
     min_energy = compute_energy(best_theta, z_hamiltonian)
     iter_count = 0
     improved = True

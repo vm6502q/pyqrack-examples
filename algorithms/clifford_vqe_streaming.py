@@ -246,6 +246,32 @@ n_qubits = mol.nao << 1
 print(f"{n_qubits} qubits...")
 
 # Step 3: Bootstrap!
+def initial_energy(theta_bits):
+    energy = 0.0
+    z_qubits = set()
+    for term, coeff in fermion_ham.terms.items():
+        jw_term = jordan_wigner(FermionOperator(term=term, coefficient=coeff))  # Transform single term
+
+        for pauli_string, jw_coeff in jw_term.terms.items():
+            # Skip terms with X or Y
+            if any(p in ('X', 'Y') for _, p in pauli_string):
+                continue
+
+            term_value = jw_coeff.real
+            q = []
+            for qubit, op in paulis:
+                # Z/I terms: keep only Z
+                if op != "Z":
+                    continue
+                q.append(qubit)
+                z_qubits.add(qubit)
+                if theta_bits[qubit]:
+                    term_value *= -1
+
+    z_qubits = list(z_qubits)
+
+    return energy, z_qubits
+
 def compute_energy(theta_bits):
     # Step 4: Iterate JW terms without materializing full op
     energy = 0.0
@@ -261,7 +287,8 @@ def compute_energy(theta_bits):
             term_value = jw_coeff.real
             for qubit, op in pauli_string:
                 if op == 'Z':
-                    term_value *= (1 if theta_bits[qubit] == 0 else -1)
+                    if theta_bits[qubit]:
+                        term_value *= -1
 
             energy += term_value
 
@@ -281,7 +308,8 @@ def bootstrap_worker(args):
 
 def multiprocessing_bootstrap(n_qubits):
     best_theta = np.random.randint(2, size=n_qubits)
-    min_energy = compute_energy(best_theta)
+    min_energy, z_qubits = initial_energy(best_theta)
+    n_qubits = len(z_qubits)
     iter_count = 0
     improved = True
     while improved:
@@ -298,7 +326,7 @@ def multiprocessing_bootstrap(n_qubits):
                 with multiprocessing.Pool(processes=os.cpu_count()) as pool:
                     args = []
                     for i in range(n_qubits):
-                        args.append((theta, (i,)))
+                        args.append((theta, (z_qubits[i],)))
                     results = pool.map(bootstrap_worker, args)
 
                 results.sort(key=lambda r: r[1])
@@ -325,7 +353,7 @@ def multiprocessing_bootstrap(n_qubits):
                 args = []
                 for i in range(n_qubits):
                     for j in range(i + 1, n_qubits):
-                        args.append((theta, (i, j)))
+                        args.append((theta, (z_qubits[i], z_qubits[j])))
                 results = pool.map(bootstrap_worker, args)
 
             results.sort(key=lambda r: r[1])
@@ -353,7 +381,7 @@ def multiprocessing_bootstrap(n_qubits):
             for i in range(n_qubits):
                 for j in range(i + 1, n_qubits):
                     for k in range(j + 1, n_qubits):
-                        args.append((theta, (i, j, k)))
+                        args.append((theta, (z_qubits[i], z_qubits[j], z_qubits[k])))
             results = pool.map(bootstrap_worker, args)
 
         results.sort(key=lambda r: r[1])
