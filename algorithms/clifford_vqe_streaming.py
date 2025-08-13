@@ -243,6 +243,7 @@ molecule_of = MolecularData(geometry, basis, multiplicity=1, charge=0)
 molecule_of = run_pyscf(molecule_of, run_scf=True, run_mp2=False, run_cisd=False, run_ccsd=False, run_fci=False)
 fermion_ham = get_fermion_operator(molecule_of.get_molecular_hamiltonian())
 n_qubits = mol.nao << 1
+print(f"{n_qubits} qubits...")
 
 # Step 3: Bootstrap!
 def compute_energy(theta_bits):
