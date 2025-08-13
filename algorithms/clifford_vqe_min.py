@@ -240,8 +240,7 @@ atom_str = geometry_to_atom_str(geometry)
 
 mol = gto.M(
     atom=atom_str,
-    basis=basis,
-    unit="Angstrom"
+    basis=basis
 )
 
 mf = scf.RHF(mol).run()
