@@ -259,7 +259,7 @@ def initial_energy(theta_bits):
 
             term_value = jw_coeff.real
             q = []
-            for qubit, op in paulis:
+            for qubit, op in pauli_string:
                 # Z/I terms: keep only Z
                 if op != "Z":
                     continue
