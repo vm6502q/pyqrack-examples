@@ -2,9 +2,9 @@
 # Developed with help from (OpenAI custom GPT) Elara
 # (Requires OpenFermion)
 
-import openfermion as of
+from pyscf import gto, scf, ao2mo
+from openfermion import MolecularData, FermionOperator, jordan_wigner, get_fermion_operator
 from openfermionpyscf import run_pyscf
-from openfermion.transforms import jordan_wigner
 
 import multiprocessing
 import numpy as np
@@ -228,7 +228,69 @@ n_qubits = molecule.n_qubits  # Auto-detect qubit count
 print(str(n_qubits) + " qubits...")
 
 # Step 3: Convert to Qubit Hamiltonian (Jordan-Wigner)
-qubit_hamiltonian = jordan_wigner(fermionic_hamiltonian)
+def geometry_to_atom_str(geometry):
+    """Convert list of (symbol, (x,y,z)) to Pyscf atom string."""
+    return "; ".join(
+        f"{symbol} {x:.10f} {y:.10f} {z:.10f}"
+        for symbol, (x, y, z) in geometry
+    )
+
+# Convert and feed to gto.M()
+atom_str = geometry_to_atom_str(geometry)
+
+mol = gto.M(
+    atom=atom_str,
+    basis=basis,
+    unit="Angstrom"
+)
+
+mf = scf.RHF(mol).run()
+
+# Step 2: Create OpenFermion molecule
+molecule_of = MolecularData(geometry, basis, multiplicity=1, charge=0)
+molecule_of = run_pyscf(molecule_of, run_scf=True, run_mp2=False, run_cisd=False, run_ccsd=False, run_fci=False)
+fermion_ham = get_fermion_operator(molecule_of.get_molecular_hamiltonian())
+n_qubits = mol.nao << 1
+
+# Step 3: Iterate JW terms without materializing full op
+z_hamiltonian = []
+    z_qubits = set()
+    for paulis, coeff in hamiltonian.terms.items():
+        # Skip if any X or Y in term
+        if any(op in ("X", "Y") for _, op in paulis):
+            continue
+
+        q = []
+        for qubit, op in paulis:
+            # Z/I terms: keep only Z
+            if op != "Z":
+                continue
+            q.append(qubit)
+            z_qubits.add(qubit)
+
+        z_hamiltonian.append((q, coeff))
+
+z_hamiltonian = []
+z_qubits = set()
+for term, coeff in fermion_ham.terms.items():
+    jw_term = jordan_wigner(FermionOperator(term=term, coefficient=coeff))  # Transform single term
+
+    for pauli_string, jw_coeff in jw_term.terms.items():
+        # Skip terms with X or Y
+        if any(p in ('X', 'Y') for _, p in pauli_string):
+            continue
+
+        q = []
+        for qubit, op in paulis:
+            # Z/I terms: keep only Z
+            if op != "Z":
+                continue
+            q.append(qubit)
+            z_qubits.add(qubit)
+
+        z_hamiltonian.append((q, coeff))
+
+z_qubits = list(z_qubits)
 
 # Step 4: Bootstrap!
 def compute_energy(theta_bits, z_hamiltonian):
@@ -266,25 +328,7 @@ def bootstrap_worker(args):
 
     return indices, energy, flipped
 
-def multiprocessing_bootstrap(hamiltonian):
-    z_hamiltonian = []
-    z_qubits = set()
-    for paulis, coeff in hamiltonian.terms.items():
-        # Skip if any X or Y in term
-        if any(op in ("X", "Y") for _, op in paulis):
-            continue
-
-        q = []
-        for qubit, op in paulis:
-            # Z/I terms: keep only Z
-            if op != "Z":
-                continue
-            q.append(qubit)
-            z_qubits.add(qubit)
-
-        z_hamiltonian.append((q, coeff))
-
-    z_qubits = list(z_qubits)
+def multiprocessing_bootstrap(z_hamiltonian, z_qubits):
     n_qubits = len(z_qubits)
     best_theta = np.random.randint(2, size=n_qubits)
     min_energy = compute_energy(best_theta, z_hamiltonian)
@@ -376,7 +420,7 @@ def multiprocessing_bootstrap(hamiltonian):
     return best_theta, min_energy
 
 # Run threaded bootstrap
-theta, min_energy = multiprocessing_bootstrap(qubit_hamiltonian)
+theta, min_energy = multiprocessing_bootstrap(z_hamiltonian, z_qubits)
 
 print(f"\nFinal Bootstrap Ground State Energy: {min_energy} Ha")
 print("Final Bootstrap Parameters:")
