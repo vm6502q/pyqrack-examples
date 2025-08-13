@@ -316,7 +316,8 @@ def multiprocessing_bootstrap(hamiltonian, n_qubits):
             converged = False
             print(f"  Qubit {i} flip accepted. New energy: {min_energy}")
         else:
-            print(f"  Qubit flips all rejected.\n")
+            print("  Qubit flips all rejected.\n")
+        print(f"  {best_theta}")
 
         iter_count += 1
 
@@ -345,6 +346,7 @@ def multiprocessing_bootstrap(hamiltonian, n_qubits):
         if energy < min_energy:
             min_energy = energy
             best_delta = delta.copy()
+        print(best_delta)
 
     return best_theta, best_delta, min_energy
 

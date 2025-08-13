@@ -360,7 +360,8 @@ def multiprocessing_bootstrap(z_hamiltonian, z_qubits):
                     improved_1qb = True
                     print(f"  Qubit {indices[0]} flip accepted. New energy: {min_energy}")
                 else:
-                    print(f"  Qubit flips all rejected.")
+                    print("  Qubit flips all rejected.")
+                print(f"  {best_theta}")
 
                 iter_count += 1
 
@@ -386,7 +387,8 @@ def multiprocessing_bootstrap(z_hamiltonian, z_qubits):
                 improved_2qb = True
                 print(f"  Qubits {indices} flip accepted. New energy: {min_energy}")
             else:
-                print(f"  Qubit flips all rejected.")
+                print("  Qubit flips all rejected.")
+            print(f"  {best_theta}")
 
             iter_count += 1
 
@@ -413,7 +415,8 @@ def multiprocessing_bootstrap(z_hamiltonian, z_qubits):
             improved = True
             print(f"  Qubit {indices} flip accepted. New energy: {min_energy}")
         else:
-            print(f"  Qubit flips all rejected.")
+            print("  Qubit flips all rejected.")
+        print(f"  {best_theta}")
 
         iter_count += 1
 
