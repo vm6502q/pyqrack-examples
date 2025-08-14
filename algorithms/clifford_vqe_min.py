@@ -338,7 +338,7 @@ def multiprocessing_bootstrap(z_hamiltonian, z_qubits, n_qubits):
 
             results.sort(key=lambda r: r[1])
             indices, energy, flipped = results[0]
-            if energy < min_energy:
+            if (energy < min_energy) and not np.isclose(energy, min_energy):
                 min_energy = energy
                 for i in range(len(indices)):
                     best_theta[indices[i]] = flipped[i]
@@ -365,7 +365,7 @@ def multiprocessing_bootstrap(z_hamiltonian, z_qubits, n_qubits):
 
         results.sort(key=lambda r: r[1])
         indices, energy, flipped = results[0]
-        if energy < min_energy:
+        if energy < min_energy and not np.isclose(energy, min_energy):
             min_energy = energy
             for i in range(len(indices)):
                 best_theta[indices[i]] = flipped[i]
