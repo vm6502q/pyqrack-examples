@@ -33,7 +33,7 @@ charge = 0  # Excess +/- elementary charge, beyond multiplicity
 
 # Hydrogen (and lighter):
 
-# geometry = [("H", (0.0, 0.0, 0.0)), ("H", (0.0, 0.0, 0.74))]  # H2 Molecule
+geometry = [("H", (0.0, 0.0, 0.0)), ("H", (0.0, 0.0, 0.74))]  # H2 Molecule
 
 # Helium (and lighter):
 
@@ -41,7 +41,7 @@ charge = 0  # Excess +/- elementary charge, beyond multiplicity
 
 # Lithium (and lighter):
 
-geometry = [('Li', (0.0, 0.0, 0.0)), ('H', (0.0, 0.0, 15.9))]  # LiH Molecule
+# geometry = [('Li', (0.0, 0.0, 0.0)), ('H', (0.0, 0.0, 15.9))]  # LiH Molecule
 
 # Carbon (and lighter):
 
@@ -438,7 +438,7 @@ def multiprocessing_bootstrap(hamiltonian, z_hamiltonian, z_qubits, n_qubits):
     return best_theta, best_delta, min_energy
 
 # Run threaded bootstrap
-theta, min_energy = multiprocessing_bootstrap(hamiltonian, z_hamiltonian, z_qubits, n_qubits)
+theta, delta, min_energy = multiprocessing_bootstrap(hamiltonian, z_hamiltonian, z_qubits, n_qubits)
 
 print(f"\nFinal Bootstrap Ground State Energy: {min_energy} Ha")
 print("Final Bootstrap Parameters:")
