@@ -5,9 +5,9 @@
 import pennylane as qml
 from pennylane import numpy as np
 
-import openfermion as of
+from pyscf import gto, scf, ao2mo
+from openfermion import MolecularData, FermionOperator, jordan_wigner, get_fermion_operator
 from openfermionpyscf import run_pyscf
-from openfermion.transforms import jordan_wigner
 
 import multiprocessing
 import os
@@ -33,7 +33,7 @@ charge = 0  # Excess +/- elementary charge, beyond multiplicity
 
 # Hydrogen (and lighter):
 
-geometry = [("H", (0.0, 0.0, 0.0)), ("H", (0.0, 0.0, 0.74))]  # H2 Molecule
+# geometry = [("H", (0.0, 0.0, 0.0)), ("H", (0.0, 0.0, 0.74))]  # H2 Molecule
 
 # Helium (and lighter):
 
@@ -41,7 +41,7 @@ geometry = [("H", (0.0, 0.0, 0.0)), ("H", (0.0, 0.0, 0.74))]  # H2 Molecule
 
 # Lithium (and lighter):
 
-# geometry = [('Li', (0.0, 0.0, 0.0)), ('H', (0.0, 0.0, 15.9))]  # LiH Molecule
+geometry = [('Li', (0.0, 0.0, 0.0)), ('H', (0.0, 0.0, 15.9))]  # LiH Molecule
 
 # Carbon (and lighter):
 
@@ -223,46 +223,49 @@ geometry = [("H", (0.0, 0.0, 0.0)), ("H", (0.0, 0.0, 0.74))]  # H2 Molecule
 # Now, `geometry` contains all 6 carbons and 6 hydrogens!
 
 # Step 2: Compute the Molecular Hamiltonian
-molecule = of.MolecularData(geometry, basis, multiplicity, charge)
+# Step 2: Compute the Molecular Hamiltonian
+molecule = MolecularData(geometry, basis, multiplicity, charge)
 molecule = run_pyscf(molecule, run_scf=True, run_fci=True)
 fermionic_hamiltonian = molecule.get_molecular_hamiltonian()
 n_qubits = molecule.n_qubits  # Auto-detect qubit count
 print(str(n_qubits) + " qubits...")
 
 # Step 3: Convert to Qubit Hamiltonian (Jordan-Wigner)
-qubit_hamiltonian = jordan_wigner(fermionic_hamiltonian)
+def geometry_to_atom_str(geometry):
+    """Convert list of (symbol, (x,y,z)) to Pyscf atom string."""
+    return "; ".join(
+        f"{symbol} {x:.10f} {y:.10f} {z:.10f}"
+        for symbol, (x, y, z) in geometry
+    )
 
-# Step 4: Bootstrap!
+# Convert and feed to gto.M()
+atom_str = geometry_to_atom_str(geometry)
 
-# Parallelization by Elara (OpenAI custom GPT):
-def bootstrap_worker(args):
-    hamiltonian, theta, i, n_qubits = args
-    local_theta = theta.copy()
-    local_theta[i] = not local_theta[i]
+mol = gto.M(
+    atom=atom_str,
+    basis=basis
+)
 
-    # Fastest at low qubit counts, but can be very memory intensive:
-    dev = qml.device("default.clifford", wires=n_qubits)
-    # Good compromise between very low memory usage and decent speed:
-    # dev = qml.device("qrack.stabilizer", wires=n_qubits)
-    # Schmidt-decomposed, and does Clifford+RZ gate set:
-    # dev = qml.device("qrack.simulator", wires=n_qubits, isTensorNetwork=False, isSchmidtDecompose=False, isStabilizerHybrid=True)
+mf = scf.RHF(mol).run()
 
-    @qml.qnode(dev)
-    def circuit(theta):
-        for j in range(n_qubits):
-            if theta[j]:
-                qml.X(wires=j)
-        return qml.expval(hamiltonian)
+# Step 2: Create OpenFermion molecule
+molecule_of = MolecularData(geometry, basis, multiplicity=1, charge=0)
+molecule_of = run_pyscf(molecule_of, run_scf=True, run_mp2=False, run_cisd=False, run_ccsd=False, run_fci=False)
+fermion_ham = get_fermion_operator(molecule_of.get_molecular_hamiltonian())
+n_qubits = mol.nao << 1
+print(f"{n_qubits} qubits...")
 
-    energy = circuit(local_theta)
-    return i, energy, local_theta[i]
+# Step 3: Iterate JW terms without materializing full op
+z_hamiltonian = []
+z_qubits = set()
+coeffs = []
+observables = []
+for term, coeff in fermion_ham.terms.items():
+    jw_term = jordan_wigner(FermionOperator(term=term, coefficient=coeff))  # Transform single term
 
-def multiprocessing_bootstrap(hamiltonian, n_qubits):
-    coeffs = []
-    observables = []
-    for term, coefficient in hamiltonian.terms.items():
+    for pauli_string, jw_coeff in jw_term.terms.items():
         pauli_operators = []
-        for qubit_idx, pauli in term:
+        for qubit_idx, pauli in pauli_string:
             if pauli == "X":
                 pauli_operators.append(qml.PauliX(qubit_idx))
             elif pauli == "Y":
@@ -276,47 +279,131 @@ def multiprocessing_bootstrap(hamiltonian, n_qubits):
             observables.append(observable)
         else:
             observables.append(qml.Identity(0))  # Default identity if no operators
-        coeffs.append(qml.numpy.array(coefficient, requires_grad=False))
+        coeffs.append(qml.numpy.array(jw_coeff.real, requires_grad=False))
 
-    qubit_hamiltonian = qml.Hamiltonian(coeffs, observables)
+        # Skip terms with X or Y
+        if any(p in ('X', 'Y') for _, p in pauli_string):
+            continue
 
-    # Fastest at low qubit counts, but can be very memory intensive:
-    dev = qml.device("default.clifford", wires=n_qubits)
-    # Good compromise between very low memory usage and decent speed:
-    # dev = qml.device("qrack.stabilizer", wires=n_qubits)
-    # Schmidt-decomposed, and does Clifford+RZ gate set:
-    # dev = qml.device("qrack.simulator", wires=n_qubits, isTensorNetwork=False, isSchmidtDecompose=False, isStabilizerHybrid=True)
+        q = []
+        for qubit, op in pauli_string:
+            # Z/I terms: keep only Z
+            if op != "Z":
+                continue
+            q.append(qubit)
+            z_qubits.add(qubit)
 
-    @qml.qnode(dev)
-    def circuit(theta):
-        for i in range(n_qubits):
-            if theta[i]:
-                qml.X(wires=i)
-        return qml.expval(qubit_hamiltonian)
+        z_hamiltonian.append((q, jw_coeff.real))
 
+z_qubits = list(z_qubits)
+hamiltonian = qml.Hamiltonian(coeffs, observables)
+
+# Step 4: Bootstrap!
+def initial_energy(theta_bits, z_hamiltonian):
+    energy = 0.0
+    for qubits, coeff in z_hamiltonian:
+        for qubit in qubits:
+            if theta_bits[qubit]:
+                coeff *= -1
+        energy += coeff
+
+    return energy
+
+def compute_energy(theta_bits, z_hamiltonian, indices, energy):
+    """
+    Computes the exact expectation value of a Hamiltonian on a computational basis state.
+
+    Args:
+        theta_bits: list of 0/1 integers representing the eigenstate in computational basis
+        hamiltonian: list of (coefficient, PauliString) terms
+
+    Returns:
+        energy (float)
+    """
+    indices = set(indices)
+    for qubits, coeff in z_hamiltonian:
+        overlap = set(qubits) & indices
+        if (len(overlap) & 1) == 0:
+            continue
+        # Z/I terms → product of ±1 from computational basis bits
+        value = 2 * coeff
+        for qubit in qubits:
+            if theta_bits[qubit] == 1:
+                value *= -1
+        energy += value
+
+    return energy
+
+# Parallelization by Elara (OpenAI custom GPT):
+def bootstrap_worker(args):
+    z_hamiltonian, theta, indices, energy = args
+    local_theta = theta.copy()
+    flipped = []
+    for i in indices:
+        local_theta[i] = not local_theta[i]
+        flipped.append(local_theta[i])
+    energy = compute_energy(local_theta, z_hamiltonian, indices, energy)
+
+    return indices, energy, flipped
+
+def multiprocessing_bootstrap(hamiltonian, z_hamiltonian, z_qubits, n_qubits):
     best_theta = np.random.randint(2, size=n_qubits)
-    min_energy = circuit(best_theta)
-    converged = False
+    n_z_qubits = len(z_qubits)
+    print(f"Z qubits: {n_z_qubits}")
+    min_energy = initial_energy(best_theta, z_hamiltonian)
     iter_count = 0
+    improved = True
+    while improved:
+        improved = False
+        improved_1qb = True
+        while improved_1qb:
+            improved_1qb = False
+            print(f"\nBootstrap Iteration {iter_count + 1}:")
+            theta = best_theta.copy()
 
-    while not converged:
+            with multiprocessing.Pool(processes=os.cpu_count()) as pool:
+                args = []
+                for i in range(n_z_qubits):
+                    args.append((z_hamiltonian, theta, (z_qubits[i],), min_energy))
+                results = pool.map(bootstrap_worker, args)
+
+            results.sort(key=lambda r: r[1])
+            indices, energy, flipped = results[0]
+            if (energy < min_energy) and not np.isclose(energy, min_energy):
+                min_energy = energy
+                for i in range(len(indices)):
+                    best_theta[indices[i]] = flipped[i]
+                improved_1qb = True
+                print(f"  Qubit {indices[0]} flip accepted. New energy: {min_energy}")
+            else:
+                print("  Qubit flips all rejected.")
+            print(f"  {best_theta}")
+
+            iter_count += 1
+
+        if n_z_qubits < 2:
+            break
+
         print(f"\nBootstrap Iteration {iter_count + 1}:")
-        converged = True
         theta = best_theta.copy()
 
         with multiprocessing.Pool(processes=os.cpu_count()) as pool:
-            args = [(qubit_hamiltonian, theta, i, n_qubits) for i in range(n_qubits)]
+            args = []
+            for i in range(n_z_qubits):
+                for j in range(i + 1, n_z_qubits):
+                    args.append((z_hamiltonian, theta, (z_qubits[i], z_qubits[j]), min_energy))
             results = pool.map(bootstrap_worker, args)
 
         results.sort(key=lambda r: r[1])
-        i, energy, flipped = results[0]
-        if energy < min_energy:
+        indices, energy, flipped = results[0]
+        if energy < min_energy and not np.isclose(energy, min_energy):
             min_energy = energy
-            best_theta[i] = flipped
-            converged = False
-            print(f"  Qubit {i} flip accepted. New energy: {min_energy}")
+            for i in range(len(indices)):
+                best_theta[indices[i]] = flipped[i]
+            improved = True
+            print(f"  Qubits {indices} flip accepted. New energy: {min_energy}")
         else:
-            print("  Qubit flips all rejected.\n")
+            print("  Qubit flips all rejected.")
         print(f"  {best_theta}")
 
         iter_count += 1
@@ -333,7 +420,7 @@ def multiprocessing_bootstrap(hamiltonian, n_qubits):
         for i in range(n_qubits-1):
             qml.CZ(wires=[i, i+1])
         qml.CZ(wires=[n_qubits-1, 0])
-        return qml.expval(qubit_hamiltonian)
+        return qml.expval(hamiltonian)
 
     best_delta = np.zeros(n_qubits, dtype=float, requires_grad=True)
     delta = best_delta.copy()
@@ -351,7 +438,7 @@ def multiprocessing_bootstrap(hamiltonian, n_qubits):
     return best_theta, best_delta, min_energy
 
 # Run threaded bootstrap
-theta, delta, min_energy = multiprocessing_bootstrap(qubit_hamiltonian, n_qubits)
+theta, min_energy = multiprocessing_bootstrap(hamiltonian, z_hamiltonian, z_qubits, n_qubits)
 
 print(f"\nFinal Bootstrap Ground State Energy: {min_energy} Ha")
 print("Final Bootstrap Parameters:")
