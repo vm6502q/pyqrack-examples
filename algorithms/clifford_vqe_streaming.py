@@ -302,6 +302,7 @@ def multiprocessing_bootstrap(n_qubits):
     best_theta = np.random.randint(2, size=n_qubits)
     min_energy, z_qubits = initial_energy(best_theta)
     n_qubits = len(z_qubits)
+    print(f"Z qubits: {n_qubits}")
     iter_count = 0
     improved = True
     while improved:
