@@ -158,11 +158,11 @@ geometry = [('Li', (0.0, 0.0, 0.0)), ('H', (0.0, 0.0, 15.9))]  # LiH Molecule
 # ]
 
 # Calcium chloride:
-geometry = [
-    ('Ca', (0.0000, 0.0000, 0.0000)),
-    ('Cl', (2.7800, 0.0000, 0.0000)),
-    ('Cl', (-2.7800, 0.0000, 0.0000))
-]
+# geometry = [
+#     ('Ca', (0.0000, 0.0000, 0.0000)),
+#     ('Cl', (2.7800, 0.0000, 0.0000)),
+#     ('Cl', (-2.7800, 0.0000, 0.0000))
+# ]
 
 # Diatomic halogens:
 
@@ -213,7 +213,7 @@ geometry = [
 # Now, `geometry` contains all 6 carbons and 6 hydrogens!
 
 # Step 2: Compute the Molecular Hamiltonian
-molecule = of.MolecularData(geometry, basis, multiplicity, charge)
+molecule = MolecularData(geometry, basis, multiplicity, charge)
 molecule = run_pyscf(molecule, run_scf=True, run_fci=True)
 fermionic_hamiltonian = molecule.get_molecular_hamiltonian()
 n_qubits = molecule.n_qubits  # Auto-detect qubit count
@@ -246,23 +246,6 @@ print(f"{n_qubits} qubits...")
 
 # Step 3: Iterate JW terms without materializing full op
 z_hamiltonian = []
-    z_qubits = set()
-    for paulis, coeff in hamiltonian.terms.items():
-        # Skip if any X or Y in term
-        if any(op in ("X", "Y") for _, op in paulis):
-            continue
-
-        q = []
-        for qubit, op in paulis:
-            # Z/I terms: keep only Z
-            if op != "Z":
-                continue
-            q.append(qubit)
-            z_qubits.add(qubit)
-
-        z_hamiltonian.append((q, coeff))
-
-z_hamiltonian = []
 z_qubits = set()
 for term, coeff in fermion_ham.terms.items():
     jw_term = jordan_wigner(FermionOperator(term=term, coefficient=coeff))  # Transform single term
@@ -273,19 +256,29 @@ for term, coeff in fermion_ham.terms.items():
             continue
 
         q = []
-        for qubit, op in paulis:
+        for qubit, op in pauli_string:
             # Z/I terms: keep only Z
             if op != "Z":
                 continue
             q.append(qubit)
             z_qubits.add(qubit)
 
-        z_hamiltonian.append((q, coeff))
+        z_hamiltonian.append((q, jw_coeff.real))
 
 z_qubits = list(z_qubits)
 
 # Step 4: Bootstrap!
-def compute_energy(theta_bits, z_hamiltonian):
+def initial_energy(theta_bits, z_hamiltonian):
+    energy = 0.0
+    for qubits, coeff in z_hamiltonian:
+        for qubit in qubits:
+            if theta_bits[qubit]:
+                coeff *= -1
+        energy += coeff
+
+    return energy
+
+def compute_energy(theta_bits, z_hamiltonian, indices, energy):
     """
     Computes the exact expectation value of a Hamiltonian on a computational basis state.
 
@@ -296,35 +289,37 @@ def compute_energy(theta_bits, z_hamiltonian):
     Returns:
         energy (float)
     """
-    energy = 0.0
-
+    indices = set(indices)
     for qubits, coeff in z_hamiltonian:
+        overlap = set(qubits) & indices
+        if (len(overlap) & 1) == 0:
+            continue
         # Z/I terms → product of ±1 from computational basis bits
-        value = 1
+        value = 2 * coeff
         for qubit in qubits:
             if theta_bits[qubit] == 1:
                 value *= -1
-        energy += coeff * value
+        energy += value
 
     return energy
 
 # Parallelization by Elara (OpenAI custom GPT):
 def bootstrap_worker(args):
-    z_hamiltonian, theta, indices = args
+    z_hamiltonian, theta, indices, energy = args
     local_theta = theta.copy()
     flipped = []
     for i in indices:
         local_theta[i] = not local_theta[i]
         flipped.append(local_theta[i])
-    energy = compute_energy(local_theta, z_hamiltonian)
+    energy = compute_energy(local_theta, z_hamiltonian, indices, energy)
 
     return indices, energy, flipped
 
-def multiprocessing_bootstrap(z_hamiltonian, z_qubits):
+def multiprocessing_bootstrap(z_hamiltonian, z_qubits, n_qubits):
     best_theta = np.random.randint(2, size=n_qubits)
     n_qubits = len(z_qubits)
     print(f"Z qubits: {n_qubits}")
-    min_energy = compute_energy(best_theta, z_hamiltonian)
+    min_energy = initial_energy(best_theta, z_hamiltonian)
     iter_count = 0
     improved = True
     while improved:
@@ -338,7 +333,7 @@ def multiprocessing_bootstrap(z_hamiltonian, z_qubits):
             with multiprocessing.Pool(processes=os.cpu_count()) as pool:
                 args = []
                 for i in range(n_qubits):
-                    args.append((theta, (z_qubits[i],)))
+                    args.append((z_hamiltonian, theta, (z_qubits[i],), min_energy))
                 results = pool.map(bootstrap_worker, args)
 
             results.sort(key=lambda r: r[1])
@@ -365,7 +360,7 @@ def multiprocessing_bootstrap(z_hamiltonian, z_qubits):
             args = []
             for i in range(n_qubits):
                 for j in range(i + 1, n_qubits):
-                    args.append((theta, (z_qubits[i], z_qubits[j])))
+                    args.append((z_hamiltonian, theta, (z_qubits[i], z_qubits[j]), min_energy))
             results = pool.map(bootstrap_worker, args)
 
         results.sort(key=lambda r: r[1])
@@ -385,7 +380,7 @@ def multiprocessing_bootstrap(z_hamiltonian, z_qubits):
     return best_theta, min_energy
 
 # Run threaded bootstrap
-theta, min_energy = multiprocessing_bootstrap(z_hamiltonian, z_qubits)
+theta, min_energy = multiprocessing_bootstrap(z_hamiltonian, z_qubits, n_qubits)
 
 print(f"\nFinal Bootstrap Ground State Energy: {min_energy} Ha")
 print("Final Bootstrap Parameters:")
