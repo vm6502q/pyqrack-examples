@@ -259,6 +259,7 @@ def initial_energy(theta_bits):
                 z_qubits.add(qubit)
                 if theta_bits[qubit]:
                     term_value *= -1
+            energy += term_value
 
     z_qubits = list(z_qubits)
 
