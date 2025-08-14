@@ -33,7 +33,7 @@ charge = 0  # Excess +/- elementary charge, beyond multiplicity
 
 # Hydrogen (and lighter):
 
-geometry = [("H", (0.0, 0.0, 0.0)), ("H", (0.0, 0.0, 0.74))]  # H2 Molecule
+# geometry = [("H", (0.0, 0.0, 0.0)), ("H", (0.0, 0.0, 0.74))]  # H2 Molecule
 
 # Helium (and lighter):
 
@@ -41,7 +41,7 @@ geometry = [("H", (0.0, 0.0, 0.0)), ("H", (0.0, 0.0, 0.74))]  # H2 Molecule
 
 # Lithium (and lighter):
 
-# geometry = [('Li', (0.0, 0.0, 0.0)), ('H', (0.0, 0.0, 15.9))]  # LiH Molecule
+geometry = [('Li', (0.0, 0.0, 0.0)), ('H', (0.0, 0.0, 15.9))]  # LiH Molecule
 
 # Carbon (and lighter):
 
@@ -408,8 +408,10 @@ def multiprocessing_bootstrap(hamiltonian, z_hamiltonian, z_qubits, n_qubits):
 
         iter_count += 1
 
+    # Fast low-width simulation:
+    dev = qml.device("lightning.qubit", wires=n_qubits)
     # Ideal simulation with "automatic circuit elision" approximation for large circuits:
-    dev = qml.device("qrack.simulator", wires=n_qubits, isTensorNetwork=False)
+    # dev = qml.device("qrack.simulator", wires=n_qubits, isTensorNetwork=False)
     # Schmidt-decomposed, and does Clifford+RZ gate set:
     # dev = qml.device("qrack.simulator", wires=n_qubits, isTensorNetwork=False, isSchmidtDecompose=False, isStabilizerHybrid=True)
 
