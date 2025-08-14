@@ -408,17 +408,21 @@ def multiprocessing_bootstrap(hamiltonian, z_hamiltonian, z_qubits, n_qubits):
 
         iter_count += 1
 
+    # Ideal simulation with "automatic circuit elision" approximation for large circuits:
+    dev = qml.device("qrack.simulator", wires=n_qubits, isTensorNetwork=False)
     # Schmidt-decomposed, and does Clifford+RZ gate set:
-    dev = qml.device("qrack.simulator", wires=n_qubits, isTensorNetwork=False, isSchmidtDecompose=False, isStabilizerHybrid=True)
+    # dev = qml.device("qrack.simulator", wires=n_qubits, isTensorNetwork=False, isSchmidtDecompose=False, isStabilizerHybrid=True)
 
     @qml.qnode(dev)
     def circuit(theta, delta):
         for i in range(n_qubits):
             if theta[i]:
                 qml.X(wires=i)
-            qml.H(wires=i)
-            qml.RZ(delta[i], wires=i)
-            qml.H(wires=i)
+            qml.RY(delta[i], wires=i)
+            # Near-Clifford:
+            # qml.H(wires=i)
+            # qml.RZ(delta[i], wires=i)
+            # qml.H(wires=i)
         for i in range(n_qubits-1):
             qml.CZ(wires=[i, i+1])
         qml.CZ(wires=[n_qubits-1, 0])
@@ -442,7 +446,7 @@ def multiprocessing_bootstrap(hamiltonian, z_hamiltonian, z_qubits, n_qubits):
 # Run threaded bootstrap
 theta, delta, min_energy = multiprocessing_bootstrap(hamiltonian, z_hamiltonian, z_qubits, n_qubits)
 
-print(f"\nFinal Bootstrap Ground State Energy: {min_energy} Ha")
-print("Final Bootstrap Parameters:")
+print(f"\nFinal Ground State Energy: {min_energy} Ha")
+print("Final Parameters:")
 print(theta)
 print(delta)
