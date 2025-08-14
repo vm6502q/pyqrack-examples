@@ -416,7 +416,9 @@ def multiprocessing_bootstrap(hamiltonian, z_hamiltonian, z_qubits, n_qubits):
         for i in range(n_qubits):
             if theta[i]:
                 qml.X(wires=i)
-            qml.RY(delta[i], wires=i)
+            qml.H(wires=i)
+            qml.RZ(delta[i], wires=i)
+            qml.H(wires=i)
         for i in range(n_qubits-1):
             qml.CZ(wires=[i, i+1])
         qml.CZ(wires=[n_qubits-1, 0])
