@@ -4,6 +4,7 @@
 
 import pennylane as qml
 from pennylane import numpy as np
+from catalyst import qjit
 
 from pyscf import gto, scf, ao2mo
 from openfermion import MolecularData, FermionOperator, jordan_wigner, get_fermion_operator
@@ -418,7 +419,7 @@ def multiprocessing_bootstrap(hamiltonian, z_hamiltonian, z_qubits, n_qubits):
     @qml.qnode(dev)
     def circuit(theta, delta):
         for i in range(n_qubits):
-            if theta[i]:
+            if theta[i] == 1:
                 qml.X(wires=i)
             qml.RY(delta[i], wires=i)
             # Near-Clifford:
