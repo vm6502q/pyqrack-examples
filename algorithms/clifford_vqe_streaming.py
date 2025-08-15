@@ -27,11 +27,11 @@ charge = 0  # Excess +/- elementary charge, beyond multiplicity
 
 # Helium (and lighter):
 
-# geometry = [('He', (0.0, 0.0, 0.0)), ('H', (0.0, 0.0, 7.74))]  # HeH Molecule
+# geometry = [('He', (0.0, 0.0, 0.0)), ('H', (0.0, 0.0, 0.774))]  # HeH Molecule
 
 # Lithium (and lighter):
 
-geometry = [('Li', (0.0, 0.0, 0.0)), ('H', (0.0, 0.0, 15.9))]  # LiH Molecule
+# geometry = [('Li', (0.0, 0.0, 0.0)), ('H', (0.0, 0.0, 1.595))]  # LiH Molecule
 
 # Carbon (and lighter):
 
@@ -46,24 +46,25 @@ geometry = [('Li', (0.0, 0.0, 0.0)), ('H', (0.0, 0.0, 15.9))]  # LiH Molecule
 
 # Nitrogen (and lighter):
 
-# geometry = [('N', (0.0, 0.0, 0.0)), ('N', (0.0, 0.0, 10.9))]  # N2 Molecule
+# geometry = [('N', (0.0, 0.0, 0.0)), ('N', (0.0, 0.0, 1.10))]  # N2 Molecule
 
 # Ammonia:
-# geometry = [
-#     ('N', (0.0000, 0.0000, 0.0000)),  # Nitrogen at center
-#     ('H', (0.9400, 0.0000, -0.3200)),  # Hydrogen 1
-#     ('H', (-0.4700, 0.8130, -0.3200)), # Hydrogen 2
-#     ('H', (-0.4700, -0.8130, -0.3200)) # Hydrogen 3
-# ]
+geometry = [
+    ('N', (0.0000, 0.0000, 0.0000)),  # Nitrogen at center
+    ('H', (0.9400, 0.0000, -0.3200)),  # Hydrogen 1
+    ('H', (-0.4700, 0.8130, -0.3200)), # Hydrogen 2
+    ('H', (-0.4700, -0.8130, -0.3200)) # Hydrogen 3
+]
 
 # Oxygen (and lighter):
 
-# geometry = [('O', (0.0, 0.0, 0.0)), ('H', (0.0, 0.0, 9.6))]  # OH- Radical
+# geometry = [('O', (0.0, 0.0, 0.0)), ('H', (0.0, 0.0, 0.97))]  # OH- Radical
 # geometry = [('O', (0.0000, 0.0000, 0.0000)), ('H', (0.7586, 0.0000, 0.5043)),  ('H', (-0.7586, 0.0000, 0.5043))]  # H2O Molecule
 # geometry = [('C', (0.0000, 0.0000, 0.0000)), ('O', (0.0000, 0.0000, 1.128))]  # CO Molecule
 # geometry = [('C', (0.0000, 0.0000, 0.0000)), ('O', (0.0000, 0.0000, 1.16)), ('O', (0.0000, 0.0000, -1.16))]  # CO2 Molecule
 # geometry = [('O', (0.0, 0.0, 0.0)), ('N', (0.0, 0.0, 1.55))]  # NO Molecule
 # geometry = [('O', (0.0, 0.0, 0.0)), ('N', (0.0, 0.0, 11.5))]  # NO+ Radical
+# geometry = [('O', (0.0, 0.0, 0.0)), ('O', (0.0, 0.0, 1.21))]  # O2 Molecule
 
 # Nitrogen dioxide (toxic pollutant)
 # geometry = [
