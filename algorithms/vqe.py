@@ -4,12 +4,9 @@
 
 import pennylane as qml
 from pennylane import numpy as np
-from catalyst import qjit
-
 import openfermion as of
 from openfermionpyscf import run_pyscf
 from openfermion.transforms import jordan_wigner
-
 
 # Step 0: Set environment variables (before running script)
 
@@ -39,7 +36,7 @@ charge = 0  # Excess +/- elementary charge, beyond multiplicity
 
 # Lithium (and lighter):
 
-geometry = [('Li', (0.0, 0.0, 0.0)), ('H', (0.0, 0.0, 15.9))]  # LiH Molecule
+# geometry = [('Li', (0.0, 0.0, 0.0)), ('H', (0.0, 0.0, 15.9))]  # LiH Molecule
 
 # Carbon (and lighter):
 
@@ -57,12 +54,12 @@ geometry = [('Li', (0.0, 0.0, 0.0)), ('H', (0.0, 0.0, 15.9))]  # LiH Molecule
 # geometry = [('N', (0.0, 0.0, 0.0)), ('N', (0.0, 0.0, 10.9))]  # N2 Molecule
 
 # Ammonia:
-# geometry = [
-#     ('N', (0.0000, 0.0000, 0.0000)),  # Nitrogen at center
-#     ('H', (0.9400, 0.0000, -0.3200)),  # Hydrogen 1
-#     ('H', (-0.4700, 0.8130, -0.3200)), # Hydrogen 2
-#     ('H', (-0.4700, -0.8130, -0.3200)) # Hydrogen 3
-# ]
+geometry = [
+    ('N', (0.0000, 0.0000, 0.0000)),  # Nitrogen at center
+    ('H', (0.9400, 0.0000, -0.3200)),  # Hydrogen 1
+    ('H', (-0.4700, 0.8130, -0.3200)), # Hydrogen 2
+    ('H', (-0.4700, -0.8130, -0.3200)) # Hydrogen 3
+]
 
 # Oxygen (and lighter):
 
@@ -224,66 +221,80 @@ geometry = [('Li', (0.0, 0.0, 0.0)), ('H', (0.0, 0.0, 15.9))]  # LiH Molecule
 molecule = of.MolecularData(geometry, basis, multiplicity, charge)
 molecule = run_pyscf(molecule, run_scf=True, run_fci=True)
 fermionic_hamiltonian = molecule.get_molecular_hamiltonian()
-n_qubits = molecule.n_qubits  # Auto-detect qubit count
-print(str(n_qubits) + " qubits...")
 
 # Step 3: Convert to Qubit Hamiltonian (Jordan-Wigner)
 qubit_hamiltonian = jordan_wigner(fermionic_hamiltonian)
 
-# Step 4: Setup ansatz and simulator
-def hybrid_tfim_vqe(qubit_hamiltonian, n_qubits, dev=None):
-    """
-    Estimate energy from TFIM-predicted RY angles.
-    """
-    if dev is None:
-        dev = qml.device("lightning.qubit", wires=n_qubits)
+# Step 4: Extract Qubit Terms for PennyLane
+coeffs = []
+observables = []
+n_qubits = molecule.n_qubits  # Auto-detect qubit count
+print(str(n_qubits) + " qubits...")
 
-    coeffs = []
-    observables = []
-    for term, coefficient in qubit_hamiltonian.terms.items():
-        pauli_operators = []
-        for qubit_idx, pauli in term:
-            if pauli == "X":
-                pauli_operators.append(qml.PauliX(qubit_idx))
-            elif pauli == "Y":
-                pauli_operators.append(qml.PauliY(qubit_idx))
-            elif pauli == "Z":
-                pauli_operators.append(qml.PauliZ(qubit_idx))
-        if pauli_operators:
-            observable = pauli_operators[0]
-            for op in pauli_operators[1:]:
-                observable = observable @ op
-            observables.append(observable)
-        else:
-            observables.append(qml.Identity(0))  # Default identity if no operators
-        coeffs.append(qml.numpy.array(coefficient, requires_grad=False))
-
-    hamiltonian = qml.Hamiltonian(coeffs, observables)
-
-    @qjit
-    @qml.qnode(dev)
-    def circuit(theta):
-        for i in range(n_qubits):
-            qml.RY(theta[i], wires=i)
-        return qml.expval(hamiltonian)
-
-    return circuit
-
-# dev = qml.device("qrack.simulator", wires=n_qubits, isSchmidtDecompose=False, isStabilizerHybrid=True)
-circuit = hybrid_tfim_vqe(qubit_hamiltonian, n_qubits)
-
-# Step 6: Bootstrap!
-theta = np.zeros(n_qubits, dtype=float, requires_grad="False")
-min_energy = circuit(theta)
-for i in range(n_qubits):
-    theta[i] = np.pi
-    energy = circuit(theta)
-    if energy < min_energy:
-        min_energy = energy
+for term, coefficient in qubit_hamiltonian.terms.items():
+    pauli_operators = []
+    for qubit_idx, pauli in term:
+        if pauli == "X":
+            pauli_operators.append(qml.PauliX(qubit_idx))
+        elif pauli == "Y":
+            pauli_operators.append(qml.PauliY(qubit_idx))
+        elif pauli == "Z":
+            pauli_operators.append(qml.PauliZ(qubit_idx))
+    if pauli_operators:
+        observable = pauli_operators[0]
+        for op in pauli_operators[1:]:
+            observable = observable @ op
+        observables.append(observable)
     else:
-        theta[i] = 0.0
-    print(f"Step {i+1}: Energy = {min_energy}")
+        observables.append(qml.Identity(0))  # Default identity if no operators
+    coeffs.append(qml.numpy.array(coefficient, requires_grad=False))
 
-print(f"\nBootstrap Ground State Energy: {min_energy} Ha")
-print("Bootstrap parameters:")
+hamiltonian = qml.Hamiltonian(coeffs, observables)
+
+# Step 5: Define Qrack Backend
+dev = qml.device(
+#     "qrack.simulator", wires=n_qubits, isTensorNetwork=False
+    "lightning.qubit", wires=n_qubits
+)  # Replace with "default.qubit" for CPU test
+
+
+# Step 6: Define a Simple Variational Ansatz
+def ansatz(params, wires):
+    for i in range(len(wires)):
+        # qml.Hadamard(wires=i)
+        # qml.RZ(params[i], wires=i)
+        # qml.Hadamard(wires=i)
+        # The above is the near-Clifford equivalent of just RY:
+        qml.RY(params[i], wires=i)
+    for i in range(len(wires) - 1):
+        qml.CZ(wires=[i, i + 1])
+    qml.CZ(wires=[len(wires) - 1, 0])
+    # OPTIONAL: Second layer to ansatz
+    for i in range(len(wires)):
+        qml.RY(params[len(wires) + i], wires=i)
+    for i in range(len(wires) - 1):
+        qml.CZ(wires=[i, i + 1])
+    qml.CZ(wires=[len(wires) - 1, 0])
+
+
+# Step 7: Cost Function for VQE (Expectation of Hamiltonian)
+@qml.qnode(dev)
+def circuit(params):
+    ansatz(params, wires=range(n_qubits))
+    return qml.expval(hamiltonian)  # Scalar cost function
+
+
+# Step 8: Optimize the Energy
+opt = qml.AdamOptimizer(stepsize=0.1)
+# theta = np.random.randn(n_qubits, requires_grad=True)  # Single-layer ansatz
+theta = np.random.randn(2 * n_qubits, requires_grad=True)  # Double-layer ansatz
+num_steps = 100
+
+for step in range(num_steps):
+    theta = opt.step(circuit, theta)
+    energy = circuit(theta)  # Compute energy at new parameters
+    print(f"Step {step+1}: Energy = {energy} Ha")
+
+print(f"Optimized Ground State Energy: {energy} Ha")
+print("Optimized parameters:")
 print(theta)
