@@ -330,7 +330,7 @@ def compute_energy(theta_bits, z_hamiltonian, indices, energy):
         # Z/I terms → product of ±1 from computational basis bits
         value = 2 * coeff
         for qubit in qubits:
-            if theta_bits[qubit] == 1:
+            if theta_bits[qubit]:
                 value *= -1
         energy += value
 
