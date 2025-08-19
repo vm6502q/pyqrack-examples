@@ -2,6 +2,8 @@
 
 import sys
 
+from collections import Counter
+
 from pyqrack import QrackSimulator
 
 from qiskit import QuantumCircuit
@@ -14,7 +16,7 @@ def run_qasm(file_in):
     qc = transpile(qc, basis_gates=QrackSimulator.get_qiskit_basis_gates())
     sim = QrackSimulator(qc.num_qubits)
     sim.run_qiskit_circuit(qc, shots=0)
-    print(sim.m_all())
+    print(Counter(sim.measure_shots(list(range(qc.num_qubits)), 8192)))
 
 
 def main():
