@@ -16,38 +16,16 @@ def int_to_bitstring(integer, length, reverse):
 
 def run_qasm(file_in, file_out):
     shot_count = 1024
-    # shot_count = 8388608
+    # shot_count = 536870912
     qc = QuantumCircuit.from_qasm_file(file_in)
     basis_gates = QrackSimulator.get_qiskit_basis_gates()
-    # basis_gates = [
-    #     "rz",
-    #     "h",
-    #     "x",
-    #     "y",
-    #     "z",
-    #     "sx",
-    #     "sxdg",
-    #     "s",
-    #     "sdg",
-    #     "t",
-    #     "tdg",
-    #     "cx",
-    #     "cy",
-    #     "cz",
-    #     "swap",
-    #     "iswap",
-    # ]
     qc = transpile(qc, basis_gates=basis_gates)
     sim = QrackSimulator(qc.num_qubits, isTensorNetwork=False)
-    # sim = QrackSimulator(qc.num_qubits, isTensorNetwork=False, isSchmidtDecompose=False, isStabilizerHybrid=True)
-    # sim.set_ncrp(2.0)
     sim.run_qiskit_circuit(qc, shots=0)
     print("Fidelity estimate: " + str(sim.get_unitary_fidelity()))
     shots = dict(Counter(sim.measure_shots(list(range(qc.num_qubits)), shot_count)))
     with open(file_out, "w") as f:
         json.dump(shots, f)
-    # sim.m_all()
-    # print("Fidelity estimate: " + str(sim.get_unitary_fidelity()))
     max_key = max(shots, key=shots.get)
     print(f"Total shots: {shot_count}")
     print(f"Peak counts: {(max_key, shots[max_key])}")
