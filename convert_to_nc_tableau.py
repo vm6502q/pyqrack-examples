@@ -2,7 +2,7 @@
 
 import sys
 
-from pyqrack import QrackSimulator, QrackCircuit
+from pyqrack import QrackSimulator
 
 from qiskit import QuantumCircuit
 from qiskit.compiler import transpile
