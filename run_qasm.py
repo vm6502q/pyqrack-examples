@@ -23,12 +23,13 @@ def run_qasm(file_in, file_out):
     sim = QrackSimulator(qc.num_qubits, isTensorNetwork=False)
     sim.run_qiskit_circuit(qc, shots=0)
     print("Fidelity estimate: " + str(sim.get_unitary_fidelity()))
-    shots = dict(Counter(sim.measure_shots(list(range(qc.num_qubits)), shot_count)))
-    with open(file_out, "w") as f:
-        json.dump(shots, f)
-    max_key = max(shots, key=shots.get)
+    # shots = dict(Counter(sim.measure_shots(list(range(qc.num_qubits)), shot_count)))
+    # with open(file_out, "w") as f:
+    #     json.dump(shots, f)
+    # max_key = max(shots, key=shots.get)
+    max_key = sim.highest_prob_perm()
     print(f"Total shots: {shot_count}")
-    print(f"Peak counts: {(max_key, shots[max_key])}")
+    # print(f"Peak counts: {(max_key, shots[max_key])}")
     rtl = int_to_bitstring(max_key, qc.num_qubits, False)
     ltr = int_to_bitstring(max_key, qc.num_qubits, True)
     print(f"Right-to-left, least-to-most significant: {rtl}")
