@@ -361,6 +361,10 @@ def bootstrap(theta, z_hamiltonian, k, indices_array, energy):
     return energies
 
 
+def occupancy_penalty(n_electrons, theta, lam=1.0):
+    return lam * (((sum(theta) - n_electrons) / n_electrons) ** 2)
+
+
 def multiprocessing_bootstrap(hamiltonian, z_hamiltonian, z_qubits, n_qubits, quality=2):
     best_theta = np.random.randint(2, size=n_qubits)
     n_qubits = len(z_qubits)
