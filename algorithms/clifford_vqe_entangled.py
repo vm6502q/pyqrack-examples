@@ -10,6 +10,7 @@ from pyscf import gto, scf, ao2mo
 from openfermion import MolecularData, FermionOperator, jordan_wigner, get_fermion_operator
 from openfermionpyscf import run_pyscf
 
+import itertools
 import multiprocessing
 import os
 
@@ -311,6 +312,7 @@ def initial_energy(theta_bits, z_hamiltonian):
 
     return energy
 
+
 def compute_energy(theta_bits, z_hamiltonian, indices, energy):
     """
     Computes the exact expectation value of a Hamiltonian on a computational basis state.
@@ -336,79 +338,60 @@ def compute_energy(theta_bits, z_hamiltonian, indices, energy):
 
     return energy
 
-# Parallelization by Elara (OpenAI custom GPT):
-def bootstrap_worker(args):
-    z_hamiltonian, theta, indices, energy = args
+
+def bootstrap_worker(theta, z_hamiltonian, indices, energy):
     local_theta = theta.copy()
-    flipped = []
     for i in indices:
         local_theta[i] = not local_theta[i]
-        flipped.append(local_theta[i])
     energy = compute_energy(local_theta, z_hamiltonian, indices, energy)
 
-    return indices, energy, flipped
+    return energy
 
-def multiprocessing_bootstrap(hamiltonian, z_hamiltonian, z_qubits, n_qubits):
+
+def bootstrap(theta, z_hamiltonian, k, indices_array, energy):
+    n = len(indices_array) // k
+    with multiprocessing.Pool(processes=os.cpu_count()) as pool:
+        args = []
+        for i in range(n):
+            j = i * k
+            args.append((theta, z_hamiltonian, indices_array[j : j + k], energy))
+        energies = pool.starmap(bootstrap_worker, args)
+
+    return energies
+
+
+def multiprocessing_bootstrap(hamiltonian, z_hamiltonian, z_qubits, n_qubits, quality=2):
     best_theta = np.random.randint(2, size=n_qubits)
-    n_z_qubits = len(z_qubits)
-    print(f"Z qubits: {n_z_qubits}")
+    n_qubits = len(z_qubits)
+    print(f"Z qubits: {n_qubits}")
     min_energy = initial_energy(best_theta, z_hamiltonian)
-    iter_count = 0
     improved = True
     while improved:
         improved = False
-        improved_1qb = True
-        while improved_1qb:
-            improved_1qb = False
-            print(f"\nBootstrap Iteration {iter_count + 1}:")
+        for k in range(1, max(1, quality + 1)):
+            if n_qubits < k:
+                break
+
             theta = best_theta.copy()
 
-            with multiprocessing.Pool(processes=os.cpu_count()) as pool:
-                args = []
-                for i in range(n_z_qubits):
-                    args.append((z_hamiltonian, theta, (z_qubits[i],), min_energy))
-                results = pool.map(bootstrap_worker, args)
+            combos = list(
+                item for sublist in itertools.combinations(z_qubits, k) for item in sublist
+            )
+            energies = bootstrap(theta, z_hamiltonian, k, combos, min_energy)
 
-            results.sort(key=lambda r: r[1])
-            indices, energy, flipped = results[0]
-            if (energy < min_energy) and not np.isclose(energy, min_energy):
+            energy = min(energies)
+            if energy < min_energy:
+                index_match = energies.index(energy)
+                indices = combos[(index_match * k) : ((index_match + 1) * k)]
                 min_energy = energy
-                for i in range(len(indices)):
-                    best_theta[indices[i]] = flipped[i]
-                improved_1qb = True
-                print(f"  Qubit {indices[0]} flip accepted. New energy: {min_energy}")
+                for i in indices:
+                    best_theta[i] = not best_theta[i]
+                improved = True
+                print(f"  Qubits {indices} flip accepted. New energy: {min_energy}")
+                print(f"  {best_theta}")
+                break
             else:
                 print("  Qubit flips all rejected.")
-            print(f"  {best_theta}")
-
-            iter_count += 1
-
-        if n_z_qubits < 2:
-            break
-
-        print(f"\nBootstrap Iteration {iter_count + 1}:")
-        theta = best_theta.copy()
-
-        with multiprocessing.Pool(processes=os.cpu_count()) as pool:
-            args = []
-            for i in range(n_z_qubits):
-                for j in range(i + 1, n_z_qubits):
-                    args.append((z_hamiltonian, theta, (z_qubits[i], z_qubits[j]), min_energy))
-            results = pool.map(bootstrap_worker, args)
-
-        results.sort(key=lambda r: r[1])
-        indices, energy, flipped = results[0]
-        if energy < min_energy and not np.isclose(energy, min_energy):
-            min_energy = energy
-            for i in range(len(indices)):
-                best_theta[indices[i]] = flipped[i]
-            improved = True
-            print(f"  Qubits {indices} flip accepted. New energy: {min_energy}")
-        else:
-            print("  Qubit flips all rejected.")
-        print(f"  {best_theta}")
-
-        iter_count += 1
 
     # Fast low-width simulation:
     dev = qml.device("lightning.qubit", wires=n_qubits)
