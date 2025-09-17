@@ -243,6 +243,7 @@ mf = scf.RHF(mol).run()
 molecule_of = MolecularData(geometry, basis, multiplicity=1, charge=0)
 molecule_of = run_pyscf(molecule_of, run_scf=True, run_mp2=False, run_cisd=False, run_ccsd=False, run_fci=False)
 fermion_ham = get_fermion_operator(molecule_of.get_molecular_hamiltonian())
+n_electrons = molecule_of.n_electrons
 n_qubits = mol.nao << 1
 print(f"{n_qubits} qubits...")
 
@@ -328,10 +329,15 @@ def bootstrap(theta, z_hamiltonian, k, indices_array, energy):
     return energies
 
 
-def multiprocessing_bootstrap(z_hamiltonian, z_qubits, n_qubits, quality=2):
+def occupancy_penalty(n_electrons, theta, lam=1.0):
+    return lam * (((sum(theta) - n_electrons) / n_electrons) ** 2)
+
+
+def multiprocessing_bootstrap(z_hamiltonian, z_qubits, n_qubits, n_electrons, quality=2, lam=1.0):
     best_theta = np.random.randint(2, size=n_qubits)
     n_qubits = len(z_qubits)
     print(f"Z qubits: {n_qubits}")
+    min_occ_penalty = occupancy_penalty(n_electrons, best_theta, lam)
     min_energy = initial_energy(best_theta, z_hamiltonian)
     improved = True
     while improved:
@@ -348,10 +354,13 @@ def multiprocessing_bootstrap(z_hamiltonian, z_qubits, n_qubits, quality=2):
             energies = bootstrap(theta, z_hamiltonian, k, combos, min_energy)
 
             energy = min(energies)
-            if energy < min_energy:
-                index_match = energies.index(energy)
-                indices = combos[(index_match * k) : ((index_match + 1) * k)]
+            index_match = energies.index(energy)
+            indices = combos[(index_match * k) : ((index_match + 1) * k)]
+            occ_penalty = occupancy_penalty(n_electrons, indices, lam)
+
+            if (energy + occ_penalty) < (min_energy + min_occ_penalty):
                 min_energy = energy
+                min_occ_penalty = occ_penalty
                 for i in indices:
                     best_theta[i] = not best_theta[i]
                 improved = True
@@ -364,7 +373,7 @@ def multiprocessing_bootstrap(z_hamiltonian, z_qubits, n_qubits, quality=2):
     return best_theta, min_energy
 
 # Run threaded bootstrap
-theta, min_energy = multiprocessing_bootstrap(z_hamiltonian, z_qubits, n_qubits)
+theta, min_energy = multiprocessing_bootstrap(z_hamiltonian, z_qubits, n_qubits, n_electrons)
 
 print(f"\nFinal Bootstrap Ground State Energy: {min_energy} Ha")
 print("Final Bootstrap Parameters:")

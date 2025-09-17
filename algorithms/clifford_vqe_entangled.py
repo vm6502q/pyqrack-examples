@@ -230,6 +230,7 @@ geometry = [
 molecule = MolecularData(geometry, basis, multiplicity, charge)
 molecule = run_pyscf(molecule, run_scf=True, run_fci=True)
 fermionic_hamiltonian = molecule.get_molecular_hamiltonian()
+n_electrons = molecule.n_electrons
 n_qubits = molecule.n_qubits  # Auto-detect qubit count
 print(str(n_qubits) + " qubits...")
 
@@ -364,6 +365,7 @@ def multiprocessing_bootstrap(hamiltonian, z_hamiltonian, z_qubits, n_qubits, qu
     best_theta = np.random.randint(2, size=n_qubits)
     n_qubits = len(z_qubits)
     print(f"Z qubits: {n_qubits}")
+    min_occ_penalty = occupancy_penalty(n_electrons, best_theta, lam)
     min_energy = initial_energy(best_theta, z_hamiltonian)
     improved = True
     while improved:
@@ -380,10 +382,13 @@ def multiprocessing_bootstrap(hamiltonian, z_hamiltonian, z_qubits, n_qubits, qu
             energies = bootstrap(theta, z_hamiltonian, k, combos, min_energy)
 
             energy = min(energies)
-            if energy < min_energy:
-                index_match = energies.index(energy)
-                indices = combos[(index_match * k) : ((index_match + 1) * k)]
+            index_match = energies.index(energy)
+            indices = combos[(index_match * k) : ((index_match + 1) * k)]
+            occ_penalty = occupancy_penalty(n_electrons, indices, lam)
+
+            if (energy + occ_penalty) < (min_energy + min_occ_penalty):
                 min_energy = energy
+                min_occ_penalty = occ_penalty
                 for i in indices:
                     best_theta[i] = not best_theta[i]
                 improved = True
