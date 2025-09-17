@@ -365,7 +365,7 @@ def occupancy_penalty(n_electrons, theta, lam=1.0):
     return lam * (((sum(theta) - n_electrons) / n_electrons) ** 2)
 
 
-def multiprocessing_bootstrap(hamiltonian, z_hamiltonian, z_qubits, n_qubits, n_electrons, quality=2, lam=1.0):
+def multiprocessing_bootstrap(hamiltonian, z_hamiltonian, z_qubits, n_qubits, quality=2):
     best_theta = np.random.randint(2, size=n_qubits)
     n_qubits = len(z_qubits)
     print(f"Z qubits: {n_qubits}")
@@ -440,7 +440,7 @@ def multiprocessing_bootstrap(hamiltonian, z_hamiltonian, z_qubits, n_qubits, n_
     return best_theta, best_delta, min_energy
 
 # Run threaded bootstrap
-theta, delta, min_energy = multiprocessing_bootstrap(hamiltonian, z_hamiltonian, z_qubits, n_qubits, n_electrons)
+theta, delta, min_energy = multiprocessing_bootstrap(hamiltonian, z_hamiltonian, z_qubits, n_qubits)
 
 print(f"\nFinal Ground State Energy: {min_energy} Ha")
 print("Final Parameters:")
