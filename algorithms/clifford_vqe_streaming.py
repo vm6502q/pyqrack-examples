@@ -313,7 +313,7 @@ def bootstrap(theta, k, indices_array):
 
 
 def occupancy_penalty(n_electrons, theta, lam=1.0):
-    return lam * ((sum(theta) - n_electrons) ** 2)
+    return lam * (((sum(theta) - n_electrons) / n_electrons) ** 2)
 
 
 def multiprocessing_bootstrap(n_qubits, n_electrons, quality=2, lam=1.0):

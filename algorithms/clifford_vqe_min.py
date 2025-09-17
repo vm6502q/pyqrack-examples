@@ -330,7 +330,7 @@ def bootstrap(theta, z_hamiltonian, k, indices_array, energy):
 
 
 def occupancy_penalty(n_electrons, theta, lam=1.0):
-    return lam * ((sum(theta) - n_electrons) ** 2)
+    return lam * (((sum(theta) - n_electrons) / n_electrons) ** 2)
 
 
 def multiprocessing_bootstrap(z_hamiltonian, z_qubits, n_qubits, n_electrons, quality=2, lam=1.0):
