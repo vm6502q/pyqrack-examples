@@ -388,9 +388,7 @@ def multiprocessing_bootstrap(hamiltonian, z_hamiltonian, z_qubits, n_qubits, n_
             energy = min(energies)
             index_match = energies.index(energy)
             indices = combos[(index_match * k) : ((index_match + 1) * k)]
-            for i in indices:
-                theta[i] = not theta[i]
-            occ_penalty = occupancy_penalty(n_electrons, theta, lam)
+            occ_penalty = occupancy_penalty(n_electrons, indices, lam)
 
             if (energy + occ_penalty) < (min_energy + min_occ_penalty):
                 min_energy = energy
