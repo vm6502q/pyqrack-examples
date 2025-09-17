@@ -6,6 +6,7 @@ from pyscf import gto, scf, ao2mo
 from openfermion import MolecularData, FermionOperator, jordan_wigner, get_fermion_operator
 from openfermionpyscf import run_pyscf
 
+import itertools
 import multiprocessing
 import numpy as np
 import os
@@ -288,79 +289,61 @@ def compute_energy(theta_bits):
 
     return energy
 
-# Parallelization by Elara (OpenAI custom GPT):
-def bootstrap_worker(args):
-    theta, indices = args
+
+def bootstrap_worker(theta, indices):
     local_theta = theta.copy()
-    flipped = []
     for i in indices:
         local_theta[i] = not local_theta[i]
-        flipped.append(local_theta[i])
     energy = compute_energy(local_theta)
 
-    return indices, energy, flipped
+    return energy
 
-def multiprocessing_bootstrap(n_qubits):
+
+def bootstrap(theta, k, indices_array):
+    n = len(indices_array) // k
+    with multiprocessing.Pool(processes=os.cpu_count()) as pool:
+        args = []
+        for i in range(n):
+            j = i * k
+            args.append((theta, indices_array[j : j + k]))
+        energies = pool.starmap(bootstrap_worker, args)
+
+    return energies
+
+
+def multiprocessing_bootstrap(n_qubits, quality=2):
     best_theta = np.random.randint(2, size=n_qubits)
     min_energy, z_qubits = initial_energy(best_theta)
     n_qubits = len(z_qubits)
     print(f"Z qubits: {n_qubits}")
-    iter_count = 0
     improved = True
     while improved:
         improved = False
-        improved_1qb = True
-        while improved_1qb:
-            improved_1qb = False
-            print(f"\nBootstrap Iteration {iter_count + 1}:")
+        for k in range(1, max(1, quality + 1)):
+            if n_qubits < k:
+                break
+
             theta = best_theta.copy()
 
-            with multiprocessing.Pool(processes=os.cpu_count()) as pool:
-                args = []
-                for i in range(n_qubits):
-                    args.append((theta, (z_qubits[i],)))
-                results = pool.map(bootstrap_worker, args)
+            combos = list(
+                item for sublist in itertools.combinations(z_qubits, k) for item in sublist
+            )
+            energies = bootstrap(theta, k, combos)
 
-            results.sort(key=lambda r: r[1])
-            indices, energy, flipped = results[0]
+            energy = min(energies)
             if energy < min_energy:
+                index_match = energies.index(energy)
+                indices = combos[(index_match * k) : ((index_match + 1) * k)]
                 min_energy = energy
-                for i in range(len(indices)):
-                    best_theta[indices[i]] = flipped[i]
-                improved_1qb = True
-                print(f"  Qubit {indices[0]} flip accepted. New energy: {min_energy}")
+                for i in indices:
+                    best_theta[i] = not best_theta[i]
+                improved = True
+                break
+                print(f"  Qubits {indices} flip accepted. New energy: {min_energy}")
+                print(f"  {best_theta}")
+                break
             else:
                 print("  Qubit flips all rejected.")
-            print(f"  {best_theta}")
-
-            iter_count += 1
-
-        if n_qubits < 2:
-            break
-
-        print(f"\nBootstrap Iteration {iter_count + 1}:")
-        theta = best_theta.copy()
-
-        with multiprocessing.Pool(processes=os.cpu_count()) as pool:
-            args = []
-            for i in range(n_qubits):
-                for j in range(i + 1, n_qubits):
-                    args.append((theta, (z_qubits[i], z_qubits[j])))
-            results = pool.map(bootstrap_worker, args)
-
-        results.sort(key=lambda r: r[1])
-        indices, energy, flipped = results[0]
-        if energy < min_energy:
-            min_energy = energy
-            for i in range(len(indices)):
-                best_theta[indices[i]] = flipped[i]
-            improved = True
-            print(f"  Qubits {indices} flip accepted. New energy: {min_energy}")
-        else:
-            print("  Qubit flips all rejected.")
-        print(f"  {best_theta}")
-
-        iter_count += 1
 
     return best_theta, min_energy
 
