@@ -361,16 +361,18 @@ def bootstrap(theta, z_hamiltonian, k, indices_array, energy):
     return energies
 
 
-def multiprocessing_bootstrap(hamiltonian, z_hamiltonian, z_qubits, n_qubits, quality=2):
+def multiprocessing_bootstrap(hamiltonian, z_hamiltonian, z_qubits, n_qubits):
     best_theta = np.random.randint(2, size=n_qubits)
     n_qubits = len(z_qubits)
     print(f"Z qubits: {n_qubits}")
     min_occ_penalty = occupancy_penalty(n_electrons, best_theta, lam)
     min_energy = initial_energy(best_theta, z_hamiltonian)
     improved = True
+    quality = 1
     while improved:
         improved = False
-        for k in range(1, max(1, quality + 1)):
+        k = 1
+        while k < (quality + 1):
             if n_qubits < k:
                 break
 
@@ -392,11 +394,13 @@ def multiprocessing_bootstrap(hamiltonian, z_hamiltonian, z_qubits, n_qubits, qu
                 for i in indices:
                     best_theta[i] = not best_theta[i]
                 improved = True
+                quality = k
                 print(f"  Qubits {indices} flip accepted. New energy: {min_energy}")
                 print(f"  {best_theta}")
                 break
-            else:
-                print("  Qubit flips all rejected.")
+
+            k = k + 1
+            print("  Qubit flips all rejected.")
 
     # Fast low-width simulation:
     dev = qml.device("lightning.qubit", wires=n_qubits)
