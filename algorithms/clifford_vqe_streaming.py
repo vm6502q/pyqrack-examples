@@ -349,7 +349,8 @@ def multiprocessing_bootstrap(n_qubits, n_electrons, lam=1.0):
                 for i in indices:
                     best_theta[i] = not best_theta[i]
                 improved = True
-                quality = k + 1
+                if quality < (k + 1):
+                    quality = k + 1
                 print(f"  Qubits {indices} flip accepted. New energy: {min_energy}")
                 print(f"  {best_theta}")
                 break
