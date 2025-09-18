@@ -372,7 +372,7 @@ def multiprocessing_bootstrap(hamiltonian, z_hamiltonian, z_qubits, n_qubits):
     while improved:
         improved = False
         k = 1
-        while k < (quality + 1):
+        while k <= quality:
             if n_qubits < k:
                 break
 
@@ -394,7 +394,7 @@ def multiprocessing_bootstrap(hamiltonian, z_hamiltonian, z_qubits, n_qubits):
                 for i in indices:
                     best_theta[i] = not best_theta[i]
                 improved = True
-                quality = k
+                quality = k + 1
                 print(f"  Qubits {indices} flip accepted. New energy: {min_energy}")
                 print(f"  {best_theta}")
                 break
