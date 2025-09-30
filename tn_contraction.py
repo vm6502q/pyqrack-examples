@@ -87,10 +87,8 @@ def max_amplitude_via_output_inds(tn, phys_inds):
             test_tn = working_tn.copy()
             test_tn.add_tensor(proj)
 
-            try:
-                amp2 = test_tn.contract(all, get='norm')**2
-            except Exception:
-                amp2 = 0  # fallback in case of numerical instability
+            cntrct = test_tn.contract(all, optimize='auto-hq')
+            amp2 = (np.abs(cntrct.norm()) if isinstance(cntrct, qtn.Tensor) else np.abs(cntrct)) ** 2
 
             if amp2 > best_amp2:
                 best_amp2 = amp2
