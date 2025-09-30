@@ -2,6 +2,8 @@ import math
 import random
 import sys
 
+import numpy as np
+
 from qiskit_quimb import quimb_circuit
 import quimb.tensor as qtn
 
@@ -68,12 +70,22 @@ def main():
     tsp, _nodes = convert_quimb_tree_to_tsp(quimb_tn)
     # Isolate unique tags:
     nodes = []
+    i = 0
+    to_remove = []
     for n0 in _nodes:
         n = n0.copy()
         for n1 in _nodes:
             if n0 != n1:
                 n = (n ^ n1) & n
-        nodes.append(n)
+        if len(n) == 0:
+            to_remove.append(i)
+        else:
+            nodes.append(n)
+        i += 1
+    _nodes = None
+    for rc in reversed(to_remove):
+        tsp = np.delete(tsp, rc, axis=0)
+        tsp = np.delete(tsp, rc, axis=1)
 
     # Solve TSP
     tsp_sol, raw_cost = tsp_symmetric(tsp, monte_carlo=False, is_cyclic=False)
