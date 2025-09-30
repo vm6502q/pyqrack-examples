@@ -164,7 +164,7 @@ def main():
     print((segments, cost))
 
     print("Contracting...")
-    MAX_BYTES = 1 << 20 # 1 MB
+    MAX_BYTES = 1 << 32 # 4 GB
     for path in segments:
         if len(path) < 2:
             continue
