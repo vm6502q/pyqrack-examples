@@ -2,8 +2,6 @@ import math
 import random
 import sys
 
-import qiskit.qasm2
-
 from qiskit_quimb import quimb_circuit
 import quimb.tensor as qtn
 
@@ -44,6 +42,17 @@ def generate_qv_circuit(width, depth):
     return circ
 
 
+def safe_contract_between(tn, tags1, tags2):
+    tensors1 = tn.select(tags1).tensors
+    tensors2 = tn.select(tags2).tensors
+    if not tensors1 or not tensors2:
+        print(f"[WARN] Skipping contraction between {tags1} and {tags2} (missing tensors)")
+        return
+    t1_tag = next(iter(tensors1[0].tags))
+    t2_tag = next(iter(tensors2[0].tags))
+    tn.contract_between(t1_tag, t2_tag)
+
+
 def main():
     if len(sys.argv) < 3:
         raise RuntimeError(
@@ -56,7 +65,16 @@ def main():
     # Generate the circuit
     quimb_tn = generate_qv_circuit(width, depth)
     # Convert to TSP
-    tsp, nodes = convert_quimb_tree_to_tsp(quimb_tn)
+    tsp, _nodes = convert_quimb_tree_to_tsp(quimb_tn)
+    # Isolate unique tags:
+    nodes = []
+    for n0 in _nodes:
+        n = n0.copy()
+        for n1 in _nodes:
+            if n0 != n1:
+                n = (n ^ n1) & n
+        nodes.append(n)
+
     # Solve TSP
     tsp_sol, raw_cost = tsp_symmetric(tsp, monte_carlo=False, is_cyclic=False)
 
@@ -84,8 +102,9 @@ def main():
             continue
         tags = set(path[0])
         for i in range(len(path) - 1):
-            quimb_tn.contract_between(tags, path[i + 1])
-            tags = tags.union(path[i + 1])
+            n_tags = path[i + 1]
+            safe_contract_between(quimb_tn, tags, n_tags)
+            tags = tags.union(n_tags)
 
     print("Contraction result:")
     print(quimb_tn)
