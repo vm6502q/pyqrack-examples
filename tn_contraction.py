@@ -167,7 +167,7 @@ def main():
     MAX_BYTES = 1 << 32 # 4 GB
     itemsize = quimb_tn.tensors[0].data.itemsize
     index_count = 2
-    while (index_count * itemsize) < MAX_BYTES:
+    while (index_count * itemsize) <= MAX_BYTES:
         n_segments = []
         for path in segments:
             if len(path) < 2:
@@ -198,7 +198,7 @@ def main():
                 for ix in result_inds:
                     for iy in quimb_tn.ind_map.get(ix, 2):
                         result_indices *= iy
-                        too_big = (result_indices > index_count) or (result_indices * itemsize) > MAX_BYTES
+                        too_big = (result_indices > index_count) or ((result_indices * itemsize) > MAX_BYTES)
                         if too_big:
                             break
                     if too_big:
