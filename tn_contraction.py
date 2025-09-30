@@ -2,7 +2,7 @@ import math
 import random
 import sys
 
-from collections import defaultdict
+from collections import Counter
 
 import numpy as np
 
@@ -32,24 +32,31 @@ def generate_qv_circuit(width, depth):
         while len(unused_bits) > 1:
             c = unused_bits.pop()
             t = unused_bits.pop()
-            circ.apply_gate('CNOT', (c, t))
+            circ.apply_gate('CNOT', c, t)
 
     return circ
 
 
-def contract_single(tn, single_gate_types=None):
-    if single_gate_types is None:
-        single_gate_types = ["PSI0", "U3"]
-
-    # Organize tensors per qubit wire
-    single_gates = tn.select(single_gate_types, which='any')
-
-    for tensor in single_gates:
+def contract_single(tn):
+    # Contract to the right
+    for tensor in tn.tensors:
+        if len(tensor.inds) > 2:
+            continue
         right_inds = set(tensor.inds)
-        if hasattr(tensor, 'left_inds') and not tensor.left_inds is None:
-            right_inds ^= set(tensor.left_inds)
+        if hasattr(tensor, 'left_inds') and tensor.left_inds is not None:
+            right_inds -= set(tensor.left_inds)
         for idx in right_inds:
-            tn.contract_ind(idx)
+            if idx in tn.ind_map and len(tn.ind_map[idx]) == 2:
+                tn.contract_ind(idx)
+
+    # Contract dangling indices (1-edge tensors)
+    while True:
+        num_tensors = len(tn.tensors)
+        for tensor in tn.tensors[:]:  # Use a c1opy of the list to avoid mutation issues
+            if len(tensor.inds) == 1:
+                tn.contract_ind(tensor.inds[0])
+        if num_tensors == len(tn.tensors):
+            break
 
 
 def safe_contract_between(tn, tags1, tags2):
@@ -73,7 +80,8 @@ def main():
     depth = int(sys.argv[2])
 
     # Generate the circuit
-    quimb_tn = generate_qv_circuit(width, depth).psi
+    qc = generate_qv_circuit(width, depth)
+    quimb_tn = qc.psi
     # Contract single-qubit gates.
     contract_single(quimb_tn)
     # Convert to TSP
@@ -161,6 +169,7 @@ def main():
             safe_contract_between(quimb_tn, tags, n_tags)
             tags = tags.union(n_tags)
 
+    contract_single(quimb_tn)
     print("Contraction result:")
     print(quimb_tn)
 
