@@ -164,9 +164,10 @@ def main():
     print((segments, cost))
 
     print("Contracting...")
-    MAX_ITEMS = (1 << 32) // quimb_tn.tensors[0].data.itemsize # 4 GB
-    index_count = 2
-    while index_count <= MAX_ITEMS:
+    MAX_BYTES = (1 << 32) # 4 GB
+    itemsize = quimb_tn.tensors[0].data.itemsize
+    byte_count = itemsize << 1
+    while byte_count <= MAX_BYTES:
         n_segments = []
         for path in segments:
             if len(path) < 2:
@@ -192,12 +193,12 @@ def main():
                 result_inds = set(t1.inds) | set(t2.inds)
 
                 # Manual product of dimensions
-                result_indices = 1
+                result_bytes = itemsize
                 too_big = False
                 for ix in result_inds:
                     for iy in quimb_tn.ind_map.get(ix, 2):
-                        result_indices *= iy
-                        too_big = (result_indices > index_count)
+                        result_bytes *= iy
+                        too_big = (result_bytes > byte_count)
                         if too_big:
                             break
                     if too_big:
@@ -218,7 +219,7 @@ def main():
             n_segments.append(n_path)
 
         segments = n_segments
-        index_count *= 2
+        byte_count *= 2
 
     contract_single(quimb_tn)
     print("Contraction result:")
