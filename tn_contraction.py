@@ -109,12 +109,36 @@ def main():
     print((segments, cost))
 
     print("Contracting...")
+    MAX_BYTES = 16 * 2**30  # 16 GiB
     for path in segments:
         if len(path) < 2:
             continue
         tags = set(path[0])
         for i in range(len(path) - 1):
             n_tags = path[i + 1]
+
+            # Get tensors
+            tensors1 = quimb_tn.select(tags).tensors
+            tensors2 = quimb_tn.select(n_tags).tensors
+            if not tensors1 or not tensors2:
+                print(f"[WARN] Skipping contraction between {tags} and {n_tags} (missing tensors)")
+                continue
+
+            t1 = tensors1[0]
+            t2 = tensors2[0]
+
+            # Estimate memory usage of contraction
+            # Union of indices = resulting tensor indices
+            result_inds = set(t1.inds) | set(t2.inds)
+            result_shape = [quimb_tn.ind_map.get(ix, 2) for ix in result_inds]  # default dimension 2
+            result_bytes = int(np.prod(np.array(result_shape))) * t1.data.itemsize
+
+            if result_bytes > MAX_BYTES:
+                print(f"[SKIP] Est. contraction size {result_bytes / 2**30:.2f} GiB > limit ({MAX_BYTES / 2**30:.0f} GiB)")
+                tags = set(n_tags)  # Reset tags to start new path
+                continue
+
+            # Contract safely
             safe_contract_between(quimb_tn, tags, n_tags)
             tags = tags.union(n_tags)
 
