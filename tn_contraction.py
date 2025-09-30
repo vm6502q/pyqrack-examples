@@ -2,6 +2,8 @@ import math
 import random
 import sys
 
+from collections import defaultdict
+
 import numpy as np
 
 from qiskit_quimb import quimb_circuit
@@ -16,15 +18,13 @@ def generate_qv_circuit(width, depth):
     all_bits = list(lcv_range)
 
     circ = qtn.Circuit(width)
-    contraction_set = []
     for d in range(depth):
         # Single-qubit gates
         for i in lcv_range:
             th = random.uniform(0, 2 * math.pi)
             ph = random.uniform(0, 2 * math.pi)
             lm = random.uniform(0, 2 * math.pi)
-            tag = f"U3_d{d}_q{i}"
-            circ.apply_gate('U3', th, ph, lm, i, tags=tag)
+            circ.apply_gate('U3', th, ph, lm, i)
 
         # 2-qubit couplers
         unused_bits = all_bits.copy()
@@ -32,16 +32,24 @@ def generate_qv_circuit(width, depth):
         while len(unused_bits) > 1:
             c = unused_bits.pop()
             t = unused_bits.pop()
-            tag = f"CNOT_d{d}_c{c}_t{t}"
-            circ.apply_gate('CNOT', (c, t), tags=tag)
-            contraction_set.append((f"U3_d{d}_q{c}", tag))
-            contraction_set.append((f"U3_d{d}_q{t}", tag))
-
-    circ = circ.psi
-    for tags in contraction_set:
-        circ.contract_between(tags[0], tags[1])
+            circ.apply_gate('CNOT', (c, t))
 
     return circ
+
+
+def contract_single(tn, single_gate_types=None):
+    if single_gate_types is None:
+        single_gate_types = ["PSI0", "U3"]
+
+    # Organize tensors per qubit wire
+    single_gates = tn.select(single_gate_types, which='any')
+
+    for tensor in single_gates:
+        right_inds = set(tensor.inds)
+        if hasattr(tensor, 'left_inds') and not tensor.left_inds is None:
+            right_inds ^= set(tensor.left_inds)
+        for idx in right_inds:
+            tn.contract_ind(idx)
 
 
 def safe_contract_between(tn, tags1, tags2):
@@ -65,7 +73,9 @@ def main():
     depth = int(sys.argv[2])
 
     # Generate the circuit
-    quimb_tn = generate_qv_circuit(width, depth)
+    quimb_tn = generate_qv_circuit(width, depth).psi
+    # Contract single-qubit gates.
+    contract_single(quimb_tn)
     # Convert to TSP
     tsp, _nodes = convert_quimb_tree_to_tsp(quimb_tn)
     # Isolate unique tags:
