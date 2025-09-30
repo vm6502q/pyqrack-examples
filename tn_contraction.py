@@ -187,8 +187,7 @@ def main():
             result_inds = set(t1.inds) | set(t2.inds)
 
             # Manual product of dimensions
-            dtype_size = 4  # for float32
-            result_bytes = dtype_size
+            result_bytes = t1.data.itemsize
             for ix in result_inds:
                 for iy in quimb_tn.ind_map.get(ix, 2):
                     result_bytes *= iy
