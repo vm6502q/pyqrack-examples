@@ -70,6 +70,49 @@ def safe_contract_between(tn, tags1, tags2):
     tn.contract_between(t1_tag, t2_tag)
 
 
+def sample_bitstring_from_tn(tn, phys_inds, dtype=float):
+    """
+    Sample a single bitstring from a (partially contracted) tensor network `tn`,
+    given the list of physical output indices `phys_inds` (in a fixed order).
+    Returns a tuple of bits (0 or 1).
+    """
+
+    bitstr = []
+    # We'll operate on a working copy so as not to destroy the original tn
+    working = tn.copy()
+
+    # For each qubit’s physical index in order
+    for idx in phys_inds:
+        # For bit = 0, 1: slice the index
+        probs = []
+        for bit in (0, 1):
+            # Create a sliced network: restrict index `idx` = bit
+            sliced = working.copy()
+            sliced = sliced.slice({idx: bit})  # Quimb supports slicing tensor networks by index value
+            # Contract the sliced network (all remaining tensor contraction) to a scalar (amplitude)
+            amp = sliced.contract(all)  # Contract all remaining indices
+            # The amplitude may be complex; take absolute squared
+            probs.append(abs(amp)**2)
+
+        # Normalize
+        total = probs[0] + probs[1]
+        if total == 0:
+            # numeric degeneracy: fallback to uniform
+            p0 = 0.5
+        else:
+            p0 = probs[0] / total
+
+        # Sample bit0
+        r = random.random()
+        b0 = 0 if r < p0 else 1
+        bitstr.append(b0)
+
+        # Fix that bit in the working network (slice permanently)
+        working = working.slice({idx: b0})
+
+    return tuple(bitstr)
+
+
 def main():
     if len(sys.argv) < 3:
         raise RuntimeError(
@@ -171,7 +214,10 @@ def main():
 
     contract_single(quimb_tn)
     print("Contraction result:")
-    print(quimb_tn)
+    quimb_tn.draw()
+
+    # print("Full contraction:")
+    # quimb_tn.contract().draw()
 
     return 0
 
