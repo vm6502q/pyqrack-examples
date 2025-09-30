@@ -70,47 +70,39 @@ def safe_contract_between(tn, tags1, tags2):
     tn.contract_between(t1_tag, t2_tag)
 
 
-def sample_bitstring_from_tn(tn, phys_inds, dtype=float):
-    """
-    Sample a single bitstring from a (partially contracted) tensor network `tn`,
-    given the list of physical output indices `phys_inds` (in a fixed order).
-    Returns a tuple of bits (0 or 1).
-    """
-
+def max_amplitude_via_output_inds(tn, phys_inds):
     bitstr = []
-    # We'll operate on a working copy so as not to destroy the original tn
-    working = tn.copy()
+    working_tn = tn.copy()
 
-    # For each qubit’s physical index in order
-    for idx in phys_inds:
-        # For bit = 0, 1: slice the index
-        probs = []
+    for qi in phys_inds:
+        best_bit = None
+        best_amp2 = -1.0
+
         for bit in (0, 1):
-            # Create a sliced network: restrict index `idx` = bit
-            sliced = working.copy()
-            sliced = sliced.slice({idx: bit})  # Quimb supports slicing tensor networks by index value
-            # Contract the sliced network (all remaining tensor contraction) to a scalar (amplitude)
-            amp = sliced.contract(all)  # Contract all remaining indices
-            # The amplitude may be complex; take absolute squared
-            probs.append(abs(amp)**2)
+            arr = [1, 0] if bit == 0 else [0, 1]
+            proj = qtn.Tensor(data=arr, inds=(qi,))
 
-        # Normalize
-        total = probs[0] + probs[1]
-        if total == 0:
-            # numeric degeneracy: fallback to uniform
-            p0 = 0.5
-        else:
-            p0 = probs[0] / total
+            sub_tn = working_tn.copy()
+            sub_tn.add_tensor(proj)
 
-        # Sample bit0
-        r = random.random()
-        b0 = 0 if r < p0 else 1
-        bitstr.append(b0)
+            remaining_inds = [ix for ix in sub_tn.outer_inds() if ix != qi]
+            sub = sub_tn.contract(output_inds=remaining_inds)
 
-        # Fix that bit in the working network (slice permanently)
-        working = working.slice({idx: b0})
+            val2 = (abs(np.array(sub.data)) ** 2).sum()
+            if val2 > best_amp2:
+                best_amp2 = val2
+                best_bit = bit
 
-    return tuple(bitstr)
+        bitstr.append(best_bit)
+
+        # Add the projection for the best bit (do not fully contract yet!)
+        fix_proj = qtn.Tensor(data=[1, 0] if best_bit == 0 else [0, 1], inds=(qi,))
+        working_tn.add_tensor(fix_proj)
+
+    # Final contraction to get the full amplitude
+    final = working_tn.contract(output_inds=[])
+
+    return tuple(bitstr), final
 
 
 def main():
@@ -216,8 +208,9 @@ def main():
     print("Contraction result:")
     quimb_tn.draw()
 
-    # print("Full contraction:")
-    # quimb_tn.contract().draw()
+    quimb_tn = qtn.TensorNetwork(quimb_tn)
+    print("Best guess for highest-probability bit string:")
+    print(max_amplitude_via_output_inds(quimb_tn, [f"k{qi}" for qi in range(width)])[0])
 
     return 0
 
