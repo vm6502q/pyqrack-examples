@@ -70,6 +70,7 @@ def safe_contract_between(tn, tags1, tags2):
     tn.contract_between(t1_tag, t2_tag)
 
 
+# Produced with a ton of help from Elara, the custom OpenAI GPT (and more generally)
 def max_amplitude_via_output_inds(tn, phys_inds):
     bitstr = []
     working_tn = tn.copy()
@@ -82,27 +83,29 @@ def max_amplitude_via_output_inds(tn, phys_inds):
             arr = [1, 0] if bit == 0 else [0, 1]
             proj = qtn.Tensor(data=arr, inds=(qi,))
 
-            sub_tn = working_tn.copy()
-            sub_tn.add_tensor(proj)
+            test_tn = working_tn.copy()
+            test_tn.add_tensor(proj)
 
-            remaining_inds = [ix for ix in sub_tn.outer_inds() if ix != qi]
-            sub = sub_tn.contract(output_inds=remaining_inds)
+            try:
+                amp2 = test_tn.contract(all, get='norm')**2
+            except Exception:
+                amp2 = 0  # fallback in case of numerical instability
 
-            val2 = (abs(np.array(sub.data)) ** 2).sum()
-            if val2 > best_amp2:
-                best_amp2 = val2
+            if amp2 > best_amp2:
+                best_amp2 = amp2
                 best_bit = bit
 
         bitstr.append(best_bit)
 
-        # Add the projection for the best bit (do not fully contract yet!)
-        fix_proj = qtn.Tensor(data=[1, 0] if best_bit == 0 else [0, 1], inds=(qi,))
-        working_tn.add_tensor(fix_proj)
+        # Fix this bit in the main network
+        arr = [1, 0] if best_bit == 0 else [0, 1]
+        proj = qtn.Tensor(data=arr, inds=(qi,))
+        working_tn.add_tensor(proj)
 
-    # Final contraction to get the full amplitude
-    final = working_tn.contract(output_inds=[])
+    # Final contraction for amplitude (if desired)
+    final_amp = working_tn.contract(all)
 
-    return tuple(bitstr), final
+    return tuple(bitstr), final_amp
 
 
 def main():
