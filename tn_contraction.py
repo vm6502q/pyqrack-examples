@@ -129,9 +129,15 @@ def main():
 
             # Estimate memory usage of contraction
             # Union of indices = resulting tensor indices
-            result_inds = set(t1.inds) | set(t2.inds)
-            result_shape = [quimb_tn.ind_map.get(ix, 2) for ix in result_inds]  # default dimension 2
-            result_bytes = int(np.prod(np.array(result_shape))) * t1.data.itemsize
+            inds1 = set(t1.inds)
+            inds2 = set(t2.inds)
+
+            # Union of indices = resulting tensor indices
+            result_inds = inds1 | inds2
+
+            # Ensure dimensions are integers
+            result_shape = [iy for sublist in [quimb_tn.ind_map.get(ix, 2) for ix in result_inds] for iy in sublist]
+            result_bytes = np.prod(result_shape) * t1.data.itemsize
 
             if result_bytes > MAX_BYTES:
                 print(f"[SKIP] Est. contraction size {result_bytes / 2**30:.2f} GiB > limit ({MAX_BYTES / 2**30:.0f} GiB)")
@@ -142,8 +148,8 @@ def main():
             safe_contract_between(quimb_tn, tags, n_tags)
             tags = tags.union(n_tags)
 
-    print("Contraction result:")
-    print(quimb_tn)
+        print("Contraction result:")
+        print(quimb_tn)
 
     return 0
 
