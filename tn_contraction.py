@@ -165,45 +165,60 @@ def main():
 
     print("Contracting...")
     MAX_BYTES = 1 << 32 # 4 GB
-    for path in segments:
-        if len(path) < 2:
-            continue
-        tags = set(path[0])
-        for i in range(len(path) - 1):
-            n_tags = path[i + 1]
-
-            # Get tensors
-            tensors1 = quimb_tn.select(tags).tensors
-            tensors2 = quimb_tn.select(n_tags).tensors
-            if not tensors1 or not tensors2:
-                print(f"[WARN] Skipping contraction between {tags} and {n_tags} (missing tensors)")
+    itemsize = quimb_tn.tensors[0].data.itemsize
+    index_count = 2
+    while (index_count * itemsize) < MAX_BYTES:
+        n_segments = []
+        for path in segments:
+            if len(path) < 2:
+                n_segments.append(path)
                 continue
+            n_path = []
+            tags = set(path[0])
+            for i in range(len(path) - 1):
+                n_tags = path[i + 1]
 
-            t1 = tensors1[0]
-            t2 = tensors2[0]
+                # Get tensors
+                tensors1 = quimb_tn.select(tags).tensors
+                tensors2 = quimb_tn.select(n_tags).tensors
+                if not tensors1 or not tensors2:
+                    print(f"[WARN] Skipping contraction between {tags} and {n_tags} (missing tensors)")
+                    continue
 
-            # Estimate memory usage of contraction
-            # Union of indices = resulting tensor indices
-            result_inds = set(t1.inds) | set(t2.inds)
+                t1 = tensors1[0]
+                t2 = tensors2[0]
 
-            # Manual product of dimensions
-            result_bytes = t1.data.itemsize
-            for ix in result_inds:
-                for iy in quimb_tn.ind_map.get(ix, 2):
-                    result_bytes *= iy
-                    if result_bytes > MAX_BYTES:
+                # Estimate memory usage of contraction
+                # Union of indices = resulting tensor indices
+                result_inds = set(t1.inds) | set(t2.inds)
+
+                # Manual product of dimensions
+                result_indices = 1
+                for ix in result_inds:
+                    for iy in quimb_tn.ind_map.get(ix, 2):
+                        result_indices *= iy
+                        if (result_indices > index_count) or (result_indices * itemsize) > MAX_BYTES:
+                            break
+                    if (result_indices > index_count) or (result_indices * itemsize) > MAX_BYTES:
                         break
-                if result_bytes > MAX_BYTES:
-                    break
 
-            if result_bytes > MAX_BYTES:
-                # print(f"[SKIP] Exceeded maximum contraction size.")
-                tags = set(n_tags)  # Reset tags to start new path
-                continue
+                if (result_indices > index_count) or (result_indices * itemsize) > MAX_BYTES:
+                    # print(f"[SKIP] Exceeded maximum contraction size.")
+                    n_path.append(tags)
+                    tags = set(n_tags)  # Reset tags to start new path
+                    continue
 
-            # Contract safely
-            safe_contract_between(quimb_tn, tags, n_tags)
-            tags = tags.union(n_tags)
+                # Contract safely
+                safe_contract_between(quimb_tn, tags, n_tags)
+                tags = tags.union(n_tags)
+
+            if n_path[-1] != tags:
+                n_path.append(tags)
+            n_segments.append(n_path)
+            index_count += 2
+
+        segments = n_segments
+        index_count *= 2
 
     contract_single(quimb_tn)
     print("Contraction result:")
