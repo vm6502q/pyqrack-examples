@@ -6,7 +6,6 @@ from collections import Counter
 
 import numpy as np
 
-from qiskit_quimb import quimb_circuit
 import quimb.tensor as qtn
 
 from pyqrackising import convert_quimb_tree_to_tsp, tsp_symmetric
