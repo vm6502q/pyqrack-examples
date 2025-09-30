@@ -198,7 +198,7 @@ def main():
                     break
 
             if result_bytes > MAX_BYTES:
-                print(f"[SKIP] Exceeded maximum contraction size.")
+                # print(f"[SKIP] Exceeded maximum contraction size.")
                 tags = set(n_tags)  # Reset tags to start new path
                 continue
 
@@ -208,6 +208,7 @@ def main():
 
     contract_single(quimb_tn)
     print("Contraction result:")
+    print(quimb_tn)
     quimb_tn.draw()
 
     quimb_tn = qtn.TensorNetwork(quimb_tn)
