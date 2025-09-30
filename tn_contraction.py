@@ -1,3 +1,4 @@
+import heapq
 import math
 import random
 import sys
@@ -72,39 +73,35 @@ def safe_contract_between(tn, tags1, tags2):
 
 
 # Produced with a ton of help from Elara, the custom OpenAI GPT (and more generally)
-def max_amplitude_via_output_inds(tn, phys_inds):
-    bitstr = []
-    working_tn = tn.copy()
+def max_amplitude_beam_search(tn, phys_inds, beam_width=4):
+    # Each beam entry is a tuple: (neg_amp2, bitstring_so_far, network_so_far)
+    # We negate amp2 to use Python's min-heap as a max-heap
+    beam = [(-1.0, [], tn.copy())]
 
     for qi in phys_inds:
-        best_bit = None
-        best_amp2 = -1.0
+        new_beam = []
 
-        for bit in (0, 1):
-            arr = [1, 0] if bit == 0 else [0, 1]
-            proj = qtn.Tensor(data=arr, inds=(qi,))
+        for neg_amp2, bitstr, partial_tn in beam:
+            for bit in (0, 1):
+                # Project this bit
+                arr = [1, 0] if bit == 0 else [0, 1]
+                proj = qtn.Tensor(data=arr, inds=(qi,))
+                test_tn = partial_tn.copy()
+                test_tn.add_tensor(proj)
 
-            test_tn = working_tn.copy()
-            test_tn.add_tensor(proj)
+                cntrct = test_tn.contract(all, optimize='auto-hq')
+                amp2 = (np.abs(cntrct.norm()) if isinstance(cntrct, qtn.Tensor) else np.abs(cntrct)) ** 2
 
-            cntrct = test_tn.contract(all, optimize='auto-hq')
-            amp2 = (np.abs(cntrct.norm()) if isinstance(cntrct, qtn.Tensor) else np.abs(cntrct)) ** 2
+                new_beam.append((-amp2, bitstr + [bit], test_tn))
 
-            if amp2 > best_amp2:
-                best_amp2 = amp2
-                best_bit = bit
+        # Keep only top `beam_width` candidates
+        beam = heapq.nsmallest(beam_width, new_beam, key=lambda x: x[0])
 
-        bitstr.append(best_bit)
+    # Return the best-scoring final result
+    best_neg_amp2, best_bits, final_tn = beam[0]
+    final_amp = final_tn.contract(all, optimize='auto-hq')
 
-        # Fix this bit in the main network
-        arr = [1, 0] if best_bit == 0 else [0, 1]
-        proj = qtn.Tensor(data=arr, inds=(qi,))
-        working_tn.add_tensor(proj)
-
-    # Final contraction for amplitude (if desired)
-    final_amp = working_tn.contract(all)
-
-    return tuple(bitstr), final_amp
+    return tuple(best_bits), final_amp
 
 
 def main():
@@ -228,7 +225,7 @@ def main():
 
     quimb_tn = qtn.TensorNetwork(quimb_tn)
     print("Best guess for highest-probability bit string:")
-    print(max_amplitude_via_output_inds(quimb_tn, [f"k{qi}" for qi in range(width)])[0])
+    print(max_amplitude_beam_search(quimb_tn, [f"k{qi}" for qi in range(width)])[0])
 
     return 0
 
