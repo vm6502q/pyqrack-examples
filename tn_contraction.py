@@ -217,7 +217,6 @@ def main():
             if n_path[-1] != tags:
                 n_path.append(tags)
             n_segments.append(n_path)
-            index_count += 2
 
         segments = n_segments
         index_count *= 2
