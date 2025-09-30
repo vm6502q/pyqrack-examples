@@ -75,7 +75,20 @@ def main():
     segments.sort(key=len)
 
     # Print segments and cost:
+    print("Optimal contraction path segments and cost:")
     print((segments, cost))
+
+    print("Contracting...")
+    for path in segments:
+        if len(path) < 2:
+            continue
+        tags = set(path[0])
+        for i in range(len(path) - 1):
+            quimb_tn.contract_between(tags, path[i + 1])
+            tags = tags.union(path[i + 1])
+
+    print("Contraction result:")
+    print(quimb_tn)
 
     return 0
 
