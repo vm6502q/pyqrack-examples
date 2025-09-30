@@ -140,7 +140,7 @@ def main():
             result_bytes = np.prod(result_shape) * t1.data.itemsize
 
             if result_bytes > MAX_BYTES:
-                print(f"[SKIP] Est. contraction size {result_bytes / 2**30:.2f} GiB > limit ({MAX_BYTES / 2**30:.0f} GiB)")
+                print(f"[SKIP] Est. contraction size {result_bytes / (1 << 20):.2f} MiB > limit ({MAX_BYTES / (1 << 20):.0f} MiB)")
                 tags = set(n_tags)  # Reset tags to start new path
                 continue
 
