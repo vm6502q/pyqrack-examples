@@ -72,6 +72,7 @@ def main():
         else:
             cost += val
         segment.append(nodes[tsp_sol[i + 1]])
+    segments.sort(key=len)
 
     # Print segments and cost:
     print((segments, cost))
