@@ -2,6 +2,8 @@ import math
 import random
 import sys
 
+import psutil
+
 from collections import Counter
 
 import numpy as np
@@ -164,7 +166,7 @@ def main():
     print((segments, cost))
 
     print("Contracting...")
-    MAX_BYTES = (1 << 32) # 4 GB
+    MAX_BYTES = psutil.virtual_memory().total >> 1  # Half system memory
     itemsize = quimb_tn.tensors[0].data.itemsize
     byte_count = itemsize << 1
     while byte_count <= MAX_BYTES:
