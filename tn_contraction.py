@@ -194,15 +194,17 @@ def main():
 
                 # Manual product of dimensions
                 result_indices = 1
+                too_big = False
                 for ix in result_inds:
                     for iy in quimb_tn.ind_map.get(ix, 2):
                         result_indices *= iy
-                        if (result_indices > index_count) or (result_indices * itemsize) > MAX_BYTES:
+                        too_big = (result_indices > index_count) or (result_indices * itemsize) > MAX_BYTES
+                        if too_big:
                             break
-                    if (result_indices > index_count) or (result_indices * itemsize) > MAX_BYTES:
+                    if too_big:
                         break
 
-                if (result_indices > index_count) or (result_indices * itemsize) > MAX_BYTES:
+                if too_big:
                     # print(f"[SKIP] Exceeded maximum contraction size.")
                     n_path.append(tags)
                     tags = set(n_tags)  # Reset tags to start new path
