@@ -69,7 +69,7 @@ def safe_contract_between(tn, tags1, tags2):
         return
     t1_tag = next(iter(tensors1[0].tags))
     t2_tag = next(iter(tensors2[0].tags))
-    tn.contract_between(t1_tag, t2_tag)
+    tn.contract_between(list(t1_tag), list(t2_tag))
 
 
 # Produced with a ton of help from Elara, the custom OpenAI GPT (and more generally)
@@ -168,7 +168,7 @@ def main():
         n_segments = []
         for path in segments:
             if len(path) < 2:
-                n_segments.append(path)
+                n_segments.append([path])
                 continue
             n_path = []
             tags = set(path[0])
@@ -211,7 +211,7 @@ def main():
                 safe_contract_between(quimb_tn, tags, n_tags)
                 tags = tags.union(n_tags)
 
-            if n_path[-1] != tags:
+            if (len(n_path) == 0) or (n_path[-1] != tags):
                 n_path.append(tags)
             n_segments.append(n_path)
 
