@@ -197,7 +197,7 @@ def main():
                     continue
 
                 # Contract safely
-                qtn.contract_between(list(tags), list(n_tags))
+                quimb_tn.contract_between(list(tags), list(n_tags))
                 tags = tags.union(n_tags)
 
             if (len(n_path) == 0) or (n_path[-1] != tags):
