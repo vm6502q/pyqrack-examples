@@ -61,17 +61,6 @@ def contract_single(tn):
             break
 
 
-def safe_contract_between(tn, tags1, tags2):
-    tensors1 = tn.select(tags1).tensors
-    tensors2 = tn.select(tags2).tensors
-    if not tensors1 or not tensors2:
-        print(f"[WARN] Skipping contraction between {tags1} and {tags2} (missing tensors)")
-        return
-    t1_tag = next(iter(tensors1[0].tags))
-    t2_tag = next(iter(tensors2[0].tags))
-    tn.contract_between(list(t1_tag), list(t2_tag))
-
-
 # Produced with a ton of help from Elara, the custom OpenAI GPT (and more generally)
 def max_amplitude_beam_search(tn, phys_inds, beam_width=4):
     # Each beam entry is a tuple: (neg_amp2, bitstring_so_far, network_so_far)
@@ -208,7 +197,7 @@ def main():
                     continue
 
                 # Contract safely
-                safe_contract_between(quimb_tn, tags, n_tags)
+                tn.contract_between(list(tags), list(n_tags))
                 tags = tags.union(n_tags)
 
             if (len(n_path) == 0) or (n_path[-1] != tags):
