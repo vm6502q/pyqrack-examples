@@ -103,11 +103,14 @@ def main():
     depth = int(sys.argv[2])
 
     # Generate the circuit
+    print("Generating circuit...")
     qc = generate_qv_circuit(width, depth)
     quimb_tn = qc.psi
     # Contract single-qubit gates.
+    print("Pruning leaves...")
     contract_single(quimb_tn)
     # Convert to TSP
+    print("Converting to tsp matrix...")
     tsp, _nodes = convert_quimb_tree_to_tsp(quimb_tn)
     # Isolate unique tags:
     nodes = []
@@ -129,9 +132,12 @@ def main():
         tsp = np.delete(tsp, rc, axis=1)
 
     # Solve TSP
+    print("Solving TSP...")
     tsp_sol, raw_cost = tsp_symmetric(tsp, monte_carlo=False, is_cyclic=False)
 
     # Break into segments
+    id_tag_set = set()
+    id_tag_set.update(nodes[tsp_sol[0]])
     segments = []
     segment = [nodes[tsp_sol[0]]]
     cost = 0
@@ -143,32 +149,39 @@ def main():
         else:
             cost += val
         segment.append(nodes[tsp_sol[i + 1]])
+        id_tag_set.update(nodes[tsp_sol[i + 1]])
     segments.sort(key=len)
 
     # Print segments and cost:
     print("Optimal contraction path segments and cost:")
     print((segments, cost))
 
-    print("Contracting...")
-    MAX_BYTES = psutil.virtual_memory().total >> 1  # Half system memory
+    keys = [n for p in segments for n in p]
+    tag_to_index = {}
+    for i, t in enumerate(quimb_tn.tensors):
+        tag_to_index[frozenset(set(t.tags) & id_tag_set)] = i
+
+    path = []
     itemsize = quimb_tn.tensors[0].data.itemsize
     byte_count = itemsize << 1
-    while byte_count <= MAX_BYTES:
-        n_segments = []
+    is_more = True
+    while is_more:
+        is_more = False
+        n_keys = []
         for path in segments:
             if len(path) < 2:
-                n_segments.append([path])
+                n_keys.append([path])
                 continue
-            n_path = []
-            tags = set(path[0])
+            key = frozenset(path[0])
+            n_key = [key]
             for i in range(len(path) - 1):
-                n_tags = path[i + 1]
+                o_key = frozenset(path[i + 1])
 
                 # Get tensors
-                tensors1 = quimb_tn.select(tags).tensors
-                tensors2 = quimb_tn.select(n_tags).tensors
+                tensors1 = quimb_tn.select(key).tensors
+                tensors2 = quimb_tn.select(o_key).tensors
                 if not tensors1 or not tensors2:
-                    print(f"[WARN] Skipping contraction between {tags} and {n_tags} (missing tensors)")
+                    print(f"[WARN] Skipping contraction between {key} and {n_key} (missing tensors)")
                     continue
 
                 t1 = tensors1[0]
@@ -192,22 +205,32 @@ def main():
 
                 if too_big:
                     # print(f"[SKIP] Exceeded maximum contraction size.")
-                    n_path.append(tags)
-                    tags = set(n_tags)  # Reset tags to start new path
+                    n_key.append(key)
+                    # Reset tags to start new path
+                    key = o_key
+                    is_more = True
                     continue
 
                 # Contract safely
-                quimb_tn.contract_between(list(tags), list(n_tags))
-                tags = tags.union(n_tags)
+                contracted_index = tag_to_index[frozenset(n_key)]
+                path.append((tag_to_index[key], contracted_index))
+                for key, value in tag_to_index.items():
+                    if value >= contracted_index:
+                        tag_to_index[key] -= 1
 
-            if (len(n_path) == 0) or (n_path[-1] != tags):
-                n_path.append(tags)
-            n_segments.append(n_path)
+            if (len(n_path) == 0) or (n_key[-1] != key):
+                n_key.append(key)
+            n_keys.append(n_key)
 
-        segments = n_segments
+        keys = n_keys
         byte_count *= 2
 
-    contract_single(quimb_tn)
+    print("Contraction path:")
+    print(path)
+
+    print("Contracting...")
+    quimb_tn.contract(optimize=tuple(path))
+
     print("Contraction result:")
     print(quimb_tn)
     quimb_tn.draw()
