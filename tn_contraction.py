@@ -165,7 +165,7 @@ def main():
         uid = frozenset(set(t.tags) & id_tag_set)
         tag_to_index[uid] = i
         result_bytes = itemsize
-        for ix in t:
+        for ix in t.inds:
             for iy in quimb_tn.ind_map.get(ix, 2):
                 result_bytes *= iy
         tag_to_inds[uid] = result_bytes
