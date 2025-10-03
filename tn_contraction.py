@@ -139,7 +139,7 @@ def main():
     id_tag_set = set()
     id_tag_set.update(nodes[tsp_sol[0]])
     segments = []
-    segment = [nodes[tsp_sol[0]]]
+    segment = [frozenset(nodes[tsp_sol[0]])]
     cost = 0
     for i in range(len(tsp_sol) - 1):
         val = tsp[tsp_sol[i], tsp_sol[i + 1]]
@@ -148,7 +148,7 @@ def main():
             segment = []
         else:
             cost += val
-        segment.append(nodes[tsp_sol[i + 1]])
+        segment.append(frozenset(nodes[tsp_sol[i + 1]]))
         id_tag_set.update(nodes[tsp_sol[i + 1]])
     segments.sort(key=len)
 
@@ -156,62 +156,50 @@ def main():
     print("Optimal contraction path segments and cost:")
     print((segments, cost))
 
-    keys = [n for p in segments for n in p]
-    tag_to_index = {}
-    for i, t in enumerate(quimb_tn.tensors):
-        tag_to_index[frozenset(set(t.tags) & id_tag_set)] = i
-
-    path = []
     itemsize = quimb_tn.tensors[0].data.itemsize
+
+    keys = [p.copy() for p in segments]
+    tag_to_index = {}
+    tag_to_inds = {}
+    for i, t in enumerate(quimb_tn.tensors):
+        uid = frozenset(set(t.tags) & id_tag_set)
+        tag_to_index[uid] = i
+        result_bytes = itemsize
+        for ix in t:
+            for iy in quimb_tn.ind_map.get(ix, 2):
+                result_bytes *= iy
+        tag_to_inds[uid] = result_bytes
+
+    i = 0
+    while len(keys[i]) == 1:
+        keys[i] = tag_to_index[keys[i][0]]
+
     byte_count = itemsize << 1
     is_more = True
     while is_more:
         is_more = False
         n_keys = []
-        for path in segments:
+        for path in keys:
             if len(path) < 2:
-                n_keys.append([path])
                 continue
-            key = frozenset(path[0])
+
+            key = path[0]
             n_key = [key]
             for i in range(len(path) - 1):
-                o_key = frozenset(path[i + 1])
-
-                # Get tensors
-                tensors1 = quimb_tn.select(key).tensors
-                tensors2 = quimb_tn.select(o_key).tensors
-                if not tensors1 or not tensors2:
-                    print(f"[WARN] Skipping contraction between {key} and {n_key} (missing tensors)")
-                    continue
-
-                t1 = tensors1[0]
-                t2 = tensors2[0]
-
-                # Estimate memory usage of contraction
-                # Union of indices = resulting tensor indices
-                result_inds = set(t1.inds) | set(t2.inds)
+                o_key = path[i + 1]
 
                 # Manual product of dimensions
-                result_bytes = itemsize
-                too_big = False
-                for ix in result_inds:
-                    for iy in quimb_tn.ind_map.get(ix, 2):
-                        result_bytes *= iy
-                        too_big = (result_bytes > byte_count)
-                        if too_big:
-                            break
-                    if too_big:
-                        break
+                result_bytes = tag_to_inds[key] * tag_to_inds[o_key]
 
-                if too_big:
-                    # print(f"[SKIP] Exceeded maximum contraction size.")
-                    n_key.append(key)
+                if result_bytes > byte_count:
                     # Reset tags to start new path
+                    n_key.append(key)
                     key = o_key
                     is_more = True
                     continue
 
                 # Contract safely
+                tag_to_inds[key] = result_bytes
                 contracted_index = tag_to_index[o_key]
                 path.append((tag_to_index[key], contracted_index))
                 for key, value in tag_to_index.items():
@@ -223,7 +211,7 @@ def main():
             n_keys.append(n_key)
 
         keys = n_keys
-        byte_count *= 2
+        byte_count <<= 1
 
     print("Contraction path:")
     print(path)
