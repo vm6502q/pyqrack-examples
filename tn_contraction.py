@@ -218,7 +218,7 @@ def main():
                     if value >= contracted_index:
                         tag_to_index[key] -= 1
 
-            if (len(n_path) == 0) or (n_key[-1] != key):
+            if n_key[-1] != key:
                 n_key.append(key)
             n_keys.append(n_key)
 
