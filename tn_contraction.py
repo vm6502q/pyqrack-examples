@@ -186,7 +186,7 @@ def main():
                 continue
 
             key = p[0]
-            n_key = [key]
+            n_key = []
             for i in range(len(p) - 1):
                 o_key = p[i + 1]
 
@@ -213,7 +213,7 @@ def main():
                     if value >= contracted_index:
                         tag_to_index[key] -= 1
 
-            if n_key[-1] != key:
+            if (len(n_key) == 0) or (n_key[-1] != key):
                 n_key.append(key)
             n_keys.append(n_key)
 
@@ -224,7 +224,7 @@ def main():
     print(path)
 
     print("Contracting...")
-    quimb_tn.contract(optimize=tuple(path))
+    quimb_tn.contract(optimize=path)
 
     print("Contraction result:")
     print(quimb_tn)
