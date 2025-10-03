@@ -174,20 +174,21 @@ def main():
     while len(keys[i]) == 1:
         keys[i] = tag_to_index[keys[i][0]]
 
+    path = []
     byte_count = itemsize << 1
     is_more = True
     while is_more:
         is_more = False
         n_keys = []
         min_byte_count = 0
-        for path in keys:
-            if len(path) < 2:
+        for p in keys:
+            if len(p) < 2:
                 continue
 
-            key = path[0]
+            key = p[0]
             n_key = [key]
-            for i in range(len(path) - 1):
-                o_key = path[i + 1]
+            for i in range(len(p) - 1):
+                o_key = p[i + 1]
 
                 # Manual product of dimensions
                 result_bytes = tag_to_inds[key] * tag_to_inds[o_key]
