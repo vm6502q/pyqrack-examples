@@ -179,6 +179,7 @@ def main():
     while is_more:
         is_more = False
         n_keys = []
+        min_byte_count = 0
         for path in keys:
             if len(path) < 2:
                 continue
@@ -190,6 +191,11 @@ def main():
 
                 # Manual product of dimensions
                 result_bytes = tag_to_inds[key] * tag_to_inds[o_key]
+                rb2 = result_bytes << 1
+                if min_byte_count == 0:
+                    min_byte_count = rb2
+                elif rb2 < min_byte_count:
+                    min_byte_count = rb2
 
                 if result_bytes > byte_count:
                     # Reset tags to start new path
@@ -211,7 +217,7 @@ def main():
             n_keys.append(n_key)
 
         keys = n_keys
-        byte_count <<= 1
+        byte_count = max(byte_count, min_byte_count)
 
     print("Contraction path:")
     print(path)
