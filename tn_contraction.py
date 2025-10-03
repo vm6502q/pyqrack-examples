@@ -212,7 +212,7 @@ def main():
                     continue
 
                 # Contract safely
-                contracted_index = tag_to_index[frozenset(o_key)]
+                contracted_index = tag_to_index[o_key]
                 path.append((tag_to_index[key], contracted_index))
                 for key, value in tag_to_index.items():
                     if value >= contracted_index:
