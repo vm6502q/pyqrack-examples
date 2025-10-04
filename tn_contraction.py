@@ -176,9 +176,10 @@ def main():
         keys[i] = tag_to_index[keys[i][0]]
 
     path = []
+    MAX_BYTES = psutil.virtual_memory().total >> 1
     byte_count = itemsize << 1
     is_more = True
-    while is_more:
+    while (byte_count < MAX_BYTES) and is_more:
         is_more = False
         n_keys = []
         min_byte_count = 0
