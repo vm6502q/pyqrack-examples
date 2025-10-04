@@ -169,6 +169,7 @@ def main():
             for iy in quimb_tn.ind_map.get(ix, 2):
                 result_bytes *= iy
         tag_to_inds[uid] = result_bytes
+    keys.sort(key=len)
 
     i = 0
     while len(keys[i]) == 1:
@@ -207,10 +208,20 @@ def main():
 
                 # Contract safely
                 tag_to_inds[key] = result_bytes
-                contracted_index = tag_to_index[o_key]
-                path.append((tag_to_index[key], contracted_index))
+
+                low_index = tag_to_index[key]
+                high_index = tag_to_index[o_key]
+
+                if low_index == high_index:
+                    continue
+
+                if low_index > high_index:
+                    low_index, high_index = high_index, low_index
+
+                path.append((low_index, high_index))
+
                 for key, value in tag_to_index.items():
-                    if value >= contracted_index:
+                    if value >= high_index:
                         tag_to_index[key] -= 1
 
             if (len(n_key) == 0) or (n_key[-1] != key):
