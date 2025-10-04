@@ -138,27 +138,26 @@ def main():
     # Break into segments
     id_tag_set = set()
     id_tag_set.update(nodes[tsp_sol[0]])
-    segments = []
+    keys = []
     segment = [frozenset(nodes[tsp_sol[0]])]
     cost = 0
     for i in range(len(tsp_sol) - 1):
         val = tsp[tsp_sol[i], tsp_sol[i + 1]]
         if val > 2:
-            segments.append(segment)
+            keys.append(segment)
             segment = []
         else:
             cost += val
         segment.append(frozenset(nodes[tsp_sol[i + 1]]))
         id_tag_set.update(nodes[tsp_sol[i + 1]])
-    segments.sort(key=len)
+    keys.sort(key=len)
 
     # Print segments and cost:
     print("Optimal contraction path segments and cost:")
-    print((segments, cost))
+    print((keys, cost))
 
     itemsize = quimb_tn.tensors[0].data.itemsize
 
-    keys = [p.copy() for p in segments]
     tag_to_index = {}
     tag_to_inds = {}
     for i, t in enumerate(quimb_tn.tensors):
@@ -170,10 +169,6 @@ def main():
                 result_bytes *= iy
         tag_to_inds[uid] = result_bytes
     keys.sort(key=len)
-
-    i = 0
-    while len(keys[i]) == 1:
-        keys[i] = tag_to_index[keys[i][0]]
 
     path = []
     MAX_BYTES = psutil.virtual_memory().total >> 1
@@ -194,11 +189,10 @@ def main():
 
                 # Manual product of dimensions
                 result_bytes = tag_to_inds[key] * tag_to_inds[o_key]
-                rb2 = result_bytes << 1
                 if min_byte_count == 0:
-                    min_byte_count = rb2
-                elif rb2 < min_byte_count:
-                    min_byte_count = rb2
+                    min_byte_count = result_bytes
+                elif result_bytes < min_byte_count:
+                    min_byte_count = result_bytes
 
                 if result_bytes > byte_count:
                     # Reset tags to start new path
@@ -206,6 +200,9 @@ def main():
                     key = o_key
                     is_more = True
                     continue
+
+                if result_bytes == min_byte_count:
+                    min_byte_count <<= 1
 
                 # Contract safely
                 tag_to_inds[key] = result_bytes
