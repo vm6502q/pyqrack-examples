@@ -133,7 +133,7 @@ def main():
 
     # Solve TSP
     print("Solving TSP...")
-    tsp_sol, raw_cost = tsp_symmetric(tsp, monte_carlo=False, is_cyclic=False)
+    tsp_sol, raw_cost = tsp_symmetric(tsp, is_cyclic=False)
 
     # Break into segments
     id_tag_set = set()
