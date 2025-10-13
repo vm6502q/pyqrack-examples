@@ -61,6 +61,50 @@ def contract_single(tn):
             break
 
 
+def set_up_tsp(quimb_tn):
+    tsp, _nodes = convert_quimb_tree_to_tsp(quimb_tn)
+    # Isolate unique tags:
+    nodes = []
+    i = 0
+    to_remove = []
+    for n0 in _nodes:
+        n = n0.copy()
+        for n1 in _nodes:
+            if n0 != n1:
+                n = (n ^ n1) & n
+        if len(n) == 0:
+            to_remove.append(i)
+        else:
+            nodes.append(n)
+        i += 1
+    _nodes = None
+    for rc in reversed(to_remove):
+        tsp = np.delete(tsp, rc, axis=0)
+        tsp = np.delete(tsp, rc, axis=1)
+
+    return tsp, nodes
+
+
+def chunk_segments(tsp, nodes, tsp_sol):
+    id_tag_set = set()
+    id_tag_set.update(nodes[tsp_sol[0]])
+    keys = []
+    segment = [frozenset(nodes[tsp_sol[0]])]
+    cost = 0
+    for i in range(len(tsp_sol) - 1):
+        val = tsp[tsp_sol[i], tsp_sol[i + 1]]
+        if val > 2:
+            keys.append(segment)
+            segment = []
+        else:
+            cost += val
+        segment.append(frozenset(nodes[tsp_sol[i + 1]]))
+        id_tag_set.update(nodes[tsp_sol[i + 1]])
+    keys.sort(key=len)
+
+    return keys, cost, id_tag_set
+
+
 # Produced with a ton of help from Elara, the custom OpenAI GPT (and more generally)
 def max_amplitude_beam_search(tn, phys_inds, beam_width=4):
     # Each beam entry is a tuple: (neg_amp2, bitstring_so_far, network_so_far)
@@ -106,51 +150,21 @@ def main():
     print("Generating circuit...")
     qc = generate_qv_circuit(width, depth)
     quimb_tn = qc.psi
+
     # Contract single-qubit gates.
     print("Pruning leaves...")
     contract_single(quimb_tn)
+
     # Convert to TSP
     print("Converting to tsp matrix...")
-    tsp, _nodes = convert_quimb_tree_to_tsp(quimb_tn)
-    # Isolate unique tags:
-    nodes = []
-    i = 0
-    to_remove = []
-    for n0 in _nodes:
-        n = n0.copy()
-        for n1 in _nodes:
-            if n0 != n1:
-                n = (n ^ n1) & n
-        if len(n) == 0:
-            to_remove.append(i)
-        else:
-            nodes.append(n)
-        i += 1
-    _nodes = None
-    for rc in reversed(to_remove):
-        tsp = np.delete(tsp, rc, axis=0)
-        tsp = np.delete(tsp, rc, axis=1)
+    tsp, nodes = set_up_tsp(quimb_tn)
 
     # Solve TSP
     print("Solving TSP...")
     tsp_sol, raw_cost = tsp_symmetric(tsp, is_cyclic=False)
 
     # Break into segments
-    id_tag_set = set()
-    id_tag_set.update(nodes[tsp_sol[0]])
-    keys = []
-    segment = [frozenset(nodes[tsp_sol[0]])]
-    cost = 0
-    for i in range(len(tsp_sol) - 1):
-        val = tsp[tsp_sol[i], tsp_sol[i + 1]]
-        if val > 2:
-            keys.append(segment)
-            segment = []
-        else:
-            cost += val
-        segment.append(frozenset(nodes[tsp_sol[i + 1]]))
-        id_tag_set.update(nodes[tsp_sol[i + 1]])
-    keys.sort(key=len)
+    keys, cost, id_tag_set = chunk_segments(tsp, nodes, tsp_sol)
 
     # Print segments and cost:
     print("Optimal contraction path segments and cost:")
@@ -171,10 +185,11 @@ def main():
     keys.sort(key=len)
 
     path = []
+    full_path = []
     MAX_BYTES = psutil.virtual_memory().total >> 1
     byte_count = itemsize << 1
     is_more = True
-    while (byte_count < MAX_BYTES) and is_more:
+    while is_more:
         is_more = False
         n_keys = []
         min_byte_count = 0
@@ -216,7 +231,9 @@ def main():
                 if low_index > high_index:
                     low_index, high_index = high_index, low_index
 
-                path.append((low_index, high_index))
+                full_path.append((low_index, high_index))
+                if (byte_count < MAX_BYTES):
+                    path.append((low_index, high_index))
 
                 for key, value in tag_to_index.items():
                     if value >= high_index:
@@ -230,7 +247,7 @@ def main():
         byte_count = max(byte_count, min_byte_count)
 
     print("Contraction path:")
-    print(path)
+    print(full_path)
 
     if len(path):
         print("Contracting...")
