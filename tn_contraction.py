@@ -234,7 +234,7 @@ def main():
 
     if len(path):
         print("Contracting...")
-        quimb_tn.contract(optimize=path)
+        quimb_tn = quimb_tn.contract(optimize=path)
 
     print("Contraction result:")
     print(quimb_tn)
