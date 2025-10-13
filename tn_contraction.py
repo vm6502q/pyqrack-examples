@@ -241,7 +241,7 @@ def main():
 
     quimb_tn = qtn.TensorNetwork(quimb_tn)
     print("Best guess for highest-probability bit string:")
-    print(max_amplitude_beam_search(quimb_tn, [f"k{qi}" for qi in range(width)])[0])
+    print(max_amplitude_beam_search(quimb_tn, [f"k{qi}" for qi in range(width)]))
 
     return 0
 
