@@ -332,8 +332,6 @@ def multiprocessing_bootstrap(n_qubits, n_electrons, reheat_tries=0):
                 if n_qubits < k:
                     break
 
-                reheat_theta = reheat_theta.copy()
-
                 if len(combos_list) < k:
                     combos = np.array(list(
                         item for sublist in itertools.combinations(z_qubits, k) for item in sublist
@@ -375,7 +373,7 @@ def multiprocessing_bootstrap(n_qubits, n_electrons, reheat_tries=0):
             bits_to_flip = random.sample(list(range(n_qubits)), num_to_flip)
             for bit in bits_to_flip:
                 reheat_theta[bit] = not reheat_theta[bit]
-            reheat_energy = compute_energy(reheat_theta)
+            reheat_min_energy = compute_energy(reheat_theta)
 
     return best_theta, min_energy
 
