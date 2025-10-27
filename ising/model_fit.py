@@ -340,7 +340,7 @@ def main():
 
         p = (
             2.0 ** (abs(J / h) - 1.0)
-            * (1.0 + math.sin(theta - theta_c) * math.cos(omega * math.pi * J * t + theta) / (1.0 + math.sqrt(t)))
+            * (1.0 + math.sin(theta - theta_c) * math.cos(omega * J * t + theta) / (1.0 + math.sqrt(t)))
             - 0.5
         )
 
