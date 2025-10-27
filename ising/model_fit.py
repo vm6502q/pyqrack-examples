@@ -226,7 +226,7 @@ def main():
     omega = 1.5
 
     # Quantinuum settings
-    J, h, dt = -1.0, 2.0, 0.25
+    J, h, dt, z = -1.0, 2.0, 0.25, 4
     theta = math.pi / 18
     delta_theta = 2 * math.pi / 9
 
@@ -348,24 +348,17 @@ def main():
             d_sqr_magnetization = 0
             bias = (n_qubits + 1) * [1 / (n_qubits + 1)]
         else:
-            # ChatGPT o3 suggested this cos_theta correction.
-            sin_delta_theta = math.sin(delta_theta)
             # "p" is the exponent of the geometric series weighting, for (n+1) dimensions of Hamming weight.
             # Notice that the expected symmetries are respected under reversal of signs of J and/or h.
+            zJ = z * J
+            theta_c = ((np.pi if J > 0 else -np.pi) / 2) if abs(zJ) < sys.float_info.epsilon else np.arcsin(max(-1.0, min(1.0, h / zJ)))
+
             p = (
-                (
-                    (2 ** (abs(J / h) - 1))
-                    * (
-                        1
-                        + sin_delta_theta
-                        * math.cos(-J * omega * t)
-                        / ((1 + math.sqrt(t / t2)) if t2 > 0 else 1)
-                    )
-                    - 1 / 2
-                )
-                if t2 > 0
-                else 2 ** abs(J / h)
+                2.0 ** (abs(J / h) - 1.0)
+                * (1.0 + math.sin(theta - theta_c) * math.cos(omega * math.pi * J * t + theta) / (1.0 + math.sqrt(t)))
+                - 0.5
             )
+
             if p >= 1024:
                 # This is approaching J / h -> infinity.
                 d_magnetization = 1
@@ -374,10 +367,14 @@ def main():
                 bias += n_qubits * [0]
             else:
                 # The magnetization components are weighted by (n+1) symmetric "bias" terms over possible Hamming weights.
+                n_bias = n_qubits + 1
+                bias = [0] * n_bias
+                factor = 2.0 ** -(p / n_bias)
+                result = 1.0
                 tot_n = 0
-                for q in range(n_qubits + 1):
-                    n = 1 / (n_qubits * (2 ** (p * q)))
-                    if n == float("inf"):
+                for q in range(n_bias):
+                    result *= factor
+                    if result == float("inf"):
                         d_magnetization = 1
                         d_sqr_magnetization = 1
                         tot_n = 1
@@ -385,10 +382,10 @@ def main():
                         bias += n_qubits * [0]
                         break
                     m = (n_qubits - (q << 1)) / n_qubits
-                    d_magnetization += n * m
-                    d_sqr_magnetization += n * m * m
-                    bias.append(n)
-                    tot_n += n
+                    d_magnetization += result * m
+                    d_sqr_magnetization += result * m * m
+                    bias[q] = result
+                    tot_n += result
                 # Normalize the results for 1.0 total marginal probability.
                 d_magnetization /= tot_n
                 d_sqr_magnetization /= tot_n
