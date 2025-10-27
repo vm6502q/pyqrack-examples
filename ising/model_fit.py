@@ -345,7 +345,6 @@ def main():
             d_magnetization = 1
             d_sqr_magnetization = 1
             bias[0] = 1.0
-            bias += n_qubits * [0]
         else:
             p = (
                 2.0 ** (abs(J / h) - 1.0)
