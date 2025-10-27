@@ -226,8 +226,8 @@ def main():
     omega = 1.5
 
     # Quantinuum settings
-    J, h, dt, z = -1.0, 2.0, 0.25, 4
-    theta = math.pi / 18
+    # J, h, dt, z = -1.0, 2.0, 0.25, 4
+    # theta = math.pi / 18
 
     # Pure ferromagnetic
     # J, h, dt, z = -1.0, 0.0, 0.25, 4
@@ -346,11 +346,6 @@ def main():
             d_sqr_magnetization = 1
             bias[0] = 1.0
             bias += n_qubits * [0]
-        elif J <= sys.float_info.epsilon:
-            # This agrees with small perturbations away from J = 0.
-            d_magnetization = 0
-            d_sqr_magnetization = 0
-            bias = (n_qubits + 1) * [1 / (n_qubits + 1)]
         else:
             p = (
                 2.0 ** (abs(J / h) - 1.0)
