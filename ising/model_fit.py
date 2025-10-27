@@ -351,9 +351,7 @@ def main():
         if factor <= sys.float_info.epsilon:
             d_magnetization = 1
             d_sqr_magnetization = 1
-            bias.clear()
-            bias.append(1.0)
-            bias += n_qubits * [0]
+            bias[0] = 1.0
         else:
             result = 1.0
             tot_n = 0
