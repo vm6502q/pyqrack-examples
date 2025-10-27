@@ -326,7 +326,6 @@ def main():
         # This section calculates the geometric series weight per Hamming weight, with oscillating time dependence.
         # The mean-field ground state is encapsulated as a multiplier on the geometric series exponent.
         # Additionally, this same mean-field exponent is the amplitude of time-dependent oscillation (also in the geometric series exponent).
-        bias = []
         t = d * dt
         # Determine how to weight closed-form vs. conventional simulation contributions:
         model = (1 - 1 / math.exp(t / t1)) if (t1 > 0) else 1
@@ -338,35 +337,47 @@ def main():
         zJ = z * J
         theta_c = ((np.pi if J > 0 else -np.pi) / 2) if abs(zJ) <= sys.float_info.epsilon else np.arcsin(max(-1.0, min(1.0, h / zJ)))
 
-        p = (
-            2.0 ** (abs(J / h) - 1.0)
-            * (1.0 + math.sin(theta - theta_c) * math.cos(omega * J * t + theta) / (1.0 + math.sqrt(t)))
-            - 0.5
-        )
-
         # The magnetization components are weighted by (n+1) symmetric "bias" terms over possible Hamming weights.
         n_bias = n_qubits + 1
         bias = [0] * n_bias
-        factor = 2.0 ** -(p / n_bias)
-        if factor <= sys.float_info.epsilon:
+        if h <= sys.float_info.epsilon:
+            # This agrees with small perturbations away from h = 0.
             d_magnetization = 1
             d_sqr_magnetization = 1
             bias[0] = 1.0
+            bias += n_qubits * [0]
+        elif J <= sys.float_info.epsilon:
+            # This agrees with small perturbations away from J = 0.
+            d_magnetization = 0
+            d_sqr_magnetization = 0
+            bias = (n_qubits + 1) * [1 / (n_qubits + 1)]
         else:
-            result = 1.0
-            tot_n = 0
-            for q in range(n_bias):
-                result *= factor
-                m = (n_qubits - (q << 1)) / n_qubits
-                d_magnetization += result * m
-                d_sqr_magnetization += result * m * m
-                bias[q] = result
-                tot_n += result
-            # Normalize the results for 1.0 total marginal probability.
-            d_magnetization /= tot_n
-            d_sqr_magnetization /= tot_n
-            for q in range(n_qubits + 1):
-                bias[q] /= tot_n
+            p = (
+                2.0 ** (abs(J / h) - 1.0)
+                * (1.0 + math.sin(theta - theta_c) * math.cos(omega * J * t + theta) / (1.0 + math.sqrt(t)))
+                - 0.5
+            )
+
+            factor = 2.0 ** -(p / n_bias)
+            if factor <= sys.float_info.epsilon:
+                d_magnetization = 1
+                d_sqr_magnetization = 1
+                bias[0] = 1.0
+            else:
+                result = 1.0
+                tot_n = 0
+                for q in range(n_bias):
+                    result *= factor
+                    m = (n_qubits - (q << 1)) / n_qubits
+                    d_magnetization += result * m
+                    d_sqr_magnetization += result * m * m
+                    bias[q] = result
+                    tot_n += result
+                # Normalize the results for 1.0 total marginal probability.
+                d_magnetization /= tot_n
+                d_sqr_magnetization /= tot_n
+                for q in range(n_qubits + 1):
+                    bias[q] /= tot_n
 
         if J > 0:
             # This is antiferromagnetism.
