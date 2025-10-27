@@ -228,22 +228,18 @@ def main():
     # Quantinuum settings
     J, h, dt, z = -1.0, 2.0, 0.25, 4
     theta = math.pi / 18
-    delta_theta = 2 * math.pi / 9
 
     # Pure ferromagnetic
     # J, h, dt = -1.0, 0.0, 0.25
     # theta = 0
-    # delta_theta = 0
 
     # Pure transverse field
     # J, h, dt = 0.0, 2.0, 0.25
     # theta = -math.pi / 2
-    # delta_theta = 0
 
     # Critical point (symmetry breaking)
     # J, h, dt = -1.0, 1.0, 0.25
     # theta = -math.pi / 4
-    # delta_theta = math.pi / 4
 
     if len(sys.argv) > 1:
         n_qubits = int(sys.argv[1])
