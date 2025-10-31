@@ -26,6 +26,12 @@ def bench_qrack(n):
             theta_crit,
             theta_crit,
         )
+        if 3 * random.random() < 1:
+            qsim.x(i)
+        if 3 * random.random() < 1:
+            qsim.y(i)
+        if 3 * random.random() < 1:
+            qsim.z(i)
 
     # ...But this might be rather what happens in practice:
     # for i in lcv_range:
