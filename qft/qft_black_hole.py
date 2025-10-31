@@ -18,7 +18,7 @@ def bench_qrack(n):
 
     theta_crit = math.acos(1.0 / math.sqrt(3))
 
-    # Single-qubit gates
+    # Idealized maximum information density state...
     for i in lcv_range:
         qsim.u(
             i,
@@ -27,10 +27,14 @@ def bench_qrack(n):
             theta_crit,
         )
 
-    # GHZ state
-    # qsim.h(0)
-    # for i in range(1, n):
-    #     qsim.mcx([i - 1], i)
+    # ...But this might be rather what happens in practice:
+    # for i in lcv_range:
+    #     qsim.u(
+    #         i,
+    #         random.uniform(0, 2 * math.pi),
+    #         random.uniform(0, 2 * math.pi),
+    #         random.uniform(0, 2 * math.pi),
+    #     )
 
     qsim.qft(list(lcv_range))
 
