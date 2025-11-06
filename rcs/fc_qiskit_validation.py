@@ -18,7 +18,7 @@ from qiskit_aer.backends import AerSimulator
 from qiskit.quantum_info import Statevector
 
 
-def bench_qrack(width, depth, trials):
+def bench_qrack(width, depth, trials, sdrp):
     # This is a "nearest-neighbor" coupler random circuit.
     control = AerSimulator(method="statevector")
     shots = 1 << (width + 2)
@@ -47,6 +47,8 @@ def bench_qrack(width, depth, trials):
                 circ.cx(c, t)
 
             experiment = QrackSimulator(width)
+            if sdrp > 0:
+                experiment.set_sdrp(sdrp)
             experiment.run_qiskit_circuit(circ)
 
             circ_aer = transpile(circ, backend=control)
@@ -119,11 +121,14 @@ def main():
     width = int(sys.argv[1])
     depth = int(sys.argv[2])
     trials = 1
+    sdrp = 0
     if len(sys.argv) > 3:
         trials = int(sys.argv[3])
+    if len(sys.argv) > 4:
+        sdrp = float(sys.argv[4])
 
     # Run the benchmarks
-    bench_qrack(width, depth, trials)
+    bench_qrack(width, depth, trials, sdrp)
 
     return 0
 
