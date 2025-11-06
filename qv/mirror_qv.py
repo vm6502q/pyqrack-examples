@@ -87,7 +87,7 @@ def nswap(sim, q1, q2):
     sim.cz(q1, q2)
 
 
-def bench_qrack(width, depth, trials, is_obfuscated):
+def bench_qrack(width, depth, trials, sdrp, is_obfuscated):
     # This is a "nearest-neighbor" coupler random circuit.
     shots = 100
     n_perm = 1 << width
@@ -104,6 +104,7 @@ def bench_qrack(width, depth, trials, is_obfuscated):
         "qubits": width,
         "depth": depth,
         "trials": trials,
+        "sdrp": sdrp,
         "forward_seconds_avg": 0,
         "transpile_seconds_avg": 0,
         "backward_seconds_avg": 0,
@@ -133,6 +134,8 @@ def bench_qrack(width, depth, trials, is_obfuscated):
         start = time.perf_counter()
 
         experiment = QrackSimulator(width)
+        if sdrp > 0:
+            experiment.set_sdrp(sdrp)
 
         # To ensure no dependence on initial |0> state,
         # initialize to a random permutation.
@@ -226,14 +229,17 @@ def main():
     width = int(sys.argv[1])
     depth = int(sys.argv[2])
     trials = 1
+    sdrp = 0
     is_obfuscated = False
     if len(sys.argv) > 3:
         trials = int(sys.argv[3])
     if len(sys.argv) > 4:
-        is_obfuscated = sys.argv[4] not in ["False", "0"]
+        sdrp = float(sys.argv[4])
+    if len(sys.argv) > 5:
+        is_obfuscated = sys.argv[5] not in ["False", "0"]
 
     # Run the benchmarks
-    print(bench_qrack(width, depth, trials, is_obfuscated))
+    print(bench_qrack(width, depth, trials, sdrp, is_obfuscated))
 
     return 0
 
