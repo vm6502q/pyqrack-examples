@@ -10,13 +10,15 @@ import time
 from pyqrack import QrackSimulator
 
 
-def bench_qrack(width, depth):
+def bench_qrack(width, depth, sdrp):
     lcv_range = range(width)
     all_bits = list(lcv_range)
 
     start = time.perf_counter()
 
     experiment = QrackSimulator(width)
+    if sdrp > 0:
+        experiment.set_sdrp(sdrp)
 
     for _ in range(depth):
         start = time.perf_counter()
@@ -48,9 +50,12 @@ def main():
 
     width = int(sys.argv[1])
     depth = int(sys.argv[2])
+    sdrp = 0
+    if len(sys.argv) > 3:
+        sdrp = float(sys.argv[3])
 
     # Run the benchmarks
-    result = bench_qrack(width, depth)
+    result = bench_qrack(width, depth, sdrp)
     # Calc. and print the results
     print("Width=" + str(width) + ", Depth=" + str(depth) + ", Seconds=" + str(result))
 
