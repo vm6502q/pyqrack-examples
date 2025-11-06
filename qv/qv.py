@@ -136,19 +136,34 @@ def main():
     # We compare probabilities of (ideal) "heavy outputs."
     # If the probability is above 2/3, the protocol certifies/passes the qubit width.
     threshold = statistics.median(ideal_probs)
-    sum_prob = 0
+    u_u = statistics.mean(ideal_probs)
+    numer = 0
+    denom = 0
+    hog_prob = 0
     for i in range(n_pow):
-        if ideal_probs[i] > threshold:
-            sum_prob = sum_prob + approx_probs[i]
+        ideal = ideal_probs[i]
+        experimental = approx_probs[i]
+
+        # XEB / EPLG
+        ideal_centered = ideal - u_u
+        denom += ideal_centered * ideal_centered
+        numer += ideal_centered * (experimental - u_u)
+
+        # QV / HOG
+        if ideal > threshold:
+            hog_prob += experimental
+
+    xeb = numer / denom
 
     print(
         {
             "qubits": n,
             "sdrp": sdrp,
             "seconds": interval,
-            "fidelity": fidelity,
-            "hog_prob": sum_prob,
-            "pass": (sum_prob >= 2 / 3),
+            "worst_case_fidelity": fidelity,
+            "xeb": xeb,
+            "hog_prob": hog_prob,
+            "pass": (hog_prob >= 2 / 3),
             "peak_cpu_mb": memory_cpu,
             "peak_gpu_mb": memory_gpu,
         }
