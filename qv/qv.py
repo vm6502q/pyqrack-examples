@@ -117,7 +117,7 @@ def bench_qrack(n, sdrp=0):
 
 def main():
     n = 20
-    sdrp = 0.3
+    sdrp = 1 / 3
     if len(sys.argv) > 1:
         n = int(sys.argv[1])
     if len(sys.argv) > 2:
