@@ -27,7 +27,8 @@ def bench_qrack(width, depth, trials):
     control = AerSimulator(method="statevector")
     experiment = QrackAceBackend(width)
     if "QRACK_QUNIT_SEPARABILITY_THRESHOLD" not in os.environ:
-        experiment.sim.set_sdrp(0.03)
+        for sim in experiment.sim:
+            sim.set_sdrp(0.03)
     noise_dummy=AceQasmSimulator(n_qubits=width)
 
     lcv_range = range(width)
