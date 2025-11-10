@@ -12,17 +12,6 @@ from qiskit import QuantumCircuit
 from qiskit.compiler import transpile
 
 
-def factor_width(width):
-    col_len = math.floor(math.sqrt(width))
-    while ((width // col_len) * col_len) != width:
-        col_len -= 1
-    row_len = width // col_len
-    if col_len == 1:
-        raise Exception("ERROR: Can't simulate prime number width!")
-
-    return (row_len, col_len)
-
-
 def count_set_bits(n):
     return bin(n).count("1")
 
@@ -33,8 +22,6 @@ def bench_qrack(width, depth, trials, sdrp, is_obfuscated):
     n_perm = 1 << width
     lcv_range = range(width)
     all_bits = list(lcv_range)
-
-    row_len, col_len = factor_width(width)
 
     results = {
         "qubits": width,
