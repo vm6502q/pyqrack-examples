@@ -27,76 +27,12 @@ def count_set_bits(n):
     return bin(n).count("1")
 
 
-def cx(sim, q1, q2):
-    sim.cx(q1, q2)
-
-
-def cy(sim, q1, q2):
-    sim.cy(q1, q2)
-
-
-def cz(sim, q1, q2):
-    sim.cz(q1, q2)
-
-
-def acx(sim, q1, q2):
-    sim.x(q1)
-    sim.cx(q1, q2)
-    sim.x(q1)
-
-
-def acy(sim, q1, q2):
-    sim.x(q1)
-    sim.cy(q1, q2)
-    sim.x(q1)
-
-
-def acz(sim, q1, q2):
-    sim.x(q1)
-    sim.cz(q1, q2)
-    sim.x(q1)
-
-
-def swap(sim, q1, q2):
-    sim.swap(q1, q2)
-
-
-def iswap(sim, q1, q2):
-    sim.iswap(q1, q2)
-
-
-def iiswap(sim, q1, q2):
-    sim.iswap(q1, q2)
-    sim.iswap(q1, q2)
-    sim.iswap(q1, q2)
-
-
-def pswap(sim, q1, q2):
-    sim.cz(q1, q2)
-    sim.swap(q1, q2)
-
-
-def mswap(sim, q1, q2):
-    sim.swap(q1, q2)
-    sim.cz(q1, q2)
-
-
-def nswap(sim, q1, q2):
-    sim.cz(q1, q2)
-    sim.swap(q1, q2)
-    sim.cz(q1, q2)
-
-
 def bench_qrack(width, depth, trials, sdrp, is_obfuscated):
     # This is a "nearest-neighbor" coupler random circuit.
     shots = 100
     n_perm = 1 << width
     lcv_range = range(width)
     all_bits = list(lcv_range)
-
-    # Nearest-neighbor couplers:
-    gateSequence = [0, 3, 2, 1, 2, 1, 0, 3]
-    two_bit_gates = swap, pswap, mswap, nswap, iswap, iiswap, cx, cy, cz, acx, acy, acz
 
     row_len, col_len = factor_width(width)
 
@@ -119,9 +55,10 @@ def bench_qrack(width, depth, trials, sdrp, is_obfuscated):
         for d in range(depth):
             # Single-qubit gates
             for i in lcv_range:
-                for _ in range(3):
-                    circ.h(i)
-                    circ.rz(random.uniform(0, 2 * math.pi), i)
+                circ.u(random.uniform(0, 2 * math.pi), random.uniform(0, 2 * math.pi), random.uniform(0, 2 * math.pi), i)
+                # for _ in range(3):
+                #     circ.h(i)
+                #     circ.rz(random.uniform(0, 2 * math.pi), i)
 
             # 2-qubit couplers
             unused_bits = all_bits.copy()
@@ -229,7 +166,7 @@ def main():
     width = int(sys.argv[1])
     depth = int(sys.argv[2])
     trials = 1
-    sdrp = 0
+    sdrp = 1 - 1 / math.sqrt(2)
     is_obfuscated = False
     if len(sys.argv) > 3:
         trials = int(sys.argv[3])
