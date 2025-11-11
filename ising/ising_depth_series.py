@@ -92,22 +92,18 @@ def main():
     # Quantinuum settings
     J, h, dt = -1.0, 2.0, 0.25
     theta = math.pi / 18
-    delta_theta = 2 * math.pi / 9
 
     # Pure ferromagnetic
     # J, h, dt = -1.0, 0.0, 0.25
     # theta = 0
-    # delta_theta = 0
 
     # Pure transverse field
     # J, h, dt = 0.0, 2.0, 0.25
     # theta = -math.pi / 2
-    # delta_theta = 0
 
     # Critical point (symmetry breaking)
     # J, h, dt = -1.0, 1.0, 0.25
     # theta = -math.pi / 4
-    # delta_theta = math.pi / 4
 
     if len(sys.argv) > 1:
         n_qubits = int(sys.argv[1])
@@ -120,7 +116,7 @@ def main():
     if len(sys.argv) > 5:
         shots = int(sys.argv[5])
     else:
-        shots = max(65536, 1 << (n_qubits + 2))
+        shots = min(65536, 1 << (n_qubits + 2))
     if len(sys.argv) > 6:
         trials = int(sys.argv[6])
     else:
@@ -130,6 +126,9 @@ def main():
     print("t2: " + str(t2))
     print("omega / pi: " + str(omega))
 
+    z = 4
+    zJ = z * J
+    theta_c = ((np.pi if J > 0 else -np.pi) / 2) if abs(zJ) <= sys.float_info.epsilon else np.arcsin(max(-1.0, min(1.0, h / zJ)))
     omega *= math.pi
     n_rows, n_cols = factor_width(n_qubits, False)
     qubits = list(range(n_qubits))
@@ -155,64 +154,66 @@ def main():
         magnetizations.append([])
         experiment = QrackSimulator(n_qubits)
 
-        start = time.perf_counter()
+        magnetization = np.cos(math.pi / 18)
+        sqr_magnetization = magnetization * magnetization
+        results.append(
+            {
+                "width": n_qubits,
+                "depth": 0,
+                "trial": trial,
+                "magnetization": magnetization,
+                "square_magnetization": sqr_magnetization,
+                "seconds": 0.0,
+            }
+        )
+        magnetizations[-1].append(sqr_magnetization)
 
-        experiment.run_qiskit_circuit(qc)
-        for d in depths:
+        start = time.perf_counter()
+        for d in range(1, depth + 1):
             d_magnetization = 0
             d_sqr_magnetization = 0
             model = 0
-            if d > 0:
-                if t1 > 0:
-                    experiment.run_qiskit_circuit(step)
+            if t1 > 0:
+                experiment.run_qiskit_circuit(step)
 
-                t = d * dt
-                model = (1 - 1 / math.exp(t / t1)) if (t1 > 0) else (0 if d == 0 else 1)
-                if np.isclose(h, 0):
+            t = d * dt
+            model = (1 - 1 / math.exp(t / t1)) if (t1 > 0) else (0 if d == 0 else 1)
+            if np.isclose(h, 0):
+                d_magnetization = 1
+                d_sqr_magnetization = 1
+            elif np.isclose(J, 0):
+                d_magnetization = 0
+                d_sqr_magnetization = 0
+            else:
+                # ChatGPT o3 suggested this cos_theta correction.
+                # sin_delta_theta = math.sin(delta_theta)
+                p = (
+                    2.0 ** (abs(J / h) - 1.0)
+                    * (1.0 + math.sin(theta - theta_c) * math.cos(omega * J * t + theta) / (1.0 + math.sqrt(t)))
+                    - 0.5
+                )
+                if p >= 1024:
                     d_magnetization = 1
                     d_sqr_magnetization = 1
-                elif np.isclose(J, 0):
-                    d_magnetization = 0
-                    d_sqr_magnetization = 0
                 else:
-                    # ChatGPT o3 suggested this cos_theta correction.
-                    sin_delta_theta = math.sin(delta_theta)
-                    p = (
-                        (
-                            (2 ** (abs(J / h) - 1))
-                            * (
-                                1
-                                + sin_delta_theta
-                                * math.cos(-J * omega * t)
-                                / ((1 + math.sqrt(t / t2)) if t2 > 0 else 1)
-                            )
-                            - 1 / 2
-                        )
-                        if t2 > 0
-                        else 2 ** abs(J / h)
-                    )
-                    if p >= 1024:
-                        d_magnetization = 1
-                        d_sqr_magnetization = 1
-                    else:
-                        tot_n = 0
-                        for q in range(n_qubits + 1):
-                            n = 1 / (n_qubits * (2 ** (p * q)))
-                            if n == float("inf"):
-                                d_magnetization = 1
-                                d_sqr_magnetization = 1
-                                tot_n = 1
-                                break
-                            m = (n_qubits - (q << 1)) / n_qubits
-                            d_magnetization += n * m
-                            d_sqr_magnetization += n * m * m
-                            tot_n += n
-                        d_magnetization /= tot_n
-                        d_sqr_magnetization /= tot_n
-                if J > 0:
-                    d_magnetization = -d_magnetization
+                    tot_n = 0
+                    for q in range(n_qubits + 1):
+                        n = 1 / (n_qubits * (2 ** (p * q)))
+                        if n == float("inf"):
+                            d_magnetization = 1
+                            d_sqr_magnetization = 1
+                            tot_n = 1
+                            break
+                        m = (n_qubits - (q << 1)) / n_qubits
+                        d_magnetization += n * m
+                        d_sqr_magnetization += n * m * m
+                        tot_n += n
+                    d_magnetization /= tot_n
+                    d_sqr_magnetization /= tot_n
+            if J > 0:
+                d_magnetization = -d_magnetization
 
-            if (d == 0) or (model < 0.99):
+            if (model < 0.99):
                 experiment_samples = experiment.measure_shots(qubits, shots)
                 magnetization = 0
                 sqr_magnetization = 0
