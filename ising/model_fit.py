@@ -226,8 +226,8 @@ def main():
     omega = 1.5
 
     # Quantinuum settings
-    # J, h, dt, z = -1.0, 2.0, 0.25, 4
-    # theta = math.pi / 18
+    J, h, dt, z = -1.0, 2.0, 0.25, 4
+    theta = math.pi / 18
 
     # Pure ferromagnetic
     # J, h, dt, z = -1.0, 0.0, 0.25, 4
