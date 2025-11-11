@@ -96,6 +96,7 @@ def calc_stats(n_rows, n_cols, ideal_probs, counts, bias, model, shots, depth):
     z_fidelity = 0
     sum_hog_counts = 0
     # total = 0
+    # hamming_bias = [0.0] * (n + 1)
     for i in range(n_pow):
         ideal = ideal_probs[i]
         count = counts[i] if i in counts else 0
@@ -103,17 +104,16 @@ def calc_stats(n_rows, n_cols, ideal_probs, counts, bias, model, shots, depth):
 
         # How many bits are 1, in the basis state?
         hamming_weight = hamming_distance(i, 0, n)
-        # How closely grouped are "like" bits to "like"?
-        expected_closeness = expected_closeness_weight(n_rows, n_cols, hamming_weight)
-        # When we add all "closeness" possibilities for the particular Hamming weight, we should maintain the (n+1) mean probability dimensions.
-        normed_closeness = (1 + closeness_like_bits(i, n_rows, n_cols)) / (
-            1 + expected_closeness
-        )
-        # If we're also using conventional simulation, use a normalized weighted average that favors the (n+1)-dimensional model at later times.
-        # The (n+1)-dimensional marginal probability is the product of a function of Hamming weight and "closeness," split among all basis states with that specific Hamming weight.
-        count = (1 - model) * exp + model * normed_closeness * bias[
-            hamming_weight
-        ] / math.comb(n, hamming_weight)
+        if model:
+            # How closely grouped are "like" bits to "like"?
+            expected_closeness = expected_closeness_weight(n_rows, n_cols, hamming_weight)
+            # When we add all "closeness" possibilities for the particular Hamming weight, we should maintain the (n+1) mean probability dimensions.
+            normed_closeness = (1 + closeness_like_bits(i, n_rows, n_cols)) / (1 + expected_closeness)
+            # If we're also using conventional simulation, use a normalized weighted average that favors the (n+1)-dimensional model at later times.
+            # The (n+1)-dimensional marginal probability is the product of a function of Hamming weight and "closeness," split among all basis states with that specific Hamming weight.
+            count = (1 - model) * exp + model * normed_closeness * bias[hamming_weight] / math.comb(n, hamming_weight)
+        else:
+            count = exp
         exp = count / shots
 
         # You can make sure this still adds up to 1.0, to show the distribution is normalized:
@@ -126,6 +126,7 @@ def calc_stats(n_rows, n_cols, ideal_probs, counts, bias, model, shots, depth):
         # L2 distance
         diff_sqr += (ideal - exp) ** 2
         z_fidelity += exp if ideal > exp else ideal
+        # hamming_bias[hamming_weight] += (ideal - exp) ** 2
 
         # XEB / EPLG
         ideal_centered = ideal - u_u
@@ -138,6 +139,7 @@ def calc_stats(n_rows, n_cols, ideal_probs, counts, bias, model, shots, depth):
 
     # This should be ~1.0, if we're properly normalized.
     # print("Distribution total: " + str(total))
+    # print(hamming_bias)
 
     return {
         "qubits": n,
@@ -191,6 +193,7 @@ def closeness_like_bits(perm, n_rows, n_cols):
 
     # normalize
     normalized_closeness = like_count / total_edges
+
     return normalized_closeness
 
 
@@ -200,6 +203,7 @@ def expected_closeness_weight(n_rows, n_cols, hamming_weight):
     same_pairs = math.comb(hamming_weight, 2) + math.comb(L - hamming_weight, 2)
     total_pairs = math.comb(L, 2)
     mu_k = same_pairs / total_pairs
+
     return 2 * mu_k - 1  # normalized closeness in [-1,1]
 
 
@@ -289,31 +293,86 @@ def main():
         for trial in range(trials):
             experiment = QrackSimulator(n_qubits)
             experiment.run_qiskit_circuit(qc)
-            for d in range(depth + 1):
-                if d > 0:
-                    experiment.run_qiskit_circuit(step)
+            for d in range(1, depth + 1):
+                experiment.run_qiskit_circuit(step)
 
                 counts = dict(Counter(experiment.measure_shots(qubits, shots)))
 
                 for key, value in counts.items():
-                    experiment_probs[d - 1][key] = (
-                        experiment_probs[d - 1].get(key, 0) + value / shots
+                    experiment_probs[d][key] = (
+                        experiment_probs[d].get(key, 0) + value / shots
                     )
 
         for experiment in experiment_probs:
             for key in experiment.keys():
                 experiment[key] /= trials
 
+    experiment = QrackSimulator(n_qubits)
+    experiment.run_qiskit_circuit(qc)
+    counts = dict(Counter(experiment.measure_shots(qubits, shots)))
+
+    for key, value in counts.items():
+        experiment_probs[0][key] = (
+            experiment_probs[0].get(key, 0) + value / shots
+        )
+
+    control = AerSimulator(method="statevector")
+    qc_aer = transpile(
+        qc_aer,
+        backend=control,
+    )
+    qc_aer_sv = qc_aer.copy()
+    qc_aer_sv.save_statevector()
+    job = control.run(qc_aer_sv)
+    control_probs = Statevector(job.result().get_statevector()).probabilities()
+
+    result = calc_stats(
+        n_rows,
+        n_cols,
+        control_probs,
+        experiment_probs[0],
+        [],
+        0,
+        shots,
+        0,
+    )
+
+    # Add up the square residuals:
+    r_squared = result["l2_difference"] ** 2
+
+    magnetization, sqr_magnetization = 0, 0
+    for key, value in experiment_probs[0].items():
+        m = 0
+        for _ in range(n_qubits):
+            m += -1 if (key & 1) else 1
+            key >>= 1
+        m /= n_qubits
+        magnetization += value * m
+        sqr_magnetization += value * m * m
+
+    c_magnetization, c_sqr_magnetization = 0, 0
+    for p in range(1 << n_qubits):
+        perm = p
+        m = 0
+        for _ in range(n_qubits):
+            m += -1 if (perm & 1) else 1
+            perm >>= 1
+        m /= n_qubits
+        c_magnetization += control_probs[p] * m
+        c_sqr_magnetization += control_probs[p] * m * m
+
+    # Save the sum of squares and sum of square residuals on the magnetization curve values.
+    ss = c_sqr_magnetization**2
+    ssr = (c_sqr_magnetization - sqr_magnetization) ** 2
+
     r_squared = 0
     ss = 0
     ssr = 0
-    for d in range(depth + 1):
+    for d in range(1, depth + 1):
         # For each depth step, we append an additional Trotter step to Aer's circuit.
-        if d > 0:
-            trotter_step(qc_aer, qubits, (n_rows, n_cols), J, h, dt)
+        trotter_step(qc_aer, qubits, (n_rows, n_cols), J, h, dt)
 
         # Run the Trotterized simulation with Aer and get the marginal probabilities.
-        control = AerSimulator(method="statevector")
         qc_aer = transpile(
             qc_aer,
             backend=control,
@@ -398,8 +457,7 @@ def main():
 
         if model < 0.99:
             # Mix in the conventional simulation component.
-            magnetization = 0
-            sqr_magnetization = 0
+            magnetization, sqr_magnetization = 0, 0
             for key, value in experiment_probs[d].items():
                 m = 0
                 for _ in range(n_qubits):
