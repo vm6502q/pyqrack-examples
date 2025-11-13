@@ -144,10 +144,30 @@ def bench_qrack(width, depth, trials):
                     g = random.choice(two_bit_gates)
                     g(circ, b1, b2)
 
-            experiment = QrackSimulator(width)
-            experiment.run_qiskit_circuit(circ)
+            basis_gates = [
+                "u",
+                "rz",
+                "h",
+                "x",
+                "y",
+                "z",
+                "sx",
+                "sxdg",
+                "s",
+                "sdg",
+                "t",
+                "tdg",
+                "cx",
+                "cy",
+                "cz",
+                "swap",
+            ]
 
-            circ_aer = transpile(circ, backend=control)
+            circ_aer = transpile(circ, basis_gates=basis_gates)
+
+            experiment = QrackSimulator(width)
+            experiment.run_qiskit_circuit(circ_aer)
+
             circ_aer.save_statevector()
             job = control.run(circ_aer)
 
