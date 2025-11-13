@@ -13,7 +13,6 @@ from scipy.stats import binom
 from pyqrack import QrackSimulator
 
 from qiskit import QuantumCircuit
-from qiskit.compiler import transpile
 from qiskit_aer.backends import AerSimulator
 from qiskit.quantum_info import Statevector
 
@@ -46,12 +45,12 @@ def bench_qrack(width, depth, trials, sdrp):
                 t = unused_bits.pop()
                 circ.cx(c, t)
 
-            experiment = QrackSimulator(width, isOpenCL=False, isSparse=True)
+            experiment = QrackSimulator(width, isOpenCL=False)
             if sdrp > 0:
                 experiment.set_sdrp(sdrp)
             experiment.run_qiskit_circuit(circ)
 
-            circ_aer = transpile(circ, backend=control)
+            circ_aer = circ.copy()
             circ_aer.save_statevector()
             job = control.run(circ_aer)
 
