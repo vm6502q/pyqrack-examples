@@ -106,9 +106,9 @@ def calc_stats(ideal_probs, counts, depth, shots):
     return {
         "qubits": n,
         "depth": depth,
-        "xeb": xeb,
-        "hog_prob": hog_prob,
-        "p-value": p_val,
+        "xeb": float(xeb),
+        "hog_prob": float(hog_prob),
+        "p-value": float(p_val),
     }
 
 
