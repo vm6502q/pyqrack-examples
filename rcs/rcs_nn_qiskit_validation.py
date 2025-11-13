@@ -64,13 +64,17 @@ def swap(sim, q1, q2):
 
 
 def iswap(sim, q1, q2):
-    sim.iswap(q1, q2)
+    sim.swap(q1, q2)
+    sim.cz(q1, q2)
+    sim.s(q1)
+    sim.s(q2)
 
 
 def iiswap(sim, q1, q2):
-    sim.iswap(q1, q2)
-    sim.iswap(q1, q2)
-    sim.iswap(q1, q2)
+    sim.sdg(q2)
+    sim.sdg(q1)
+    sim.cz(q1, q2)
+    sim.swap(q1, q2)
 
 
 def pswap(sim, q1, q2):
@@ -144,30 +148,10 @@ def bench_qrack(width, depth, trials):
                     g = random.choice(two_bit_gates)
                     g(circ, b1, b2)
 
-            basis_gates = [
-                "u",
-                "rz",
-                "h",
-                "x",
-                "y",
-                "z",
-                "sx",
-                "sxdg",
-                "s",
-                "sdg",
-                "t",
-                "tdg",
-                "cx",
-                "cy",
-                "cz",
-                "swap",
-            ]
-
-            circ_aer = transpile(circ, basis_gates=basis_gates)
-
             experiment = QrackSimulator(width)
-            experiment.run_qiskit_circuit(circ_aer)
+            experiment.run_qiskit_circuit(circ)
 
+            circ_aer = circ.copy()
             circ_aer.save_statevector()
             job = control.run(circ_aer)
 

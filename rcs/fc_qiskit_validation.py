@@ -46,7 +46,7 @@ def bench_qrack(width, depth, trials, sdrp):
                 t = unused_bits.pop()
                 circ.cx(c, t)
 
-            experiment = QrackSimulator(width)
+            experiment = QrackSimulator(width, isOpenCL=False, isSparse=True)
             if sdrp > 0:
                 experiment.set_sdrp(sdrp)
             experiment.run_qiskit_circuit(circ)
