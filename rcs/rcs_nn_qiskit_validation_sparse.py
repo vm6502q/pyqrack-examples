@@ -147,7 +147,7 @@ def bench_qrack(width, depth, trials):
                     g = random.choice(two_bit_gates)
                     g(circ, b1, b2)
 
-            experiment = QrackSimulator(width)
+            experiment = QrackSimulator(width, isOpenCL=False, isSparse=True)
             experiment.run_qiskit_circuit(circ)
 
             circ_aer = circ.copy()
