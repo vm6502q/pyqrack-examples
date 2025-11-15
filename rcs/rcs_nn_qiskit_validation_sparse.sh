@@ -1,1 +1,1 @@
-for n in {4,6,8,9,10,12,14,15,16,18,20,21,22,24,25,26,27,28,30}; do QRACK_SPARSE_TRUNCATION_THRESHOLD=$( echo "scale=24; 1/(4*sqrt(2^$n))" | bc ) python3 rcs_nn_qiskit_validation_sparse.py $n $n; done
+for n in {4,6,8,9,10,12,14,15,16,18,20,21,22,24,25,26,27,28,30}; do QRACK_SPARSE_TRUNCATION_THRESHOLD=$(python3 -c "import math; print(1/(4*math.sqrt(2**$n)))") python3 rcs_nn_qiskit_validation_sparse.py $n $n; done
