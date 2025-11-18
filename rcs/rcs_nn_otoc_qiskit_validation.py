@@ -153,7 +153,7 @@ def bench_qrack(width, depth, cycles):
             string.append(random.choice(ops))
         pauli_strings.append("".join(string))
         act_string(otoc, string)
-        otoc &= rcs
+        otoc &= rcs.inverse()
 
 
     experiment = QrackSimulator(width)
