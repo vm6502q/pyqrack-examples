@@ -30,7 +30,7 @@ def bench_qrack(width, depth, sdrp):
     lcv_range = range(width)
     all_bits = list(lcv_range)
     retained = width * width
-    shots = retained << 2
+    shots = retained * width
 
     rcs = QuantumCircuit(width)
     for d in range(depth):
