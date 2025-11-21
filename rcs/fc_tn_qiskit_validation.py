@@ -91,7 +91,7 @@ def calc_stats(ideal_probs, exp_probs, adj_xeb, depth):
     n_pow = len(ideal_probs)
     n = int(round(math.log2(n_pow)))
     u_u =  1 / n_pow
-    model = max(1.0, 1 / adj_xeb)
+    model = min(1.0, 1 / adj_xeb)
     numer = 0
     denom = 0
     for i in range(n_pow):
