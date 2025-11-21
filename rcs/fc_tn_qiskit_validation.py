@@ -9,6 +9,8 @@ import sys
 
 from collections import Counter
 
+from scipy.stats import binom
+
 from pyqrack import QrackSimulator
 
 from qiskit import QuantumCircuit
@@ -73,7 +75,7 @@ def bench_qrack(width, depth, sdrp):
     for key in ideal_probs.keys():
         ideal = ideal_probs[key]
         adj = ideal / sum_probs
-        ideal_probs[key] = ideal
+        ideal_probs[key] = adj
         denom += (ideal - u_u) ** 2
         numer += (ideal - u_u) * (adj - u_u)
 
@@ -84,30 +86,52 @@ def bench_qrack(width, depth, sdrp):
     job = control.run(rcs)
     control_probs = Statevector(job.result().get_statevector()).probabilities()
 
-    return calc_stats(control_probs, ideal_probs, adj_xeb, depth)
+    return calc_stats(control_probs, ideal_probs, adj_xeb, shots, depth)
 
 
-def calc_stats(ideal_probs, exp_probs, adj_xeb, depth):
+def calc_stats(ideal_probs, exp_probs, adj_xeb, shots, depth):
+    # For QV, we compare probabilities of (ideal) "heavy outputs."
+    # If the probability is above 2/3, the protocol certifies/passes the qubit width.
     n_pow = len(ideal_probs)
+    mean_guess = 1 / n_pow
     n = int(round(math.log2(n_pow)))
-    u_u =  1 / n_pow
-    model = min(1.0, 1 / adj_xeb)
+    threshold = statistics.median(ideal_probs)
+    u_u = statistics.mean(ideal_probs)
+    model = min(1.0, 1 / (adj_xeb * n))
     numer = 0
     denom = 0
+    sum_hog_counts = 0
+    sqr_diff = 0
     for i in range(n_pow):
-        count = model * (exp_probs[i] if i in exp_probs else 0) + (1 - model) * u_u
+        exp = model * (exp_probs[i] if i in exp_probs else 0) + (1.0 - model) * mean_guess
         ideal = ideal_probs[i]
 
         # XEB / EPLG
         denom += (ideal - u_u) ** 2
-        numer += (ideal - u_u) * (count - u_u)
+        numer += (ideal - u_u) * (exp - u_u)
 
+        # L2 norm
+        sqr_diff += (ideal - exp) ** 2
+
+        # QV / HOG
+        if ideal > threshold:
+            sum_hog_counts += exp * shots
+
+    hog_prob = sum_hog_counts / shots
     xeb = numer / denom
+    # p-value of heavy output count, if method were actually 50/50 chance of guessing
+    p_val = (
+        (1 - binom.cdf(sum_hog_counts - 1, shots, 1 / 2)) if sum_hog_counts > 0 else 1
+    )
+    rss = math.sqrt(sqr_diff)
 
     return {
         "qubits": n,
         "depth": depth,
-        "xeb": float(xeb)
+        "xeb": float(xeb),
+        "hog_prob": float(hog_prob),
+        "l2_diff": float(rss),
+        "p-value": float(p_val),
     }
 
 
