@@ -30,6 +30,7 @@ def bench_qrack(width, depth, sdrp):
     lcv_range = range(width)
     all_bits = list(lcv_range)
     shots = 1 << (width + 2)
+    retained = width * width
 
     rcs = QuantumCircuit(width)
     for d in range(depth):
@@ -60,7 +61,7 @@ def bench_qrack(width, depth, sdrp):
     idx = 0
     ideal_probs = {}
     sum_probs = 0
-    while (len(ideal_probs) < width):
+    while (len(ideal_probs) < retained):
         count_tuple = sorted_counts[idx]
         idx += 1
         key = count_tuple[0]
