@@ -1,5 +1,6 @@
 # The inverse QFT on a set of entropic single separable qubits can be sampled in a classically efficient manner.
 
+import cmath
 import math
 import random
 import sys
@@ -26,7 +27,7 @@ def bench_qrack(n):
     for c in range(n):
         for t in range(c):
             if result_bits[t]:
-                qsim.mtrx([1.0, 0.0, 0.0, (-1.0 + 0j) ** (-1.0 / (1 << (t + 1)))], 0)
+                qsim.mtrx([1.0, 0.0, 0.0, cmath.exp(-1j * math.pi / (1 << (t + 1)))], 0)
         b = qsim.m(0)
         result_bits.append(b)
         if b:
