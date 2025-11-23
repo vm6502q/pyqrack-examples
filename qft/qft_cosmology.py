@@ -1,7 +1,7 @@
 # The inverse QFT on a set of entropic single separable qubits can be sampled in a classically efficient manner.
 # (See https://arxiv.org/abs/1702.06959 for inverse QFT)
 # (See https://arxiv.org/abs/1702.06959 for motivation cosmology concept)
-# (The idea that the cosmological "program" is an inverse QFT on single separable qubits is from Dan Strano.)
+# (The idea that the cosmological "program" is a QFT on single separable qubits is from Dan Strano.)
 
 import cmath
 import math
@@ -18,30 +18,22 @@ def bench_qrack(n):
 
     qsim = QrackSimulator(1, isTensorNetwork=False)
 
-    qsim.h(0)
-    qsim.u(
-        0,
-        random.uniform(0, 2 * math.pi),
-        random.uniform(0, 2 * math.pi),
-        random.uniform(0, 2 * math.pi),
-    )
-    qsim.h(0)
     result_bits = []
-    for c in range(n):
-        for t in range(c):
-            if result_bits[t]:
-                qsim.mtrx([1.0, 0.0, 0.0, cmath.exp(-1j * math.pi / (1 << (t + 1)))], 0)
-        b = qsim.m(0)
-        result_bits.append(b)
-        if b:
-            qsim.x(0)
-        qsim.h(0)
+    for t in range(n):
         qsim.u(
             0,
             random.uniform(0, 2 * math.pi),
             random.uniform(0, 2 * math.pi),
             random.uniform(0, 2 * math.pi),
         )
+        qsim.h(0)
+        for c in range(t):
+            if result_bits[c]:
+                qsim.mtrx([1.0, 0.0, 0.0, cmath.exp(1j * math.pi / (1 << (t + 1)))], 0)
+        b = qsim.m(0)
+        result_bits.append(b)
+        if b:
+            qsim.x(0)
     result_bits.append(qsim.m(0))
 
     return (time.perf_counter() - start, result_bits)
