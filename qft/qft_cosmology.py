@@ -37,7 +37,11 @@ def bench_qrack(n):
         if b:
             qsim.x(0)
 
-    return (time.perf_counter() - start, result_bits)
+    bit_string = ""
+    for b in result_bits:
+        bit_string += "1" if b else "0"
+
+    return (time.perf_counter() - start, bit_string)
 
 
 def main():
@@ -52,7 +56,7 @@ def main():
     bit_string_result = r[1]
 
     print(
-        max_qb, ": ", time_result, " seconds, ", bit_string_result, " measurement result"
+        max_qb, "qubits,", time_result, "seconds,", bit_string_result, "measurement result"
     )
 
     return 0
