@@ -1,4 +1,5 @@
 # The inverse QFT on a set of entropic single separable qubits can be sampled in a classically efficient manner.
+# (See https://arxiv.org/abs/1702.06959)
 
 import cmath
 import math
