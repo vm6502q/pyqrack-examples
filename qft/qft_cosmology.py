@@ -16,7 +16,7 @@ def bench_qrack(n):
     # This is a discrete Fourier transform, after initializing all qubits randomly but separably.
     start = time.perf_counter()
 
-    qsim = QrackSimulator(1, isTensorNetwork=False)
+    qsim = QrackSimulator(1, isTensorNetwork=False, isSchmidtDecompose=False, isStabilizerHybrid=False, isOpenCL=False)
 
     result_bits = []
     for c in range(n):
@@ -36,7 +36,6 @@ def bench_qrack(n):
         result_bits.append(b)
         if b:
             qsim.x(0)
-    result_bits.append(qsim.m(0))
 
     return (time.perf_counter() - start, result_bits)
 
