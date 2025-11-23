@@ -19,7 +19,7 @@ def bench_qrack(n):
     qsim = QrackSimulator(1, isTensorNetwork=False)
 
     result_bits = []
-    for t in range(n):
+    for c in range(n):
         qsim.u(
             0,
             random.uniform(0, 2 * math.pi),
@@ -27,9 +27,11 @@ def bench_qrack(n):
             random.uniform(0, 2 * math.pi),
         )
         qsim.h(0)
-        for c in range(t):
-            if result_bits[c]:
-                qsim.mtrx([1.0, 0.0, 0.0, cmath.exp(1j * math.pi / (1 << (t + 1)))], 0)
+        phase_factor = cmath.exp(1j * math.pi)
+        for t in range(c):
+            phase_factor = cmath.sqrt(phase_factor)
+            if result_bits[t]:
+                qsim.mtrx([1.0, 0.0, 0.0, phase_factor], 0)
         b = qsim.m(0)
         result_bits.append(b)
         if b:
