@@ -1,4 +1,4 @@
-# The inverse QFT on a set of entropic single separable qubits can be sampled in a classically efficient manner.
+# The QFT on a set of entropic single separable qubits can be sampled in a classically efficient manner.
 # (See https://arxiv.org/abs/1702.06959 for inverse QFT)
 # (See https://arxiv.org/abs/1702.06959 for motivation cosmology concept)
 # (The idea that the cosmological "program" is a QFT on single separable qubits is from Dan Strano.)
