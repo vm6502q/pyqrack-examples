@@ -133,7 +133,7 @@ def bench_qrack(width, depth, sdrp):
     sum_probs = 0
     for count_tuple in experiment_counts:
         key = count_tuple[0]
-        prob = float((abs(quimb_rcs.amplitude(int_to_bitstring(key, width), backend="jax")) ** 2).real)
+        prob = float((abs(complex(quimb_rcs.amplitude(int_to_bitstring(key, width), backend="jax"))) ** 2).real)
         if prob <= u_u:
             continue
         val = count_tuple[1]
