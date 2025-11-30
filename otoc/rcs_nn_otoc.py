@@ -134,7 +134,7 @@ def bench_qrack(width, depth, cycles):
 
     return {
         "qubits": width,
-        "depth": d + 1,
+        "depth": depth,
         "shots": shots,
         "pauli_strings": pauli_strings,
         "marginal_prob": experiment_probs

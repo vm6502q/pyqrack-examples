@@ -14,8 +14,6 @@ from scipy.stats import binom
 from pyqrack import QrackSimulator
 
 from qiskit import QuantumCircuit
-from qiskit_aer.backends import AerSimulator
-from qiskit.quantum_info import Statevector
 
 import quimb.tensor as tn
 from qiskit_quimb import quimb_circuit
@@ -72,60 +70,11 @@ def bench_qrack(width, depth, sdrp):
         if len(ideal_probs) >= retained:
             break
 
-    for key in ideal_probs.keys():
-        ideal_probs[key] = ideal_probs[key] / sum_probs
-
-    rcs.save_statevector()
-    control = AerSimulator(method="statevector")
-    job = control.run(rcs)
-    control_probs = Statevector(job.result().get_statevector()).probabilities()
-
-    return calc_stats(control_probs, ideal_probs, shots, depth)
-
-
-def calc_stats(ideal_probs, exp_probs, shots, depth):
-    # For QV, we compare probabilities of (ideal) "heavy outputs."
-    # If the probability is above 2/3, the protocol certifies/passes the qubit width.
-    n_pow = len(ideal_probs)
-    n = int(round(math.log2(n_pow)))
-    mean_guess = 1 / n_pow
-    model = 1 / math.sqrt(n)
-    threshold = statistics.median(ideal_probs)
-    u_u = statistics.mean(ideal_probs)
-    numer = 0
-    denom = 0
-    sum_hog_counts = 0
-    sqr_diff = 0
-    for i in range(n_pow):
-        exp = (1 - model) * (exp_probs[i] if i in exp_probs else 0) + model * mean_guess
-        ideal = ideal_probs[i]
-
-        # XEB / EPLG
-        denom += (ideal - u_u) ** 2
-        numer += (ideal - u_u) * (exp - u_u)
-
-        # L2 norm
-        sqr_diff += (ideal - exp) ** 2
-
-        # QV / HOG
-        if ideal > threshold:
-            sum_hog_counts += exp * shots
-
-    hog_prob = sum_hog_counts / shots
-    xeb = numer / denom
-    # p-value of heavy output count, if method were actually 50/50 chance of guessing
-    p_val = (
-        (1 - binom.cdf(sum_hog_counts - 1, shots, 1 / 2)) if sum_hog_counts > 0 else 1
-    )
-    rss = math.sqrt(sqr_diff)
-
     return {
-        "qubits": n,
+        "qubits": width,
         "depth": depth,
-        "xeb": float(xeb),
-        "hog_prob": float(hog_prob),
-        "l2_diff": float(rss),
-        "p-value": float(p_val),
+        "sum_sieved_probs": sum_probs,
+        "sieved_probs": ideal_probs
     }
 
 
