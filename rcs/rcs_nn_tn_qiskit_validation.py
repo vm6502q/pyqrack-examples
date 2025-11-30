@@ -159,7 +159,7 @@ def calc_stats(ideal_probs, exp_probs, shots, depth):
     n_pow = len(ideal_probs)
     n = int(round(math.log2(n_pow)))
     mean_guess = 1 / n_pow
-    model = 1 / math.sqrt(n)
+    model = min(1.0, math.sqrt(2.0 / n))
     threshold = statistics.median(ideal_probs)
     u_u = statistics.mean(ideal_probs)
     numer = 0
