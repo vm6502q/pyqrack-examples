@@ -55,40 +55,51 @@ def main():
     results = []
     magnetizations = {}
 
-    n_rows, n_cols = factor_width(n_qubits, False)
-    qubits = list(range(n_qubits))
-    magnetizations = []
+    n_qubits_sets = [16, 25, 36, 56]
 
-    start = time.perf_counter()
-    for d in depths:
-        t = d * dt
+    for n_qubits in n_qubits_sets:
+        n_rows, n_cols = factor_width(n_qubits, False)
+        qubits = list(range(n_qubits))
+        magnetizations[n_qubits] = []
 
-        bias = get_tfim_hamming_distribution(J=J, h=h, z=z, theta=theta, t=t, n_qubits=n_qubits)
+        start = time.perf_counter()
+        for d in depths:
+            t = d * dt
 
-        d_magnetization, d_sqr_magnetization = 0, 0
-        for hamming_weight, value in enumerate(bias):
-            m = 1.0 - 2 * hamming_weight / n_qubits
-            d_magnetization += value * m
-            d_sqr_magnetization += value * m * m
+            bias = get_tfim_hamming_distribution(J=J, h=h, z=z, theta=theta, t=t, n_qubits=n_qubits)
 
-        seconds = time.perf_counter() - start
+            d_magnetization, d_sqr_magnetization = 0, 0
+            for hamming_weight, value in enumerate(bias):
+                m = 1.0 - 2 * hamming_weight / n_qubits
+                d_magnetization += value * m
+                d_sqr_magnetization += value * m * m
 
-        results.append(
-            {
-                "width": n_qubits,
-                "depth": d,
-                "magnetization": float(d_magnetization),
-                "square_magnetization": float(d_sqr_magnetization),
-                "seconds": seconds,
-            }
-        )
-        magnetizations.append(d_sqr_magnetization)
-        print(results[-1])
+            seconds = time.perf_counter() - start
+
+            results.append(
+                {
+                    "width": n_qubits,
+                    "depth": d,
+                    "magnetization": float(d_magnetization),
+                    "square_magnetization": float(d_sqr_magnetization),
+                    "seconds": seconds,
+                }
+            )
+            magnetizations[n_qubits].append(d_sqr_magnetization)
+            print(results[-1])
+
+    data_series = {
+        "4×4": magnetizations[16],
+        "5×5": magnetizations[25],
+        "6×6": magnetizations[36],
+        "7×8": magnetizations[56],
+    }
 
     # Plotting (contributed by Elara, an OpenAI custom GPT)
     plt.figure(figsize=(14, 14))
 
-    plt.plot(depths, magnetizations, marker='o', linestyle='-')
+    for label, mags in data_series.items():
+        plt.plot(depths, mags, marker='o', linestyle='-', label=f"{label} (exact)")
 
     plt.xlabel("step")
     plt.ylabel(r"$\langle Z^2_{tot} \rangle$")
