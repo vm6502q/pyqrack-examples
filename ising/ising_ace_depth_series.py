@@ -87,9 +87,9 @@ def main():
     n_qubits = 16
     depth = 40
     z = 4
-    alpha = 0.666666
+    alpha = 2 / 3
     t1 = float("inf")
-    t2 = 1.6
+    t2 = math.pi / 2
 
     # Quantinuum settings
     J, h, dt = -1.0, 2.0, 0.125
