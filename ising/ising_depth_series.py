@@ -93,7 +93,7 @@ def main():
     plt.xlabel("step")
     plt.ylabel(r"$\langle Z^2_{tot} \rangle$")
     plt.title("Square Magnetization vs Trotter Depth")
-    plt.legend()
+    # plt.legend()
     plt.grid(True)
     plt.xticks(depths)
     # plt.ylim(0.05, 0.7)

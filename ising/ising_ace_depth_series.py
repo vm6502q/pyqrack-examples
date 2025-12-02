@@ -122,6 +122,8 @@ def main():
     else:
         shots = max(65536, 1 << (n_qubits + 2))
 
+    dt /= 2
+
     print(f"Qubits: {n_qubits}")
     print(f"Subsystem size: {os.environ['QRACK_MAX_PAGING_QB']}")
     print(f"alpha: {alpha}")
@@ -202,7 +204,7 @@ def main():
     plt.xlabel("step")
     plt.ylabel(r"$\langle Z^2_{tot} \rangle$")
     plt.title("Square Magnetization vs Trotter Depth")
-    plt.legend()
+    # plt.legend()
     plt.grid(True)
     plt.xticks(depths)
     # plt.ylim(0.05, 0.7)

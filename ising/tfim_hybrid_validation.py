@@ -330,7 +330,7 @@ def main():
     ssr = (c_sqr_magnetization - sqr_magnetization_0) ** 2
 
     qc_step = QuantumCircuit(n_qubits)
-    trotter_step(qc_step, qubits, (n_rows, n_cols), J, h, dt)
+    trotter_step(qc_step, qubits, (n_rows, n_cols), J, h, dt / 2)
     qc_step = transpile(
         qc_step,
         basis_gates=QrackSimulator.get_qiskit_basis_gates(),
@@ -356,7 +356,7 @@ def main():
         experiment_counts = dict(Counter(experiment.measure_shots(qubits, shots)))
 
         # The magnetization components are weighted by (n+1) symmetric "bias" terms over possible Hamming weights.
-        bias = get_tfim_hamming_distribution(J=J, h=h, z=z, theta=theta, t=t, n_qubits=n_qubits)
+        bias = get_tfim_hamming_distribution(J=J, h=h, z=z, theta=theta, t=t / 2, n_qubits=n_qubits)
         
         model = (alpha / math.exp(t / t1)) if (t1 > 0) else alpha
 
