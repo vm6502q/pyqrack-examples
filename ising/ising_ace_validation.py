@@ -244,8 +244,8 @@ def main():
         result = calc_stats(control_probs, experiment_counts, 0, shots)
 
         # Add up the square residuals:
-        r_squared = result["l2_difference"] ** 2
-        r_squared_xeb = (1.0 - result["xeb"]) ** 2
+        r_squared += result["l2_difference"] ** 2
+        r_squared_xeb += (1.0 - result["xeb"]) ** 2
 
         magnetization, sqr_magnetization = 0, 0
         for key, value in experiment_counts.items():
