@@ -226,6 +226,7 @@ def main():
     depth = 20
     alpha = 0.375
     t1 = 28
+    t2 = 2
 
     # Quantinuum settings
     J, h, dt, z = -1.0, 2.0, 0.25, 4
@@ -255,14 +256,19 @@ def main():
     if len(sys.argv) > 5:
         t1 = float(sys.argv[5])
     if len(sys.argv) > 6:
+        t2 = float(sys.argv[6])
+    if len(sys.argv) > 6:
         shots = int(sys.argv[6])
     else:
         shots = max(65536, 1 << (n_qubits + 2))
+
+    dt_h = dt / t2
 
     print(f"Qubits: {n_qubits}")
     print(f"Subsystem size: {os.environ['QRACK_MAX_PAGING_QB']}")
     print(f"alpha: {alpha}")
     print(f"t1: {t1}")
+    print(f"t2: {t2}")
 
     n_rows, n_cols = factor_width(n_qubits, False)
     qubits = list(range(n_qubits))
@@ -330,7 +336,7 @@ def main():
     ssr = (c_sqr_magnetization - sqr_magnetization_0) ** 2
 
     qc_step = QuantumCircuit(n_qubits)
-    trotter_step(qc_step, qubits, (n_rows, n_cols), J, h, dt / 2)
+    trotter_step(qc_step, qubits, (n_rows, n_cols), J, h, dt_h)
     qc_step = transpile(
         qc_step,
         basis_gates=QrackSimulator.get_qiskit_basis_gates(),
@@ -338,6 +344,7 @@ def main():
 
     for d in range(1, depth + 1):
         t = d * dt
+        t_h = t / t2
 
         # For each depth step, we append an additional Trotter step to Aer's circuit.
         trotter_step(qc_aer, qubits, (n_rows, n_cols), J, h, dt)
@@ -356,9 +363,9 @@ def main():
         experiment_counts = dict(Counter(experiment.measure_shots(qubits, shots)))
 
         # The magnetization components are weighted by (n+1) symmetric "bias" terms over possible Hamming weights.
-        bias = get_tfim_hamming_distribution(J=J, h=h, z=z, theta=theta, t=t / 2, n_qubits=n_qubits)
+        bias = get_tfim_hamming_distribution(J=J, h=h, z=z, theta=theta, t=t_h, n_qubits=n_qubits)
         
-        model = (alpha / math.exp(t / t1)) if (t1 > 0) else alpha
+        model = (alpha / math.exp(t_h / t1)) if (t1 > 0) else alpha
 
         result = calc_stats(n_rows, n_cols, control_probs, experiment_counts, bias, model, shots, d)
 

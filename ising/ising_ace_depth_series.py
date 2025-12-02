@@ -89,6 +89,7 @@ def main():
     z = 4
     alpha = 0.375
     t1 = 28
+    t2 = 2
 
     # Quantinuum settings
     J, h, dt = -1.0, 2.0, 0.125
@@ -118,16 +119,19 @@ def main():
     if len(sys.argv) > 5:
         t1 = float(sys.argv[5])
     if len(sys.argv) > 6:
-        shots = int(sys.argv[6])
+        t2 = float(sys.argv[6])
+    if len(sys.argv) > 7:
+        shots = int(sys.argv[7])
     else:
         shots = max(65536, 1 << (n_qubits + 2))
 
-    dt /= 2
+    dt_h = dt / t2
 
     print(f"Qubits: {n_qubits}")
     print(f"Subsystem size: {os.environ['QRACK_MAX_PAGING_QB']}")
     print(f"alpha: {alpha}")
     print(f"t1: {t1}")
+    print(f"t2: {t2}")
 
     depths = list(range(1, depth + 1))
     results = []
@@ -142,7 +146,7 @@ def main():
         init.ry(theta, q)
 
     qc_step = QuantumCircuit(n_qubits)
-    trotter_step(qc_step, qubits, (n_rows, n_cols), J, h, dt)
+    trotter_step(qc_step, qubits, (n_rows, n_cols), J, h, dt_h)
     qc_step = transpile(
         qc_step,
         basis_gates=QrackSimulator.get_qiskit_basis_gates(),
@@ -155,10 +159,11 @@ def main():
 
     for d in depths:
         t = d * dt
+        t_h = t / t2
 
         experiment.run_qiskit_circuit(qc_step)
         experiment_counts = dict(Counter(experiment.measure_shots(qubits, shots)))
-        bias = get_tfim_hamming_distribution(J=J, h=h, z=z, theta=theta, t=t, n_qubits=n_qubits)
+        bias = get_tfim_hamming_distribution(J=J, h=h, z=z, theta=theta, t=t_h, n_qubits=n_qubits)
 
         magnetization, sqr_magnetization = 0, 0
         for key, value in experiment_counts.items():
@@ -178,7 +183,7 @@ def main():
             b_magnetization += value * m
             b_sqr_magnetization += value * m * m
 
-        model = (alpha / math.exp(t / t1)) if (t1 > 0) else alpha
+        model = (alpha / math.exp(t_h / t1)) if (t1 > 0) else alpha
         magnetization = model * magnetization + (1.0 - model) * b_magnetization
         sqr_magnetization = model * sqr_magnetization + (1.0 - model) * b_sqr_magnetization
 
