@@ -257,8 +257,8 @@ def main():
         t1 = float(sys.argv[5])
     if len(sys.argv) > 6:
         t2 = float(sys.argv[6])
-    if len(sys.argv) > 6:
-        shots = int(sys.argv[6])
+    if len(sys.argv) > 7:
+        shots = int(sys.argv[7])
     else:
         shots = max(65536, 1 << (n_qubits + 2))
 
