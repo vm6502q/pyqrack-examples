@@ -156,22 +156,10 @@ def main():
 
     depths = list(range(1, depth + 1))
     results = []
-    magnetizations = {}
+    magnetizations = []
 
     n_rows, n_cols = factor_width(n_qubits, False)
     qubits = list(range(n_qubits))
-    magnetizations = []
-
-    init = QuantumCircuit(n_qubits)
-    for q in range(n_qubits):
-        init.ry(theta, q)
-
-    qc_step = QuantumCircuit(n_qubits)
-    trotter_step(qc_step, qubits, (n_rows, n_cols), J, h, dt_h)
-    qc_step = transpile(
-        qc_step,
-        basis_gates=QrackSimulator.get_qiskit_basis_gates(),
-    )
 
     bias_h = init_beta(n_qubits)
     bias_magnetization, bias_sqr_magnetization = 0, 0
@@ -180,10 +168,22 @@ def main():
         bias_magnetization += value * m
         bias_sqr_magnetization += value * m * m
 
+    # Set the initial temperature by theta.
+    qc_aer = QuantumCircuit(n_qubits)
+    for q in range(n_qubits):
+        qc_aer.ry(theta, q)
+
+    qc_step = QuantumCircuit(n_qubits)
+    trotter_step(qc_step, qubits, (n_rows, n_cols), J, h, dt_h)
+    qc_step = transpile(
+        qc_step,
+        basis_gates=QrackSimulator.get_qiskit_basis_gates(),
+    )
+
     start = time.perf_counter()
 
     experiment = QrackSimulator(n_qubits, isTensorNetwork=False)
-    experiment.run_qiskit_circuit(init)
+    experiment.run_qiskit_circuit(qc_aer)
 
     for d in depths:
         t = d * dt
@@ -191,6 +191,8 @@ def main():
 
         experiment.run_qiskit_circuit(qc_step)
         experiment_counts = dict(Counter(experiment.measure_shots(qubits, shots)))
+
+        # The magnetization components are weighted by (n+1) symmetric "bias" terms over possible Hamming weights.
         bias = get_tfim_hamming_distribution(J=J, h=h, z=z, theta=theta, t=t_h, n_qubits=n_qubits)
 
         magnetization, sqr_magnetization = 0, 0

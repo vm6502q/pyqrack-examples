@@ -305,14 +305,9 @@ def main():
         qc_aer,
         backend=control,
     )
-    qc_aer_sv = qc_aer.copy()
-    qc_aer_sv.save_statevector()
-    job = control.run(qc_aer_sv)
-    control_probs = Statevector(job.result().get_statevector()).probabilities()
 
     experiment = QrackSimulator(n_qubits, isTensorNetwork=False)
     experiment.run_qiskit_circuit(qc_aer)
-    experiment_counts = dict(Counter(experiment.measure_shots(qubits, shots)))
 
     # Add up the square residuals:
     r_squared = 0
