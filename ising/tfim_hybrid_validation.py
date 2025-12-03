@@ -155,12 +155,33 @@ def top_n(n, a):
     return np.argsort(a)[-n:]
 
 
+def init_beta(n_qubits):
+    n_bias = n_qubits + 1
+    thresholds = np.empty(n_bias, dtype=np.float64)
+    normalizer = 0
+    for q in range(n_qubits >> 1):
+        normalizer += math.comb(n_qubits, q) << 1
+    if n_qubits & 1:
+        normalizer += math.comb(n_qubits, n_qubits >> 1)
+    p = 1
+    for q in range(n_qubits >> 1):
+        val = p / normalizer
+        thresholds[q] = val
+        thresholds[n_bias - (q + 1)] = val
+        p = math.comb(n_qubits, q + 1)
+    if n_qubits & 1:
+        thresholds[n_qubits >> 1] = p / normalizer
+
+    return thresholds
+
+
 # Calculate various statistics based on comparison between ideal (Trotterized) and approximate (continuum) measurement distributions.
-def calc_stats(n_rows, n_cols, ideal_probs, counts, bias, model, shots, depth):
+def calc_stats(n_rows, n_cols, ideal_probs, counts, bias, model, beta, shots, depth):
     # For QV, we compare probabilities of (ideal) "heavy outputs."
     # If the probability is above 2/3, the protocol certifies/passes the qubit width.
     n = n_rows * n_cols
     n_pow = 2**n
+    mean_prob = 1 / n_pow
     threshold = statistics.median(ideal_probs)
     u_u = statistics.mean(ideal_probs)
     numer = 0
@@ -185,7 +206,7 @@ def calc_stats(n_rows, n_cols, ideal_probs, counts, bias, model, shots, depth):
         normed_closeness = (1 + closeness_like_bits(i, n_rows, n_cols)) / (1 + expected_closeness)
         # Use a normalized weighted average that favors the (n+1)-dimensional model at later times.
         # The (n+1)-dimensional marginal probability is the product of a function of Hamming weight and "closeness," split among all basis states with that specific Hamming weight.
-        count = model * exp + (1 - model) * normed_closeness * bias[hamming_weight] / math.comb(n, hamming_weight)
+        count = (1.0 - beta) * (model * exp + (1 - model) * normed_closeness * bias[hamming_weight] / math.comb(n, hamming_weight)) + beta * mean_prob
 
         # You can make sure this still adds up to 1.0, to show the distribution is normalized:
         # total += count
@@ -225,7 +246,7 @@ def main():
     n_qubits = 8
     depth = 20
     alpha = 2 / 3
-    t1 = float("inf")
+    beta = 1 / 3
     t2 = math.pi / 2
 
     # Quantinuum settings
@@ -254,7 +275,8 @@ def main():
         alpha = float(sys.argv[4])
         alpha = min(max(alpha, 0), 1)
     if len(sys.argv) > 5:
-        t1 = float(sys.argv[5])
+        beta = float(sys.argv[5])
+        beta = min(max(beta, 0), 1)
     if len(sys.argv) > 6:
         t2 = float(sys.argv[6])
     if len(sys.argv) > 7:
@@ -267,7 +289,7 @@ def main():
     print(f"Qubits: {n_qubits}")
     print(f"Subsystem size: {os.environ['QRACK_MAX_PAGING_QB']}")
     print(f"alpha: {alpha}")
-    print(f"t1: {t1}")
+    print(f"beta: {beta}")
     print(f"t2: {t2}")
 
     n_rows, n_cols = factor_width(n_qubits, False)
@@ -292,48 +314,13 @@ def main():
     experiment.run_qiskit_circuit(qc_aer)
     experiment_counts = dict(Counter(experiment.measure_shots(qubits, shots)))
 
-    bias_0 = get_tfim_hamming_distribution(J=J, h=h, z=z, theta=theta, t=0, n_qubits=n_qubits)
-
-    result = calc_stats(n_rows, n_cols, control_probs, experiment_counts, bias_0, alpha, shots, 0)
-
     # Add up the square residuals:
-    r_squared = result["l2_difference"] ** 2
-    r_squared_xeb = (1.0 - result["xeb"]) ** 2
-
-    magnetization_0, sqr_magnetization_0 = 0, 0
-    for key, value in experiment_counts.items():
-        m = 0
-        for _ in range(n_qubits):
-            m += -1 if (key & 1) else 1
-            key >>= 1
-        m /= n_qubits
-        magnetization_0 += m * value
-        sqr_magnetization_0 += m * m * value
-    magnetization_0 /= shots
-    sqr_magnetization_0 /= shots
-
-    b_magnetization_0, b_sqr_magnetization_0 = 0, 0
-    for hamming_weight, value in enumerate(bias_0):
-        m = 1.0 - 2 * hamming_weight / n_qubits
-        b_magnetization_0 += value * m
-        b_sqr_magnetization_0 += value * m * m
-
-    magnetization_0 = alpha * magnetization_0 + (1.0 - alpha) * b_magnetization_0
-    sqr_magnetization_0 = alpha * sqr_magnetization_0 + (1.0 - alpha) * b_sqr_magnetization_0
-
-    c_sqr_magnetization = 0
-    for p in range(1 << n_qubits):
-        perm = p
-        m = 0
-        for _ in range(n_qubits):
-            m += -1 if (perm & 1) else 1
-            perm >>= 1
-        m /= n_qubits
-        c_sqr_magnetization += control_probs[p] * m * m
+    r_squared = 0
+    r_squared_xeb = 0
 
     # Save the sum of squares and sum of square residuals on the magnetization curve values.
-    ss = c_sqr_magnetization**2
-    ssr = (c_sqr_magnetization - sqr_magnetization_0) ** 2
+    ss = 0
+    ssr = 0
 
     qc_step = QuantumCircuit(n_qubits)
     trotter_step(qc_step, qubits, (n_rows, n_cols), J, h, dt_h)
@@ -341,6 +328,13 @@ def main():
         qc_step,
         basis_gates=QrackSimulator.get_qiskit_basis_gates(),
     )
+
+    bias_h = init_beta(n_qubits)
+    bias_magnetization, bias_sqr_magnetization = 0, 0
+    for hamming_weight, value in enumerate(bias_h):
+        m = 1.0 - 2 * hamming_weight / n_qubits
+        bias_magnetization += value * m
+        bias_sqr_magnetization += value * m * m
 
     for d in range(1, depth + 1):
         t = d * dt
@@ -364,10 +358,8 @@ def main():
 
         # The magnetization components are weighted by (n+1) symmetric "bias" terms over possible Hamming weights.
         bias = get_tfim_hamming_distribution(J=J, h=h, z=z, theta=theta, t=t_h, n_qubits=n_qubits)
-        
-        model = (alpha / math.exp(t_h / t1)) if (t1 > 0) else alpha
 
-        result = calc_stats(n_rows, n_cols, control_probs, experiment_counts, bias, model, shots, d)
+        result = calc_stats(n_rows, n_cols, control_probs, experiment_counts, bias, alpha, beta, shots, d)
 
         # Add up the square residuals:
         r_squared += result["l2_difference"] ** 2
@@ -391,8 +383,8 @@ def main():
             b_magnetization += value * m
             b_sqr_magnetization += value * m * m
 
-        magnetization = model * magnetization + (1.0 - model) * b_magnetization
-        sqr_magnetization = model * sqr_magnetization + (1.0 - model) * b_sqr_magnetization
+        magnetization = (1.0 - beta) * (alpha * magnetization + (1.0 - alpha) * b_magnetization) + beta * bias_magnetization
+        sqr_magnetization = (1.0 - beta) * (alpha * sqr_magnetization + (1.0 - alpha) * b_sqr_magnetization) + beta * bias_sqr_magnetization
 
         c_sqr_magnetization = 0
         for p in range(1 << n_qubits):
@@ -410,8 +402,8 @@ def main():
 
     # R^2 and RMSE are elementary and standard measures of goodness-of-fit with simple definitions.
     # Ideal marginal probability would be 1.0, each depth step. Squared and summed, that's depth.
-    r_squared = 1.0 - r_squared / (depth + 1)
-    r_squared_xeb = 1.0 - r_squared_xeb / (depth + 1)
+    r_squared = 1.0 - r_squared / depth
+    r_squared_xeb = 1.0 - r_squared_xeb / depth
     rmse = (ssr / depth) ** (1 / 2)
     sm_r_squared = 1.0 - (ssr / ss)
 

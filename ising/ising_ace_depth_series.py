@@ -83,12 +83,32 @@ def trotter_step(circ, qubits, lattice_shape, J, h, dt):
     return circ
 
 
+def init_beta(n_qubits):
+    n_bias = n_qubits + 1
+    thresholds = np.empty(n_bias, dtype=np.float64)
+    normalizer = 0
+    for q in range(n_qubits >> 1):
+        normalizer += math.comb(n_qubits, q) << 1
+    if n_qubits & 1:
+        normalizer += math.comb(n_qubits, n_qubits >> 1)
+    p = 1
+    for q in range(n_qubits >> 1):
+        val = p / normalizer
+        thresholds[q] = val
+        thresholds[n_bias - (q + 1)] = val
+        p = math.comb(n_qubits, q + 1)
+    if n_qubits & 1:
+        thresholds[n_qubits >> 1] = p / normalizer
+
+    return thresholds
+
+
 def main():
     n_qubits = 16
     depth = 40
     z = 4
     alpha = 2 / 3
-    t1 = float("inf")
+    beta = 1 / 3
     t2 = math.pi / 2
 
     # Quantinuum settings
@@ -117,7 +137,8 @@ def main():
         alpha = float(sys.argv[4])
         alpha = min(max(alpha, 0), 1)
     if len(sys.argv) > 5:
-        t1 = float(sys.argv[5])
+        beta = float(sys.argv[5])
+        beta = min(max(beta, 0), 1)
     if len(sys.argv) > 6:
         t2 = float(sys.argv[6])
     if len(sys.argv) > 7:
@@ -130,7 +151,7 @@ def main():
     print(f"Qubits: {n_qubits}")
     print(f"Subsystem size: {os.environ['QRACK_MAX_PAGING_QB']}")
     print(f"alpha: {alpha}")
-    print(f"t1: {t1}")
+    print(f"beta: {beta}")
     print(f"t2: {t2}")
 
     depths = list(range(1, depth + 1))
@@ -151,6 +172,13 @@ def main():
         qc_step,
         basis_gates=QrackSimulator.get_qiskit_basis_gates(),
     )
+
+    bias_h = init_beta(n_qubits)
+    bias_magnetization, bias_sqr_magnetization = 0, 0
+    for hamming_weight, value in enumerate(bias_h):
+        m = 1.0 - 2 * hamming_weight / n_qubits
+        bias_magnetization += value * m
+        bias_sqr_magnetization += value * m * m
 
     start = time.perf_counter()
 
@@ -183,9 +211,8 @@ def main():
             b_magnetization += value * m
             b_sqr_magnetization += value * m * m
 
-        model = (alpha / math.exp(t_h / t1)) if (t1 > 0) else alpha
-        magnetization = model * magnetization + (1.0 - model) * b_magnetization
-        sqr_magnetization = model * sqr_magnetization + (1.0 - model) * b_sqr_magnetization
+        magnetization = (1.0 - beta) * (alpha * magnetization + (1.0 - alpha) * b_magnetization) + beta * bias_magnetization
+        sqr_magnetization = (1.0 - beta) * (alpha * sqr_magnetization + (1.0 - alpha) * b_sqr_magnetization) + beta * bias_sqr_magnetization
 
         seconds = time.perf_counter() - start
 
