@@ -247,7 +247,6 @@ def main():
     depth = 20
     alpha = 1 / 9
     beta = 2 / 9
-    t2 = math.pi / 2
 
     # Quantinuum settings
     J, h, dt, z = -1.0, 2.0, 0.25, 4
@@ -279,6 +278,8 @@ def main():
         beta = min(max(beta, 0), 1)
     if len(sys.argv) > 6:
         t2 = float(sys.argv[6])
+    else:
+        t2 = 8 * math.pi / n_qubits
     if len(sys.argv) > 7:
         shots = int(sys.argv[7])
     else:
