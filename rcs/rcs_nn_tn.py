@@ -137,13 +137,14 @@ def bench_qrack(width, depth, sdrp, is_sparse):
             h_idx = layer_offset + 6 * q
             quimb_rcs.psi.contract_between([f'GATE_{h_idx}'], [f'GATE_{h_idx + 5}'])
 
+    retained = width * width
     n_pow = 1 << width
     u_u =  1 / n_pow
     idx = 0
     ideal_amps = {}
     sum_probs = 0
     for count_tuple in experiment_counts:
-        if count_tuple[1] < 2:
+        if len(ideal_amps) >= retained and count_tuple[1] < 2:
             break
         key = count_tuple[0]
         amp = complex(quimb_rcs.amplitude(int_to_bitstring(key, width), backend="jax"))
