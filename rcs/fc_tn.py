@@ -27,8 +27,7 @@ def int_to_bitstring(integer, length):
 def bench_qrack(width, depth, sdrp, is_sparse):
     lcv_range = range(width)
     all_bits = list(lcv_range)
-    retained = width * width * 2
-    shots = retained * width
+    shots = width ** 3
 
     quimb_rcs = tn.Circuit(width)
     rcs = QuantumCircuit(width)
@@ -86,6 +85,8 @@ def bench_qrack(width, depth, sdrp, is_sparse):
     ideal_amps = {}
     sum_probs = 0
     for count_tuple in experiment_counts:
+        if count_tuple[1] < 2:
+            break
         key = count_tuple[0]
         amp = complex(quimb_rcs.amplitude(int_to_bitstring(key, width), backend="jax"))
         prob = float((abs(amp) ** 2).real)
@@ -93,8 +94,6 @@ def bench_qrack(width, depth, sdrp, is_sparse):
             continue
         ideal_amps[key] = amp
         sum_probs += prob
-        if len(ideal_amps) >= retained:
-            break
 
     return {
         "qubits": width,

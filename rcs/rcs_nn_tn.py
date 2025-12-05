@@ -68,8 +68,7 @@ def acz(sim, q1, q2):
 def bench_qrack(width, depth, sdrp, is_sparse):
     lcv_range = range(width)
     all_bits = list(lcv_range)
-    retained = width * width * 2
-    shots = retained * width
+    shots = width ** 3
     gateSequence = [0, 3, 2, 1, 2, 1, 0, 3]
     two_bit_gates = cx, cy, cz, acx, acy, acz
     row_len, col_len = factor_width(width)
@@ -144,6 +143,8 @@ def bench_qrack(width, depth, sdrp, is_sparse):
     ideal_amps = {}
     sum_probs = 0
     for count_tuple in experiment_counts:
+        if count_tuple[1] < 2:
+            break
         key = count_tuple[0]
         amp = complex(quimb_rcs.amplitude(int_to_bitstring(key, width), backend="jax"))
         prob = float((abs(amp) ** 2).real)
@@ -151,8 +152,6 @@ def bench_qrack(width, depth, sdrp, is_sparse):
             continue
         ideal_amps[key] = complex(amp)
         sum_probs += prob
-        if len(ideal_amps) >= retained:
-            break
 
     return {
         "qubits": width,
