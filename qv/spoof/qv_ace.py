@@ -37,14 +37,14 @@ def find_cutoff(arr):
         mid_val = arr[mid][1]
 
         if (mid_val > 1) and (arr[mid + 1][1] < 2):
-            return mid
+            return mid + 1
 
         if mid_val > 1:
             low = mid + 1
         else:
             high = mid - 1
 
-    return -1
+    return len(arr)
 
 
 def bench_qrack(width, depth, sdrp, is_sparse):
