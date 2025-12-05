@@ -27,14 +27,13 @@ def int_to_bitstring(integer, length):
 
 def find_cutoff(arr):
     low = 0
-    high = len(arr) - 1
-    mx = high
+    high = len(arr) - 2
 
     while low <= high:
         mid = (low + high) // 2
         mid_val = arr[mid][1]
 
-        if (mid_val > 1) and ((mid == mx) or (arr[mid + 1][1] == 1)):
+        if (mid_val > 1) and (arr[mid + 1][1] < 2):
             return mid
 
         if mid_val > 1:
