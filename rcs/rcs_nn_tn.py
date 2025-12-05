@@ -13,9 +13,7 @@ from scipy.stats import binom
 
 from pyqrack import QrackSimulator
 
-from qiskit import QuantumCircuit
-from qiskit_aer.backends import AerSimulator
-from qiskit.quantum_info import Statevector
+from qiskit import QuantumCircuit, qpy
 
 import quimb.tensor as tn
 from qiskit_quimb import quimb_circuit
@@ -117,6 +115,9 @@ def bench_qrack(width, depth, sdrp, is_sparse):
 
                 g = random.choice(two_bit_gates)
                 g(rcs, b1, b2)
+
+    with open("rcs_nn_tn.qpy", "wb") as file:
+        qpy.dump(rcs, file)
 
     if is_sparse:
         experiment = QrackSimulator(width, isTensorNetwork=False, isOpenCL=False, isSparse=True)
