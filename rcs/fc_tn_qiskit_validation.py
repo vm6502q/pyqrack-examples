@@ -34,7 +34,7 @@ def bench_qrack(width, depth, sdrp, is_sparse):
 
     quimb_rcs = tn.Circuit(width)
     rcs = QuantumCircuit(width)
-    excluded = [-1] * depth
+    # excluded = [-1] * depth
     for d in range(depth):
         # Single-qubit gates
         for i in lcv_range:
@@ -52,8 +52,8 @@ def bench_qrack(width, depth, sdrp, is_sparse):
             t = unused_bits.pop()
             rcs.cx(c, t)
             quimb_rcs.apply_gate('CX', c, t, tags=f"LAYER_{d}")
-        if len(unused_bits) > 0:
-            excluded[d] = unused_bits.pop()
+        # if len(unused_bits) > 0:
+        #     excluded[d] = unused_bits.pop()
 
     if is_sparse:
         experiment = QrackSimulator(width, isTensorNetwork=False, isOpenCL=False, isSparse=True)
@@ -111,7 +111,6 @@ def calc_stats(ideal_probs, exp_probs, shots, depth):
     n_pow = len(ideal_probs)
     n = int(round(math.log2(n_pow)))
     mean_guess = 1 / n_pow
-    model = min(1.0, 1 / n ** (1/4))
     threshold = statistics.median(ideal_probs)
     u_u = statistics.mean(ideal_probs)
     numer = 0
@@ -119,7 +118,7 @@ def calc_stats(ideal_probs, exp_probs, shots, depth):
     sum_hog_counts = 0
     sqr_diff = 0
     for i in range(n_pow):
-        exp = (1 - model) * (exp_probs[i] if i in exp_probs else 0) + model * mean_guess
+        exp = ((exp_probs[i] if i in exp_probs else 0) + mean_guess) / 2.0
         ideal = ideal_probs[i]
 
         # XEB / EPLG
@@ -159,7 +158,7 @@ def main():
 
     width = int(sys.argv[1])
     depth = int(sys.argv[2])
-    sdrp = 0
+    sdrp = (1.0 - 1.0 / math.sqrt(2)) / 2.0
     is_sparse = False
     if len(sys.argv) > 3:
         sdrp = float(sys.argv[3])

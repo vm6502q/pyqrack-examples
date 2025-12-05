@@ -32,7 +32,7 @@ def bench_qrack(width, depth, sdrp, is_sparse):
 
     quimb_rcs = tn.Circuit(width)
     rcs = QuantumCircuit(width)
-    excluded = [-1] * depth
+    # excluded = [-1] * depth
     for d in range(depth):
         # Single-qubit gates
         for i in lcv_range:
@@ -50,8 +50,8 @@ def bench_qrack(width, depth, sdrp, is_sparse):
             t = unused_bits.pop()
             rcs.cx(c, t)
             quimb_rcs.apply_gate('CX', c, t, tags=f"LAYER_{d}")
-        if len(unused_bits) > 0:
-            excluded[d] = unused_bits.pop()
+        # if len(unused_bits) > 0:
+        #     excluded[d] = unused_bits.pop()
 
     if is_sparse:
         experiment = QrackSimulator(width, isTensorNetwork=False, isOpenCL=False, isSparse=True)
@@ -109,7 +109,7 @@ def main():
 
     width = int(sys.argv[1])
     depth = int(sys.argv[2])
-    sdrp = 0
+    sdrp = 0.1464466
     is_sparse = False
     if len(sys.argv) > 3:
         sdrp = float(sys.argv[3])
