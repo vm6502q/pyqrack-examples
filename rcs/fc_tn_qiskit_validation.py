@@ -62,6 +62,13 @@ def bench_qrack(width, depth, sdrp, is_sparse):
     experiment_counts = dict(Counter(experiment.measure_shots(all_bits, shots)))
     experiment_counts = sorted(experiment_counts.items(), key=operator.itemgetter(1))
 
+    for p in range(2):
+        s = 1 << p
+        for l in range(0, depth, s):
+            l_end = l + s - 1
+            for q in range(width):
+                quimb_rcs.psi.contract_between(['CX', f'I{q}', f'LAYER_{l}'], ['CX', f'I{q}', f'LAYER_{l_end}'])
+
     for l in range(depth):
         for q in range(width):
             quimb_rcs.psi.contract([f'I{q}', f'LAYER_{l}'], which='all')
