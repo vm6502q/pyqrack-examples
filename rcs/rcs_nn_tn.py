@@ -67,7 +67,7 @@ def acz(sim, q1, q2):
     sim.x(q1)
 
 
-def bench_qrack(width, depth, sdrp):
+def bench_qrack(width, depth, sdrp, is_sparse):
     lcv_range = range(width)
     all_bits = list(lcv_range)
     retained = width * width
@@ -118,7 +118,10 @@ def bench_qrack(width, depth, sdrp):
                 g = random.choice(two_bit_gates)
                 g(rcs, b1, b2)
 
-    experiment = QrackSimulator(width, isTensorNetwork=False, isSparse=True, isOpenCL=False)
+    if is_sparse:
+        experiment = QrackSimulator(width, isTensorNetwork=False, isOpenCL=False, isSparse=True)
+    else:
+        experiment = QrackSimulator(width, isTensorNetwork=False)
     if sdrp > 0:
         experiment.set_sdrp(sdrp)
     experiment.run_qiskit_circuit(rcs)
@@ -154,17 +157,20 @@ def bench_qrack(width, depth, sdrp):
 def main():
     if len(sys.argv) < 3:
         raise RuntimeError(
-            "Usage: python3 fc_qiskit_validation.py [width] [depth] [trials]"
+            "Usage: python3 rcs_nn_tn.py [width] [depth] [sdrp] [is_sparse]"
         )
 
     width = int(sys.argv[1])
     depth = int(sys.argv[2])
     sdrp = 0
+    is_sparse = False
     if len(sys.argv) > 3:
         sdrp = float(sys.argv[3])
+    if len(sys.argv) > 4:
+        is_sparse = sys.argv[4] not in ["False", "0"]
 
     # Run the benchmarks
-    print(bench_qrack(width, depth, sdrp))
+    print(bench_qrack(width, depth, sdrp, is_sparse))
 
     return 0
 
