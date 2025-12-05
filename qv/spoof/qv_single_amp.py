@@ -33,11 +33,10 @@ def bench_qrack(idx):
     with open("qv_ace.pkl", "rb") as file:
         experiment_counts = pickle.load(file)
 
-    count_tuple = experiment_counts[idx]
+    key = experiment_counts[idx]
     width = quimb_rcs.N
     n_pow = 1 << width
     u_u =  1 / n_pow
-    key = count_tuple[0]
 
     prob = float((abs(complex(quimb_rcs.amplitude(int_to_bitstring(key, width), backend="jax"))) ** 2).real)
 

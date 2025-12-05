@@ -33,7 +33,7 @@ def bench_qrack():
     with open("qv_qiskit.pkl", "rb") as file:
         rcs = pickle.load(file)
     with open("qv_ace.pkl", "rb") as file:
-        experiment_counts = pickle.load(file)
+        experiment_perms = pickle.load(file)
 
     width = quimb_rcs.N
     retained = width * width
@@ -42,15 +42,14 @@ def bench_qrack():
     idx = 0
     ideal_probs = {}
     sum_probs = 0
-    for count_tuple in experiment_counts:
-        if len(ideal_probs) >= retained and count_tuple[1] < 2:
-            break
-        key = count_tuple[0]
+    for key in experiment_perms:
         prob = float((abs(complex(quimb_rcs.amplitude(int_to_bitstring(key, width), backend="jax"))) ** 2).real)
         if prob <= u_u:
             continue
         ideal_probs[key] = prob
         sum_probs += prob
+        if len(ideal_probs) >= retained:
+            break
 
     for key in ideal_probs.keys():
         ideal_probs[key] = ideal_probs[key] / sum_probs

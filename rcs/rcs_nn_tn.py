@@ -68,7 +68,8 @@ def acz(sim, q1, q2):
 def bench_qrack(width, depth, sdrp, is_sparse):
     lcv_range = range(width)
     all_bits = list(lcv_range)
-    shots = min(1 << 16, 1 << (width * 2))
+    retained = width * width
+    checked = min(1 << width, retained * width)
     gateSequence = [0, 3, 2, 1, 2, 1, 0, 3]
     two_bit_gates = cx, cy, cz, acx, acy, acz
     row_len, col_len = factor_width(width)
@@ -125,8 +126,8 @@ def bench_qrack(width, depth, sdrp, is_sparse):
     if sdrp > 0:
         experiment.set_sdrp(sdrp)
     experiment.run_qiskit_circuit(rcs)
-    experiment_counts = dict(Counter(experiment.measure_shots(all_bits, shots)))
-    experiment_counts = sorted(experiment_counts.items(), key=operator.itemgetter(1), reverse=True)
+    experiment_perms = experiment.highest_n_prob_perm(checked)
+    experiment = None
 
     quimb_rcs = quimb_circuit(rcs)
 
@@ -137,22 +138,19 @@ def bench_qrack(width, depth, sdrp, is_sparse):
             h_idx = layer_offset + 6 * q
             quimb_rcs.psi.contract_between([f'GATE_{h_idx}'], [f'GATE_{h_idx + 5}'])
 
-    retained = width * width
     n_pow = 1 << width
     u_u =  1 / n_pow
     idx = 0
-    ideal_amps = {}
+    ideal_probs = {}
     sum_probs = 0
-    for count_tuple in experiment_counts:
-        if len(ideal_amps) >= retained and count_tuple[1] < 2:
-            break
-        key = count_tuple[0]
-        amp = complex(quimb_rcs.amplitude(int_to_bitstring(key, width), backend="jax"))
-        prob = float((abs(amp) ** 2).real)
+    for key in experiment_perms:
+        prob = float((abs(complex(quimb_rcs.amplitude(int_to_bitstring(key, width), backend="jax"))) ** 2).real)
         if prob <= u_u:
             continue
-        ideal_amps[key] = complex(amp)
+        ideal_probs[key] = prob
         sum_probs += prob
+        if len(ideal_probs) >= retained:
+            break
 
     return {
         "qubits": width,

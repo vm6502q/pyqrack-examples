@@ -25,32 +25,11 @@ def int_to_bitstring(integer, length):
     return (bin(integer)[2:].zfill(length))[::-1]
 
 
-def find_cutoff(arr):
-    if arr[0][1] < 2:
-        return 0
-
-    low = 0
-    high = len(arr) - 2
-
-    while low <= high:
-        mid = (low + high) // 2
-        mid_val = arr[mid][1]
-
-        if (mid_val > 1) and (arr[mid + 1][1] < 2):
-            return mid + 1
-
-        if mid_val > 1:
-            low = mid + 1
-        else:
-            high = mid - 1
-
-    return len(arr)
-
-
 def bench_qrack(width, depth, sdrp, is_sparse):
     lcv_range = range(width)
     all_bits = list(lcv_range)
-    shots = min(1 << 16, 1 << (width * 2))
+    retained = width * width
+    checked = min(1 << width, retained * width)
 
     quimb_rcs = tn.Circuit(N=width)
     rcs = QuantumCircuit(width)
@@ -103,19 +82,14 @@ def bench_qrack(width, depth, sdrp, is_sparse):
     if sdrp > 0:
         experiment.set_sdrp(sdrp)
     experiment.run_qiskit_circuit(rcs)
-    experiment_counts = dict(Counter(experiment.measure_shots(all_bits, shots)))
-    experiment_counts = sorted(experiment_counts.items(), key=operator.itemgetter(1), reverse=True)
+    experiment_perms = experiment.highest_n_prob_perm(checked)
     experiment = None
 
-    cutoff = find_cutoff(experiment_counts)
-    if cutoff > (width * width):
-        experiment_counts = experiment_counts[:cutoff]
-
     with open('qv_ace.pkl', 'wb') as file:
-        pickle.dump(experiment_counts, file)
-    print("ACE counts saved to qv_ace.pkl")
+        pickle.dump(experiment_perms, file)
+    print("ACE indices saved to qv_ace.pkl")
 
-    return experiment_counts
+    return experiment_perms
 
 
 def main():
