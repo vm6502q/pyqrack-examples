@@ -27,7 +27,7 @@ def int_to_bitstring(integer, length):
 def bench_qrack(width, depth, sdrp, is_sparse):
     lcv_range = range(width)
     all_bits = list(lcv_range)
-    retained = width * width
+    retained = width * width * 2
     shots = retained * width
 
     rcs = QuantumCircuit(width)
@@ -68,7 +68,6 @@ def bench_qrack(width, depth, sdrp, is_sparse):
         prob = float((abs(amp) ** 2).real)
         if prob <= u_u:
             continue
-        val = count_tuple[1]
         ideal_amps[key] = amp
         sum_probs += prob
         if len(ideal_amps) >= retained:
