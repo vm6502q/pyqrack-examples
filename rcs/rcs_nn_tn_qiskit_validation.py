@@ -7,10 +7,6 @@ import random
 import statistics
 import sys
 
-from collections import Counter
-
-from scipy.stats import binom
-
 from pyqrack import QrackSimulator
 
 from qiskit import QuantumCircuit
@@ -191,10 +187,6 @@ def calc_stats(ideal_probs, exp_probs):
             hog_prob += exp
 
     xeb = numer / denom
-    # p-value of heavy output count, if method were actually 50/50 chance of guessing
-    p_val = (
-        (1 - binom.cdf(sum_hog_counts - 1, shots, 1 / 2)) if sum_hog_counts > 0 else 1
-    )
     rss = math.sqrt(sqr_diff)
 
     return {
