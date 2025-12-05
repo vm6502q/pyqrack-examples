@@ -27,7 +27,7 @@ def int_to_bitstring(integer, length):
 def bench_qrack(width, depth, sdrp, is_sparse):
     lcv_range = range(width)
     all_bits = list(lcv_range)
-    shots = width ** 3
+    shots = min(1 << 16, 1 << (width * 2))
 
     quimb_rcs = tn.Circuit(width)
     rcs = QuantumCircuit(width)

@@ -70,7 +70,7 @@ def acz(sim, q1, q2):
 def bench_qrack(width, depth, sdrp, is_sparse):
     lcv_range = range(width)
     all_bits = list(lcv_range)
-    shots = width ** 3
+    shots = min(1 << 16, 1 << (width * 2))
     gateSequence = [0, 3, 2, 1, 2, 1, 0, 3]
     two_bit_gates = cx, cy, cz, acx, acy, acz
     row_len, col_len = factor_width(width)
