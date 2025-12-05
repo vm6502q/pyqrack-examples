@@ -25,6 +25,26 @@ def int_to_bitstring(integer, length):
     return (bin(integer)[2:].zfill(length))[::-1]
 
 
+def find_cutoff(arr):
+    low = 0
+    high = len(arr) - 1
+    mx = high
+
+    while low <= high:
+        mid = (low + high) // 2
+        mid_val = arr[mid][1]
+
+        if (mid_val > 1) and ((mid == mx) or (arr[mid + 1][1] == 1)):
+            return mid
+
+        if mid_val > 1:
+            low = mid + 1
+        else:
+            high = mid - 1
+
+    return mx
+
+
 def bench_qrack(width, depth, sdrp, is_sparse):
     lcv_range = range(width)
     all_bits = list(lcv_range)
@@ -84,6 +104,8 @@ def bench_qrack(width, depth, sdrp, is_sparse):
     experiment_counts = dict(Counter(experiment.measure_shots(all_bits, shots)))
     experiment_counts = sorted(experiment_counts.items(), key=operator.itemgetter(1), reverse=True)
     experiment = None
+
+    experiment_counts = experiment_counts[:find_cutoff(experiment_counts)]
 
     with open('qv_ace.pkl', 'wb') as file:
         pickle.dump(experiment_counts, file)
