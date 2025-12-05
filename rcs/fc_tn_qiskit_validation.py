@@ -63,7 +63,7 @@ def bench_qrack(width, depth, sdrp, is_sparse):
         experiment.set_sdrp(sdrp)
     experiment.run_qiskit_circuit(rcs)
     experiment_counts = dict(Counter(experiment.measure_shots(all_bits, shots)))
-    experiment_counts = sorted(experiment_counts.items(), key=operator.itemgetter(1))
+    experiment_counts = sorted(experiment_counts.items(), key=operator.itemgetter(1), reverse=True)
     experiment = None
 
     for l in range(depth):
@@ -111,6 +111,7 @@ def calc_stats(ideal_probs, exp_probs, shots, depth):
     n_pow = len(ideal_probs)
     n = int(round(math.log2(n_pow)))
     mean_guess = 1 / n_pow
+    model = min(1.0, 1 / math.sqrt(n))
     threshold = statistics.median(ideal_probs)
     u_u = statistics.mean(ideal_probs)
     numer = 0
@@ -118,7 +119,7 @@ def calc_stats(ideal_probs, exp_probs, shots, depth):
     sum_hog_counts = 0
     sqr_diff = 0
     for i in range(n_pow):
-        exp = ((exp_probs[i] if i in exp_probs else 0) + mean_guess) / 2.0
+        exp = (1 - model) * (exp_probs[i] if i in exp_probs else 0) + model * mean_guess
         ideal = ideal_probs[i]
 
         # XEB / EPLG

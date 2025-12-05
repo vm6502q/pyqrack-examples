@@ -127,7 +127,7 @@ def bench_qrack(width, depth, sdrp, is_sparse):
         experiment.set_sdrp(sdrp)
     experiment.run_qiskit_circuit(rcs)
     experiment_counts = dict(Counter(experiment.measure_shots(all_bits, shots)))
-    experiment_counts = sorted(experiment_counts.items(), key=operator.itemgetter(1))
+    experiment_counts = sorted(experiment_counts.items(), key=operator.itemgetter(1), reverse=True)
 
     quimb_rcs = quimb_circuit(rcs)
 

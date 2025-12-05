@@ -126,7 +126,7 @@ def bench_qrack(width, depth, sdrp, is_sparse):
         experiment.set_sdrp(sdrp)
     experiment.run_qiskit_circuit(rcs)
     experiment_counts = dict(Counter(experiment.measure_shots(all_bits, shots)))
-    experiment_counts = sorted(experiment_counts.items(), key=operator.itemgetter(1))
+    experiment_counts = sorted(experiment_counts.items(), key=operator.itemgetter(1), reverse=True)
 
     quimb_rcs = quimb_circuit(rcs)
 
@@ -169,7 +169,7 @@ def calc_stats(ideal_probs, exp_probs, shots, depth):
     n_pow = len(ideal_probs)
     n = int(round(math.log2(n_pow)))
     mean_guess = 1 / n_pow
-    model = min(1.0, 1 / n ** (1/4))
+    model = min(1.0, 1 / math.sqrt(n))
     threshold = statistics.median(ideal_probs)
     u_u = statistics.mean(ideal_probs)
     numer = 0
