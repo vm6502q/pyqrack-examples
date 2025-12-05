@@ -108,7 +108,7 @@ def main():
         is_sparse = sys.argv[4] not in ["False", "0"]
 
     # Run the benchmarks
-    print(bench_qrack(width, depth, sdrp, is_sparse))
+    bench_qrack(width, depth, sdrp, is_sparse)
 
     return 0
 
