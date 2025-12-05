@@ -36,25 +36,20 @@ def bench_qrack():
         experiment_counts = pickle.load(file)
 
     width = quimb_rcs.N
-    lcv_range = range(width)
-    all_bits = list(lcv_range)
-    retained = width * width * 2
-    shots = retained * width
-
     n_pow = 1 << width
     u_u =  1 / n_pow
     idx = 0
     ideal_probs = {}
     sum_probs = 0
     for count_tuple in experiment_counts:
+        if count_tuple[1] < 2:
+            break
         key = count_tuple[0]
         prob = float((abs(complex(quimb_rcs.amplitude(int_to_bitstring(key, width), backend="jax"))) ** 2).real)
         if prob <= u_u:
             continue
         ideal_probs[key] = prob
         sum_probs += prob
-        if len(ideal_probs) >= retained:
-            break
 
     for key in ideal_probs.keys():
         ideal_probs[key] = ideal_probs[key] / sum_probs
@@ -73,6 +68,7 @@ def calc_stats(ideal_probs, exp_probs):
     n_pow = len(ideal_probs)
     n = int(round(math.log2(n_pow)))
     mean_guess = 1 / n_pow
+    model = min(1.0, 1 / math.sqrt(n))
     threshold = statistics.median(ideal_probs)
     u_u = statistics.mean(ideal_probs)
     numer = 0
@@ -80,7 +76,7 @@ def calc_stats(ideal_probs, exp_probs):
     hog_prob = 0
     sqr_diff = 0
     for i in range(n_pow):
-        exp = ((exp_probs[i] if i in exp_probs else 0) + mean_guess) / 2.0
+        exp = (1 - model) * (exp_probs[i] if i in exp_probs else 0) + model * mean_guess
         ideal = ideal_probs[i]
 
         # XEB / EPLG
