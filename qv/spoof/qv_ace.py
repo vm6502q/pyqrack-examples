@@ -41,7 +41,7 @@ def find_cutoff(arr):
         else:
             high = mid - 1
 
-    return mx
+    return -1
 
 
 def bench_qrack(width, depth, sdrp, is_sparse):
