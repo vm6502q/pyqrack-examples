@@ -64,7 +64,7 @@ def bench_qrack(width, depth, sdrp, is_sparse):
 
     for p in range(2):
         s = 1 << p
-        for l in range(0, depth, s):
+        for l in range(0, depth - s + 1, s):
             l_end = l + s - 1
             for q in range(width):
                 quimb_rcs.psi.contract_between(['CX', f'I{q}', f'LAYER_{l}'], ['CX', f'I{q}', f'LAYER_{l_end}'])
