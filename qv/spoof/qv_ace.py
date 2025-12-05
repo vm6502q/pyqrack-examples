@@ -33,7 +33,7 @@ def bench_qrack(width, depth, sdrp, is_sparse):
 
     quimb_rcs = tn.Circuit(N=width)
     rcs = QuantumCircuit(width)
-    excluded = [-1] * depth
+    # excluded = [-1] * depth
     for d in range(depth):
         # Single-qubit gates
         for i in lcv_range:
@@ -51,8 +51,8 @@ def bench_qrack(width, depth, sdrp, is_sparse):
             t = unused_bits.pop()
             rcs.cx(c, t)
             quimb_rcs.apply_gate('CX', c, t, tags=f"LAYER_{d}")
-        if len(unused_bits) > 0:
-            excluded[d] = unused_bits.pop()
+        # if len(unused_bits) > 0:
+        #     excluded[d] = unused_bits.pop()
 
     with open('qv_qiskit.pkl', 'wb') as file:
         pickle.dump(rcs, file)
@@ -62,14 +62,14 @@ def bench_qrack(width, depth, sdrp, is_sparse):
         for q in range(width):
             quimb_rcs.psi.contract([f'I{q}', f'LAYER_{l}'], which='all')
 
-    for p in range(2):
-        s = 1 << p
-        for l in range(0, depth - s + 1, s):
-            l_end = l + s - 1
-            for q in range(width):
-                if excluded[l] == q or excluded[l_end] == q:
-                    continue
-                quimb_rcs.psi.contract_between(['CX', f'I{q}', f'LAYER_{l}'], ['CX', f'I{q}', f'LAYER_{l_end}'])
+    # for p in range(2):
+    #     s = 1 << p
+    #     for l in range(0, depth - s + 1, s):
+    #         l_end = l + s - 1
+    #         for q in range(width):
+    #             if excluded[l] == q or excluded[l_end] == q:
+    #                 continue
+    #             quimb_rcs.psi.contract_between(['CX', f'I{q}', f'LAYER_{l}'], ['CX', f'I{q}', f'LAYER_{l_end}'])
 
     with open('qv_quimb.pkl', 'wb') as file:
         pickle.dump(quimb_rcs, file)
