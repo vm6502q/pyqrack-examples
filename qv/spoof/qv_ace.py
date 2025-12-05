@@ -26,6 +26,9 @@ def int_to_bitstring(integer, length):
 
 
 def find_cutoff(arr):
+    if arr[0][1] < 2:
+        return 0
+
     low = 0
     high = len(arr) - 2
 
