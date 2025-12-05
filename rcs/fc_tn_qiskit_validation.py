@@ -32,13 +32,16 @@ def bench_qrack(width, depth, sdrp, is_sparse):
     retained = width * width * 2
     shots = retained * width
 
+    quimb_rcs = tn.Circuit(width)
     rcs = QuantumCircuit(width)
     for d in range(depth):
         # Single-qubit gates
         for i in lcv_range:
-            for b in range(3):
-                rcs.h(i)
-                rcs.rz(random.uniform(0, 2 * math.pi), i)
+            th = random.uniform(0, 2 * math.pi)
+            ph = random.uniform(0, 2 * math.pi)
+            lm = random.uniform(0, 2 * math.pi)
+            rcs.u(th, ph, lm, i)
+            quimb_rcs.apply_gate('U3', th, ph, lm, i, tags=f"LAYER_{d}")
 
         # 2-qubit couplers
         unused_bits = all_bits.copy()
@@ -47,6 +50,7 @@ def bench_qrack(width, depth, sdrp, is_sparse):
             c = unused_bits.pop()
             t = unused_bits.pop()
             rcs.cx(c, t)
+            quimb_rcs.apply_gate('CX', c, t, tags=f"LAYER_{d}")
 
     if is_sparse:
         experiment = QrackSimulator(width, isTensorNetwork=False, isOpenCL=False, isSparse=True)
@@ -58,14 +62,9 @@ def bench_qrack(width, depth, sdrp, is_sparse):
     experiment_counts = dict(Counter(experiment.measure_shots(all_bits, shots)))
     experiment_counts = sorted(experiment_counts.items(), key=operator.itemgetter(1))
 
-    quimb_rcs = quimb_circuit(rcs)
-
-    cx_count = width >> 1
     for l in range(depth):
-        layer_offset = (6 * width + cx_count) * l
         for q in range(width):
-            h_idx = layer_offset + 6 * q
-            quimb_rcs.psi.contract_between([f'GATE_{h_idx}'], [f'GATE_{h_idx + 5}'])
+            quimb_rcs.psi.contract([f'I{q}', f'LAYER_{l}'], which='all')
 
     n_pow = 1 << width
     u_u =  1 / n_pow
