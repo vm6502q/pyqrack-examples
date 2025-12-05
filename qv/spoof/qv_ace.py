@@ -107,7 +107,9 @@ def bench_qrack(width, depth, sdrp, is_sparse):
     experiment_counts = sorted(experiment_counts.items(), key=operator.itemgetter(1), reverse=True)
     experiment = None
 
-    experiment_counts = experiment_counts[:find_cutoff(experiment_counts)]
+    cutoff = find_cutoff(experiment_counts)
+    if cutoff > (width * width):
+        experiment_counts = experiment_counts[:cutoff]
 
     with open('qv_ace.pkl', 'wb') as file:
         pickle.dump(experiment_counts, file)
