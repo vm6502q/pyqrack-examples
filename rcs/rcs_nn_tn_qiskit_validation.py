@@ -129,6 +129,14 @@ def bench_qrack(width, depth, sdrp, is_sparse):
     experiment_counts = sorted(experiment_counts.items(), key=operator.itemgetter(1))
 
     quimb_rcs = quimb_circuit(rcs)
+
+    cx_count = width >> 1
+    for l in range(depth):
+        layer_offset = (6 * width + cx_count) * l
+        for q in range(width):
+            h_idx = layer_offset + 6 * q
+            quimb_rcs.psi.contract_between([f'GATE_{h_idx}'], [f'GATE_{h_idx + 5}'])
+
     n_pow = 1 << width
     u_u =  1 / n_pow
     idx = 0
