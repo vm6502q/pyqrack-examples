@@ -159,10 +159,10 @@ def bench_qrack(width, depth, sdrp, is_sparse):
     job = control.run(rcs)
     control_probs = Statevector(job.result().get_statevector()).probabilities()
 
-    return calc_stats(control_probs, ideal_probs, shots, depth)
+    return calc_stats(control_probs, ideal_probs)
 
 
-def calc_stats(ideal_probs, exp_probs, shots, depth):
+def calc_stats(ideal_probs, exp_probs):
     # For QV, we compare probabilities of (ideal) "heavy outputs."
     # If the probability is above 2/3, the protocol certifies/passes the qubit width.
     n_pow = len(ideal_probs)
@@ -173,7 +173,7 @@ def calc_stats(ideal_probs, exp_probs, shots, depth):
     u_u = statistics.mean(ideal_probs)
     numer = 0
     denom = 0
-    sum_hog_counts = 0
+    hog_prob = 0
     sqr_diff = 0
     for i in range(n_pow):
         exp = (1 - model) * (exp_probs[i] if i in exp_probs else 0) + model * mean_guess
@@ -188,9 +188,8 @@ def calc_stats(ideal_probs, exp_probs, shots, depth):
 
         # QV / HOG
         if ideal > threshold:
-            sum_hog_counts += exp * shots
+            hog_prob += exp
 
-    hog_prob = sum_hog_counts / shots
     xeb = numer / denom
     # p-value of heavy output count, if method were actually 50/50 chance of guessing
     p_val = (
@@ -200,11 +199,9 @@ def calc_stats(ideal_probs, exp_probs, shots, depth):
 
     return {
         "qubits": n,
-        "depth": depth,
         "xeb": float(xeb),
         "hog_prob": float(hog_prob),
         "l2_diff": float(rss),
-        "p-value": float(p_val),
     }
 
 
