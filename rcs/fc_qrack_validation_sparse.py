@@ -9,50 +9,40 @@ import sys
 from pyqrack import QrackSimulator
 
 
-def bench_qrack(width, depth, trials, sdrp):
+def bench_qrack(width, depth, sdrp):
     lcv_range = range(width)
     all_bits = list(lcv_range)
 
     results = []
 
-    for trial in range(trials):
-        control = QrackSimulator(width, isTensorNetwork=False)
-        experiment = QrackSimulator(width, isTensorNetwork=False, isOpenCL=False, isSparse=True)
-        if sdrp > 0:
-            experiment.set_sdrp(sdrp)
-        for d in range(depth):
-            # Single-qubit gates
-            for i in lcv_range:
-                th = random.uniform(0, 2 * math.pi)
-                ph = random.uniform(0, 2 * math.pi)
-                lm = random.uniform(0, 2 * math.pi)
-                control.u(i, th, ph, lm)
-                experiment.u(i, th, ph, lm)
+    control = QrackSimulator(width, isTensorNetwork=False)
+    experiment = QrackSimulator(width, isTensorNetwork=False, isOpenCL=False, isSparse=True)
+    if sdrp > 0:
+        experiment.set_sdrp(sdrp)
+    for d in range(depth):
+        # Single-qubit gates
+        for i in lcv_range:
+            th = random.uniform(0, 2 * math.pi)
+            ph = random.uniform(0, 2 * math.pi)
+            lm = random.uniform(0, 2 * math.pi)
+            control.u(i, th, ph, lm)
+            experiment.u(i, th, ph, lm)
 
-            # 2-qubit couplers
-            unused_bits = all_bits.copy()
-            random.shuffle(unused_bits)
-            while len(unused_bits) > 1:
-                c = unused_bits.pop()
-                t = unused_bits.pop()
-                control.mcx([c], t)
-                experiment.mcx([c], t)
+        # 2-qubit couplers
+        unused_bits = all_bits.copy()
+        random.shuffle(unused_bits)
+        while len(unused_bits) > 1:
+            c = unused_bits.pop()
+            t = unused_bits.pop()
+            control.mcx([c], t)
+            experiment.mcx([c], t)
 
-            experiment_probs = experiment.out_probs()
-            control_probs = control.out_probs()
+        experiment_probs = experiment.out_probs()
+        control_probs = control.out_probs()
 
-            stats = calc_stats(control_probs, experiment_probs, d + 1)
+        stats = calc_stats(control_probs, experiment_probs, d + 1)
 
-            if trial == 0:
-                results.append(stats)
-            else:
-                results[d]["xeb"] += stats["xeb"]
-                results[d]["hog_prob"] += stats["hog_prob"]
-
-            if trial == (trials - 1):
-                results[d]["xeb"] /= trials
-                results[d]["hog_prob"] /= trials
-                print(results[d])
+        print(stats)
 
 
 def calc_stats(ideal_probs, experiment_probs, depth):
@@ -97,13 +87,11 @@ def main():
     depth = int(sys.argv[2])
     trials = 1
     sdrp = 0
-    if len(sys.argv) > 3:
-        trials = int(sys.argv[3])
     if len(sys.argv) > 4:
         sdrp = float(sys.argv[4])
 
     # Run the benchmarks
-    bench_qrack(width, depth, trials, sdrp)
+    bench_qrack(width, depth, sdrp)
 
     return 0
 
