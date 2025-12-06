@@ -33,7 +33,7 @@ def bench_qrack(idx):
     with open("qv_ace.pkl", "rb") as file:
         experiment_counts = pickle.load(file)
 
-    key = experiment_counts[idx]
+    key = experiment_counts[idx][0]
     width = quimb_rcs.N
     n_pow = 1 << width
     u_u =  1 / n_pow

@@ -102,7 +102,7 @@ def bench_qrack(width, depth, sdrp, is_sparse):
     #             quimb_rcs.psi.contract_between(['CX', f'I{q}', f'LAYER_{l}'], ['CX', f'I{q}', f'LAYER_{l_end}'])
 
     with open('qv_ace.pkl', 'wb') as file:
-        pickle.dump(experiment_perms, file)
+        pickle.dump(experiment_counts, file)
     print("ACE indices saved to qv_ace.pkl")
 
     return experiment_perms

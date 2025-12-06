@@ -33,7 +33,7 @@ def bench_qrack():
     with open("qv_qiskit.pkl", "rb") as file:
         rcs = pickle.load(file)
     with open("qv_ace.pkl", "rb") as file:
-        experiment_perms = pickle.load(file)
+        experiment_counts = pickle.load(file)
 
     width = quimb_rcs.N
     retained = width * width
