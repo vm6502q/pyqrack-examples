@@ -36,7 +36,7 @@ def bench_qrack(width, depth, trials, sdrp):
                 c = unused_bits.pop()
                 t = unused_bits.pop()
                 control.mcx([c], t)
-                control.mcx([c], t)
+                experiment.mcx([c], t)
 
             experiment_probs = experiment.out_probs()
             control_probs = control.out_probs()
