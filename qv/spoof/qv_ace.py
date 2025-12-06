@@ -105,7 +105,7 @@ def bench_qrack(width, depth, sdrp, is_sparse):
         pickle.dump(experiment_counts, file)
     print("ACE indices saved to qv_ace.pkl")
 
-    return experiment_perms
+    return experiment_counts
 
 
 def main():
