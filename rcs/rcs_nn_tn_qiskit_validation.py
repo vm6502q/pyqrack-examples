@@ -121,31 +121,27 @@ def bench_qrack(width, depth, sdrp, is_sparse):
     if sdrp > 0:
         experiment.set_sdrp(sdrp)
     experiment.run_qiskit_circuit(rcs)
-    experiment_perms = experiment.highest_n_prob_perm(checked)
+    highest_prob = experiment.highest_prob_perm()
+    experiment_counts = dict(Counter(experiment.measure_shots(all_bits, checked)))
+    experiment_counts[highest_prob] = checked
+    experiment_counts = sorted(experiment_counts.items(), key=operator.itemgetter(1), reverse=True)
     experiment = None
-
-    quimb_rcs = quimb_circuit(rcs)
-
-    cx_count = width >> 1
-    for l in range(depth):
-        layer_offset = (6 * width + cx_count) * l
-        for q in range(width):
-            h_idx = layer_offset + 6 * q
-            quimb_rcs.psi.contract_between([f'GATE_{h_idx}'], [f'GATE_{h_idx + 5}'])
 
     n_pow = 1 << width
     u_u =  1 / n_pow
     idx = 0
-    ideal_probs = {}
+    ideal_amps = {}
     sum_probs = 0
-    for key in experiment_perms:
-        prob = float((abs(complex(quimb_rcs.amplitude(int_to_bitstring(key, width), backend="jax"))) ** 2).real)
+    for count_tuple in experiment_counts:
+        if len(ideal_amps) >= retained and count_tuple[1] < 2:
+            break
+        key = count_tuple[0]
+        amp = complex(quimb_rcs.amplitude(int_to_bitstring(key, width), backend="jax"))
+        prob = float((abs(amp) ** 2).real)
         if prob <= u_u:
             continue
-        ideal_probs[key] = prob
+        ideal_amps[key] = amp
         sum_probs += prob
-        if len(ideal_probs) >= retained:
-            break
 
     for key in ideal_probs.keys():
         ideal_probs[key] = ideal_probs[key] / sum_probs

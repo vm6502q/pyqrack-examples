@@ -82,8 +82,24 @@ def bench_qrack(width, depth, sdrp, is_sparse):
     if sdrp > 0:
         experiment.set_sdrp(sdrp)
     experiment.run_qiskit_circuit(rcs)
-    experiment_perms = experiment.highest_n_prob_perm(checked)
+    highest_prob = experiment.highest_prob_perm()
+    experiment_counts = dict(Counter(experiment.measure_shots(all_bits, checked)))
+    experiment_counts[highest_prob] = checked
+    experiment_counts = sorted(experiment_counts.items(), key=operator.itemgetter(1), reverse=True)
     experiment = None
+
+    for l in range(depth):
+        for q in range(width):
+            quimb_rcs.psi.contract([f'I{q}', f'LAYER_{l}'], which='all')
+
+    # for p in range(2):
+    #     s = 1 << p
+    #     for l in range(0, depth - s + 1, s):
+    #         l_end = l + s - 1
+    #         for q in range(width):
+    #             if excluded[l] == q or excluded[l_end] == q:
+    #                 continue
+    #             quimb_rcs.psi.contract_between(['CX', f'I{q}', f'LAYER_{l}'], ['CX', f'I{q}', f'LAYER_{l_end}'])
 
     with open('qv_ace.pkl', 'wb') as file:
         pickle.dump(experiment_perms, file)

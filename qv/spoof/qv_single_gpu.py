@@ -40,16 +40,18 @@ def bench_qrack():
     n_pow = 1 << width
     u_u =  1 / n_pow
     idx = 0
-    ideal_probs = {}
+    ideal_amps = {}
     sum_probs = 0
-    for key in experiment_perms:
-        prob = float((abs(complex(quimb_rcs.amplitude(int_to_bitstring(key, width), backend="jax"))) ** 2).real)
+    for count_tuple in experiment_counts:
+        if len(ideal_amps) >= retained and count_tuple[1] < 2:
+            break
+        key = count_tuple[0]
+        amp = complex(quimb_rcs.amplitude(int_to_bitstring(key, width), backend="jax"))
+        prob = float((abs(amp) ** 2).real)
         if prob <= u_u:
             continue
-        ideal_probs[key] = prob
+        ideal_amps[key] = amp
         sum_probs += prob
-        if len(ideal_probs) >= retained:
-            break
 
     for key in ideal_probs.keys():
         ideal_probs[key] = ideal_probs[key] / sum_probs
