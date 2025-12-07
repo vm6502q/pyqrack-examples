@@ -245,8 +245,8 @@ def calc_stats(n_rows, n_cols, ideal_probs, counts, bias, model, beta, shots, de
 def main():
     n_qubits = 8
     depth = 20
-    alpha = 1 / 9
-    beta = 2 / 9
+    alpha = 0.2
+    beta = 0.2
 
     # Quantinuum settings
     J, h, dt, z = -1.0, 2.0, 0.25, 4
