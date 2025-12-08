@@ -162,36 +162,39 @@ def calc_stats(ideal_probs, counts, depth, shots):
     n = int(round(math.log2(n_pow)))
     threshold = statistics.median(ideal_probs)
     u_u = statistics.mean(ideal_probs)
+    uniform = 1 / n_pow
     numer = 0
     denom = 0
-    sum_hog_counts = 0
-    for i in range(n_pow):
-        count = counts[i] if i in counts else 0
-        ideal = ideal_probs[i]
+    hog_prob = 0
+    l2_dist = 0
+    l2_dist_random = 0
+    for b in range(n_pow):
+        ideal = ideal_probs[b]
+        patch = (counts[b] / shots) if b in counts.keys() else 0
 
         # XEB / EPLG
-        denom += (ideal - u_u) ** 2
-        numer += (ideal - u_u) * ((count / shots) - u_u)
+        ideal_centered = ideal - u_u
+        denom += ideal_centered * ideal_centered
+        numer += ideal_centered * (patch - u_u)
 
         # QV / HOG
         if ideal > threshold:
-            sum_hog_counts += count
+            hog_prob += patch
 
-    hog_prob = sum_hog_counts / shots
+        # L2 dist
+        l2_dist += (ideal - patch) ** 2
+        l2_dist_random += (ideal - uniform) ** 2
+
     xeb = numer / denom
-    # p-value of heavy output count, if method were actually 50/50 chance of guessing
-    p_val = (
-        (1 - binom.cdf(sum_hog_counts - 1, shots, 1 / 2)) if sum_hog_counts > 0 else 1
-    )
 
     return {
         "qubits": n,
         "depth": depth,
         "xeb": float(xeb),
         "hog_prob": float(hog_prob),
-        "p-value": float(p_val),
+        "l2_dist": float(l2_dist),
+        "l2_dist_vs_uniform_random": float(l2_dist_random)
     }
-
 
 def main():
     if len(sys.argv) < 4:
