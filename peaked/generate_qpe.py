@@ -141,7 +141,7 @@ def main():
     if len(sys.argv) > 5:
         file_out = str(sys.argv[3])
 
-    qasm_str = qpe_ising_z_qasm(t, L, k=k, j=j)
+    qasm_str = qpe_ising_z_qasm(t, L, k=k, j_coupling=j)
     with open(file_out, "w") as f:
         f.write(qasm_str)
 
