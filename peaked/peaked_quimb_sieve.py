@@ -10,22 +10,20 @@
 # QRACK_QUNIT_SEPARABILITY_THRESHOLD - Optionally, this rounds nearly-separable single qubits to total separable, in flight. That might help or hurt.
 #     (A "golden" value for large, hard circuits seems to be (1 - 1 / sqrt(2)) / 2, approximately 0.1464466.)
 
-import json
 import operator
 import sys
-
 from collections import Counter
+from itertools import combinations
 
 from pyqrack import QrackSimulator
-
 from qiskit import QuantumCircuit
 from qiskit.compiler import transpile
-
 from qiskit_quimb import quimb_circuit
 
 
 def int_to_bitstring(integer, length, reverse):
-    return (bin(integer)[2:].zfill(length))[::-1] if reverse else (bin(integer)[2:].zfill(length))
+    s = bin(integer)[2:].zfill(length)
+    return s[::-1] if reverse else s
 
 
 def run_qasm(file_in):
@@ -37,32 +35,64 @@ def run_qasm(file_in):
 
     quimb_c = quimb_circuit(qc)
 
-    # print(quimb_c.psi)
-    
     sim = QrackSimulator(n_qubits, isTensorNetwork=False)
     sim.run_qiskit_circuit(qc, shots=0)
-    # print("ACE fidelity estimate: " + str(sim.get_unitary_fidelity()))
+
     highest_prob = sim.highest_prob_perm()
     print(f"ACE highest-probability dimension: {highest_prob}")
+
     experiment_counts = dict(Counter(sim.measure_shots(list(range(n_qubits)), shots)))
+    # make sure the ACE argmax is present and dominant
     experiment_counts[highest_prob] = shots
-    experiment_counts = sorted(experiment_counts.items(), key=operator.itemgetter(1), reverse=True)
-    experiment = None
+    experiment_counts = sorted(experiment_counts.items(),
+                               key=operator.itemgetter(1),
+                               reverse=True)
 
     best_key = highest_prob
-    best_prob = 0
-    best_amp = 0
-    for count_tuple in experiment_counts:
-        key = count_tuple[0]
-        amp = complex(quimb_c.amplitude(int_to_bitstring(key, n_qubits, True), backend="jax"))
+    best_prob = 0.0
+    best_amp = 0.0 + 0.0j
+    tot_prob = 0.0
+
+    visited = set()
+
+    def evaluate_key(key):
+        """Evaluate amplitude / prob of a basis state if not yet visited."""
+        nonlocal best_key, best_prob, best_amp, tot_prob
+        if key in visited:
+            return
+        visited.add(key)
+
+        bitstr = int_to_bitstring(key, n_qubits, True)
+        amp = complex(quimb_c.amplitude(bitstr, backend="jax"))
         prob = float((abs(amp) ** 2).real)
+
+        tot_prob += prob
         if prob > best_prob:
             print(f"{key}: {prob}, {amp}")
             best_prob = prob
             best_amp = amp
             best_key = key
-        if prob >= 0.5:
-            # We can't possibly find a better result.
+
+    # maximum Hamming radius around each candidate to explore
+    MAX_RADIUS = 2  # 0 => just the key, 1 => key + all single-bit flips, etc.
+
+    done = False
+
+    for key, _cnt in experiment_counts:
+        # Generate all neighbors of 'key' within Hamming distance MAX_RADIUS
+        for r in range(0, MAX_RADIUS + 1):
+            for idxs in combinations(range(n_qubits), r):
+                neighbor = key
+                for i in idxs:
+                    neighbor ^= (1 << i)  # flip bit i
+                evaluate_key(neighbor)
+
+                if (1.0 - tot_prob) < best_prob:
+                    done = True
+                    break
+            if done:
+                break
+        if done:
             break
 
     rtl = int_to_bitstring(best_key, n_qubits, False)
@@ -78,9 +108,7 @@ def main():
     file_in = "qpe.qasm"
     if len(sys.argv) > 1:
         file_in = str(sys.argv[1])
-
     run_qasm(file_in)
-
     return 0
 
 
