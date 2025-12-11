@@ -128,14 +128,7 @@ def run_qasm(power, file_in):
                 # we'll use the most-polarized bit before the inner loop fixes any more bits
                 if is_first_inner:
                     max_bit = random.choice(max_bit)
-                    val = marginal[max_bit]
-                    if abs(val - 0.5) <= epsilon:
-                        # We're at the 50/50 point, so randomize
-                        val = random.random() < 0.5
-                    else:
-                        # We're polarized, so tend towards the favored pole
-                        val = val > 0.5
-                    force_bit.append((max_bit, val))
+                    force_bit.append((max_bit, marginal[max_bit] >= 0.5))
                     is_first_inner = False
 
                 if max_polar < 0:
@@ -161,10 +154,10 @@ def run_qasm(power, file_in):
                         if total_polar < sum_polar:
                             break
 
-                    val = marginal[f_bit]
-                    if abs(val - 0.5) <= epsilon:
-                        accepted_mask[f_bit] = False
-                        val = random.random()
+                val = marginal[f_bit]
+                if abs(val - 0.5) <= epsilon:
+                    # We've picked a bit that's 50/50 split between highest-probability state disagreeing with sampling
+                    accepted_mask[f_bit] = False
 
                 # Unless multiple bits are at floor/ceiling, we fix one bit per round
                 fixed_bits[f_bit] = 0 if val < 0.5 else 1
