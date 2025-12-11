@@ -93,7 +93,7 @@ def run_qasm(file_in):
         improved = False
         for r in range(0, MAX_RADIUS + 1):
             for idxs in combinations(range(n_qubits), r):
-                neighbor = key
+                neighbor = best_key
                 for i in idxs:
                     neighbor ^= (1 << i)  # flip bit i
 
