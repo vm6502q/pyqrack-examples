@@ -28,6 +28,7 @@ epsilon = sys.float_info.epsilon
 def int_to_bitstring(integer, length):
     return (bin(integer)[2:].zfill(length))[::-1]
 
+
 def run_qasm(power, file_in):
     # Load QASM as Qiskit circuit
     qc = QuantumCircuit.from_qasm_file(file_in)
@@ -213,7 +214,7 @@ def run_qasm(power, file_in):
 
 def main():
     power = 2
-    file_in = "P7_heavy_hex_1275.qasm"
+    file_in = "qpe.qasm"
     if len(sys.argv) > 1:
         power = float(sys.argv[1])
     if len(sys.argv) > 2:

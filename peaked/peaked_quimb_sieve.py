@@ -82,7 +82,7 @@ def run_qasm(file_in):
 
 
 def main():
-    file_in = "P3_sharp_peak.qasm"
+    file_in = "qpe.qasm"
     if len(sys.argv) > 1:
         file_in = str(sys.argv[1])
 
