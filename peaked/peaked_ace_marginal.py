@@ -103,12 +103,9 @@ def run_qasm(power, file_in):
                     if b in fixed_bits.keys():
                         continue
 
-                    if p < 0.5:
-                        polar[b] = 1.0 - 2 * p
-                    else:
-                        polar[b] = 2 * p - 1
+                    polar[b] = abs(2 * p - 1)
 
-                    if (polar[b] + epsilon) >= 1.0:
+                    if (polar[b] + epsilon) >= 1:
                         val = 0 if marginal[b] < 0.5 else 1
                         fixed_bits[b] = val
                         sim.force_m(b, val)
