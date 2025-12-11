@@ -28,7 +28,7 @@ epsilon = sys.float_info.epsilon
 def int_to_bitstring(integer, length):
     return (bin(integer)[2:].zfill(length))[::-1]
 
-def run_qasm(file_in):
+def run_qasm(power, file_in):
     # Load QASM as Qiskit circuit
     qc = QuantumCircuit.from_qasm_file(file_in)
     basis_gates = QrackSimulator.get_qiskit_basis_gates()
@@ -104,18 +104,18 @@ def run_qasm(file_in):
                         continue
 
                     if p < 0.5:
-                        polar[b] = 0.5 - p
+                        polar[b] = 1.0 - 2 * p
                     else:
-                        polar[b] = p - 0.5
+                        polar[b] = 2 * p - 1
 
-                    if (polar[b] + epsilon) >= 0.5:
+                    if (polar[b] + epsilon) >= 1.0:
                         val = 0 if marginal[b] < 0.5 else 1
                         fixed_bits[b] = val
                         sim.force_m(b, val)
                         is_new_fixed = True
                         continue
 
-                    total_polar += polar[b]
+                    total_polar += polar[b] ** power
 
                     if polar[b] > max_polar:
                         max_polar = polar[b]
@@ -159,7 +159,7 @@ def run_qasm(file_in):
                     for b in range(n_qubits):
                         if b in fixed_bits.keys():
                             continue
-                        sum_polar += polar[b]
+                        sum_polar += polar[b] ** power
                         f_bit = b
                         if total_polar < sum_polar:
                             break
@@ -222,11 +222,14 @@ def run_qasm(file_in):
     print(f"Left-to-right, least-to-most significant: {ltr}")
 
 def main():
-    file_in = "P3_sharp_peak.qasm"
+    power = 2
+    file_in = "P7_heavy_hex_1275.qasm"
     if len(sys.argv) > 1:
-        file_in = str(sys.argv[1])
+        power = float(sys.argv[1])
+    if len(sys.argv) > 2:
+        file_in = str(sys.argv[2])
 
-    run_qasm(file_in)
+    run_qasm(power, file_in)
 
     return 0
 
