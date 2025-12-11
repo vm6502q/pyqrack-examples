@@ -13,7 +13,6 @@
 import json
 import operator
 import sys
-import time
 
 from collections import Counter
 
@@ -30,10 +29,6 @@ def int_to_bitstring(integer, length, reverse):
 
 
 def run_qasm(file_in):
-    start = time.perf_counter()
-    # Well short of 2-hour challenge time limit:
-    max_time = 60 * 60 * 1.5
-
     qc = QuantumCircuit.from_qasm_file(file_in)
     basis_gates = QrackSimulator.get_qiskit_basis_gates()
     qc = transpile(qc, basis_gates=basis_gates)
@@ -66,9 +61,8 @@ def run_qasm(file_in):
             best_prob = prob
             best_amp = amp
             best_key = key
-        current = time.perf_counter()
-        if (current - start) > max_time:
-            # We're running out of time: cut line and return the best we have.
+        if prob >= 0.5:
+            # We can't possibly find a better result.
             break
 
     rtl = int_to_bitstring(best_key, n_qubits, False)

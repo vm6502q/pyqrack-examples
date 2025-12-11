@@ -101,8 +101,8 @@ def qpe_ising_z_qasm(num_counting_qubits: int,
     lines.append('// Inverse QFT on counting register')
 
     # Optional: reverse counting qubit order for canonical output
-    for j in range(t // 2):
-        lines.append(f'swap q[{j}], q[{t - 1 - j}];')
+    # for j in range(t // 2):
+    #    lines.append(f'swap q[{j}], q[{t - 1 - j}];')
 
     # Inverse QFT: for j = 0..t-1
     for j in range(t):
@@ -125,10 +125,10 @@ def qpe_ising_z_qasm(num_counting_qubits: int,
 
 
 def main():
-    t = 32
-    L = 16
-    k = 17
-    j = 0.5
+    t = 12
+    L = 24
+    k = 5
+    j = 1.0
     file_out = "qpe.qasm"
     if len(sys.argv) > 1:
         t = int(sys.argv[1])
