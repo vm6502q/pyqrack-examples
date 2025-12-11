@@ -54,7 +54,6 @@ def run_qasm(file_in):
     experiment_counts = sorted(experiment_counts.items(), key=operator.itemgetter(1), reverse=True)
     experiment = None
 
-    u_u =  1 / (1 << n_qubits)
     best_key = highest_prob
     best_prob = 0
     best_amp = 0
