@@ -60,7 +60,7 @@ def run_qasm(file_in):
     best_amp = 0
     for count_tuple in experiment_counts:
         key = count_tuple[0]
-        amp = complex(quimb_c.amplitude(int_to_bitstring(key, n_qubits, True))) #, backend="jax"))
+        amp = complex(quimb_c.amplitude(int_to_bitstring(key, n_qubits, True)), backend="jax"))
         prob = float((abs(amp) ** 2).real)
         if prob > best_prob:
             print(f"{key}: {prob}, {amp}")
