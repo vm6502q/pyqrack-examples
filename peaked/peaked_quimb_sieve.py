@@ -59,7 +59,7 @@ def run_qasm(file_in):
         """Evaluate amplitude / prob of a basis state if not yet visited."""
         nonlocal best_key, best_prob, best_amp, tot_prob
         if key in visited:
-            return
+            return False
         visited.add(key)
 
         bitstr = int_to_bitstring(key, n_qubits, True)
@@ -72,26 +72,44 @@ def run_qasm(file_in):
             best_prob = prob
             best_amp = amp
             best_key = key
+            return True
+
+        return False
 
     # maximum Hamming radius around each candidate to explore
     MAX_RADIUS = 2  # 0 => just the key, 1 => key + all single-bit flips, etc.
 
     done = False
+    improved = True
 
     for key, _cnt in experiment_counts:
         # Generate all neighbors of 'key' within Hamming distance MAX_RADIUS
-        for r in range(0, MAX_RADIUS + 1):
-            for idxs in combinations(range(n_qubits), r):
-                neighbor = key
-                for i in idxs:
-                    neighbor ^= (1 << i)  # flip bit i
-                evaluate_key(neighbor)
+        while improved:
+            improved = False
+            for r in range(0, MAX_RADIUS + 1):
+                for idxs in combinations(range(n_qubits), r):
+                    neighbor = key
+                    for i in idxs:
+                        neighbor ^= (1 << i)  # flip bit i
 
-                if (1.0 - tot_prob) < best_prob:
-                    done = True
+                    improved = evaluate_key(neighbor)
+
+                    if (1.0 - tot_prob) < best_prob:
+                        done = True
+                        break
+
+                    if improved:
+                        break
+
+                if done:
                     break
+
+                if improved:
+                    break
+
             if done:
                 break
+
         if done:
             break
 
