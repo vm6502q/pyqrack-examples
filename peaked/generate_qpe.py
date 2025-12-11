@@ -116,10 +116,10 @@ def qpe_ising_z_qasm(num_counting_qubits: int,
             lines.append(f'cx q[{m}], q[{j}];')
         lines.append(f'h q[{j}];')
 
-    lines.append('')
-    lines.append('// Measure counting register')
-    for j in range(t):
-        lines.append(f'measure q[{j}] -> c[{j}];')
+    # lines.append('')
+    # lines.append('// Measure counting register')
+    # for j in range(t):
+    #     lines.append(f'measure q[{j}] -> c[{j}];')
 
     return "\n".join(lines)
 
