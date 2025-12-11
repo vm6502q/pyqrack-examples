@@ -83,35 +83,31 @@ def run_qasm(file_in):
     improved = True
 
     for key, _cnt in experiment_counts:
-        # Generate all neighbors of 'key' within Hamming distance MAX_RADIUS
-        while improved:
-            improved = False
-            for r in range(0, MAX_RADIUS + 1):
-                for idxs in combinations(range(n_qubits), r):
-                    neighbor = key
-                    for i in idxs:
-                        neighbor ^= (1 << i)  # flip bit i
+        evaluate_key(key)
+        if (1.0 - tot_prob) < best_prob:
+            done = True
+            break
 
-                    improved = evaluate_key(neighbor)
+    # Generate all neighbors of 'key' within Hamming distance MAX_RADIUS
+    while improved and not done:
+        improved = False
+        for r in range(0, MAX_RADIUS + 1):
+            for idxs in combinations(range(n_qubits), r):
+                neighbor = key
+                for i in idxs:
+                    neighbor ^= (1 << i)  # flip bit i
 
-                    if (1.0 - tot_prob) < best_prob:
-                        done = True
-                        break
+                improved = evaluate_key(neighbor)
 
-                    if improved:
-                        break
-
-                if done:
+                if (1.0 - tot_prob) < best_prob:
+                    done = True
                     break
 
                 if improved:
                     break
 
-            if done:
+            if done or improved:
                 break
-
-        if done:
-            break
 
     rtl = int_to_bitstring(best_key, n_qubits, False)
     ltr = int_to_bitstring(best_key, n_qubits, True)
