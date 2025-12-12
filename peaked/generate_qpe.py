@@ -4,6 +4,10 @@
 import math
 import sys
 
+
+epsilon = math.pi * sys.float_info.epsilon
+
+
 def qpe_qasm(num_counting_qubits: int, k: int = 1) -> str:
     """
     Generate an OpenQASM 2.0 circuit for textbook QPE with:
@@ -53,6 +57,10 @@ def qpe_qasm(num_counting_qubits: int, k: int = 1) -> str:
         # CRz(theta) = Rz(theta/2) -- CX -- Rz(-theta/2) -- CX
         half = theta / 2.0
 
+        if abs(half) < epsilon:
+            # AQFT, or at least below system precision
+            continue
+
         lines.append(f'// layer j={j}: theta = {theta}')
         lines.append(f'u1({half}) q[{t}];')
         lines.append(f'cx q[{j}], q[{t}];')
@@ -75,6 +83,9 @@ def qpe_qasm(num_counting_qubits: int, k: int = 1) -> str:
             angle = -math.pi / (2 ** (j - m))
             # Implement controlled-phase via CRz on target j
             half = angle / 2.0
+            if abs(half) < epsilon:
+                # AQFT, or at least below system precision
+                continue
             lines.append(f'// inverse QFT phase: m={m}, j={j}, angle={angle}')
             lines.append(f'u1({half}) q[{j}];')
             lines.append(f'cx q[{m}], q[{j}];')
@@ -93,7 +104,7 @@ def qpe_qasm(num_counting_qubits: int, k: int = 1) -> str:
 
 def main():
     t = 35
-    k = 10000
+    k = 1000
     file_out = "qpe.qasm"
     if len(sys.argv) > 1:
         t = int(sys.argv[1])

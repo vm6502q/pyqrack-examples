@@ -4,6 +4,10 @@
 import math
 import sys
 
+
+epsilon = math.pi * sys.float_info.epsilon
+
+
 def qpe_ising_z_qasm(num_counting_qubits: int,
                      num_system_qubits: int,
                      k: int = 1,
@@ -84,12 +88,16 @@ def qpe_ising_z_qasm(num_counting_qubits: int,
     for j in range(t):
         power = 2 ** j
         theta = base_theta * power
+        half = theta / 2.0
+
+        if abs(half) < epsilon:
+            # AQFT, or at least below system precision
+            continue
 
         lines.append(f'// Layer j={j}: applying controlled Rz({theta}) on each system qubit')
 
         for s in range(L):
             target = t + s
-            half = theta / 2.0
             # CRz(theta) decomposition using u1 and cx:
             # Rz(half) -- CX -- Rz(-half) -- CX (control on q[j], target on q[target])
             lines.append(f'u1({half}) q[{target}];')
@@ -109,6 +117,9 @@ def qpe_ising_z_qasm(num_counting_qubits: int,
         for m in range(j):
             angle = -math.pi / (2 ** (j - m))
             half = angle / 2.0
+            if abs(half) < epsilon:
+                # AQFT, or at least below system precision
+                continue
             lines.append(f'// inverse QFT phase: m={m}, j={j}, angle={angle}')
             lines.append(f'u1({half}) q[{j}];')
             lines.append(f'cx q[{m}], q[{j}];')
