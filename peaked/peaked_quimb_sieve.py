@@ -112,7 +112,7 @@ def run_qasm(file_in):
 
         # This only doubles the overall time, approximately, but it gives significant additional coverage.
         rand_subset = random.sample(list(combinations(range(n_qubits), MAX_RADIUS + 1)), k=n_qubits ** MAX_RADIUS)
-        for idxs in combinations(range(n_qubits), r):
+        for idxs in rand_subset:
             neighbor = best_key
             for i in idxs:
                 neighbor ^= (1 << i)  # flip bit i
