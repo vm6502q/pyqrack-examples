@@ -127,7 +127,7 @@ def qpe_ising_z_qasm(num_counting_qubits: int,
 def main():
     t = 12
     L = 24
-    k = 5
+    k = 100
     j = 1.0
     file_out = "qpe.qasm"
     if len(sys.argv) > 1:
