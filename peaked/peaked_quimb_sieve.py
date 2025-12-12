@@ -11,6 +11,7 @@
 #     (A "golden" value for large, hard circuits seems to be (1 - 1 / sqrt(2)) / 2, approximately 0.1464466.)
 
 import operator
+import random
 import sys
 from collections import Counter
 from itertools import combinations
@@ -77,7 +78,7 @@ def run_qasm(file_in):
         return False
 
     # maximum Hamming radius around each candidate to explore
-    MAX_RADIUS = 2  # 0 => just the key, 1 => key + all single-bit flips, etc.
+    MAX_RADIUS = min(2, n_qubits - 1)  # 0 => just the key, 1 => key + all single-bit flips, etc.
 
     done = False
     improved = True
@@ -107,6 +108,22 @@ def run_qasm(file_in):
                     break
 
             if done or improved:
+                break
+
+        # This only doubles the overall time, approximately, but it gives significant additional coverage.
+        rand_subset = random.sample(list(combinations(range(n_qubits), MAX_RADIUS + 1)), k=n_qubits*n_qubits)
+        for idxs in combinations(range(n_qubits), r):
+            neighbor = best_key
+            for i in idxs:
+                neighbor ^= (1 << i)  # flip bit i
+
+            improved = evaluate_key(neighbor)
+
+            if (1.0 - tot_prob) < best_prob:
+                done = True
+                break
+
+            if improved:
                 break
 
     rtl = int_to_bitstring(best_key, n_qubits, False)
