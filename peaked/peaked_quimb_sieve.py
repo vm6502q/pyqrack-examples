@@ -90,6 +90,7 @@ def run_qasm(file_in):
             break
 
     # Generate all neighbors of 'key' within Hamming distance MAX_RADIUS
+    next_combos = list(combinations(range(n_qubits), MAX_RADIUS + 1))
     while improved and not done:
         improved = False
         for r in range(1, MAX_RADIUS + 1):
@@ -111,7 +112,6 @@ def run_qasm(file_in):
                 break
 
         # This only doubles the overall time, approximately, but it gives significant additional coverage.
-        next_combos = list(combinations(range(n_qubits), MAX_RADIUS + 1))
         rand_subset = random.sample(next_combos, k=min(n_qubits ** MAX_RADIUS, len(next_combos)))
         for idxs in rand_subset:
             neighbor = best_key
