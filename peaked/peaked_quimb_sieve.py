@@ -27,7 +27,7 @@ def int_to_bitstring(integer, length, reverse):
     return s[::-1] if reverse else s
 
 
-def run_qasm(file_in):
+def run_qasm(is_sparse, file_in):
     qc = QuantumCircuit.from_qasm_file(file_in)
     basis_gates = QrackSimulator.get_qiskit_basis_gates()
     qc = transpile(qc, basis_gates=basis_gates)
@@ -36,13 +36,14 @@ def run_qasm(file_in):
 
     quimb_c = quimb_circuit(qc)
 
-    sim = QrackSimulator(n_qubits, isTensorNetwork=False)
+    sim = QrackSimulator(n_qubits, isSparse = is_sparse, isOpenCL = not is_sparse)
     sim.run_qiskit_circuit(qc, shots=0)
 
     highest_prob = sim.highest_prob_perm()
     print(f"ACE highest-probability dimension: {highest_prob}")
 
     experiment_counts = dict(Counter(sim.measure_shots(list(range(n_qubits)), shots)))
+    sim = None
     # make sure the ACE argmax is present and dominant
     experiment_counts[highest_prob] = shots
     experiment_counts = sorted(experiment_counts.items(),
@@ -138,10 +139,13 @@ def run_qasm(file_in):
 
 
 def main():
+    is_sparse = False
     file_in = "qpe.qasm"
     if len(sys.argv) > 1:
-        file_in = str(sys.argv[1])
-    run_qasm(file_in)
+        is_sparse = sys.argv[1] not in ['False', '0']
+    if len(sys.argv) > 2:
+        file_in = str(sys.argv[2])
+    run_qasm(is_sparse, file_in)
     return 0
 
 

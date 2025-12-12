@@ -29,7 +29,7 @@ def int_to_bitstring(integer, length):
     return (bin(integer)[2:].zfill(length))[::-1]
 
 
-def run_qasm(power, file_in):
+def run_qasm(power, is_sparse, file_in):
     # Load QASM as Qiskit circuit
     qc = QuantumCircuit.from_qasm_file(file_in)
     basis_gates = QrackSimulator.get_qiskit_basis_gates()
@@ -51,7 +51,7 @@ def run_qasm(power, file_in):
             is_first_inner = True
 
             # Run the original circuit
-            sim = QrackSimulator(n_qubits)
+            sim = QrackSimulator(n_qubits, isSparse = is_sparse, isOpenCL = not is_sparse)
             sim.run_qiskit_circuit(qc, shots=0)
 
             while len(fixed_bits.keys()) < n_qubits:
@@ -214,13 +214,16 @@ def run_qasm(power, file_in):
 
 def main():
     power = 2
+    is_sparse = False
     file_in = "qpe.qasm"
     if len(sys.argv) > 1:
         power = float(sys.argv[1])
     if len(sys.argv) > 2:
-        file_in = str(sys.argv[2])
+        is_sparse = sys.argv[2] not in ['False', '0']
+    if len(sys.argv) > 3:
+        file_in = str(sys.argv[3])
 
-    run_qasm(power, file_in)
+    run_qasm(power, is_sparse, file_in)
 
     return 0
 
