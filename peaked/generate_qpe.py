@@ -93,7 +93,7 @@ def qpe_qasm(num_counting_qubits: int, k: int = 1) -> str:
 
 def main():
     t = 35
-    k = 1000
+    k = 10000
     file_out = "qpe.qasm"
     if len(sys.argv) > 1:
         t = int(sys.argv[1])
