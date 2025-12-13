@@ -106,7 +106,7 @@ def run_qasm(power, is_sparse, file_in):
 
                     polar[b] = abs(2 * p - 1)
 
-                    if (polar[b] + epsilon) >= 1:
+                    if (polar[b] + 0.01) >= 1:
                         val = 0 if marginal[b] < 0.5 else 1
                         fixed_bits[b] = val
                         sim.force_m(b, val)
