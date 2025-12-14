@@ -12,15 +12,6 @@ except ImportError:
 from pyqrack import QrackSimulator
 
 
-def cmul_native(sim, i, a, maxN, qo, qa):
-    sim.mcmuln(a, [i], maxN, qo, qa)
-    for o in range(len(qa)):
-        sim.cswap([i], qa[o], qo[o])
-    sim.mcdivn(a, [i], maxN, qo, qa)
-    for a in qa:
-        sim.m(a)
-
-
 def phase_root_n(sim, n, q):
     sim.mtrx([1, 0, 0, -(1 ** (1.0 / (1 << (n - 1))))], q)
 
@@ -45,29 +36,18 @@ def shor(to_factor):
     sim = QrackSimulator(
         2 * qubitCount + 2, isTensorNetwork=False, isStabilizerHybrid=False
     )
-    qo = [i for i in range(qubitCount)]
-    qa = [(i + qubitCount) for i in range(qubitCount)]
-    qi = 2 * qubitCount
+    qi = [i for i in range(qubitCount)]
+    qo = [(i + qubitCount) for i in range(qubitCount)]
 
     m_results = []
 
     # Run the quantum subroutine.
-    # First, set the multiplication output register to identity, 1.
-    sim.x(qo[0])
-    for i in range(qubitCount):
-        sim.h(qi)
-        cmul_native(sim, qi, 1 << i, to_factor, qo, qa)
+    for i in qi:
+        sim.h(i)
+    sim.pown(base, to_factor, qi, qo)
+    sim.iqft(qi)
 
-        # We use the single control qubit "trick" referenced in Beauregard:
-        for j in range(len(m_results)):
-            if m_results[j]:
-                phase_root_n(sim, j + 2, qi)
-
-        m_results.append(sim.m(qi))
-        if m_results[-1]:
-            sim.x(qi)
-
-    y = 0
+    y = sim.m_all() >> qubitCount
     for i in range(len(m_results)):
         if m_results[i]:
             y |= 1 << i
@@ -91,7 +71,7 @@ def shor(to_factor):
     else:
         print("Failed: Found {} and {}".format(f1, f2))
 
-    print("Time: " + str(time.perf_counter() - start) + "seconds")
+    print("Time: " + str(time.perf_counter() - start) + " seconds")
 
 
 def main():
