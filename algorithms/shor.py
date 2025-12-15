@@ -41,7 +41,7 @@ def shor(to_factor, is_sparse):
                 factor, to_factor // factor, to_factor
             )
         )
-        print("Time: " + str(time.perf_counter() - start) + "seconds")
+        print("Time: " + str(time.perf_counter() - start) + " seconds")
         return
 
     qubitCount = math.ceil(math.log2(to_factor))
