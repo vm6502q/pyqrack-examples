@@ -20,8 +20,6 @@ def cmul_native(sim, i, a, maxN, qo, qa):
         sim.mcx([i, qo[o]], qa[o])
         sim.mcx([i, qa[o]], qo[o])
     sim.mcdivn(a, [i], maxN, qo, qa)
-    for a in qa:
-        sim.m(a)
 
 
 def phase_root_n(sim, n, q):
