@@ -48,7 +48,7 @@ def shor(to_factor, is_sparse):
     )
     qo = [i for i in range(qubitCount)]
     qa = [(i + qubitCount) for i in range(qubitCount)]
-    qi = 2 * qubitCount
+    qi = qubitCount << 1
 
     m_results = []
 
@@ -75,8 +75,8 @@ def shor(to_factor, is_sparse):
     r = Fraction(y).limit_denominator(to_factor - 1).denominator
 
     # try to determine the factors
-    if r % 2 != 0:
-        r *= 2
+    if (r & 1) != 0:
+        r <<= 1
     apowrhalf = pow(base, r >> 1, to_factor)
     f1 = gcd(apowrhalf + 1, to_factor)
     f2 = gcd(apowrhalf - 1, to_factor)
