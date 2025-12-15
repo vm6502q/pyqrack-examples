@@ -24,7 +24,7 @@ def cmul_native(sim, i, a, maxN, qo, qa):
         sim.m(a)
 
 
-def shor(to_factor):
+def shor(to_factor, is_sparse):
     # Based on https://arxiv.org/abs/quant-ph/0205095
     start = time.perf_counter()
     base = random.randrange(2, to_factor)
@@ -42,7 +42,7 @@ def shor(to_factor):
 
     qubitCount = math.ceil(math.log2(to_factor))
     sim = QrackSimulator(
-        2 * qubitCount + 2, isTensorNetwork=False, isStabilizerHybrid=False
+        2 * qubitCount + 2, isTensorNetwork=False, isStabilizerHybrid=False, isSparse=is_sparse, isOpenCL=not is_sparse
     )
     qo = [i for i in range(qubitCount)]
     qa = [(i + qubitCount) for i in range(qubitCount)]
@@ -88,7 +88,12 @@ def main():
 
     to_factor = int(sys.argv[1])
 
-    shor(to_factor)
+    to_factor = int(sys.argv[1])
+    is_sparse = False
+    if len(sys.argv) > 2:
+        is_sparse = sys.argv[2] not in ['False', '0']
+
+    shor(to_factor, is_sparse)
 
     return 0
 
