@@ -12,11 +12,23 @@ except ImportError:
 from pyqrack import QrackSimulator
 
 
+def cmul_native(sim, i, a, maxN, qo, qa):
+    sim.mcmuln(a, [i], maxN, qo, qa)
+    for o in range(len(qa)):
+        # sim.cswap([i], qa[o], qo[o])
+        sim.mcx([i, qa[o]], qo[o])
+        sim.mcx([i, qo[o]], qa[o])
+        sim.mcx([i, qa[o]], qo[o])
+    sim.mcdivn(a, [i], maxN, qo, qa)
+    for a in qa:
+        sim.m(a)
+
+
 def phase_root_n(sim, n, q):
     sim.mtrx([1, 0, 0, -(1 ** (1.0 / (1 << (n - 1))))], q)
 
 
-def shor(to_factor):
+def shor(to_factor, is_sparse):
     # Based on https://arxiv.org/abs/quant-ph/0205095
     start = time.perf_counter()
     base = random.randrange(2, to_factor)
@@ -34,20 +46,31 @@ def shor(to_factor):
 
     qubitCount = math.ceil(math.log2(to_factor))
     sim = QrackSimulator(
-        2 * qubitCount + 2, isTensorNetwork=False, isStabilizerHybrid=False
+        2 * qubitCount + 2, isTensorNetwork=False, isStabilizerHybrid=False, isSparse=is_sparse, isOpenCL=not is_sparse
     )
-    qi = [i for i in range(qubitCount)]
-    qo = [(i + qubitCount) for i in range(qubitCount)]
+    qo = [i for i in range(qubitCount)]
+    qa = [(i + qubitCount) for i in range(qubitCount)]
+    qi = 2 * qubitCount
 
     m_results = []
 
     # Run the quantum subroutine.
-    for i in qi:
-        sim.h(i)
-    sim.pown(base, to_factor, qi, qo)
-    sim.iqft(qi)
+    # First, set the multiplication output register to identity, 1.
+    sim.x(qo[0])
+    for i in range(qubitCount):
+        sim.h(qi)
+        cmul_native(sim, qi, 1 << i, to_factor, qo, qa)
 
-    y = sim.m_all() >> qubitCount
+        # We use the single control qubit "trick" referenced in Beauregard:
+        for j in range(len(m_results)):
+            if m_results[j]:
+                phase_root_n(sim, j + 2, qi)
+
+        m_results.append(sim.m(qi))
+        if m_results[-1]:
+            sim.x(qi)
+
+    y = 0
     for i in range(len(m_results)):
         if m_results[i]:
             y |= 1 << i
@@ -76,11 +99,14 @@ def shor(to_factor):
 
 def main():
     if len(sys.argv) < 2:
-        raise RuntimeError("Usage: python3 qbdd_shor.py [to_factor]")
+        raise RuntimeError("Usage: python3 qbdd_shor.py [to_factor] [is_sparse]")
 
     to_factor = int(sys.argv[1])
+    is_sparse = False
+    if len(sys.argv) > 2:
+        is_sparse = sys.argv[2] not in ['False', '0']
 
-    shor(to_factor)
+    shor(to_factor, is_sparse)
 
     return 0
 

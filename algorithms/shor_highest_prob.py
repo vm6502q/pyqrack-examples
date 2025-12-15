@@ -15,14 +15,13 @@ from pyqrack import QrackSimulator
 def cmul_native(sim, i, a, maxN, qo, qa):
     sim.mcmuln(a, [i], maxN, qo, qa)
     for o in range(len(qa)):
-        sim.cswap([i], qa[o], qo[o])
+        # sim.cswap([i], qa[o], qo[o])
+        sim.mcx([i, qa[o]], qo[o])
+        sim.mcx([i, qo[o]], qa[o])
+        sim.mcx([i, qa[o]], qo[o])
     sim.mcdivn(a, [i], maxN, qo, qa)
     for a in qa:
         sim.m(a)
-
-
-def phase_root_n(sim, n, q):
-    sim.mtrx([1, 0, 0, -(1 ** (1.0 / (1 << (n - 1))))], q)
 
 
 def shor(to_factor):
