@@ -45,7 +45,7 @@ def shor(to_factor, is_sparse):
 
         qubitCount = math.ceil(math.log2(to_factor))
         sim = QrackSimulator(
-            (qubitCount << 1) + 1, isSparse=is_sparse, isOpenCL=not is_sparse
+            (qubitCount << 1) + 1, isTensorNetwork=False, isSparse=is_sparse, isOpenCL=not is_sparse
         )
         qo = [i for i in range(qubitCount)]
         qa = [(i + qubitCount) for i in range(qubitCount)]
