@@ -43,18 +43,18 @@ def shor(to_factor, is_sparse):
             print("Time: " + str(time.perf_counter() - start) + " seconds")
             return
 
-        qubitCount = math.ceil(math.log2(to_factor))
+        n_qubits = math.ceil(math.log2(to_factor))
         sim = QrackSimulator(
-            (qubitCount << 1) + 1, isTensorNetwork=False, isSparse=is_sparse, isOpenCL=not is_sparse
+            (n_qubits << 1) + 1, isTensorNetwork=False, isSparse=is_sparse, isOpenCL=not is_sparse
         )
-        qo = [i for i in range(qubitCount)]
-        qa = [(i + qubitCount) for i in range(qubitCount)]
-        qi = qubitCount << 1
+        qo = [i for i in range(n_qubits)]
+        qa = [(i + n_qubits) for i in range(n_qubits)]
+        qi = n_qubits << 1
 
         # Run the quantum subroutine.
         # First, set the multiplication output register to identity, 1.
         sim.x(qo[0])
-        for i in range(qubitCount):
+        for i in range(n_qubits):
             sim.h(qi)
             cmul_native(sim, qi, 1 << i, to_factor, qo, qa)
 
@@ -89,8 +89,6 @@ def shor(to_factor, is_sparse):
 def main():
     if len(sys.argv) < 2:
         raise RuntimeError("Usage: python3 qbdd_shor.py [to_factor]")
-
-    to_factor = int(sys.argv[1])
 
     to_factor = int(sys.argv[1])
     is_sparse = False
