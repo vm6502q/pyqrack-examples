@@ -96,9 +96,11 @@ def bench_qrack(width, depth, trials):
     # This is a "nearest-neighbor" coupler random circuit.
     control = AerSimulator(method="statevector")
     shots = 1 << (width + 2)
-
     lcv_range = range(width)
     all_bits = list(lcv_range)
+    ace_qb = (width + 3) // 4
+
+    print(f"Maximum entangled subsystem qubit footprint: {ace_qb}")
 
     # Nearest-neighbor couplers:
     gateSequence = [0, 3, 2, 1, 2, 1, 0, 3]
@@ -148,6 +150,7 @@ def bench_qrack(width, depth, trials):
                     g(circ, b1, b2)
 
             experiment = QrackSimulator(width)
+            experiment.set_ace_max_qb(ace_qb)
             experiment.run_qiskit_circuit(circ)
 
             circ_aer = circ.copy()
@@ -157,7 +160,7 @@ def bench_qrack(width, depth, trials):
             experiment_counts = dict(Counter(experiment.measure_shots(all_bits, shots)))
             control_probs = Statevector(job.result().get_statevector()).probabilities()
 
-            stats = calc_stats(control_probs, experiment_counts, d + 1, shots)
+            stats = calc_stats(control_probs, experiment_counts, d + 1, shots, ace_qb)
 
             if trial == 0:
                 results.append(stats)
@@ -173,7 +176,7 @@ def bench_qrack(width, depth, trials):
                 print(results[d])
 
 
-def calc_stats(ideal_probs, counts, depth, shots):
+def calc_stats(ideal_probs, counts, depth, shots, ace_qb):
     # For QV, we compare probabilities of (ideal) "heavy outputs."
     # If the probability is above 2/3, the protocol certifies/passes the qubit width.
     n_pow = len(ideal_probs)
@@ -204,6 +207,7 @@ def calc_stats(ideal_probs, counts, depth, shots):
 
     return {
         "qubits": n,
+        "ace_qb_limit": ace_qb,
         "depth": depth,
         "xeb": float(xeb),
         "hog_prob": float(hog_prob),

@@ -2,6 +2,7 @@
 # (Are they better than the 2019 Sycamore hardware?)
 
 import math
+import os
 import random
 import statistics
 import sys
@@ -63,6 +64,9 @@ def bench_qrack(width, depth, cycles, is_sparse):
 
     lcv_range = range(width)
     all_bits = list(lcv_range)
+    ace_qb = (width + 3) // 4
+
+    print(f"Maximum entangled subsystem qubit footprint: {ace_qb}")
 
     # Nearest-neighbor couplers:
     gateSequence = [0, 3, 2, 1, 2, 1, 0, 3]
@@ -128,6 +132,7 @@ def bench_qrack(width, depth, cycles, is_sparse):
 
 
     experiment = QrackSimulator(width, isTensorNetwork=False, isSparse=is_sparse, isOpenCL=not is_sparse)
+    experiment.set_ace_max_qb(ace_qb)
     experiment.run_qiskit_circuit(otoc)
 
     otoc_aer = otoc.copy()
@@ -139,7 +144,7 @@ def bench_qrack(width, depth, cycles, is_sparse):
     experiment_counts = dict(Counter(experiment.measure_shots(all_bits, shots)))
     control_probs = Statevector(job.result().get_statevector()).probabilities()
 
-    return calc_stats(control_probs, experiment_counts, d + 1, shots), pauli_strings
+    return calc_stats(control_probs, experiment_counts, d + 1, shots, ace_qb), pauli_strings
 
 
 def act_string(otoc, string):
@@ -155,7 +160,7 @@ def act_string(otoc, string):
                 pass
 
 
-def calc_stats(ideal_probs, counts, depth, shots):
+def calc_stats(ideal_probs, counts, depth, shots, ace_qb):
     # For QV, we compare probabilities of (ideal) "heavy outputs."
     # If the probability is above 2/3, the protocol certifies/passes the qubit width.
     n_pow = len(ideal_probs)
@@ -189,6 +194,7 @@ def calc_stats(ideal_probs, counts, depth, shots):
 
     return {
         "qubits": n,
+        "ace_qb_limit": ace_qb,
         "depth": depth,
         "xeb": float(xeb),
         "hog_prob": float(hog_prob),
