@@ -71,12 +71,15 @@ def bench_qrack(width, depth):
     # This is a "nearest-neighbor" coupler random circuit.
     circ = QuantumCircuit(width)
     control = AerSimulator(method="statevector")
+    lcv_range = range(width)
+    all_bits = list(lcv_range)
     shots = 1 << (width + 2)
+    ace_qb = (width + 3) // 4
+
+    print(f"Maximum entangled subsystem qubit footprint: {ace_qb}")
 
     dead_qubit = 3 if width == 54 else width
 
-    lcv_range = range(width)
-    all_bits = list(lcv_range)
     last_gates = []
 
     # Nearest-neighbor couplers:
@@ -144,9 +147,10 @@ def bench_qrack(width, depth):
             circ, basis_gates=["u", "swap", "iswap" "cx", "cy", "cz"]
         )
         experiment = QrackSimulator(width)
+        experiment.set_ace_max_qb(ace_qb)
         experiment.run_qiskit_circuit(circ_qrack)
 
-        circ_aer = transpile(circ, backend=control)
+        circ_aer = circ.copy()
         circ_aer.save_statevector()
         job = control.run(circ_aer)
 
@@ -154,11 +158,12 @@ def bench_qrack(width, depth):
             experiment_counts = dict(Counter(experiment.measure_shots(all_bits, shots)))
             control_probs = Statevector(job.result().get_statevector()).probabilities()
 
-            calc_stats(control_probs, experiment_counts, d + 1, shots)
+            calc_stats(control_probs, experiment_counts, d + 1, shots, ace_qb)
         except:
             print(
                 {
                     "qubits": width,
+                    "ace_qb_limit": ace_qb,
                     "depth": d + 1,
                     "xeb": 0,
                     "hog_prob": 0.5,
@@ -167,7 +172,7 @@ def bench_qrack(width, depth):
             )
 
 
-def calc_stats(ideal_probs, counts, depth, shots):
+def calc_stats(ideal_probs, counts, depth, shots, ace_qb):
     # For QV, we compare probabilities of (ideal) "heavy outputs."
     # If the probability is above 2/3, the protocol certifies/passes the qubit width.
     n_pow = len(ideal_probs)
@@ -199,10 +204,11 @@ def calc_stats(ideal_probs, counts, depth, shots):
     print(
         {
             "qubits": n,
+            "ace_qb_limit": ace_qb,
             "depth": depth,
-            "xeb": xeb,
+            "xeb": float(xeb),
             "hog_prob": hog_prob,
-            "p-value": p_val,
+            "p-value": float(p_val),
         }
     )
 
