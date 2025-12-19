@@ -110,7 +110,6 @@ def calc_stats(ideal_probs, counts, shots, depth, hamming_n):
     threshold = statistics.median(ideal_probs)
     u_u = statistics.mean(ideal_probs)
     diff_sqr = 0
-    z_fidelity = 0
     numer = 0
     denom = 0
     sum_hog_counts = 0
@@ -124,7 +123,6 @@ def calc_stats(ideal_probs, counts, shots, depth, hamming_n):
 
         # L2 distance
         diff_sqr += (ideal - exp) ** 2
-        z_fidelity += (exp if ideal > exp else ideal)
 
         # XEB / EPLG
         denom += (ideal - u_u) ** 2
@@ -152,7 +150,6 @@ def calc_stats(ideal_probs, counts, shots, depth, hamming_n):
         "qubits": n,
         "depth": depth,
         "l2_difference": float(l2_difference),
-        "z_fidelity": float(z_fidelity),
         "xeb": float(xeb),
         "hog_prob": float(hog_prob),
         "hamming_distance_n": min(hamming_n, n_pow >> 1),
