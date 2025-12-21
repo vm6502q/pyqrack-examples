@@ -15,8 +15,8 @@ def bench_qrack(width, depth, sdrp):
 
     results = []
 
-    control = QrackSimulator(width, isTensorNetwork=False)
-    experiment = QrackSimulator(width, isTensorNetwork=False, isOpenCL=False, isSparse=True)
+    control = QrackSimulator(width)
+    experiment = QrackSimulator(width, isOpenCL=False, isSparse=True)
     if sdrp > 0:
         experiment.set_sdrp(sdrp)
     for d in range(depth):

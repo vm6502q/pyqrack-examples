@@ -78,7 +78,7 @@ def bench_qrack(n, sdrp=0):
         while len(unused_bits) > 1:
             circ.ucmtrx([unused_bits.pop()], x_op, unused_bits.pop(), 1)
 
-    sim = QrackSimulator(n, isTensorNetwork=False)
+    sim = QrackSimulator(n)
     circ.run(sim)
     ideal_probs = [(x * (x.conjugate())).real for x in sim.out_ket()]
     del sim
@@ -91,7 +91,7 @@ def bench_qrack(n, sdrp=0):
     peak_monitor_start()
     start = time.perf_counter()
 
-    sim = QrackSimulator(n, isTensorNetwork=False)
+    sim = QrackSimulator(n)
     if sdrp > 0:
         sim.set_sdrp(sdrp)
     circ.run(sim)

@@ -179,7 +179,7 @@ def main():
     job = control.run(qc_aer_sv)
     control_probs = Statevector(job.result().get_statevector()).probabilities()
 
-    experiment = QrackSimulator(n_qubits, isTensorNetwork=False)
+    experiment = QrackSimulator(n_qubits)
     experiment.run_qiskit_circuit(qc_aer)
     experiment_counts = dict(Counter(experiment.measure_shots(qubits, shots)))
 

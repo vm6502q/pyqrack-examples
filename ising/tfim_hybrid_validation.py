@@ -307,7 +307,7 @@ def main():
         backend=control,
     )
 
-    experiment = QrackSimulator(n_qubits, isTensorNetwork=False)
+    experiment = QrackSimulator(n_qubits)
     experiment.run_qiskit_circuit(qc_aer)
 
     # Add up the square residuals:

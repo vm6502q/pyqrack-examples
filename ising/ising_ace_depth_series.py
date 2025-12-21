@@ -183,7 +183,7 @@ def main():
 
     start = time.perf_counter()
 
-    experiment = QrackSimulator(n_qubits, isTensorNetwork=False)
+    experiment = QrackSimulator(n_qubits)
     experiment.run_qiskit_circuit(qc_aer)
 
     for d in depths:
