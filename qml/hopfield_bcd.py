@@ -13,7 +13,7 @@ def main():
 
     width_i = 4
     width_o = 5
-    sim = QrackSimulator(width_i + width_o, isTensorNetwork=False)
+    sim = QrackSimulator(width_i + width_o)
     i_range = range(width_i)
     o_range = range(width_o)
     pow_width = 1 << width_i

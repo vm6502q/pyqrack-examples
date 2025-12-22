@@ -15,7 +15,7 @@ def main():
     if len(sys.argv) > 1:
         width = int(sys.argv[1])
     width_x2 = width << 1
-    sim = QrackSimulator(width_x2, isTensorNetwork=False)
+    sim = QrackSimulator(width_x2)
     i_range = range(width)
     o_range = range(width, width_x2)
     pow_width = 1 << width
