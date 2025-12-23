@@ -75,7 +75,7 @@ def bench_qrack(width, depth):
     # This is a "nearest-neighbor" coupler random circuit.
     start = time.perf_counter()
 
-    sim = QrackSimulator(width, isBinaryDecisionTree=True)
+    sim = QrackSimulator(width)
     # Turned off, but might be faster when on:
     # sim.set_reactive_separate(True)
 
