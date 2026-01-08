@@ -30,19 +30,21 @@ class QrackXORNet(nn.Module):
         return x
 
 model = QrackXORNet()
-# criterion = nn.BCELoss()
-# optimizer = optim.Adam(model.parameters(), lr=0.01)
+
+# (This is just for a simple example: the model starts out perfectly trained.)
+criterion = nn.BCELoss()
+optimizer = optim.Adam(model.parameters(), lr=0.001)
 
 # Training loop
-# for epoch in range(1000):
-#     optimizer.zero_grad()
-#     outputs = model(X)
-#     loss = criterion(outputs, Y)
-#     loss.backward()
-#     optimizer.step()
-#    
-#     if epoch % 100 == 0:
-#         print(f"Epoch [{epoch}/1000], Loss: {loss.item():.4f}")
+for epoch in range(1000):
+    optimizer.zero_grad()
+    outputs = model(X)
+    loss = criterion(outputs, Y)
+    loss.backward()
+    optimizer.step()
+
+    if epoch % 100 == 0:
+        print(f"Epoch [{epoch}/1000], Loss: {loss.item():.4f}")
 
 # Evaluation
 with torch.no_grad():
