@@ -32,7 +32,7 @@ class QrackXORNet(nn.Module):
 
 model = QrackXORNet()
 criterion = nn.BCELoss()
-optimizer = optim.Adam(model.parameters(), lr=0.001)
+optimizer = optim.Adam(model.parameters(), lr=0.0005)
 
 # Training loop
 for epoch in range(1000):
