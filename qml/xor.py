@@ -22,16 +22,15 @@ Y = torch.tensor([[0.],
 class QrackXORNet(nn.Module):
     def __init__(self):
         super(QrackXORNet, self).__init__()
-        half_pi = math.pi / 2
-        self.q = QrackNeuronTorchLayer(2, 1, hidden_qubits=0, lowest_combo_count=2, highest_combo_count=2, parameters=[-half_pi, half_pi, half_pi, -half_pi])
+        # (This is just for a simple example: the model starts out halfway trained.)
+        quarter_pi = math.pi / 4
+        self.q = QrackNeuronTorchLayer(2, 1, hidden_qubits=0, lowest_combo_count=2, highest_combo_count=2, parameters=[-quarter_pi, quarter_pi, quarter_pi, -quarter_pi])
 
     def forward(self, x):
         x = self.q(x)
         return x
 
 model = QrackXORNet()
-
-# (This is just for a simple example: the model starts out perfectly trained.)
 criterion = nn.BCELoss()
 optimizer = optim.Adam(model.parameters(), lr=0.001)
 
