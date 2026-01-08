@@ -46,5 +46,6 @@ model = QrackXORNet()
 
 # Evaluation
 with torch.no_grad():
+    print("XOR predictors:\n", X)
     predictions = model(X).round()
-    print("Predictions:\n", predictions)
+    print("XOR predictions:\n", predictions)
