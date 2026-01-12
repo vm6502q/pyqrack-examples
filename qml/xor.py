@@ -23,19 +23,21 @@ class QrackXORNet(nn.Module):
     def __init__(self):
         super(QrackXORNet, self).__init__()
         # (This is just for a simple example: the model starts out halfway trained.)
-        quarter_pi = math.pi / 4
-        self.q = QrackNeuronTorchLayer(2, 1, hidden_qubits=0, lowest_combo_count=2, highest_combo_count=2, parameters=[-quarter_pi, quarter_pi, quarter_pi, -quarter_pi])
+        self.q = QrackNeuronTorchLayer(2, 1, hidden_qubits=0, lowest_combo_count=2, highest_combo_count=2)
+        self.q.simulator.h(0)
+        self.q.simulator.mcx([0], 1)
+        self.readout = nn.Linear(1, 1, bias=True)
 
     def forward(self, x):
         x = self.q(x)
-        return x
+        return torch.sigmoid(self.readout(x))
 
 model = QrackXORNet()
 criterion = nn.BCELoss()
-optimizer = optim.Adam(model.parameters(), lr=0.0005)
+optimizer = optim.Adam(model.parameters(), lr=0.01)
 
 # Training loop
-for epoch in range(1000):
+for epoch in range(5000):
     optimizer.zero_grad()
     outputs = model(X)
     loss = criterion(outputs, Y)
@@ -43,7 +45,7 @@ for epoch in range(1000):
     optimizer.step()
 
     if epoch % 100 == 0:
-        print(f"Epoch [{epoch}/1000], Loss: {loss.item():.4f}")
+        print(f"Epoch [{epoch}/5000], Loss: {loss.item():.4f}")
 
 # Evaluation
 with torch.no_grad():
