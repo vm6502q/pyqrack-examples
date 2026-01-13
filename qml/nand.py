@@ -30,7 +30,7 @@ criterion = nn.BCELoss()
 optimizer = optim.Adam(model.parameters(), lr=0.1)
 
 # Training loop
-for epoch in range(4000):
+for epoch in range(1000):
     optimizer.zero_grad()
     outputs = model(X)
     loss = criterion(outputs, Y)
@@ -38,7 +38,7 @@ for epoch in range(4000):
     optimizer.step()
 
     if epoch % 100 == 0:
-        print(f"Epoch [{epoch}/4000], Loss: {loss.item():.4f}")
+        print(f"Epoch [{epoch}/1000], Loss: {loss.item():.4f}")
 
 # Evaluation
 with torch.no_grad():
