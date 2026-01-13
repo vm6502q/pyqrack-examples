@@ -24,7 +24,7 @@ class QrackXNORNet(nn.Module):
         super(QrackXNORNet, self).__init__()
         self.q = QrackNeuronTorchLayer(2, 1, hidden_qubits=0, lowest_combo_count=2, highest_combo_count=2)
         self.q.simulator.h(0)
-        self.q.simulator.macx([0], 1)
+        self.q.simulator.mcx([0], 1)
         self.readout = nn.Linear(1, 1, bias=False)
 
     def forward(self, x):
@@ -37,7 +37,7 @@ criterion = nn.BCELoss()
 optimizer = optim.Adam(model.parameters(), lr=0.1)
 
 # Training loop
-for epoch in range(4000):
+for epoch in range(2000):
     optimizer.zero_grad()
     outputs = model(X)
     loss = criterion(outputs, Y)
@@ -45,7 +45,7 @@ for epoch in range(4000):
     optimizer.step()
 
     if epoch % 100 == 0:
-        print(f"Epoch [{epoch}/4000], Loss: {loss.item():.4f}")
+        print(f"Epoch [{epoch}/2000], Loss: {loss.item():.4f}")
 
 # Evaluation
 with torch.no_grad():
