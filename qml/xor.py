@@ -25,15 +25,16 @@ class QrackXORNet(nn.Module):
         self.q = QrackNeuronTorchLayer(2, 1, hidden_qubits=0, lowest_combo_count=2, highest_combo_count=2)
         self.q.simulator.h(0)
         self.q.simulator.macx([0], 1)
-        self.readout = nn.Linear(1, 1)
+        self.readout = nn.Linear(1, 1, bias=False)
 
     def forward(self, x):
         x = self.q(x)
+        x = x - x.mean()
         return torch.sigmoid(self.readout(x))
 
 model = QrackXORNet()
 criterion = nn.BCELoss()
-optimizer = optim.Adam(model.parameters(), lr=0.01)
+optimizer = optim.Adam(model.parameters(), lr=0.1)
 
 # Training loop
 for epoch in range(4000):
