@@ -17,15 +17,15 @@ Y = torch.tensor([[1.],
                   [0.]])
 
 # Model
-class ORNet(nn.Module):
+class NORNet(nn.Module):
     def __init__(self):
-        super(ORNet, self).__init__()
+        super(NORNet, self).__init__()
         self.readout = nn.Linear(2, 1)
 
     def forward(self, x):
         return torch.sigmoid(self.readout(x))
 
-model = ORNet()
+model = NORNet()
 criterion = nn.BCELoss()
 optimizer = optim.Adam(model.parameters(), lr=0.1)
 
