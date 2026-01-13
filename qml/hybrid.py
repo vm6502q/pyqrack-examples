@@ -1,0 +1,115 @@
+import math
+
+import torch
+import torch.nn as nn
+import torch.optim as optim
+import torch.nn.functional as F
+
+from pyqrack import QrackNeuronTorchLayer
+
+# XOR data
+X = torch.tensor([[0., 0.],
+                  [0., 1.],
+                  [1., 0.],
+                  [1., 1.]])
+
+Y_AND = torch.tensor([[0.],
+                  [0.],
+                  [0.],
+                  [1.]])
+
+Y_XOR = torch.tensor([[0.],
+                  [1.],
+                  [1.],
+                  [0.]])
+
+class HybridParityGate(nn.Module):
+    def __init__(self):
+        super().__init__()
+
+        # Quantum parity path
+        self.q = QrackNeuronTorchLayer(
+            2, 1,
+            hidden_qubits=0,
+            lowest_combo_count=2,
+            highest_combo_count=2
+        )
+        self.q.simulator.h(0)
+        self.q.simulator.macx([0], 1)
+
+        # Classical affine path
+        self.linear = nn.Linear(2, 1, bias=True)
+
+        # Single scalar gate (logit parameter)
+        self.gate = nn.Parameter(torch.tensor(0.0))
+
+        # Readout symmetry correction
+        self.readout = nn.Linear(1, 1, bias=False)
+
+    def forward(self, x):
+        # Quantum feature
+        q = self.q(x)
+        q = q - q.mean()   # keep XOR/XNOR symmetric
+
+        # Classical feature
+        a = self.linear(x)
+
+        # Gate in [0,1]
+        g = torch.sigmoid(self.gate)
+
+        # Interpolate
+        y = g * q + (1 - g) * a
+
+        return self.readout(y)
+
+
+# Model
+class QrackUniversalNet(nn.Module):
+    def __init__(self):
+        super(QrackUniversalNet, self).__init__()
+        self.q = HybridParityGate()
+
+    def forward(self, x):
+        return torch.sigmoid(self.q(x))
+
+model = QrackUniversalNet()
+criterion = nn.BCELoss()
+optimizer = optim.Adam(model.parameters(), lr=0.1)
+
+# Training loop
+for epoch in range(2000):
+    optimizer.zero_grad()
+    outputs = model(X)
+    loss = criterion(outputs, Y_AND)
+    loss.backward()
+    optimizer.step()
+
+    if epoch % 100 == 0:
+        print(f"Epoch [{epoch}/2000], Loss: {loss.item():.4f}")
+
+# Evaluation
+with torch.no_grad():
+    print("AND predictors:\n", X)
+    predictions = model(X).round()
+    print("AND predictions:\n", predictions)
+
+model = QrackUniversalNet()
+criterion = nn.BCELoss()
+optimizer = optim.Adam(model.parameters(), lr=0.1)
+
+# Training loop
+for epoch in range(2000):
+    optimizer.zero_grad()
+    outputs = model(X)
+    loss = criterion(outputs, Y_XOR)
+    loss.backward()
+    optimizer.step()
+
+    if epoch % 100 == 0:
+        print(f"Epoch [{epoch}/2000], Loss: {loss.item():.4f}")
+
+# Evaluation
+with torch.no_grad():
+    print("XOR predictors:\n", X)
+    predictions = model(X).round()
+    print("XOR predictions:\n", predictions)
