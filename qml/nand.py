@@ -42,6 +42,6 @@ for epoch in range(1000):
 
 # Evaluation
 with torch.no_grad():
-    print("OR predictors:\n", X)
+    print("NAND predictors:\n", X)
     predictions = model(X).round()
-    print("OR predictions:\n", predictions)
+    print("NAND predictions:\n", predictions)

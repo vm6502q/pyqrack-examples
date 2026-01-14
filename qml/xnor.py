@@ -49,6 +49,6 @@ for epoch in range(2000):
 
 # Evaluation
 with torch.no_grad():
-    print("XOR predictors:\n", X)
+    print("XNOR predictors:\n", X)
     predictions = model(X).round()
-    print("XOR predictions:\n", predictions)
+    print("XNOR predictions:\n", predictions)
