@@ -5,7 +5,6 @@ import math
 import random
 import statistics
 import sys
-import time
 
 from collections import Counter
 
@@ -181,46 +180,31 @@ def bench_qrack(n_qubits, hamming_n):
                 g = random.choice(two_bit_gates)
                 g(qc, b1, b2)
 
-        for r in range(11):
-            ncrp = (10 - r) / 10
-            experiment = QrackSimulator(
-                n_qubits,
-                isTensorNetwork=False,
-                isSchmidtDecompose=False,
-                isStabilizerHybrid=True,
-            )
-            # Round closer to a Clifford circuit
-            experiment.set_use_exact_near_clifford(False)
-            if ncrp > 0:
-                experiment.set_ncrp(ncrp)
-            start = time.perf_counter()
-            experiment.run_qiskit_circuit(qc, shots=0)
-            experiment_counts = dict(
-                Counter(experiment.measure_shots(list(range(n_qubits)), shots))
-            )
-            stop = time.perf_counter()
-            if r == 0:
-                min_time = stop - start
+        experiment = QrackSimulator(
+            n_qubits,
+            isTensorNetwork=False,
+            isSchmidtDecompose=False,
+            isStabilizerHybrid=True,
+        )
+        # Round closer to a Clifford circuit
+        experiment.set_use_exact_near_clifford(False)
+        experiment.run_qiskit_circuit(qc, shots=0)
+        experiment_counts = dict(
+            Counter(experiment.measure_shots(list(range(n_qubits)), shots))
+        )
 
-            aer_qc = qc.copy()
-            aer_qc.save_statevector()
-            job = control.run(aer_qc)
-            control_probs = Statevector(job.result().get_statevector()).probabilities()
+        aer_qc = qc.copy()
+        aer_qc.save_statevector()
+        job = control.run(aer_qc)
+        control_probs = Statevector(job.result().get_statevector()).probabilities()
 
-            results = calc_stats(
-                control_probs, experiment_counts, shots, d + 1, ncrp, hamming_n
-            )
-            print(results)
-
-            if ((stop - start) > (2 * min_time)) or (
-                (d > 0)
-                and ((results["l2_difference"] <= 0.0) or (results["xeb"] >= 1.0))
-            ):
-                # This has become too costly (or too accurate) to try lower rounding parameters:
-                break
+        results = calc_stats(
+            control_probs, experiment_counts, shots, d + 1, hamming_n
+        )
+        print(results)
 
 
-def calc_stats(ideal_probs, counts, shots, depth, ncrp, hamming_n):
+def calc_stats(ideal_probs, counts, shots, depth, hamming_n):
     # For QV, we compare probabilities of (ideal) "heavy outputs."
     # If the probability is above 2/3, the protocol certifies/passes the qubit width.
     n_pow = len(ideal_probs)
@@ -266,7 +250,6 @@ def calc_stats(ideal_probs, counts, shots, depth, ncrp, hamming_n):
 
     return {
         "qubits": n,
-        "ncrp": ncrp,
         "depth": depth,
         "l2_difference": float(l2_difference),
         "xeb": float(xeb),

@@ -90,6 +90,7 @@ def bench_qrack(n_qubits, hamming_n):
                 isStabilizerHybrid=True,
             )
             # Round closer to a Clifford circuit
+            experiment.set_use_exact_near_clifford(False)
             if ncrp > 0:
                 experiment.set_ncrp(ncrp)
             start = time.perf_counter()

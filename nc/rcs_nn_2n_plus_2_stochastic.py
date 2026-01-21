@@ -167,6 +167,7 @@ def bench_qrack(width, ncrp):
             isStabilizerHybrid=True,
         )
         # Round to nearest Clifford circuit
+        experiment.set_use_exact_near_clifford(False)
         if ncrp > 0:
             experiment.set_ncrp(ncrp)
         experiment.run_qiskit_circuit(qc)
@@ -178,7 +179,6 @@ def bench_qrack(width, ncrp):
             {
                 "qubits": width,
                 "ncrp": ncrp,
-                "minimum_fidelity_estimate": clone.get_unitary_fidelity(),
                 "depth": d + 1,
                 "seconds": time.perf_counter() - start,
             }
@@ -190,7 +190,7 @@ def main():
         raise RuntimeError("Usage: python3 rcs_nn_2n_plus_2.py [width] [ncrp]")
 
     n_qubits = int(sys.argv[1])
-    ncrp = 2.0
+    ncrp = 0.0
     if len(sys.argv) > 2:
         ncrp = float(sys.argv[2])
 

@@ -70,7 +70,6 @@ def bench_qrack(n_qubits, ncrp):
             {
                 "qubits": n_qubits,
                 "ncrp": ncrp,
-                "minimum_fidelity_estimate": clone.get_unitary_fidelity(),
                 "depth": d + 1,
                 "seconds": time.perf_counter() - start,
             }
@@ -82,7 +81,7 @@ def main():
         raise RuntimeError("Usage: python3 fc_2n_plus_2.py [width] [ncrp]")
 
     n_qubits = int(sys.argv[1])
-    ncrp = 2.0
+    ncrp = 0.0
     if len(sys.argv) > 2:
         ncrp = float(sys.argv[2])
 

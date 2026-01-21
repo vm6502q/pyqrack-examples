@@ -5,7 +5,6 @@ import math
 import random
 import statistics
 import sys
-import time
 
 from collections import Counter
 
@@ -17,17 +16,6 @@ from qiskit import QuantumCircuit
 from qiskit.compiler import transpile
 from qiskit_aer.backends import AerSimulator
 from qiskit.quantum_info import Statevector
-
-
-def factor_width(width):
-    col_len = math.floor(math.sqrt(width))
-    while ((width // col_len) * col_len) != width:
-        col_len -= 1
-    row_len = width // col_len
-    if col_len == 1:
-        raise Exception("ERROR: Can't simulate prime number width!")
-
-    return (row_len, col_len)
 
 
 # By Gemini (Google Search AI)
@@ -50,77 +38,8 @@ def top_n(n, a):
     return np.argsort(a)[-n:]
 
 
-def cx(sim, q1, q2):
-    sim.cx(q1, q2)
-
-
-def cy(sim, q1, q2):
-    sim.cy(q1, q2)
-
-
-def cz(sim, q1, q2):
-    sim.cz(q1, q2)
-
-
-def acx(sim, q1, q2):
-    sim.x(q1)
-    sim.cx(q1, q2)
-    sim.x(q1)
-
-
-def acy(sim, q1, q2):
-    sim.x(q1)
-    sim.cy(q1, q2)
-    sim.x(q1)
-
-
-def acz(sim, q1, q2):
-    sim.x(q1)
-    sim.cz(q1, q2)
-    sim.x(q1)
-
-
-def swap(sim, q1, q2):
-    sim.swap(q1, q2)
-
-
-def iswap(sim, q1, q2):
-    sim.swap(q1, q2)
-    sim.cz(q1, q2)
-    sim.s(q1)
-    sim.s(q2)
-
-
-def iiswap(sim, q1, q2):
-    sim.s(q2)
-    sim.s(q1)
-    sim.cz(q1, q2)
-    sim.swap(q1, q2)
-
-
-def pswap(sim, q1, q2):
-    sim.cz(q1, q2)
-    sim.swap(q1, q2)
-
-
-def mswap(sim, q1, q2):
-    sim.swap(q1, q2)
-    sim.cz(q1, q2)
-
-
-def nswap(sim, q1, q2):
-    sim.cz(q1, q2)
-    sim.swap(q1, q2)
-    sim.cz(q1, q2)
-
-
 def bench_qrack(n_qubits, hamming_n):
-    # This is a "nearest-neighbor" coupler random circuit.
-    gateSequence = [0, 3, 2, 1, 2, 1, 0, 3]
-    two_bit_gates = swap, pswap, mswap, nswap, iswap, iiswap, cx, cy, cz, acx, acy, acz
-
-    row_len, col_len = factor_width(n_qubits)
-
+    # This is a "fully-connected" coupler random circuit.
     shots = hamming_n << 2
     lcv_range = range(n_qubits)
     all_bits = list(lcv_range)
@@ -152,75 +71,39 @@ def bench_qrack(n_qubits, hamming_n):
                     qc.rz(random.uniform(0, math.pi / 2), i)
                 gate_count = gate_count + 1
 
-        # Nearest-neighbor couplers:
-        ############################
-        gate = gateSequence.pop(0)
-        gateSequence.append(gate)
-        for row in range(1, row_len, 2):
-            for col in range(col_len):
-                temp_row = row
-                temp_col = col
-                temp_row = temp_row + (1 if (gate & 2) else -1)
-                temp_col = temp_col + (1 if (gate & 1) else 0)
+        # 2-qubit couplers
+        unused_bits = all_bits.copy()
+        random.shuffle(unused_bits)
+        while len(unused_bits) > 1:
+            c = unused_bits.pop()
+            t = unused_bits.pop()
+            qc.cx(c, t)
 
-                if temp_row < 0:
-                    temp_row = temp_row + row_len
-                if temp_col < 0:
-                    temp_col = temp_col + col_len
-                if temp_row >= row_len:
-                    temp_row = temp_row - row_len
-                if temp_col >= col_len:
-                    temp_col = temp_col - col_len
+        experiment = QrackSimulator(
+            n_qubits,
+            isTensorNetwork=False,
+            isSchmidtDecompose=False,
+            isStabilizerHybrid=True,
+        )
+        # Round closer to a Clifford circuit
+        experiment.set_use_exact_near_clifford(False)
+        experiment.run_qiskit_circuit(qc, shots=0)
+        experiment_counts = dict(
+            Counter(experiment.measure_shots(list(range(n_qubits)), shots))
+        )
 
-                b1 = row * row_len + col
-                b2 = temp_row * row_len + temp_col
+        aer_qc = qc.copy()
+        aer_qc.save_statevector()
+        job = control.run(aer_qc)
+        control_probs = Statevector(job.result().get_statevector()).probabilities()
 
-                if (b1 >= n_qubits) or (b2 >= n_qubits):
-                    continue
-
-                g = random.choice(two_bit_gates)
-                g(qc, b1, b2)
-
-        for r in range(11):
-            ncrp = (10 - r) / 10
-            experiment = QrackSimulator(
-                n_qubits,
-                isTensorNetwork=False,
-                isSchmidtDecompose=False,
-                isStabilizerHybrid=True,
-            )
-            # Round closer to a Clifford circuit
-            experiment.set_use_exact_near_clifford(False)
-            if ncrp > 0:
-                experiment.set_ncrp(ncrp)
-            start = time.perf_counter()
-            experiment.run_qiskit_circuit(qc, shots=0)
-            experiment_counts = dict(
-                Counter(experiment.measure_shots(list(range(n_qubits)), shots))
-            )
-            stop = time.perf_counter()
-            if r == 0:
-                min_time = stop - start
-
-            aer_qc = qc.copy()
-            aer_qc.save_statevector()
-            job = control.run(aer_qc)
-            control_probs = Statevector(job.result().get_statevector()).probabilities()
-
-            results = calc_stats(
-                control_probs, experiment_counts, shots, d + 1, ncrp, hamming_n
-            )
-            print(results)
-
-            if ((stop - start) > (2 * min_time)) or (
-                (d > 0)
-                and ((results["l2_difference"] <= 0.0) or (results["xeb"] >= 1.0))
-            ):
-                # This has become too costly (or too accurate) to try lower rounding parameters:
-                break
+        results = calc_stats(
+            control_probs, experiment_counts, shots, d + 1, hamming_n
+        )
+        print(results)
 
 
-def calc_stats(ideal_probs, counts, shots, depth, ncrp, hamming_n):
+def calc_stats(ideal_probs, counts, shots, depth, hamming_n):
     # For QV, we compare probabilities of (ideal) "heavy outputs."
     # If the probability is above 2/3, the protocol certifies/passes the qubit width.
     n_pow = len(ideal_probs)
@@ -266,7 +149,6 @@ def calc_stats(ideal_probs, counts, shots, depth, ncrp, hamming_n):
 
     return {
         "qubits": n,
-        "ncrp": ncrp,
         "depth": depth,
         "l2_difference": float(l2_difference),
         "xeb": float(xeb),
@@ -279,7 +161,7 @@ def calc_stats(ideal_probs, counts, shots, depth, ncrp, hamming_n):
 def main():
     if len(sys.argv) < 2:
         raise RuntimeError(
-            "Usage: python3 rcs_nn_2n_plus_2_qiskit_validation.py [width] [hamming_n]"
+            "Usage: python3 fc_2n_plus_2_qiskit_validation.py [width] [hamming_n]"
         )
 
     n_qubits = n_qubits = int(sys.argv[1])
