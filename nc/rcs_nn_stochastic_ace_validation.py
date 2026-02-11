@@ -10,12 +10,7 @@ from collections import Counter
 
 import numpy as np
 
-from pyqrack import QrackSimulator
-
-from qiskit import QuantumCircuit
-from qiskit.compiler import transpile
-from qiskit_aer.backends import AerSimulator
-from qiskit.quantum_info import Statevector
+from pyqrack import QrackSimulator, Pauli
 
 
 def factor_width(width):
@@ -126,20 +121,20 @@ def bench_qrack(n_qubits, depth, use_rz):
                 if s_count & 1:
                     qc.z(i)
                     qe.z(i)
+
                 if s_count & 2:
                     qc.s(i)
                     qe.s(i)
 
                 if use_rz:
                     angle = random.uniform(0, math.pi / 2)
-                    qc.rz(angle, i)
-                    qe.rz(angle, i)
                 elif s_count & 4:
-                    qc.t(i)
-                    qe.t(i)
+                    angle = math.pi / 4
                 else:
-                    qc.adjt(i)
-                    qe.adjt(i)
+                    angle = -math.pi / 4
+
+                qc.r(Pauli.PauliZ, angle, i)
+                qe.r(Pauli.PauliZ, angle, i)
 
         # Nearest-neighbor couplers:
         ############################
@@ -172,14 +167,14 @@ def bench_qrack(n_qubits, depth, use_rz):
                 g(qe, b1, b2)
 
         
-        experiment_probs = normalize_counts(dict(
-            Counter(qe.measure_shots(list(range(n_qubits)), shots))
-        ), shots)
+    experiment_probs = normalize_counts(dict(
+        Counter(qe.measure_shots(list(range(n_qubits)), shots))
+    ), shots)
 
-        results = calc_stats(
-            qc, experiment_probs, n_qubits, shots, d + 1
-        )
-        print(results)
+    results = calc_stats(
+        qc, experiment_probs, n_qubits, shots, d + 1
+    )
+    print(results)
 
 
 def normalize_counts(counts, shots):
@@ -219,6 +214,7 @@ def calc_stats(q_a, p_b, n, shots, depth):
     return {
         "qubits": n,
         "depth": depth,
+        "magic": n * depth * 3,
         "shots":shots,
         "l2_difference": l2_diff,
         "l2_difference_debiased": l2_diff_debiased,

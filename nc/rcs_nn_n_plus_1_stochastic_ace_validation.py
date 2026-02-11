@@ -10,12 +10,7 @@ from collections import Counter
 
 import numpy as np
 
-from pyqrack import QrackSimulator
-
-from qiskit import QuantumCircuit
-from qiskit.compiler import transpile
-from qiskit_aer.backends import AerSimulator
-from qiskit.quantum_info import Statevector
+from pyqrack import QrackSimulator, Pauli
 
 
 def factor_width(width):
@@ -81,7 +76,7 @@ def nswap(sim, q1, q2):
     sim.mcz([q1], q2)
 
 
-def bench_qrack(n_qubits, depth, use_rz):
+def bench_qrack(n_qubits, depth, use_rz, magic):
     # This is a "nearest-neighbor" coupler random circuit.
     gateSequence = [0, 3, 2, 1, 2, 1, 0, 3]
     two_bit_gates = swap, pswap, mswap, nswap, iswap, iiswap, cx, cy, cz, acx, acy, acz
@@ -112,10 +107,9 @@ def bench_qrack(n_qubits, depth, use_rz):
         ace_qb = (ace_qb + 1) >> 1
     qc.set_ace_max_qb(ace_qb)
 
-    rz_count = n_qubits + 1
     rz_opportunities = n_qubits * depth * 3
     rz_positions = []
-    while len(rz_positions) < rz_count:
+    while len(rz_positions) < magic:
         rz_position = random.randint(0, rz_opportunities - 1)
         if rz_position in rz_positions:
             continue
@@ -140,14 +134,12 @@ def bench_qrack(n_qubits, depth, use_rz):
                 if gate_count in rz_positions:
                     if use_rz:
                         angle = random.uniform(0, math.pi / 2)
-                        qc.rz(angle, i)
-                        qe.rz(angle, i)
                     elif s_count & 4:
-                        qc.t(i)
-                        qe.t(i)
+                        angle = math.pi / 4
                     else:
-                        qc.adjt(i)
-                        qe.adjt(i)
+                        angle = -math.pi / 4
+                    qc.r(Pauli.PauliZ, angle, i)
+                    qe.r(Pauli.PauliZ, angle, i)
                 gate_count = gate_count + 1
 
         # Nearest-neighbor couplers:
@@ -186,7 +178,7 @@ def bench_qrack(n_qubits, depth, use_rz):
     ), shots)
 
     results = calc_stats(
-        qc, experiment_probs, n_qubits, shots, d + 1
+        qc, experiment_probs, n_qubits, shots, d + 1, magic
     )
     print(results)
 
@@ -195,7 +187,7 @@ def normalize_counts(counts, shots):
     return {k: v / shots for k, v in counts.items()}
 
 
-def calc_stats(q_a, p_b, n, shots, depth):
+def calc_stats(q_a, p_b, n, shots, depth, magic):
     n_pow = 1 << n
     qb = list(range(n))
 
@@ -228,7 +220,7 @@ def calc_stats(q_a, p_b, n, shots, depth):
     return {
         "qubits": n,
         "depth": depth,
-        "magic": n + 1,
+        "magic": magic,
         "shots":shots,
         "l2_difference": l2_diff,
         "l2_difference_debiased": l2_diff_debiased,
@@ -239,7 +231,7 @@ def calc_stats(q_a, p_b, n, shots, depth):
 def main():
     if len(sys.argv) < 3:
         raise RuntimeError(
-            "Usage: python3 rcs_nn_2n_plus_2_qiskit_validation.py [width] [depth] [use_rz]"
+            "Usage: python3 rcs_nn_2n_plus_2_qiskit_validation.py [width] [depth] [use_rz] [magic]"
         )
 
     n_qubits = n_qubits = int(sys.argv[1])
@@ -247,9 +239,12 @@ def main():
     use_rz = False
     if len(sys.argv) > 3:
         use_rz = sys.argv[3] not in ["False", "0"]
+    magic = n_qubits + 1
+    if len(sys.argv) > 4:
+        magic = int(sys.argv[4])
 
     # Run the benchmarks
-    bench_qrack(n_qubits, depth, use_rz)
+    bench_qrack(n_qubits, depth, use_rz, magic)
 
     return 0
 
