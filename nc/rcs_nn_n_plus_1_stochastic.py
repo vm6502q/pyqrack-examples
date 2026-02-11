@@ -130,7 +130,7 @@ def bench_qrack(width, use_rz):
                     qc.s(i)
                 if gate_count in rz_positions:
                     if use_rz:
-                      qc.rz(random.uniform(0, math.pi / 2), i)
+                        qc.rz(random.uniform(0, math.pi / 2), i)
                     elif s_count & 4:
                         qc.t(i)
                     else:
