@@ -87,7 +87,7 @@ def bench_qrack(n_qubits, use_rz):
     two_bit_gates = swap, pswap, mswap, nswap, iswap, iiswap, cx, cy, cz, acx, acy, acz
     row_len, col_len = factor_width(n_qubits)
 
-    shots = min(1 << 20, 1 << (n_qubits + 2))
+    shots = 1 << min(20, n_qubits + 2)
     lcv_range = range(n_qubits)
     all_bits = list(lcv_range)
 
@@ -107,10 +107,11 @@ def bench_qrack(n_qubits, use_rz):
         isStabilizerHybrid=False,
     )
     # Validate with patch circuits
-    ace_qb = (n_qubits + 1) >> 1
+    ace_qb = n_qubits
     while ace_qb > 26:
         ace_qb = (ace_qb + 1) >> 1
-    qc.set_ace_max_qb(ace_qb)
+    if ace_qb < n_qubits:
+        qc.set_ace_max_qb(ace_qb)
 
     for d in range(n_qubits):
         # Single-qubit gates
@@ -119,14 +120,17 @@ def bench_qrack(n_qubits, use_rz):
             for _ in range(3):
                 qc.h(i)
                 qe.h(i)
+
                 # s_count = random.randint(0, 3)
                 s_count = random.randint(0, 7)
+
                 if s_count & 1:
                     qc.z(i)
                     qe.z(i)
                 if s_count & 2:
                     qc.s(i)
                     qe.s(i)
+
                 if use_rz:
                     angle = random.uniform(0, math.pi / 2)
                     qc.rz(angle, i)
@@ -183,29 +187,35 @@ def normalize_counts(counts, shots):
     return {k: v / shots for k, v in counts.items()}
 
 
-
-
 def calc_stats(q_a, p_b, n, shots, depth):
+    n_pow = 1 << n
+    qb = list(range(n))
+
+    u_u = 1 / n_pow
     diff_sq = 0.0
     noise = 0.0
-    numerator = 0.0
+
+    numer = 0.0
     denom = 0.0
-    qb = list(range(n))
-    for k in range(1 << n):
+    for k in range(n_pow):
         b = [False] * n
         for q in range(n):
             if (k >> q) & 1:
                 b[q] = True
         pa = q_a.prob_perm(qb, b)
         pb = p_b.get(k, 0.0)
+
+        #XEB
+        numer += (pa - u_u) * (pb - u_u)
+        denom += (pa - u_u) ** 2
+
+        # L2
         diff_sq += (pa - pb) ** 2
         noise += pb * (1 - pb) / shots
-        numerator += pa * pb
-        denom += pa * pa
 
+    xeb = 0.0 if denom == 0 else (numer / denom)
     l2_diff = math.sqrt(diff_sq)
     l2_diff_debiased = math.sqrt(max(diff_sq - noise, 0.0))
-    xeb = 0.0 if denom == 0 else (numerator / denom)
 
     return {
         "qubits": n,
