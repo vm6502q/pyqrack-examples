@@ -12,7 +12,7 @@ from qiskit import QuantumCircuit
 from pyqrack import QrackSimulator, Pauli
 
 
-def bench_qrack(n_qubits, ncrp):
+def bench_qrack(n_qubits, use_rz):
     # This is a "fully-connected" coupler random circuit.
     lcv_range = range(n_qubits)
     all_bits = list(lcv_range)
@@ -36,8 +36,6 @@ def bench_qrack(n_qubits, ncrp):
     )
     # Round to nearest Clifford circuit
     experiment.set_use_exact_near_clifford(False)
-    if ncrp > 0:
-        experiment.set_ncrp(ncrp)
 
     qc = QuantumCircuit(n_qubits)
     gate_count = 0
@@ -46,13 +44,19 @@ def bench_qrack(n_qubits, ncrp):
         for i in lcv_range:
             for _ in range(3):
                 experiment.h(i)
-                s_count = random.randint(0, 3)
+                # s_count = random.randint(0, 3)
+                s_count = random.randint(0, 7)
                 if s_count & 1:
                     experiment.z(i)
                 if s_count & 2:
                     experiment.s(i)
                 if gate_count in rz_positions:
-                    experiment.r(Pauli.PauliZ, random.uniform(0, math.pi / 2), i)
+                    if use_rz:
+                      qc.rz(random.uniform(0, math.pi / 2), i)
+                    elif s_count & 4:
+                        qc.t(i)
+                    else:
+                        qc.tdg(i)
                 gate_count = gate_count + 1
 
         # 2-qubit couplers
@@ -69,8 +73,6 @@ def bench_qrack(n_qubits, ncrp):
         print(
             {
                 "qubits": n_qubits,
-                "ncrp": ncrp,
-                "minimum_fidelity_estimate": clone.get_unitary_fidelity(),
                 "depth": d + 1,
                 "seconds": time.perf_counter() - start,
             }
@@ -79,15 +81,17 @@ def bench_qrack(n_qubits, ncrp):
 
 def main():
     if len(sys.argv) < 2:
-        raise RuntimeError("Usage: python3 fc_2n_plus_2.py [width] [ncrp]")
+        raise RuntimeError("Usage: python3 fc_2n_plus_2.py [width] [use_rz]"
+        )
 
-    n_qubits = int(sys.argv[1])
-    ncrp = 2.0
+    n_qubits = n_qubits = int(sys.argv[1])
+    use_rz = False
     if len(sys.argv) > 2:
-        ncrp = float(sys.argv[2])
+        use_rz = sys.argv[2] not in ["False", "0"]
 
     # Run the benchmarks
-    bench_qrack(n_qubits, ncrp)
+    bench_qrack(n_qubits, use_rz)
+
 
     return 0
 

@@ -5,7 +5,6 @@ import math
 import random
 import statistics
 import sys
-import time
 
 from collections import Counter
 
@@ -39,14 +38,15 @@ def top_n(n, a):
     return np.argsort(a)[-n:]
 
 
-def bench_qrack(n_qubits, hamming_n):
+def bench_qrack(n_qubits, use_rz):
     # This is a "fully-connected" coupler random circuit.
+    hamming_n = 2048
     shots = hamming_n << 2
     lcv_range = range(n_qubits)
     all_bits = list(lcv_range)
     control = AerSimulator(method="statevector")
 
-    rz_count = (n_qubits + 1) << 1
+    rz_count = n_qubits + 1
     rz_opportunities = n_qubits * n_qubits * 3
     rz_positions = []
     while len(rz_positions) < rz_count:
@@ -63,13 +63,19 @@ def bench_qrack(n_qubits, hamming_n):
             # Single-qubit gates
             for _ in range(3):
                 qc.h(i)
-                s_count = random.randint(0, 3)
+                # s_count = random.randint(0, 3)
+                s_count = random.randint(0, 7)
                 if s_count & 1:
                     qc.z(i)
                 if s_count & 2:
                     qc.s(i)
                 if gate_count in rz_positions:
-                    qc.rz(random.uniform(0, math.pi / 2), i)
+                    if use_rz:
+                      qc.rz(random.uniform(0, math.pi / 2), i)
+                    elif s_count & 4:
+                        qc.t(i)
+                    else:
+                        qc.tdg(i)
                 gate_count = gate_count + 1
 
         # 2-qubit couplers
@@ -80,47 +86,31 @@ def bench_qrack(n_qubits, hamming_n):
             t = unused_bits.pop()
             qc.cx(c, t)
 
-        min_time = 0
-        for r in range(11):
-            ncrp = (10 - r) / 10
-            experiment = QrackSimulator(
-                n_qubits,
-                isTensorNetwork=False,
-                isSchmidtDecompose=False,
-                isStabilizerHybrid=True,
-            )
-            # Round closer to a Clifford circuit
-            experiment.set_use_exact_near_clifford(False)
-            if ncrp > 0:
-                experiment.set_ncrp(ncrp)
-            start = time.perf_counter()
-            experiment.run_qiskit_circuit(qc, shots=0)
-            experiment_counts = dict(
-                Counter(experiment.measure_shots(list(range(n_qubits)), shots))
-            )
-            stop = time.perf_counter()
-            if r == 0:
-                min_time = stop - start
+        experiment = QrackSimulator(
+            n_qubits,
+            isTensorNetwork=False,
+            isSchmidtDecompose=False,
+            isStabilizerHybrid=True,
+        )
+        # Round closer to a Clifford circuit
+        experiment.set_use_exact_near_clifford(False)
+        experiment.run_qiskit_circuit(qc, shots=0)
+        experiment_counts = dict(
+            Counter(experiment.measure_shots(list(range(n_qubits)), shots))
+        )
 
-            aer_qc = qc.copy()
-            aer_qc.save_statevector()
-            job = control.run(aer_qc)
-            control_probs = Statevector(job.result().get_statevector()).probabilities()
+        aer_qc = qc.copy()
+        aer_qc.save_statevector()
+        job = control.run(aer_qc)
+        control_probs = Statevector(job.result().get_statevector()).probabilities()
 
-            results = calc_stats(
-                control_probs, experiment_counts, shots, d + 1, ncrp, hamming_n
-            )
-            print(results)
-
-            if ((stop - start) > (2 * min_time)) or (
-                (d > 0)
-                and ((results["l2_difference"] <= 0.0) or (results["xeb"] >= 1.0))
-            ):
-                # This has become too costly (or too accurate) to try lower rounding parameters:
-                break
+        results = calc_stats(
+            control_probs, experiment_counts, shots, d + 1, hamming_n
+        )
+        print(results)
 
 
-def calc_stats(ideal_probs, counts, shots, depth, ncrp, hamming_n):
+def calc_stats(ideal_probs, counts, shots, depth, hamming_n):
     # For QV, we compare probabilities of (ideal) "heavy outputs."
     # If the probability is above 2/3, the protocol certifies/passes the qubit width.
     n_pow = len(ideal_probs)
@@ -166,7 +156,6 @@ def calc_stats(ideal_probs, counts, shots, depth, ncrp, hamming_n):
 
     return {
         "qubits": n,
-        "ncrp": ncrp,
         "depth": depth,
         "l2_difference": float(l2_difference),
         "xeb": float(xeb),
@@ -179,16 +168,16 @@ def calc_stats(ideal_probs, counts, shots, depth, ncrp, hamming_n):
 def main():
     if len(sys.argv) < 2:
         raise RuntimeError(
-            "Usage: python3 fc_2n_plus_2_qiskit_validation.py [width] [hamming_n]"
+            "Usage: python3 fc_2n_plus_2_qiskit_validation.py [width] [use_rz]"
         )
 
     n_qubits = n_qubits = int(sys.argv[1])
-    hamming_n = 2048
+    use_rz = False
     if len(sys.argv) > 2:
-        hamming_n = int(sys.argv[2])
+        use_rz = sys.argv[2] not in ["False", "0"]
 
     # Run the benchmarks
-    bench_qrack(n_qubits, hamming_n)
+    bench_qrack(n_qubits, use_rz)
 
     return 0
 

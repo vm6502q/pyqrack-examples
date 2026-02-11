@@ -94,12 +94,12 @@ def nswap(sim, q1, q2):
     sim.cz(q1, q2)
 
 
-def bench_qrack(width, ncrp):
+def bench_qrack(width, use_rz):
     # This is a "nearest-neighbor" coupler random circuit.
     lcv_range = range(width)
     all_bits = list(lcv_range)
 
-    rz_count = (width + 1) << 1
+    rz_count = width + 1
     rz_opportunities = width * width * 3
     rz_positions = []
     while len(rz_positions) < rz_count:
@@ -122,13 +122,19 @@ def bench_qrack(width, ncrp):
             # Single-qubit gates
             for i in range(3):
                 qc.h(i)
-                s_count = random.randint(0, 3)
+                # s_count = random.randint(0, 3)
+                s_count = random.randint(0, 7)
                 if s_count & 1:
                     qc.z(i)
                 if s_count & 2:
                     qc.s(i)
                 if gate_count in rz_positions:
-                    qc.rz(random.uniform(0, math.pi / 2), i)
+                    if use_rz:
+                      qc.rz(random.uniform(0, math.pi / 2), i)
+                    elif s_count & 4:
+                        qc.t(i)
+                    else:
+                        qc.tdg(i)
                 gate_count = gate_count + 1
 
         # Nearest-neighbor couplers:
@@ -167,8 +173,7 @@ def bench_qrack(width, ncrp):
             isStabilizerHybrid=True,
         )
         # Round to nearest Clifford circuit
-        if ncrp > 0:
-            experiment.set_ncrp(ncrp)
+        experiment.set_use_exact_near_clifford(False)
         experiment.run_qiskit_circuit(qc)
 
         clone = experiment.clone()
@@ -177,8 +182,6 @@ def bench_qrack(width, ncrp):
         print(
             {
                 "qubits": width,
-                "ncrp": ncrp,
-                "minimum_fidelity_estimate": clone.get_unitary_fidelity(),
                 "depth": d + 1,
                 "seconds": time.perf_counter() - start,
             }
@@ -187,15 +190,16 @@ def bench_qrack(width, ncrp):
 
 def main():
     if len(sys.argv) < 2:
-        raise RuntimeError("Usage: python3 rcs_nn_2n_plus_2.py [width] [ncrp]")
+        raise RuntimeError("Usage: python3 rcs_nn_2n_plus_2.py [width] [use_rz]"
+        )
 
-    n_qubits = int(sys.argv[1])
-    ncrp = 2.0
+    n_qubits = n_qubits = int(sys.argv[1])
+    use_rz = False
     if len(sys.argv) > 2:
-        ncrp = float(sys.argv[2])
+        use_rz = sys.argv[2] not in ["False", "0"]
 
     # Run the benchmarks
-    bench_qrack(n_qubits, ncrp)
+    bench_qrack(n_qubits, use_rz)
 
     return 0
 
