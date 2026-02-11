@@ -76,7 +76,7 @@ def nswap(sim, q1, q2):
     sim.mcz([q1], q2)
 
 
-def bench_qrack(n_qubits, depth, use_rz, magic):
+def bench_qrack(n_qubits, depth, use_rz, magic, ace_qb_limit):
     # This is a "nearest-neighbor" coupler random circuit.
     gateSequence = [0, 3, 2, 1, 2, 1, 0, 3]
     two_bit_gates = swap, pswap, mswap, nswap, iswap, iiswap, cx, cy, cz, acx, acy, acz
@@ -103,7 +103,7 @@ def bench_qrack(n_qubits, depth, use_rz, magic):
     )
     # Validate with patch circuits
     ace_qb = n_qubits
-    while ace_qb > 26:
+    while ace_qb > ace_qb_limit:
         ace_qb = (ace_qb + 1) >> 1
     qc.set_ace_max_qb(ace_qb)
 
@@ -178,7 +178,7 @@ def bench_qrack(n_qubits, depth, use_rz, magic):
     ), shots)
 
     results = calc_stats(
-        qc, experiment_probs, n_qubits, shots, d + 1, magic
+        qc, experiment_probs, n_qubits, shots, d + 1, magic, ace_qb
     )
     print(results)
 
@@ -187,7 +187,7 @@ def normalize_counts(counts, shots):
     return {k: v / shots for k, v in counts.items()}
 
 
-def calc_stats(q_a, p_b, n, shots, depth, magic):
+def calc_stats(q_a, p_b, n, shots, depth, magic, ace_qb):
     n_pow = 1 << n
     qb = list(range(n))
 
@@ -221,6 +221,7 @@ def calc_stats(q_a, p_b, n, shots, depth, magic):
         "qubits": n,
         "depth": depth,
         "magic": magic,
+        "ace_qb": ace_qb,
         "shots":shots,
         "l2_difference": l2_diff,
         "l2_difference_debiased": l2_diff_debiased,
@@ -231,20 +232,27 @@ def calc_stats(q_a, p_b, n, shots, depth, magic):
 def main():
     if len(sys.argv) < 3:
         raise RuntimeError(
-            "Usage: python3 rcs_nn_2n_plus_2_qiskit_validation.py [width] [depth] [use_rz] [magic]"
+            "Usage: python3 rcs_nn_2n_plus_2_qiskit_validation.py [width] [depth] [use_rz] [magic] [ace_qb_limit]"
         )
 
     n_qubits = n_qubits = int(sys.argv[1])
+
     depth = int(sys.argv[2])
+
     use_rz = False
     if len(sys.argv) > 3:
         use_rz = sys.argv[3] not in ["False", "0"]
+
     magic = n_qubits + 1
     if len(sys.argv) > 4:
         magic = int(sys.argv[4])
 
+    ace_qb_limit = 27
+    if len(sys.argv) > 5:
+        ace_qb_limit = int(sys.argv[5])
+
     # Run the benchmarks
-    bench_qrack(n_qubits, depth, use_rz, magic)
+    bench_qrack(n_qubits, depth, use_rz, magic, ace_qb_limit)
 
     return 0
 
