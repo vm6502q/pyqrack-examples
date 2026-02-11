@@ -173,12 +173,8 @@ def bench_qrack(n_qubits, use_rz):
             Counter(qe.measure_shots(list(range(n_qubits)), shots))
         ), shots)
 
-        control_probs = normalize_counts(dict(
-            Counter(qc.measure_shots(list(range(n_qubits)), shots))
-        ), shots)
-
         results = calc_stats(
-            control_probs, experiment_probs, n_qubits, shots, d + 1
+            qc, experiment_probs, n_qubits, shots, d + 1
         )
         print(results)
 
@@ -187,17 +183,23 @@ def normalize_counts(counts, shots):
     return {k: v / shots for k, v in counts.items()}
 
 
-def calc_stats(p_a, p_b, n, shots, depth):
-    all_keys = set(p_a) | set(p_b)
+
+
+def calc_stats(q_a, p_b, n, shots, depth):
     diff_sq = 0.0
     noise = 0.0
     numerator = 0.0
     denom = 0.0
-    for k in all_keys:
-        pa = p_a.get(k, 0.0)
+    qb = list(range(n))
+    for k in range(1 << n):
+        b = [False] * n
+        for q in range(n):
+            if (k >> q) & 1:
+                b[q] = True
+        pa = q_a.prob_perm(qb, b)
         pb = p_b.get(k, 0.0)
+        noise += pb * (1 - pb) / shots
         diff_sq += (pa - pb) ** 2
-        noise += pa * (1 - pa) / shots + pb * (1 - pb) / shots
         numerator += pa * pb
         denom += pa * pa
 
