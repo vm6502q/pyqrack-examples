@@ -81,7 +81,7 @@ def nswap(sim, q1, q2):
     sim.mcz([q1], q2)
 
 
-def bench_qrack(n_qubits, use_rz):
+def bench_qrack(n_qubits, depth, use_rz):
     # This is a "nearest-neighbor" coupler random circuit.
     gateSequence = [0, 3, 2, 1, 2, 1, 0, 3]
     two_bit_gates = swap, pswap, mswap, nswap, iswap, iiswap, cx, cy, cz, acx, acy, acz
@@ -110,10 +110,9 @@ def bench_qrack(n_qubits, use_rz):
     ace_qb = n_qubits
     while ace_qb > 26:
         ace_qb = (ace_qb + 1) >> 1
-    if ace_qb < n_qubits:
-        qc.set_ace_max_qb(ace_qb)
+    qc.set_ace_max_qb(ace_qb)
 
-    for d in range(n_qubits):
+    for d in range(depth):
         # Single-qubit gates
         for i in lcv_range:
             # Single-qubit gates
@@ -229,16 +228,17 @@ def calc_stats(q_a, p_b, n, shots, depth):
 def main():
     if len(sys.argv) < 2:
         raise RuntimeError(
-            "Usage: python3 rcs_nn_2n_plus_2_qiskit_validation.py [width] [use_rz]"
+            "Usage: python3 rcs_nn_2n_plus_2_qiskit_validation.py [width] [depth] [use_rz]"
         )
 
     n_qubits = n_qubits = int(sys.argv[1])
+    depth = n_qubits = int(sys.argv[2])
     use_rz = False
-    if len(sys.argv) > 2:
-        use_rz = sys.argv[2] not in ["False", "0"]
+    if len(sys.argv) > 3:
+        use_rz = sys.argv[3] not in ["False", "0"]
 
     # Run the benchmarks
-    bench_qrack(n_qubits, use_rz)
+    bench_qrack(n_qubits, depth, use_rz)
 
     return 0
 
