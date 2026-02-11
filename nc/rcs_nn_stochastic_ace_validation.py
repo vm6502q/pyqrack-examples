@@ -198,8 +198,8 @@ def calc_stats(q_a, p_b, n, shots, depth):
                 b[q] = True
         pa = q_a.prob_perm(qb, b)
         pb = p_b.get(k, 0.0)
-        noise += pb * (1 - pb) / shots
         diff_sq += (pa - pb) ** 2
+        noise += pb * (1 - pb) / shots
         numerator += pa * pb
         denom += pa * pa
 
