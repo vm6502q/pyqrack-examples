@@ -229,6 +229,7 @@ def calc_stats(q_a, p_b, n, shots, depth):
         "qubits": n,
         "depth": depth,
         "magic": n + 1,
+        "shots":shots,
         "l2_difference": l2_diff,
         "l2_difference_debiased": l2_diff_debiased,
         "xeb": xeb
@@ -242,7 +243,7 @@ def main():
         )
 
     n_qubits = n_qubits = int(sys.argv[1])
-    depth = n_qubits = int(sys.argv[2])
+    depth = int(sys.argv[2])
     use_rz = False
     if len(sys.argv) > 3:
         use_rz = sys.argv[3] not in ["False", "0"]
