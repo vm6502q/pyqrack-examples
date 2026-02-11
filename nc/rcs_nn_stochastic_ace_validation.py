@@ -189,8 +189,6 @@ def normalize_counts(counts, shots):
 
 def calc_stats(p_a, p_b, n, shots, depth):
     all_keys = set(p_a) | set(p_b)
-    S_a = sum(p_a.values())
-    S_b = sum(p_b.values())
     diff_sq = 0.0
     noise = 0.0
     numerator = 0.0
@@ -199,7 +197,7 @@ def calc_stats(p_a, p_b, n, shots, depth):
         pa = p_a.get(k, 0.0)
         pb = p_b.get(k, 0.0)
         diff_sq += (pa - pb) ** 2
-        noise += pa * (1 - pa) / S_a + pb * (1 - pb) / S_b
+        noise += pa * (1 - pa) / shots + pb * (1 - pb) / shots
         numerator += pa * pb
         denom += pa * pa
 
