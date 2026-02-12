@@ -188,6 +188,7 @@ def bench_qrack(n_qubits, use_rz):
 
         experiment = QrackSimulator(
             n_qubits,
+            isTensorNetwork=False,
             isSchmidtDecompose=False,
             isStabilizerHybrid=True,
         )
