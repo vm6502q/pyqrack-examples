@@ -104,19 +104,20 @@ def bench_qrack(n_qubits, depth, use_rz, magic):
     control_probs = Statevector(job.result().get_statevector()).probabilities()
 
     results = calc_stats(
-        control_probs, experiment_counts, shots, d + 1, hamming_n
+        control_probs, experiment_counts, shots, d + 1, hamming_n, magic
     )
     print(results)
 
 
-def calc_stats(ideal_probs, counts, shots, depth, hamming_n):
+def calc_stats(ideal_probs, counts, shots, depth, hamming_n, magic):
     # For QV, we compare probabilities of (ideal) "heavy outputs."
     # If the probability is above 2/3, the protocol certifies/passes the qubit width.
     n_pow = len(ideal_probs)
     n = int(round(math.log2(n_pow)))
     threshold = statistics.median(ideal_probs)
-    u_u = statistics.mean(ideal_probs)
+    u_u = 1 / n_pow
     diff_sqr = 0
+    noise = 0
     numer = 0
     denom = 0
     sum_hog_counts = 0
@@ -130,6 +131,7 @@ def calc_stats(ideal_probs, counts, shots, depth, hamming_n):
 
         # L2 distance
         diff_sqr += (ideal - exp) ** 2
+        noise += exp * (1 - exp) / shots
 
         # XEB / EPLG
         denom += (ideal - u_u) ** 2
@@ -139,7 +141,8 @@ def calc_stats(ideal_probs, counts, shots, depth, hamming_n):
         if ideal > threshold:
             sum_hog_counts += count
 
-    l2_difference = diff_sqr ** (1 / 2)
+    l2_diff = diff_sqr ** (1 / 2)
+    l2_diff_debiased = math.sqrt(max(diff_sqr - noise, 0.0))
     hog_prob = sum_hog_counts / shots
     xeb = numer / denom
 
@@ -156,7 +159,10 @@ def calc_stats(ideal_probs, counts, shots, depth, hamming_n):
     return {
         "qubits": n,
         "depth": depth,
-        "l2_difference": float(l2_difference),
+        "magic": magic,
+        "shots":shots,
+        "l2_difference": float(l2_diff),
+        "l2_difference_debiased": float(l2_diff_debiased),
         "xeb": float(xeb),
         "hog_prob": float(hog_prob),
         "hamming_distance_n": min(hamming_n, n_pow >> 1),
