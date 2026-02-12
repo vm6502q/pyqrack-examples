@@ -82,7 +82,8 @@ def bench_qrack(n_qubits, depth, use_rz, ace_qb_limit):
     two_bit_gates = swap, pswap, mswap, nswap, iswap, iiswap, cx, cy, cz, acx, acy, acz
     row_len, col_len = factor_width(n_qubits)
 
-    shots = 1 << min(20, n_qubits + 2)
+    is_sampling = (n_qubits > 18)
+    shots =  1 << (20 if is_sampling else (n_qubits + 2))
     lcv_range = range(n_qubits)
     all_bits = list(lcv_range)
 
@@ -167,13 +168,19 @@ def bench_qrack(n_qubits, depth, use_rz, ace_qb_limit):
                 g(qe, b1, b2)
 
         
-    experiment_probs = normalize_counts(dict(
-        Counter(qe.measure_shots(list(range(n_qubits)), shots))
-    ), shots)
+    if is_sampling:
+        control_probs = normalize_counts(dict(
+            Counter(qc.measure_shots(list(range(n_qubits)), shots))
+        ), shots)
 
-    results = calc_stats(
-        qc, experiment_probs, n_qubits, shots, d + 1, ace_qb
-    )
+        results = sample_stats(
+            control_probs, experiment_probs, n_qubits, shots, d + 1, magic, ace_qb
+        )
+    else :
+        results = calc_stats(
+            qc, experiment_probs, n_qubits, shots, d + 1, ace_qb
+        )
+
     print(results)
 
 
@@ -206,6 +213,50 @@ def calc_stats(q_a, p_b, n, shots, depth, ace_qb):
         # L2
         diff_sq += (pa - pb) ** 2
         noise += pb * (1 - pb) / shots
+
+    xeb = 0.0 if denom == 0 else (numer / denom)
+    l2_diff = math.sqrt(diff_sq)
+    l2_diff_debiased = math.sqrt(max(diff_sq - noise, 0.0))
+
+    return {
+        "qubits": n,
+        "depth": depth,
+        "magic": n * depth * 3,
+        "ace_qb": ace_qb,
+        "shots":shots,
+        "l2_difference": l2_diff,
+        "l2_difference_debiased": l2_diff_debiased,
+        "xeb": xeb
+    }
+
+
+def sample_stats(p_a, p_b, n, shots, depth, magic, ace_qb):
+    all_keys = set(p_a.keys()) | set(p_b.keys())
+
+    n_pow = 1 << n
+    qb = list(range(n))
+
+    u_u = 1 / n_pow
+    diff_sq = 0.0
+    noise = 0.0
+
+    numer = 0.0
+    denom = 0.0
+    for k in all_keys:
+        b = [False] * n
+        for q in range(n):
+            if (k >> q) & 1:
+                b[q] = True
+        pa = q_a.prob_perm(qb, b)
+        pb = p_b.get(k, 0.0)
+
+        #XEB
+        numer += (pa - u_u) * (pb - u_u)
+        denom += (pa - u_u) ** 2
+
+        # L2
+        diff_sq += (pa - pb) ** 2
+        noise += (pa * (1 - pa) + pb * (1 - pb)) / shots
 
     xeb = 0.0 if denom == 0 else (numer / denom)
     l2_diff = math.sqrt(diff_sq)
