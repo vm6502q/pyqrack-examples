@@ -135,6 +135,7 @@ def bench_qrack(n_qubits, depth, use_rz, magic, ace_qb_limit):
 
     qc = QuantumCircuit(n_qubits)
     gate_count = 0
+    magic_angle = 0.0
     for d in range(depth):
         # Single-qubit gates
         for i in lcv_range:
@@ -149,11 +150,13 @@ def bench_qrack(n_qubits, depth, use_rz, magic, ace_qb_limit):
                     qc.s(i)
                 if gate_count in rz_positions:
                     if use_rz:
-                        qc.rz(random.uniform(0, math.pi / 2), i)
+                        angle = random.uniform(-math.pi / 4, math.pi / 4)
                     elif s_count & 4:
-                        qc.t(i)
+                        angle = math.pi / 4
                     else:
-                        qc.tdg(i)
+                        angle = -math.pi / 4
+                    qc.rz(angle, i)
+                    magic_angle += abs(angle)
                 gate_count = gate_count + 1
 
         # Nearest-neighbor couplers:
@@ -220,7 +223,7 @@ def bench_qrack(n_qubits, depth, use_rz, magic, ace_qb_limit):
     control_probs = Statevector(job.result().get_statevector()).probabilities()
 
     results = calc_stats(
-        control_probs, nc_counts, ace_counts, shots, d + 1, hamming_n, magic
+        control_probs, nc_counts, ace_counts, shots, d + 1, hamming_n, 4 * magic_angle / math.pi
     )
     print(results)
 
@@ -238,7 +241,7 @@ def calc_stats(ideal_probs, nc_counts, ace_counts, shots, depth, hamming_n, magi
     denom = 0
     sum_hog_counts = 0
     experiment = [0] * n_pow
-    lm = 0.5 ** (magic / (n + 1))
+    lm = (1 - 1 / (2 * math.sqrt(2))) ** (magic / (n + 1))
     nlm = (lm ** 2) + ((1 - lm) ** 2)
     for i in range(n_pow):
         nc_count = nc_counts.get(i, 0)
