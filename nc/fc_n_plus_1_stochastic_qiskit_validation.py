@@ -41,7 +41,7 @@ def top_n(n, a):
 def bench_qrack(n_qubits, depth, use_rz, magic):
     # This is a "fully-connected" coupler random circuit.
     hamming_n = 2048
-    shots = hamming_n << 2
+    shots = 1 << min(20, (n_qubits + 2))
     lcv_range = range(n_qubits)
     all_bits = list(lcv_range)
     control = AerSimulator(method="statevector")
