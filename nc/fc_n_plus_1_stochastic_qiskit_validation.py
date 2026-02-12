@@ -38,7 +38,7 @@ def top_n(n, a):
     return np.argsort(a)[-n:]
 
 
-def bench_qrack(n_qubits, use_rz):
+def bench_qrack(n_qubits, depth, use_rz, magic):
     # This is a "fully-connected" coupler random circuit.
     hamming_n = 2048
     shots = hamming_n << 2
@@ -46,10 +46,9 @@ def bench_qrack(n_qubits, use_rz):
     all_bits = list(lcv_range)
     control = AerSimulator(method="statevector")
 
-    rz_count = n_qubits + 1
-    rz_opportunities = n_qubits * n_qubits * 3
+    rz_opportunities = n_qubits * depth * 3
     rz_positions = []
-    while len(rz_positions) < rz_count:
+    while len(rz_positions) < magic:
         rz_position = random.randint(0, rz_opportunities - 1)
         if rz_position in rz_positions:
             continue
@@ -57,7 +56,7 @@ def bench_qrack(n_qubits, use_rz):
 
     qc = QuantumCircuit(n_qubits)
     gate_count = 0
-    for d in range(n_qubits):
+    for d in range(depth):
         # Single-qubit gates
         for i in lcv_range:
             # Single-qubit gates
@@ -86,28 +85,28 @@ def bench_qrack(n_qubits, use_rz):
             t = unused_bits.pop()
             qc.cx(c, t)
 
-        experiment = QrackSimulator(
-            n_qubits,
-            isTensorNetwork=False,
-            isSchmidtDecompose=False,
-            isStabilizerHybrid=True,
-        )
-        # Round closer to a Clifford circuit
-        experiment.set_use_exact_near_clifford(False)
-        experiment.run_qiskit_circuit(qc, shots=0)
-        experiment_counts = dict(
-            Counter(experiment.measure_shots(list(range(n_qubits)), shots))
-        )
+    experiment = QrackSimulator(
+        n_qubits,
+        isTensorNetwork=False,
+        isSchmidtDecompose=False,
+        isStabilizerHybrid=True,
+    )
+    # Round closer to a Clifford circuit
+    experiment.set_use_exact_near_clifford(False)
+    experiment.run_qiskit_circuit(qc, shots=0)
+    experiment_counts = dict(
+        Counter(experiment.measure_shots(list(range(n_qubits)), shots))
+    )
 
-        aer_qc = qc.copy()
-        aer_qc.save_statevector()
-        job = control.run(aer_qc)
-        control_probs = Statevector(job.result().get_statevector()).probabilities()
+    aer_qc = qc.copy()
+    aer_qc.save_statevector()
+    job = control.run(aer_qc)
+    control_probs = Statevector(job.result().get_statevector()).probabilities()
 
-        results = calc_stats(
-            control_probs, experiment_counts, shots, d + 1, hamming_n
-        )
-        print(results)
+    results = calc_stats(
+        control_probs, experiment_counts, shots, d + 1, hamming_n
+    )
+    print(results)
 
 
 def calc_stats(ideal_probs, counts, shots, depth, hamming_n):
@@ -168,16 +167,23 @@ def calc_stats(ideal_probs, counts, shots, depth, hamming_n):
 def main():
     if len(sys.argv) < 2:
         raise RuntimeError(
-            "Usage: python3 fc_2n_plus_2_qiskit_validation.py [width] [use_rz]"
+            "Usage: python3 fc_2n_plus_2_qiskit_validation.py [width] [depth] [use_rz] [magic]"
         )
 
     n_qubits = n_qubits = int(sys.argv[1])
+
+    depth = int(sys.argv[2])
+
     use_rz = False
-    if len(sys.argv) > 2:
-        use_rz = sys.argv[2] not in ["False", "0"]
+    if len(sys.argv) > 3:
+        use_rz = sys.argv[3] not in ["False", "0"]
+
+    magic = n_qubits + 1
+    if len(sys.argv) > 4:
+        magic = int(sys.argv[4])
 
     # Run the benchmarks
-    bench_qrack(n_qubits, use_rz)
+    bench_qrack(n_qubits, depth, use_rz, magic)
 
     return 0
 
