@@ -239,6 +239,7 @@ def calc_stats(ideal_probs, nc_counts, ace_counts, shots, depth, hamming_n, magi
     sum_hog_counts = 0
     experiment = [0] * n_pow
     lm = 0.5 ** (magic / (n + 1))
+    nlm = (lm ** 2) + ((1 - lm) ** 2)
     for i in range(n_pow):
         nc_count = nc_counts.get(i, 0)
         ace_count = ace_counts.get(i, 0)
@@ -250,7 +251,7 @@ def calc_stats(ideal_probs, nc_counts, ace_counts, shots, depth, hamming_n, magi
 
         # L2 distance
         diff_sqr += (ideal - exp) ** 2
-        noise += exp * (1 - exp) / (shots << 1)
+        noise += nlm * exp * (1 - exp) / shots
 
         # XEB / EPLG
         denom += (ideal - u_u) ** 2
