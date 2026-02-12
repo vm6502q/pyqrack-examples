@@ -250,7 +250,7 @@ def calc_stats(ideal_probs, nc_counts, ace_counts, shots, depth, hamming_n, magi
 
         # L2 distance
         diff_sqr += (ideal - exp) ** 2
-        noise += exp * (1 - exp) / shots
+        noise += exp * (1 - exp) / (shots << 1)
 
         # XEB / EPLG
         denom += (ideal - u_u) ** 2
