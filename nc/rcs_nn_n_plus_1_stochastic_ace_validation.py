@@ -253,11 +253,7 @@ def sample_stats(p_a, p_b, n, shots, depth, magic, ace_qb):
     numer = 0.0
     denom = 0.0
     for k in all_keys:
-        b = [False] * n
-        for q in range(n):
-            if (k >> q) & 1:
-                b[q] = True
-        pa = q_a.prob_perm(qb, b)
+        pa = p_a.get(k, 0.0)
         pb = p_b.get(k, 0.0)
 
         #XEB
