@@ -263,10 +263,12 @@ def calc_stats(ideal_probs, nc_counts, ace_counts, shots, depth, hamming_n, magi
     experiment = [0] * n_pow
     lm = (1 - 1 / math.sqrt(2)) ** (magic / n)
     nlm = (lm ** 2) + ((1 - lm) ** 2)
+    # tot_count = 0
     for i in range(n_pow):
         nc_count = nc_counts.get(i, 0)
         ace_count = ace_counts.get(i, 0)
         count = lm * nc_count +  (1 - lm) * ace_count
+        # tot_count += count
         ideal = ideal_probs[i]
         exp = count / shots
 
@@ -283,6 +285,9 @@ def calc_stats(ideal_probs, nc_counts, ace_counts, shots, depth, hamming_n, magi
         # QV / HOG
         if ideal > threshold:
             sum_hog_counts += count
+
+    # Print to check that weight matches shots:
+    # print(tot_count)
 
     l2_diff = diff_sqr ** (1 / 2)
     l2_diff_debiased = math.sqrt(max(diff_sqr - noise, 0.0))
