@@ -198,7 +198,7 @@ def bench_qrack(n_qubits, depth, use_rz, magic, ace_qb_limit, sparse_mb_limit):
     nc.set_use_exact_near_clifford(False)
     nc.run_qiskit_circuit(qc, shots=0)
     nc_counts = dict(
-        Counter(nc.measure_shots(list(range(n_qubits)), (shots + 1) >> 1))
+        Counter(nc.measure_shots(list(range(n_qubits)), shots))
     )
 
     qc_ace = transpile(
@@ -235,7 +235,7 @@ def bench_qrack(n_qubits, depth, use_rz, magic, ace_qb_limit, sparse_mb_limit):
     ace.set_ace_max_qb(ace_qb)
     ace.run_qiskit_circuit(qc_ace, shots=0)
     ace_counts = dict(
-        Counter(ace.measure_shots(list(range(n_qubits)), shots >> 2))
+        Counter(ace.measure_shots(list(range(n_qubits)), shots >> 1))
     )
     
     sparse = QrackSimulator(
@@ -251,7 +251,7 @@ def bench_qrack(n_qubits, depth, use_rz, magic, ace_qb_limit, sparse_mb_limit):
     sparse.set_sparse_ace_max_mb(sparse_mb_limit)
     sparse.run_qiskit_circuit(qc_ace, shots=0)
     sparse_counts = dict(
-        Counter(sparse.measure_shots(list(range(n_qubits)), shots >> 2))
+        Counter(sparse.measure_shots(list(range(n_qubits)), shots >> 1))
     )
 
     aer_qc = qc.copy()
@@ -276,7 +276,7 @@ def calc_stats(ideal_probs, nc_counts, ace_counts, sparse_counts, shots, depth, 
     noise = 0
     numer = 0
     denom = 0
-    sum_hog_counts = 0
+    sum_hog_prob = 0
     experiment = [0] * n_pow
     lm = (1 - 1 / math.sqrt(2)) ** (magic / n)
     nlm = (lm ** 2) + ((1 - lm) ** 2)
@@ -300,11 +300,10 @@ def calc_stats(ideal_probs, nc_counts, ace_counts, sparse_counts, shots, depth, 
 
         # QV / HOG
         if ideal > threshold:
-            sum_hog_counts += count
+            sum_hog_prob += count
 
     l2_diff = diff_sqr ** (1 / 2)
     l2_diff_debiased = math.sqrt(max(diff_sqr - noise, 0.0))
-    hog_prob = sum_hog_counts / shots
     xeb = numer / denom
 
     exp_top_n = top_n(hamming_n, experiment)
@@ -327,7 +326,7 @@ def calc_stats(ideal_probs, nc_counts, ace_counts, sparse_counts, shots, depth, 
         "l2_difference": float(l2_diff),
         "l2_difference_debiased": float(l2_diff_debiased),
         "xeb": float(xeb),
-        "hog_prob": float(hog_prob),
+        "hog_prob": float(sum_hog_prob),
         "hamming_distance_n": min(hamming_n, n_pow >> 1),
         "hamming_distance_set_avg": float(avg_hamming_distance),
     }
