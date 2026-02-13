@@ -284,7 +284,7 @@ def calc_stats(ideal_probs, nc_counts, ace_counts, sparse_counts, shots, depth, 
         nc_count = nc_counts.get(i, 0)
         ace_count = ace_counts.get(i, 0)
         sparse_count = sparse_counts.get(i, 0)
-        count = lm * nc_count +  (1 - lm) * (ace_count + sparse_count)
+        count = lm * nc_count +  (1 - lm) * (ace_count + sparse_count) / 2
         ideal = ideal_probs[i]
         exp = count / shots
 
