@@ -217,6 +217,7 @@ def bench_qrack(n_qubits, depth, use_rz, magic, ace_qb_limit):
         optimization_level=3,
         basis_gates=[
             "u",
+            "h",
             "x",
             "y",
             "z",
