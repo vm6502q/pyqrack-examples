@@ -113,7 +113,7 @@ def nswap(sim, q1, q2):
     sim.cz(q1, q2)
 
 
-def bench_qrack(n_qubits, depth, use_rz, magic, ace_qb_limit):
+def bench_qrack(n_qubits, depth, use_rz, magic, ace_qb_limit, sparse_mb_limit):
     # This is a "nearest-neighbor" coupler random circuit.
     gateSequence = [0, 3, 2, 1, 2, 1, 0, 3]
     two_bit_gates = swap, pswap, mswap, nswap, iswap, iiswap, cx, cy, cz, acx, acy, acz
@@ -203,16 +203,20 @@ def bench_qrack(n_qubits, depth, use_rz, magic, ace_qb_limit):
 
     ace = QrackSimulator(
         n_qubits,
-        isTensorNetwork=True,
+        isTensorNetwork=False,
         isSchmidtDecompose=True,
-        isStabilizerHybrid=False
+        isStabilizerHybrid=False,
+        isOpenCL=False,
+        isPaged=False,
+        isSparse=True
     )
     # Split at least into 2 patches
     ace_qb = n_qubits
     while ace_qb > ace_qb_limit:
         ace_qb = (ace_qb + 1) >> 1
     ace.set_ace_max_qb(ace_qb)
-    qc_ace = transpile(
+    ace.set_sparse_ace_max_mb(sparse_mb_limit)
+    qc_sparse = transpile(
         qc,
         optimization_level=3,
         basis_gates=[
@@ -232,7 +236,7 @@ def bench_qrack(n_qubits, depth, use_rz, magic, ace_qb_limit):
             "iswap",
         ],
     )
-    ace.run_qiskit_circuit(qc_ace, shots=0)
+    ace.run_qiskit_circuit(qc_sparse, shots=0)
     ace_counts = dict(
         Counter(ace.measure_shots(list(range(n_qubits)), shots))
     )
@@ -243,12 +247,12 @@ def bench_qrack(n_qubits, depth, use_rz, magic, ace_qb_limit):
     control_probs = Statevector(job.result().get_statevector()).probabilities()
 
     results = calc_stats(
-        control_probs, nc_counts, ace_counts, shots, d + 1, hamming_n, 4 * magic_angle / math.pi, ace_qb
+        control_probs, nc_counts, ace_counts, shots, d + 1, hamming_n, 4 * magic_angle / math.pi, ace_qb, sparse_mb_limit
     )
     print(results)
 
 
-def calc_stats(ideal_probs, nc_counts, ace_counts, shots, depth, hamming_n, magic, ace_qb):
+def calc_stats(ideal_probs, nc_counts, ace_counts, shots, depth, hamming_n, magic, ace_qb, sparse_mb_limit):
     # For QV, we compare probabilities of (ideal) "heavy outputs."
     # If the probability is above 2/3, the protocol certifies/passes the qubit width.
     n_pow = len(ideal_probs)
@@ -304,7 +308,8 @@ def calc_stats(ideal_probs, nc_counts, ace_counts, shots, depth, hamming_n, magi
         "depth": depth,
         "magic": magic,
         "shots":shots,
-        "ace_qb" : ace_qb,
+        "ace_qb": ace_qb,
+        "sparse_mb": sparse_mb_limit,
         "l2_difference": float(l2_diff),
         "l2_difference_debiased": float(l2_diff_debiased),
         "xeb": float(xeb),
@@ -317,7 +322,7 @@ def calc_stats(ideal_probs, nc_counts, ace_counts, shots, depth, hamming_n, magi
 def main():
     if len(sys.argv) < 2:
         raise RuntimeError(
-            "Usage: python3 rcs_nn_2n_plus_2_qiskit_validation.py [width] [depth] [use_rz] [magic] [ace_qb_limit]"
+            "Usage: python3 rcs_nn_2n_plus_2_qiskit_validation.py [width] [depth] [use_rz] [magic] [ace_qb_limit] [sparse_mb_limit]"
         )
 
     n_qubits = n_qubits = int(sys.argv[1])
@@ -336,8 +341,12 @@ def main():
     if len(sys.argv) > 5:
         ace_qb_limit = int(sys.argv[5])
 
+    sparse_mb_limit = 1
+    if len(sys.argv) > 6:
+        sparse_mb_limit = int(sys.argv[6])
+
     # Run the benchmarks
-    bench_qrack(n_qubits, depth, use_rz, magic, ace_qb_limit)
+    bench_qrack(n_qubits, depth, use_rz, magic, ace_qb_limit, sparse_mb_limit)
 
     return 0
 
