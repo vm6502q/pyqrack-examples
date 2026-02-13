@@ -198,7 +198,7 @@ def bench_qrack(n_qubits, depth, use_rz, magic, ace_qb_limit, sparse_mb_limit):
     nc.set_use_exact_near_clifford(False)
     nc.run_qiskit_circuit(qc, shots=0)
     nc_counts = dict(
-        Counter(nc.measure_shots(list(range(n_qubits)), shots))
+        Counter(nc.measure_shots(list(range(n_qubits)), (shots + 1) >> 1))
     )
 
     qc_ace = transpile(
@@ -235,7 +235,7 @@ def bench_qrack(n_qubits, depth, use_rz, magic, ace_qb_limit, sparse_mb_limit):
     ace.set_ace_max_qb(ace_qb)
     ace.run_qiskit_circuit(qc_ace, shots=0)
     ace_counts = dict(
-        Counter(ace.measure_shots(list(range(n_qubits)), (shots + 1) >> 1))
+        Counter(ace.measure_shots(list(range(n_qubits)), shots >> 2))
     )
     
     sparse = QrackSimulator(
@@ -251,7 +251,7 @@ def bench_qrack(n_qubits, depth, use_rz, magic, ace_qb_limit, sparse_mb_limit):
     sparse.set_sparse_ace_max_mb(sparse_mb_limit)
     sparse.run_qiskit_circuit(qc_ace, shots=0)
     sparse_counts = dict(
-        Counter(sparse.measure_shots(list(range(n_qubits)), shots >> 1))
+        Counter(sparse.measure_shots(list(range(n_qubits)), shots >> 2))
     )
 
     aer_qc = qc.copy()
@@ -292,7 +292,7 @@ def calc_stats(ideal_probs, nc_counts, ace_counts, sparse_counts, shots, depth, 
 
         # L2 distance
         diff_sqr += (ideal - exp) ** 2
-        noise += nlm * exp * (1 - exp) / shots
+        noise += nlm * exp * (1 - exp) / (shots >> 1)
 
         # XEB / EPLG
         denom += (ideal - u_u) ** 2
