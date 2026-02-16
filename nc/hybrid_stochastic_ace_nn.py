@@ -10,7 +10,7 @@ from collections import Counter
 
 import numpy as np
 
-from pyqrack import QrackSimulator
+from pyqrack import QrackSimulator, QrackStabilizer
 
 from qiskit import QuantumCircuit
 from qiskit.compiler import transpile
@@ -188,18 +188,12 @@ def bench_qrack(n_qubits, depth, use_rz, magic, ace_qb_limit):
                 g = random.choice(two_bit_gates)
                 g(qc, b1, b2)
 
-    nc = QrackSimulator(
-        n_qubits,
-        isTensorNetwork=False,
-        isSchmidtDecompose=False,
-        isStabilizerHybrid=True,
-    )
-    # Round closer to a Clifford circuit
-    nc.set_use_exact_near_clifford(False)
-    nc.run_qiskit_circuit(qc, shots=0)
-    nc_counts = dict(
-        Counter(nc.measure_shots(list(range(n_qubits)), shots))
-    )
+    nc_shots = []
+    for i in range(shots):
+        nc = QrackStabilizer(n_qubits)
+        nc.run_qiskit_circuit(qc, shots=0)
+        nc_shots.append(nc.m_all());
+    nc_counts = dict(Counter(nc_shots))
 
     ace = QrackSimulator(
         n_qubits,
@@ -321,13 +315,12 @@ def calc_stats(ideal_probs, nc_counts, ace_counts, shots, depth, hamming_n, magi
 
 
 def main():
-    if len(sys.argv) < 2:
+    if len(sys.argv) < 3:
         raise RuntimeError(
             "Usage: python3 rcs_nn_2n_plus_2_qiskit_validation.py [width] [depth] [use_rz] [magic] [ace_qb_limit]"
         )
 
     n_qubits = n_qubits = int(sys.argv[1])
-
     depth = int(sys.argv[2])
 
     use_rz = False
