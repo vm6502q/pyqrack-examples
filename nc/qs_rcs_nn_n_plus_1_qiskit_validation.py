@@ -134,7 +134,6 @@ def bench_qrack(n_qubits, hamming_n):
     row_len, col_len = factor_width(n_qubits)
 
     qc = QuantumCircuit(n_qubits)
-    qs = QuantumCircuit(n_qubits)
     gate_count = 0
     for d in range(n_qubits):
         # Single-qubit gates
@@ -142,19 +141,14 @@ def bench_qrack(n_qubits, hamming_n):
             # Single-qubit gates
             for _ in range(3):
                 qc.h(i)
-                qs.h(i)
                 s_count = random.randint(0, 3)
                 if s_count & 1:
                     qc.z(i)
-                    qs.z(i)
                 if s_count & 2:
                     qc.s(i)
-                    qs.s(i)
                 if gate_count in rz_positions:
                     angle = random.uniform(0, math.pi / 2)
                     qc.rz(angle, i)
-                    if angle >= (math.pi / 4):
-                        qs.s(i)
                 gate_count = gate_count + 1
 
         # Nearest-neighbor couplers:
@@ -185,14 +179,14 @@ def bench_qrack(n_qubits, hamming_n):
 
                 g = random.choice(two_bit_gates)
                 g(qc, b1, b2)
-                g(qs, b1, b2)
 
         # Round to nearest Clifford circuit
-        experiment = QrackStabilizer(n_qubits)
-        experiment.run_qiskit_circuit(qs, shots=0)
-        experiment_counts = dict(
-            Counter(experiment.measure_shots(list(range(n_qubits)), shots))
-        )
+        exp_shots = []
+        for i in range(shots):
+            experiment = QrackStabilizer(n_qubits)
+            experiment.run_qiskit_circuit(qc, shots=0)
+            exp_shots.append(experiment.m_all());
+        experiment_counts = dict(Counter(exp_shots))
 
         aer_qc = qc.copy()
         aer_qc.save_statevector()
