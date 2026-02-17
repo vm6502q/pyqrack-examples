@@ -11,6 +11,9 @@ from collections import Counter
 from pyqrack import QrackStabilizer
 
 from qiskit import QuantumCircuit
+from qiskit.compiler import transpile
+from qiskit_aer.backends import AerSimulator
+from qiskit.quantum_info import Statevector
 
 
 def bench_qrack(n_qubits, hamming_n):
