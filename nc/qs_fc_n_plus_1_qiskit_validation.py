@@ -8,34 +8,9 @@ import sys
 
 from collections import Counter
 
-import numpy as np
-
 from pyqrack import QrackStabilizer
 
 from qiskit import QuantumCircuit
-from qiskit.compiler import transpile
-from qiskit_aer.backends import AerSimulator
-from qiskit.quantum_info import Statevector
-
-
-# By Gemini (Google Search AI)
-def int_to_bitstring(integer, length):
-    return bin(integer)[2:].zfill(length)
-
-
-# By Elara (OpenAI custom GPT)
-def hamming_distance(s1, s2, n):
-    return sum(
-        ch1 != ch2 for ch1, ch2 in zip(int_to_bitstring(s1, n), int_to_bitstring(s2, n))
-    )
-
-
-# From https://stackoverflow.com/questions/13070461/get-indices-of-the-top-n-values-of-a-list#answer-38835860
-def top_n(n, a):
-    median_index = len(a) >> 1
-    if n > median_index:
-        n = median_index
-    return np.argsort(a)[-n:]
 
 
 def bench_qrack(n_qubits, hamming_n):
@@ -94,61 +69,6 @@ def bench_qrack(n_qubits, hamming_n):
         control_probs = Statevector(job.result().get_statevector()).probabilities()
 
         print(calc_stats(control_probs, experiment_counts, shots, d + 1, hamming_n))
-
-
-def calc_stats(ideal_probs, counts, shots, depth, hamming_n):
-    # For QV, we compare probabilities of (ideal) "heavy outputs."
-    # If the probability is above 2/3, the protocol certifies/passes the qubit width.
-    n_pow = len(ideal_probs)
-    n = int(round(math.log2(n_pow)))
-    threshold = statistics.median(ideal_probs)
-    u_u = statistics.mean(ideal_probs)
-    diff_sqr = 0
-    numer = 0
-    denom = 0
-    sum_hog_counts = 0
-    experiment = [0] * n_pow
-    for i in range(n_pow):
-        count = counts[i] if i in counts else 0
-        ideal = ideal_probs[i]
-        exp = count / shots
-
-        experiment[i] = count
-
-        # L2 distance
-        diff_sqr += (ideal - exp) ** 2
-
-        # XEB / EPLG
-        denom += (ideal - u_u) ** 2
-        numer += (ideal - u_u) * (exp - u_u)
-
-        # QV / HOG
-        if ideal > threshold:
-            sum_hog_counts += count
-
-    l2_difference = diff_sqr ** (1 / 2)
-    hog_prob = sum_hog_counts / shots
-    xeb = numer / denom
-
-    exp_top_n = top_n(hamming_n, experiment)
-    con_top_n = top_n(hamming_n, ideal_probs)
-
-    # By Elara (OpenAI custom GPT)
-    # Compute Hamming distances between each ACE bitstring and its closest in control case
-    min_distances = [
-        min(hamming_distance(a, r, n) for r in con_top_n) for a in exp_top_n
-    ]
-    avg_hamming_distance = np.mean(min_distances)
-
-    return {
-        "qubits": n,
-        "depth": depth,
-        "l2_difference": float(l2_difference),
-        "xeb": float(xeb),
-        "hog_prob": float(hog_prob),
-        "hamming_distance_n": min(hamming_n, n_pow >> 1),
-        "hamming_distance_set_avg": float(avg_hamming_distance),
-    }
 
 
 def main():
