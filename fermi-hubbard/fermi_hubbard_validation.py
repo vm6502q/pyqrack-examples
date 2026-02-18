@@ -19,7 +19,7 @@ from qiskit_aer.backends import AerSimulator
 from qiskit.quantum_info import Statevector
 
 from pyqrack import QrackSimulator
-from pyqrackising import generate_fh_samples
+from pyqrackising import generate_tfim_samples
 
 
 def factor_width(width, is_transpose=False):
@@ -220,6 +220,8 @@ def main():
     else:
         shots = max(65536, 1 << (n_qubits + 2))
 
+    shots = ((shots + 1) >> 1) << 1
+
     dt_h = dt / t2
 
     print(f"Qubits: {n_qubits}")
@@ -231,7 +233,10 @@ def main():
     n_rows, n_cols = factor_width(n_qubits, False)
     qubits = list(range(n_qubits))
 
-    init_probs = normalize_counts(dict(Counter(generate_fh_samples(J=J, h=h, z=z, theta=theta, t=0.0, n_qubits=n_qubits, shots=shots))), shots)
+    init_probs = normalize_counts(dict(Counter(
+        generate_tfim_samples(J=J, h=h, z=z, theta=theta+np.pi/2, t=0.0, n_qubits=n_qubits, shots=shots >> 1, omega=0.5*np.pi) +
+        generate_tfim_samples(J=-h, h=-J, z=z, theta=theta+np.pi, t=0.0, n_qubits=n_qubits, shots=shots >> 1, omega=0.5*np.pi)
+    )), shots)
 
     # Set the initial temperature by theta.
     qc_aer = QuantumCircuit(n_qubits)
@@ -269,7 +274,10 @@ def main():
         ace_probs = normalize_counts(dict(Counter(experiment.measure_shots(qubits, shots))), shots)
 
         # The magnetization components are weighted by (n+1) symmetric "bias" terms over possible Hamming weights.
-        pqi_probs = normalize_counts(dict(Counter(generate_fh_samples(J=J, h=h, z=z, theta=theta, t=t_h, n_qubits=n_qubits, shots=shots))), shots)
+        pqi_probs = normalize_counts(dict(Counter(
+            generate_tfim_samples(J=J, h=h, z=z, theta=theta+np.pi/2, t=t_h, n_qubits=n_qubits, shots=shots >> 1, omega=0.5*np.pi) +
+            generate_tfim_samples(J=-h, h=-J, z=z, theta=theta+np.pi, t=t_h, n_qubits=n_qubits, shots=shots >> 1, omega=0.5*np.pi)
+        )), shots)
 
         result = calc_stats(ideal_probs, init_probs, ace_probs, pqi_probs, alpha, beta)
 

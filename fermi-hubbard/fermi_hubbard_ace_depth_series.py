@@ -15,7 +15,7 @@ from qiskit import QuantumCircuit
 from qiskit.compiler import transpile
 
 from pyqrack import QrackSimulator
-from pyqrackising import get_fh_hamming_distribution
+from pyqrackising import get_tfim_hamming_distribution
 
 
 def factor_width(width, is_transpose=False):
@@ -204,7 +204,9 @@ def main():
         experiment_counts = dict(Counter(experiment.measure_shots(qubits, shots)))
 
         # The magnetization components are weighted by (n+1) symmetric "bias" terms over possible Hamming weights.
-        bias = get_fh_hamming_distribution(J=J, h=h, z=z, theta=theta, t=t_h, n_qubits=n_qubits)
+        bias_z = get_tfim_hamming_distribution(J=J, h=h, z=z, theta=theta+np.pi/2, t=t, n_qubits=n_qubits, omega=0.5*np.pi)
+        bias_x = get_tfim_hamming_distribution(J=-h, h=-J, z=z, theta=theta+np.pi, t=t, n_qubits=n_qubits, omega=0.5*np.pi)
+        bias = [(z + x) / 2 for z, x in zip(bias_z, bias_x)]
 
         magnetization, sqr_magnetization = 0, 0
         for key, value in experiment_counts.items():
