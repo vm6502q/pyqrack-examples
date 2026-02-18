@@ -235,9 +235,6 @@ def bench_qrack(n_qubits, depth, use_rz, magic, ace_qb_limit, sparse_mb_limit):
     
     sparse = QrackSimulator(
         n_qubits,
-        isTensorNetwork=False,
-        isSchmidtDecompose=False,
-        isStabilizerHybrid=False,
         isOpenCL=False,
         isPaged=False,
         isSparse=True
