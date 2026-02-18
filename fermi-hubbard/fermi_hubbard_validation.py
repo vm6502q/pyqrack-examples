@@ -175,8 +175,8 @@ def main():
     depth = 40
     z = 4
     if os.environ['QRACK_MAX_PAGING_QB'] and (int(os.environ['QRACK_MAX_PAGING_QB']) < n_qubits):
-        alpha = 0.0
-        beta = 0.0
+        alpha = 0.2
+        beta = 0.2
     else:
         alpha = 1.0
         beta = 0.0
