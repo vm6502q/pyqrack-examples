@@ -192,7 +192,7 @@ def main():
 
     for d in depths:
         t = d * dt
-        t_h = (t / t2) ** 2
+        t_h = math.sqrt(t / t2)
 
         experiment.run_qiskit_circuit(qc_step)
         experiment_counts = dict(Counter(experiment.measure_shots(qubits, shots)))
@@ -218,8 +218,8 @@ def main():
             b_magnetization += value * m
             b_sqr_magnetization += value * m * m
 
-        magnetization = (1.0 - beta) * ((1.0 - alpha) * magnetization + alpha * b_magnetization) + beta * bias_magnetization
-        sqr_magnetization = (1.0 - beta) * ((1.0 - alpha) * sqr_magnetization +  alpha * b_sqr_magnetization) + beta * bias_sqr_magnetization
+        magnetization = (1.0 - beta) * (alpha * magnetization + (1.0 - alpha) * b_magnetization) + beta * bias_magnetization
+        sqr_magnetization = (1.0 - beta) * (alpha * sqr_magnetization +  (1.0 - alpha) * b_sqr_magnetization) + beta * bias_sqr_magnetization
 
         seconds = time.perf_counter() - start
 
