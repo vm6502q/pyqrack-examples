@@ -37,17 +37,8 @@ def zz_rotation(qc, q1, q2, theta):
     qc.rz(2 * theta, q2)
     qc.cx(q1, q2)
 
-
-def brick_wall_tfim_step(n_rows, n_cols, J, h, dt):
-    """
-    Single first-order Trotter step for 2D TFIM
-    using brick-wall decomposition.
-    """
-    n_qubits = n_rows * n_cols
-    qc = QuantumCircuit(n_qubits)
-
+def first_order_tfim(qc, n_rows, n_cols, J, h, dt):
     theta_zz = J * dt
-    theta_x = h * dt
 
     # ---- Horizontal even bonds ----
     for i in range(n_rows):
@@ -77,9 +68,22 @@ def brick_wall_tfim_step(n_rows, n_cols, J, h, dt):
             q2 = index(i + 1, j, n_cols)
             zz_rotation(qc, q1, q2, theta_zz)
 
+def brick_wall_tfim_step(n_rows, n_cols, J, h, dt):
+    """
+    Single first-order Trotter step for 2D TFIM
+    using brick-wall decomposition.
+    """
+    n_qubits = n_rows * n_cols
+    qc = QuantumCircuit(n_qubits)
+    theta_x = h * dt
+
+    first_order_tfim(qc, n_rows, n_cols, J, h, dt / 2)
+
     # ---- Transverse field ----
     for q in range(n_qubits):
         qc.rx(2 * theta_x, q)
+
+    first_order_tfim(qc, n_rows, n_cols, J, h, dt / 2)
 
     return qc
 
