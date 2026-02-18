@@ -151,7 +151,7 @@ def calc_stats(ideal_probs, init_probs, ace_probs, pqi_probs, alpha, beta):
         m /= n
         m *= m 
         ideal_sqr_mag += ideal * m
-        exp_sqr_mag = exp * m
+        exp_sqr_mag += exp * m
 
     l2_diff = diff_sqr ** (1 / 2)
     xeb = numer / denom
