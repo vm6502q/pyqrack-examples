@@ -112,7 +112,7 @@ def main():
     n_qubits = 16
     depth = 40
     z = 3
-    alpha = (1 / 3)
+    alpha = 0.0
     beta = 0.0
 
     # Quantinuum settings
