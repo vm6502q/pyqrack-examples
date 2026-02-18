@@ -258,7 +258,7 @@ def calc_stats(ideal_probs, nc_counts, ace_counts, shots, depth, hamming_n, magi
     experiment = [0] * n_pow
     lm = (1 - 1 / math.sqrt(2)) ** (magic / n)
     nlm = (lm ** 2) + ((1 - lm) ** 2)
-    # tot_count = 0
+    tot_count = 0
     for i in range(n_pow):
         nc_count = nc_counts.get(i, 0)
         ace_count = ace_counts.get(i, 0)
