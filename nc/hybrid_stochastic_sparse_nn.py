@@ -120,7 +120,7 @@ def bench_qrack(n_qubits, depth, use_rz, magic, ace_qb_limit, sparse_mb_limit):
     row_len, col_len = factor_width(n_qubits)
 
     hamming_n = 2048
-    shots = 1 << min(20, (n_qubits + 2))
+    shots = 1 << min(16, (n_qubits + 2))
     lcv_range = range(n_qubits)
     all_bits = list(lcv_range)
     control = AerSimulator(method="statevector")
