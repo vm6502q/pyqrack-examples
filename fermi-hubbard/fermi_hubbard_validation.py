@@ -214,7 +214,7 @@ def main():
     if len(sys.argv) > 6:
         t2 = float(sys.argv[6])
     else:
-        t2 = 1.0
+        t2 = 2.0
     if len(sys.argv) > 7:
         shots = int(sys.argv[7])
     else:
@@ -231,7 +231,10 @@ def main():
     n_rows, n_cols = factor_width(n_qubits, False)
     qubits = list(range(n_qubits))
 
-    init_probs = normalize_counts(dict(Counter(generate_tfim_samples(J=J, h=h, z=z, theta=theta, t=0.0, n_qubits=n_qubits, shots=shots))), shots)
+    init_probs = normalize_counts(dict(Counter(
+        generate_tfim_samples(J=J, h=h, z=z, theta=theta, t=0.0, n_qubits=n_qubits, shots=shots >> 1) +
+        generate_tfim_samples(J=-h, h=-J, z=z, theta=theta + np.pi, t=0.0, n_qubits=n_qubits, shots=shots >> 1)
+    )), shots)
 
     # Set the initial temperature by theta.
     qc_aer = QuantumCircuit(n_qubits)
@@ -269,7 +272,10 @@ def main():
         ace_probs = normalize_counts(dict(Counter(experiment.measure_shots(qubits, shots))), shots)
 
         # The magnetization components are weighted by (n+1) symmetric "bias" terms over possible Hamming weights.
-        pqi_probs = normalize_counts(dict(Counter(generate_tfim_samples(J=J, h=h, z=z, theta=theta, t=t_h, n_qubits=n_qubits, shots=shots))), shots)
+        pqi_probs = normalize_counts(dict(Counter(
+            generate_tfim_samples(J=J, h=h, z=z, theta=theta, t=t_h, n_qubits=n_qubits, shots=shots) +
+            generate_tfim_samples(J=-h, h=-J, z=z, theta=theta + np.pi, t=t_h, n_qubits=n_qubits, shots=shots)
+        )), shots)
 
         result = calc_stats(ideal_probs, init_probs, ace_probs, pqi_probs, alpha, beta)
 

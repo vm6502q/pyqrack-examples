@@ -152,7 +152,7 @@ def main():
     if len(sys.argv) > 6:
         t2 = float(sys.argv[6])
     else:
-        t2 = 1.0
+        t2 = 2.0
     if len(sys.argv) > 7:
         shots = int(sys.argv[7])
     else:
@@ -204,7 +204,9 @@ def main():
         experiment_counts = dict(Counter(experiment.measure_shots(qubits, shots)))
 
         # The magnetization components are weighted by (n+1) symmetric "bias" terms over possible Hamming weights.
-        bias = get_tfim_hamming_distribution(J=J, h=h, z=z, theta=theta, t=t_h, n_qubits=n_qubits)
+        bias_z = get_tfim_hamming_distribution(J=J, h=h, z=z, theta=theta, t=t_h, n_qubits=n_qubits)
+        bias_x = get_tfim_hamming_distribution(J=-h, h=-J, z=z, theta=theta + np.pi, t=t_h, n_qubits=n_qubits)
+        bias = [(z + x) / 2 for z, x in zip(bias_z, bias_x)]
 
         magnetization, sqr_magnetization = 0, 0
         for key, value in experiment_counts.items():
