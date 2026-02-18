@@ -214,7 +214,7 @@ def main():
     if len(sys.argv) > 6:
         t2 = float(sys.argv[6])
     else:
-        t2 = n_qubits * math.pi / 32
+        t2 = 1.0
     if len(sys.argv) > 7:
         shots = int(sys.argv[7])
     else:
