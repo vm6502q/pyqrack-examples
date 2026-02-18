@@ -112,8 +112,8 @@ def main():
     n_qubits = 16
     depth = 40
     z = 3
-    alpha = 0.0
-    beta = 0.0
+    alpha = 0.2 if int(os.environ['QRACK_MAX_PAGING_QB']) < n_qubits else 0.0
+    beta = 0.2 if int(os.environ['QRACK_MAX_PAGING_QB']) < n_qubits else 0.0
 
     # Quantinuum settings
     J, h, dt = -1.0, 2.0, 0.125
@@ -192,7 +192,7 @@ def main():
 
     for d in depths:
         t = d * dt
-        t_h = t / t2
+        t_h = (t / t2) ** 2
 
         experiment.run_qiskit_circuit(qc_step)
         experiment_counts = dict(Counter(experiment.measure_shots(qubits, shots)))
