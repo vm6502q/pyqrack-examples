@@ -205,7 +205,7 @@ def main():
 
         # The magnetization components are weighted by (n+1) symmetric "bias" terms over possible Hamming weights.
         bias_z = get_tfim_hamming_distribution(J=J, h=h, z=z, theta=theta, t=t_h, n_qubits=n_qubits)
-        bias_x = get_tfim_hamming_distribution(J=-h, h=-J, z=z, theta=theta + np.pi, t=t_h, n_qubits=n_qubits)
+        bias_x = get_tfim_hamming_distribution(J=-h, h=-J, z=z, theta=theta + np.pi / 2, t=t_h, n_qubits=n_qubits)
         bias = [(z + x) / 2 for z, x in zip(bias_z, bias_x)]
 
         magnetization, sqr_magnetization = 0, 0
