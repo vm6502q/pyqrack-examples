@@ -112,8 +112,8 @@ def main():
     n_qubits = 16
     depth = 40
     z = 3
-    alpha = 0.2
-    beta = 0.2
+    alpha = 0.0
+    beta = 0.0
 
     # Quantinuum settings
     J, h, dt = -1.0, 2.0, 0.125
@@ -218,8 +218,8 @@ def main():
             b_magnetization += value * m
             b_sqr_magnetization += value * m * m
 
-        magnetization = (1.0 - beta) * (alpha * magnetization + (1.0 - alpha) * b_magnetization) + beta * bias_magnetization
-        sqr_magnetization = (1.0 - beta) * (alpha * sqr_magnetization + (1.0 - alpha) * b_sqr_magnetization) + beta * bias_sqr_magnetization
+        magnetization = (1.0 - beta) * ((1.0 - alpha) * magnetization + alpha * b_magnetization) + beta * bias_magnetization
+        sqr_magnetization = (1.0 - beta) * ((1.0 - alpha) * sqr_magnetization +  alpha * b_sqr_magnetization) + beta * bias_sqr_magnetization
 
         seconds = time.perf_counter() - start
 
