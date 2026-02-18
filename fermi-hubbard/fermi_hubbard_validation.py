@@ -225,7 +225,7 @@ def main():
     n_rows, n_cols = factor_width(n_qubits, False)
     qubits = list(range(n_qubits))
 
-    init_probs = normalize_counts(dict(Counter(generate_tfim_samples(J=-h, h=-J, z=z, theta=theta, t=0.0, n_qubits=n_qubits, shots=shots))), shots)
+    init_probs = normalize_counts(dict(Counter(generate_tfim_samples(J=J, h=h, z=z, theta=theta, t=0.0, n_qubits=n_qubits, shots=shots))), shots)
 
     # Set the initial temperature by theta.
     qc_aer = QuantumCircuit(n_qubits)
@@ -250,7 +250,7 @@ def main():
 
     for d in range(1, depth + 1):
         t = d * dt
-        t_h = math.sqrt(t / t2)
+        t_h = t / t2
 
         # Run the Trotterized simulation with Aer and get the marginal probabilities.
         qc_aer = qc_aer.compose(qc_step)

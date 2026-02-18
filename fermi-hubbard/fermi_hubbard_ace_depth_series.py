@@ -192,13 +192,13 @@ def main():
 
     for d in depths:
         t = d * dt
-        t_h = math.sqrt(t / t2)
+        t_h = t / t2
 
         experiment.run_qiskit_circuit(qc_step)
         experiment_counts = dict(Counter(experiment.measure_shots(qubits, shots)))
 
         # The magnetization components are weighted by (n+1) symmetric "bias" terms over possible Hamming weights.
-        bias = get_tfim_hamming_distribution(J=-h, h=-J, z=z, theta=theta, t=t_h, n_qubits=n_qubits)
+        bias = get_tfim_hamming_distribution(J=J, h=h, z=z, theta=theta, t=t_h, n_qubits=n_qubits)
 
         magnetization, sqr_magnetization = 0, 0
         for key, value in experiment_counts.items():
