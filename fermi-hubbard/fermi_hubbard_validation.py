@@ -174,8 +174,8 @@ def main():
     n_qubits = 6
     depth = 40
     z = 3
-    alpha = 0.2 if int(os.environ['QRACK_MAX_PAGING_QB']) < n_qubits else 0.0
-    beta = 0.2 if int(os.environ['QRACK_MAX_PAGING_QB']) < n_qubits else 0.0
+    alpha = 0.0
+    beta = 0.0
 
     # Quantinuum settings
     J, h, dt = -1.0, 2.0, 0.125
