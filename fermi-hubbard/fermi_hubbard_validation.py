@@ -174,7 +174,7 @@ def main():
     n_qubits = 6
     depth = 40
     z = 3
-    alpha = 0.0
+    alpha = (1 / 3)
     beta = 0.0
 
     # Quantinuum settings
@@ -225,7 +225,7 @@ def main():
     n_rows, n_cols = factor_width(n_qubits, False)
     qubits = list(range(n_qubits))
 
-    init_probs = normalize_counts(dict(Counter(generate_tfim_samples(J=J, h=h, z=z, theta=theta, t=0.0, n_qubits=n_qubits, shots=shots))), shots)
+    init_probs = normalize_counts(dict(Counter(generate_tfim_samples(J=-h, h=-J, z=z, theta=theta, t=0.0, n_qubits=n_qubits, shots=shots))), shots)
 
     # Set the initial temperature by theta.
     qc_aer = QuantumCircuit(n_qubits)

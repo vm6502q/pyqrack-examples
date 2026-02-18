@@ -112,7 +112,7 @@ def main():
     n_qubits = 16
     depth = 40
     z = 3
-    alpha = 0.0
+    alpha = (1 / 3)
     beta = 0.0
 
     # Quantinuum settings
@@ -198,7 +198,7 @@ def main():
         experiment_counts = dict(Counter(experiment.measure_shots(qubits, shots)))
 
         # The magnetization components are weighted by (n+1) symmetric "bias" terms over possible Hamming weights.
-        bias = get_tfim_hamming_distribution(J=J, h=h, z=z, theta=theta, t=t_h, n_qubits=n_qubits)
+        bias = get_tfim_hamming_distribution(J=-h, h=-J, z=z, theta=theta, t=t_h, n_qubits=n_qubits)
 
         magnetization, sqr_magnetization = 0, 0
         for key, value in experiment_counts.items():
