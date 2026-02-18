@@ -260,9 +260,6 @@ def main():
         ideal_probs = Statevector(job.result().get_statevector()).probabilities()
 
         experiment.run_qiskit_circuit(qc_step)
-        experiment_probs = normalize_counts(dict(Counter(experiment.measure_shots(qubits, shots))), shots)
-
-        experiment.run_qiskit_circuit(qc_step)
         ace_probs = normalize_counts(dict(Counter(experiment.measure_shots(qubits, shots))), shots)
 
         # The magnetization components are weighted by (n+1) symmetric "bias" terms over possible Hamming weights.
