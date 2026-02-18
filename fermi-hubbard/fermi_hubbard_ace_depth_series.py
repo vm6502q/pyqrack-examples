@@ -15,7 +15,7 @@ from qiskit import QuantumCircuit
 from qiskit.compiler import transpile
 
 from pyqrack import QrackSimulator
-from pyqrackising import get_tfim_hamming_distribution
+from pyqrackising import get_fh_hamming_distribution
 
 
 def factor_width(width, is_transpose=False):
@@ -152,7 +152,7 @@ def main():
     if len(sys.argv) > 6:
         t2 = float(sys.argv[6])
     else:
-        t2 = 3.0
+        t2 = 1.0
     if len(sys.argv) > 7:
         shots = int(sys.argv[7])
     else:
@@ -204,9 +204,7 @@ def main():
         experiment_counts = dict(Counter(experiment.measure_shots(qubits, shots)))
 
         # The magnetization components are weighted by (n+1) symmetric "bias" terms over possible Hamming weights.
-        bias_z = get_tfim_hamming_distribution(J=J, h=h, z=z, theta=theta, t=t_h, n_qubits=n_qubits)
-        bias_x = get_tfim_hamming_distribution(J=h, h=J, z=z, theta=theta + np.pi / 2, t=t_h, n_qubits=n_qubits)
-        bias = [(z + x) / 2 for z, x in zip(bias_z, bias_x)]
+        bias = get_fh_hamming_distribution(J=J, h=h, z=z, theta=theta, t=t_h, n_qubits=n_qubits)
 
         magnetization, sqr_magnetization = 0, 0
         for key, value in experiment_counts.items():
@@ -220,7 +218,7 @@ def main():
         magnetization /= shots
         sqr_magnetization /= shots
         
-        b_magnetization, b_sqr_magnetization = 0, 0
+        b_magnetization, b_sqr_magnetization = 0.0, 0.0
         for hamming_weight, value in enumerate(bias):
             m = 1.0 - 2 * hamming_weight / n_qubits
             b_magnetization += value * m
