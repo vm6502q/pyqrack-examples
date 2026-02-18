@@ -173,7 +173,7 @@ def normalize_counts(counts, shots):
 def main():
     n_qubits = 6
     depth = 40
-    z = 3
+    z = 4
     alpha = 0.0
     beta = 0.0
 

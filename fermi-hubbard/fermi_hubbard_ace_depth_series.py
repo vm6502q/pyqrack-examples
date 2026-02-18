@@ -111,7 +111,7 @@ def init_beta(n_qubits):
 def main():
     n_qubits = 16
     depth = 40
-    z = 3
+    z = 4
     alpha = 0.0
     beta = 0.0
 
