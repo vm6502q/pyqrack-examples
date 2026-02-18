@@ -254,7 +254,7 @@ def calc_stats(ideal_probs, nc_counts, ace_counts, shots, depth, hamming_n, magi
     noise = 0
     numer = 0
     denom = 0
-    sum_hog_counts = 0
+    sum_hog_prob = 0
     experiment = [0] * n_pow
     lm = (1 - 1 / math.sqrt(2)) ** (magic / n)
     nlm = (lm ** 2) + ((1 - lm) ** 2)
@@ -263,7 +263,7 @@ def calc_stats(ideal_probs, nc_counts, ace_counts, shots, depth, hamming_n, magi
         nc_count = nc_counts.get(i, 0)
         ace_count = ace_counts.get(i, 0)
         count = lm * nc_count +  (1 - lm) * ace_count
-        # tot_count += count
+        tot_count += count
         ideal = ideal_probs[i]
         exp = count / shots
 
@@ -279,15 +279,15 @@ def calc_stats(ideal_probs, nc_counts, ace_counts, shots, depth, hamming_n, magi
 
         # QV / HOG
         if ideal > threshold:
-            sum_hog_counts += count
+            sum_hog_prob += count
 
     # Print to check that weight matches shots:
     # print(tot_count)
 
     l2_diff = diff_sqr ** (1 / 2)
     l2_diff_debiased = math.sqrt(max(diff_sqr - noise, 0.0))
-    hog_prob = sum_hog_counts / shots
     xeb = numer / denom
+    sum_hog_prob /= tot_count
 
     exp_top_n = top_n(hamming_n, experiment)
     con_top_n = top_n(hamming_n, ideal_probs)
@@ -308,7 +308,7 @@ def calc_stats(ideal_probs, nc_counts, ace_counts, shots, depth, hamming_n, magi
         "l2_difference": float(l2_diff),
         "l2_difference_debiased": float(l2_diff_debiased),
         "xeb": float(xeb),
-        "hog_prob": float(hog_prob),
+        "hog_prob": float(sum_hog_prob),
         "hamming_distance_n": min(hamming_n, n_pow >> 1),
         "hamming_distance_set_avg": float(avg_hamming_distance),
     }
