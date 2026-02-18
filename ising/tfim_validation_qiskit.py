@@ -11,7 +11,7 @@ import sys
 from collections import Counter
 
 from qiskit import QuantumCircuit
-from qiskit.circuit.library import RZZGate, RXGate
+from qiskit.circuit.library import RZZGate
 from qiskit.compiler import transpile
 from qiskit_aer.backends import AerSimulator
 from qiskit.quantum_info import Statevector

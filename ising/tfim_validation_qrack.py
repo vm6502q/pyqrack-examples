@@ -11,7 +11,7 @@ import sys
 from collections import Counter
 
 from qiskit import QuantumCircuit
-from qiskit.circuit.library import RZZGate, RXGate
+from qiskit.circuit.library import RZZGate
 from qiskit.compiler import transpile
 
 from pyqrack import QrackSimulator
