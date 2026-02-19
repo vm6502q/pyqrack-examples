@@ -204,9 +204,9 @@ def main():
         experiment_counts = dict(Counter(experiment.measure_shots(qubits, shots)))
 
         # The magnetization components are weighted by (n+1) symmetric "bias" terms over possible Hamming weights.
-        bias_z = get_tfim_hamming_distribution(J=-h, h=-J, z=z, theta=theta, t=t, n_qubits=n_qubits, omega=np.pi)
-        bias_x = get_tfim_hamming_distribution(J=J, h=h, z=z, theta=theta-np.pi/2, t=t/2, n_qubits=n_qubits, omega=np.pi)
-        bias_y = get_tfim_hamming_distribution(J=h, h=J, z=z, theta=theta+np.pi/2, t=t/2, n_qubits=n_qubits, omega=np.pi/3)
+        bias_z = get_tfim_hamming_distribution(J=J, h=h, z=z, theta=theta, t=t, n_qubits=n_qubits)
+        bias_x = get_tfim_hamming_distribution(J=-h, h=-J, z=z, theta=theta+np.pi/2, t=t, n_qubits=n_qubits)
+        bias_y = get_tfim_hamming_distribution(J=J, h=h, z=z, theta=theta+np.pi/2, t=t, n_qubits=n_qubits)
         bias = [(z + x + y) / 3 for z, x, y in zip(bias_z, bias_x, bias_y)]
 
         magnetization, sqr_magnetization = 0, 0
