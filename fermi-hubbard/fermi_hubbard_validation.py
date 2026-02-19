@@ -112,7 +112,7 @@ def init_beta(n_qubits):
     return thresholds
 
 
-def calc_stats(ideal_probs, init_probs, ace_probs, pqi_probs, alpha, beta):
+def calc_stats(ideal_probs, init_probs, ace_probs, pqi_probs, alpha, beta, shots):
     # For QV, we compare probabilities of (ideal) "heavy outputs."
     # If the probability is above 2/3, the protocol certifies/passes the qubit width.
     n_pow = len(ideal_probs)
@@ -120,6 +120,7 @@ def calc_stats(ideal_probs, init_probs, ace_probs, pqi_probs, alpha, beta):
     threshold = statistics.median(ideal_probs)
     u_u = 1 / n_pow
     diff_sqr = 0
+    noise = 0
     numer = 0
     denom = 0
     sum_hog_prob = 0
@@ -134,6 +135,7 @@ def calc_stats(ideal_probs, init_probs, ace_probs, pqi_probs, alpha, beta):
 
         # L2 distance
         diff_sqr += (ideal - exp) ** 2
+        noise += exp * (1 - exp) / shots
 
         # XEB / EPLG
         denom += (ideal - u_u) ** 2
@@ -154,12 +156,18 @@ def calc_stats(ideal_probs, init_probs, ace_probs, pqi_probs, alpha, beta):
         exp_sqr_mag += exp * m
 
     l2_diff = diff_sqr ** (1 / 2)
+    l2_diff_debiased = math.sqrt(max(diff_sqr - noise, 0.0))
     xeb = numer / denom
+    if xeb > 1.0:
+        xeb = 2.0 - xeb
+    if xeb < 0.0:
+        xeb = 0.0
 
     return {
         "qubits": n,
         "l2_difference": float(l2_diff),
-        "xeb": float(xeb),
+        "l2_difference_debiased": float(l2_diff_debiased),
+        "xeb_rectified": float(xeb),
         "hog_prob": float(sum_hog_prob),
         "ideal_sqr_mag": float(ideal_sqr_mag),
         "sqr_mag_diff": float(exp_sqr_mag - ideal_sqr_mag),
@@ -220,8 +228,6 @@ def main():
     else:
         shots = max(65536, 1 << (n_qubits + 2))
 
-    shots = ((shots + 2) // 3) * 3
-
     dt_h = dt / t2
 
     print(f"Qubits: {n_qubits}")
@@ -233,10 +239,11 @@ def main():
     n_rows, n_cols = factor_width(n_qubits, False)
     qubits = list(range(n_qubits))
 
+    shots_x, shots_y, shots_z = np.random.multinomial(shots, [1/3, 1/3, 1/3])
     init_probs = normalize_counts(dict(Counter(
-        generate_tfim_samples(J=J, h=h, z=z, theta=theta, t=0, n_qubits=n_qubits, shots=shots // 3) +
-            generate_tfim_samples(J=-h, h=-J, z=z, theta=theta+np.pi/2, t=0, n_qubits=n_qubits, shots=shots // 3) +
-            generate_tfim_samples(J=J, h=h, z=z, theta=theta+np.pi/2, t=0, n_qubits=n_qubits, shots=shots // 3)
+        generate_tfim_samples(J=J, h=h, z=z, theta=theta, t=0, n_qubits=n_qubits, shots=shots_z) +
+            generate_tfim_samples(J=-h, h=-J, z=z, theta=theta+np.pi/2, t=0, n_qubits=n_qubits, shots=shots_x) +
+            generate_tfim_samples(J=J, h=h, z=z, theta=theta+np.pi/2, t=0, n_qubits=n_qubits, shots=shots_y)
     )), shots)
 
     # Set the initial temperature by theta.
@@ -256,6 +263,7 @@ def main():
     control = AerSimulator(method="statevector")
 
     r_squared = 0.0
+    r_squared_db = 0.0
     r_squared_xeb = 0.0
     ss = 0.0
     ssr = 0.0
@@ -275,17 +283,19 @@ def main():
         ace_probs = normalize_counts(dict(Counter(experiment.measure_shots(qubits, shots))), shots)
 
         # The magnetization components are weighted by (n+1) symmetric "bias" terms over possible Hamming weights.
+        shots_x, shots_y, shots_z = np.random.multinomial(shots, [1/3, 1/3, 1/3])
         pqi_probs = normalize_counts(dict(Counter(
-            generate_tfim_samples(J=J, h=h, z=z, theta=theta, t=t, n_qubits=n_qubits, shots=shots // 3) +
-            generate_tfim_samples(J=-h, h=-J, z=z, theta=theta+np.pi/2, t=t, n_qubits=n_qubits, shots=shots // 3) +
-            generate_tfim_samples(J=J, h=h, z=z, theta=theta+np.pi/2, t=t, n_qubits=n_qubits, shots=shots // 3)
+            generate_tfim_samples(J=J, h=h, z=z, theta=theta, t=t, n_qubits=n_qubits, shots=shots_z) +
+            generate_tfim_samples(J=-h, h=-J, z=z, theta=theta+np.pi/2, t=t, n_qubits=n_qubits, shots=shots_x) +
+            generate_tfim_samples(J=J, h=h, z=z, theta=theta+np.pi/2, t=t, n_qubits=n_qubits, shots=shots_y)
         )), shots)
 
-        result = calc_stats(ideal_probs, init_probs, ace_probs, pqi_probs, alpha, beta)
+        result = calc_stats(ideal_probs, init_probs, ace_probs, pqi_probs, alpha, beta, shots)
 
         # Add up the square residuals:
         r_squared += result["l2_difference"] ** 2
-        r_squared_xeb += (1.0 - result["xeb"]) ** 2
+        r_squared_db += result["l2_difference_debiased"] ** 2
+        r_squared_xeb += (1.0 - result["xeb_rectified"]) ** 2
 
         # Save the sum of squares and sum of square residuals on the magnetization curve values.
         ss += result["ideal_sqr_mag"] ** 2
@@ -294,12 +304,14 @@ def main():
     # R^2 and RMSE are elementary and standard measures of goodness-of-fit with simple definitions.
     # Ideal marginal probability would be 1.0, each depth step. Squared and summed, that's depth.
     r_squared = 1.0 - r_squared / depth
+    r_squared_db = 1.0 - r_squared_db / depth
     r_squared_xeb = 1.0 - r_squared_xeb / depth
     rmse = (ssr / depth) ** (1 / 2)
     sm_r_squared = 1.0 - (ssr / ss)
 
     print("L2 norm similarity R^2: " + str(r_squared))
-    print("XEB R^2: " + str(r_squared_xeb))
+    print("L2 norm debiased similarity R^2: " + str(r_squared_db))
+    print("XEB (rectified) R^2: " + str(r_squared_xeb))
     print("Square magnetization RMSE: " + str(rmse))
     print("Square magnetization R^2: " + str(sm_r_squared))
 
