@@ -277,8 +277,8 @@ def main():
         # The magnetization components are weighted by (n+1) symmetric "bias" terms over possible Hamming weights.
         pqi_probs = normalize_counts(dict(Counter(
             generate_tfim_samples(J=-h, h=-J, z=z, theta=theta, t=t, n_qubits=n_qubits, shots=shots // 3, omega=np.pi) +
-            generate_tfim_samples(J=J, h=h, z=z, theta=theta-np.pi/2, t=t, n_qubits=n_qubits, shots=shots // 3, omega=np.pi/2) +
-            generate_tfim_samples(J=h, h=J, z=z, theta=theta+np.pi/2, t=t, n_qubits=n_qubits, shots=shots // 3, omega=np.pi/6)
+            generate_tfim_samples(J=J, h=h, z=z, theta=theta-np.pi/2, t=t/2, n_qubits=n_qubits, shots=shots // 3, omega=np.pi) +
+            generate_tfim_samples(J=h, h=J, z=z, theta=theta+np.pi/2, t=t/2, n_qubits=n_qubits, shots=shots // 3, omega=np.pi/3)
         )), shots)
 
         result = calc_stats(ideal_probs, init_probs, ace_probs, pqi_probs, alpha, beta)
