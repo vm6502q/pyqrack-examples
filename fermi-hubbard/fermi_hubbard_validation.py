@@ -198,14 +198,6 @@ def main():
 
     if len(sys.argv) > 1:
         n_qubits = int(sys.argv[1])
-
-    if os.environ['QRACK_MAX_PAGING_QB'] and (int(os.environ['QRACK_MAX_PAGING_QB']) < n_qubits):
-        alpha = 0.0
-        beta = 0.0
-    else:
-        alpha = 1.0
-        beta = 0.0
-
     if len(sys.argv) > 2:
         depth = int(sys.argv[2])
     if len(sys.argv) > 3:
