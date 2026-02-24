@@ -327,13 +327,12 @@ def calc_stats(ideal_probs, nc_counts, ace_counts, shots, depth, hamming_n, magi
 
 
 def main():
-    if len(sys.argv) < 2:
+    if len(sys.argv) < 3:
         raise RuntimeError(
             "Usage: python3 rcs_nn_2n_plus_2_qiskit_validation.py [width] [depth] [use_rz] [magic] [ace_qb_limit] [sparse_mb_limit]"
         )
 
     n_qubits = n_qubits = int(sys.argv[1])
-
     depth = int(sys.argv[2])
 
     use_rz = False
