@@ -19,7 +19,7 @@ from qiskit_aer.backends import AerSimulator
 from qiskit.quantum_info import Statevector
 
 from pyqrack import QrackSimulator
-from pyqrackising import generate_tfim_samples
+from pyqrackising import generate_fermi_hubbard_samples
 
 
 def factor_width(width, is_transpose=False):
@@ -242,11 +242,8 @@ def main():
         ideal_probs = Statevector(job.result().get_statevector()).probabilities()
 
         # The magnetization components are weighted by (n+1) symmetric "bias" terms over possible Hamming weights.
-        shots_x, shots_y, shots_z = np.random.multinomial(shots, [1/3, 1/3, 1/3])
         pqi_probs = normalize_counts(dict(Counter(
-            generate_tfim_samples(J=J, h=h, z=z, theta=theta, t=t, n_qubits=n_qubits, shots=shots_z) +
-            generate_tfim_samples(J=-h, h=-J, z=z, theta=theta+np.pi/2, t=t, n_qubits=n_qubits, shots=shots_x) +
-            generate_tfim_samples(J=J, h=h, z=z, theta=theta+np.pi/2, t=t, n_qubits=n_qubits, shots=shots_y)
+            generate_fermi_hubbard_samples(J=J, h=h, z=z, theta=theta, t=t, n_qubits=n_qubits, shots=shots)
         )), shots)
 
         result = calc_stats(ideal_probs, pqi_probs, shots)
