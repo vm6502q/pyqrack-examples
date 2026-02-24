@@ -272,7 +272,8 @@ def calc_stats(ideal_probs, nc_counts, ace_counts, sparse_counts, shots, depth, 
     denom = 0
     sum_hog_prob = 0
     experiment = [0] * n_pow
-    lm = (1 - 1 / math.sqrt(2)) ** (magic / n)
+    # If this is a perfect square, don't use ACE.
+    lm = 1 if int(int(math.sqrt(ace_qb)) ** 2) == ace_qb else ((1 - 1 / math.sqrt(2)) ** (magic / n))
     nlm = (lm ** 2) + ((1 - lm) ** 2)
     tot_count = 0
     for i in range(n_pow):
