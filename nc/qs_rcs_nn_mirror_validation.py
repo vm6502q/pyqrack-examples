@@ -164,13 +164,22 @@ def bench_qrack(n_qubits, magic):
 
     # Round to nearest Clifford circuit
     zero_count = 0
+    hamming_count = 0
     for i in range(shots):
         experiment = QrackStabilizer(n_qubits)
         experiment.run_qiskit_circuit(qc, shots=0)
-        if experiment.m_all() == 0:
+        sample = experiment.m_all();
+        if sample == 0:
             zero_count += 1
+        for q in range(n_qubits):
+            if sample & 1:
+                hamming_count += 1
+            sample >>= 1
+
+    avg_hamming_count = hamming_count / shots
 
     print(f"Fidelity: {zero_count} correct out of {shots} shots")
+    print(f"Average Hamming weight: {avg_hamming_count} out of {n_qubits} qubits")
 
 def main():
     n_qubits = 36
