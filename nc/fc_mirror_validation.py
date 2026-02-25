@@ -165,7 +165,7 @@ def bench_qrack(n_qubits, magic):
     experiment.set_use_exact_near_clifford(False)
     experiment.run_qiskit_circuit(qc)
     experiment_counts = dict(Counter(experiment.measure_shots(all_bits, shots)))
-    zero_count = experiment_counts[0]
+    zero_count = experiment_counts.get(0, 0)
 
     print(f"Fidelity: {zero_count} correct out of {shots} shots")
 
