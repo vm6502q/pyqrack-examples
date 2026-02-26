@@ -178,10 +178,10 @@ def bench_qrack(n_qubits, magic):
 
             #QEC code
             for i in range(n_qubits):
-                experiment.mcx([3 * i], n_qubits)
-                experiment.mcx([3 * i + 1], n_qubits)
-                experiment.mcx([3 * i + 1], n_qubits + 1)
-                experiment.mcx([3 * i + 2], n_qubits + 1)
+                experiment.mcx([3 * i], 3 * n_qubits)
+                experiment.mcx([3 * i + 1], 3 * n_qubits)
+                experiment.mcx([3 * i + 1], 3 * n_qubits + 1)
+                experiment.mcx([3 * i + 2], 3 * n_qubits + 1)
                 b0 = experiment.m(n_qubits)
                 b1 = experiment.m(n_qubits + 1)
                 if b0 and b1:
@@ -190,6 +190,10 @@ def bench_qrack(n_qubits, magic):
                     experiment.x(3 * i)
                 elif b1:
                     experiment.x(3 * i + 2)
+                if b0:
+                    experiment.x(3 * n_qubits)
+                if b1:
+                    experiment.x(3 * n_qubits + 1)
 
         raw_sample = experiment.m_all();
         sample = 0
