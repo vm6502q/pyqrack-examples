@@ -188,9 +188,9 @@ def bench_qrack(n_qubits):
         raw_sample = experiment.m_all();
         sample = 0
         for i in range(n_qubits):
-            b = (sample >> (3 * i)) & 1
-            b += (sample >> (3 * i + 1)) & 1
-            b += (sample >> (3 * i + 2)) & 1
+            b = (raw_sample >> (3 * i)) & 1
+            b += (raw_sample >> (3 * i + 1)) & 1
+            b += (raw_sample >> (3 * i + 2)) & 1
             if b > 1:
                sample |= 1 << i
         if sample == 0:
