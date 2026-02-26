@@ -182,8 +182,8 @@ def bench_qrack(n_qubits, magic):
                 experiment.mcx([3 * i + 1], 3 * n_qubits)
                 experiment.mcx([3 * i + 1], 3 * n_qubits + 1)
                 experiment.mcx([3 * i + 2], 3 * n_qubits + 1)
-                b0 = experiment.m(n_qubits)
-                b1 = experiment.m(n_qubits + 1)
+                b0 = experiment.m(3 * n_qubits)
+                b1 = experiment.m(3 * n_qubits + 1)
                 if b0 and b1:
                     experiment.x(3 * i + 1)
                 elif b0:
