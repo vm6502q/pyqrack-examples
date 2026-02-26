@@ -111,13 +111,22 @@ def nswap(sim, q1, q2):
     sim.cz(q1, q2)
 
 
-def bench_qrack(n_qubits):
+def bench_qrack(n_qubits, magic):
     # This is a "nearest-neighbor" coupler random circuit.
     shots = 100
     lcv_range = range(n_qubits)
     all_bits = list(lcv_range)
 
-    print(f"{n_qubits} qubits, square circuit, 1 random non-Clifford phase gate per single-qubit gate Pauli axis, then mirrored for double")
+    print(f"{n_qubits} qubits, square circuit, {magic} units of 'magic', then mirrored for double")
+
+    rz_count = n_qubits + 1
+    rz_opportunities = n_qubits * n_qubits * 3
+    rz_positions = []
+    while len(rz_positions) < rz_count:
+        rz_position = random.randint(0, rz_opportunities - 1)
+        if rz_position in rz_positions:
+            continue
+        rz_positions.append(rz_position)
 
     layers = []
     gate_count = 0
@@ -136,9 +145,10 @@ def bench_qrack(n_qubits):
                 if s_count & 2:
                     for j in range(3):
                         qc.s(3 * i + j)
-                angle = random.uniform(0, math.pi / 2)
-                for j in range(3):
-                    qc.rz(angle, 3 * i + j)
+                if gate_count in rz_positions:
+                    angle = random.uniform(0, math.pi / 2)
+                    for j in range(3):
+                        qc.rz(angle, 3 * i + j)
                 gate_count = gate_count + 1
 
         # 2-qubit couplers
@@ -206,12 +216,15 @@ def bench_qrack(n_qubits):
     print(f"Average Hamming weight: {avg_hamming_count} out of {n_qubits} qubits")
 
 def main():
-    n_qubits = 64
+    n_qubits = 36
     if len(sys.argv) > 1:
         n_qubits = int(sys.argv[1])
+    magic = 9
+    if len(sys.argv) > 2:
+        magic = int(sys.argv[2])
 
     # Run the benchmarks
-    bench_qrack(n_qubits)
+    bench_qrack(n_qubits, magic)
 
     return 0
 
