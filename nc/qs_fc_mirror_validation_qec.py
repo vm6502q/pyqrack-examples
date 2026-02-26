@@ -174,7 +174,7 @@ def bench_qrack(n_qubits, magic):
     for i in range(shots):
         experiment = QrackStabilizer(3 * n_qubits + 2)
         for layer in layers:
-            experiment.run_qiskit_circuit(qc, shots=0)
+            experiment.run_qiskit_circuit(layer, shots=0)
 
             #QEC code
             for i in range(n_qubits):
