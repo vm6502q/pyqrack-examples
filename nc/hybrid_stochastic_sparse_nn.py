@@ -10,7 +10,7 @@ from collections import Counter
 
 import numpy as np
 
-from pyqrack import QrackSimulator
+from pyqrack import QrackSimulator, QrackStabilizer
 
 from qiskit import QuantumCircuit
 from qiskit.compiler import transpile
@@ -188,35 +188,14 @@ def bench_qrack(n_qubits, depth, use_rz, magic, ace_qb_limit, sparse_mb_limit):
                 g = random.choice(two_bit_gates)
                 g(qc, b1, b2)
 
-    nc = QrackSimulator(
-        n_qubits,
-        isTensorNetwork=False,
-        isSchmidtDecompose=False,
-        isStabilizerHybrid=True,
-    )
-    # Round closer to a Clifford circuit
-    nc.set_use_exact_near_clifford(False)
-    nc.run_qiskit_circuit(qc, shots=0)
-    nc_counts = dict(
-        Counter(nc.measure_shots(list(range(n_qubits)), shots)
-    )
+    nc_shots = []
+    for i in range(shots):
+        nc = QrackStabilizer(n_qubits)
+        nc.run_qiskit_circuit(qc, shots=0)
+        nc_shots.append(nc.m_all());
+    nc_counts = dict(Counter(nc_shots))
 
-    ace = QrackSimulator(
-        n_qubits,
-        isTensorNetwork=False,
-        isSchmidtDecompose=True,
-        isStabilizerHybrid=False,
-        isOpenCL=False,
-        isPaged=False,
-        isSparse=True
-    )
-    # Split at least into 2 patches
-    ace_qb = n_qubits
-    while ace_qb > ace_qb_limit:
-        ace_qb = (ace_qb + 1) >> 1
-    ace.set_ace_max_qb(ace_qb)
-    ace.set_sparse_ace_max_mb(sparse_mb_limit)
-    qc_sparse = transpile(
+    qc_ace = transpile(
         qc,
         optimization_level=3,
         basis_gates=[
@@ -237,9 +216,22 @@ def bench_qrack(n_qubits, depth, use_rz, magic, ace_qb_limit, sparse_mb_limit):
             "iswap",
         ],
     )
-    ace.run_qiskit_circuit(qc_sparse, shots=0)
-    ace_counts = dict(
-        Counter(ace.measure_shots(list(range(n_qubits)), shots)
+
+    sparse = QrackSimulator(
+        n_qubits,
+        isOpenCL=False,
+        isPaged=False,
+        isSparse=True
+    )
+    # Split at least into 2 patches
+    sparse.set_sparse_ace_max_mb(sparse_mb_limit)
+    ace_qb = n_qubits
+    while ace_qb > ace_qb_limit:
+        ace_qb = (ace_qb + 1) >> 1
+    sparse.set_ace_max_qb(ace_qb)
+    sparse.run_qiskit_circuit(qc_ace, shots=0)
+    sparse_counts = dict(
+        Counter(sparse.measure_shots(list(range(n_qubits)), shots >> 1))
     )
 
     aer_qc = qc.copy()
@@ -248,39 +240,37 @@ def bench_qrack(n_qubits, depth, use_rz, magic, ace_qb_limit, sparse_mb_limit):
     control_probs = Statevector(job.result().get_statevector()).probabilities()
 
     results = calc_stats(
-        control_probs, nc_counts, ace_counts, shots, d + 1, hamming_n, 4 * magic_angle / math.pi, ace_qb, sparse_mb_limit
+        control_probs, nc_counts, sparse_counts, shots, d + 1, hamming_n, 4 * magic_angle / math.pi, ace_qb, sparse_mb_limit
     )
     print(results)
 
 
-def calc_stats(ideal_probs, nc_counts, ace_counts, shots, depth, hamming_n, magic, ace_qb, sparse_mb_limit):
+def calc_stats(ideal_probs, nc_counts, sparse_counts, shots, depth, hamming_n, magic, ace_qb, sparse_mb_limit):
     # For QV, we compare probabilities of (ideal) "heavy outputs."
     # If the probability is above 2/3, the protocol certifies/passes the qubit width.
     n_pow = len(ideal_probs)
     n = int(round(math.log2(n_pow)))
     threshold = statistics.median(ideal_probs)
     u_u = 1 / n_pow
+    m_diff_sqr = 0
     diff_sqr = 0
     noise = 0
     numer = 0
     denom = 0
     sum_hog_prob = 0
     experiment = [0] * n_pow
-    # lm = (1 - 1 / math.sqrt(2)) ** (magic / n)
-    lm = 0.5
-    nlm = (lm ** 2) + ((1 - lm) ** 2)
-    tot_count = 0
+    # If this is a perfect square, don't use ACE.
+    lm = ((1 - 1 / math.sqrt(2)) ** (magic / n))
+    th = 1 / 2
+    nlm = (lm ** 2) + ((1 - lm) * (th ** 2 + (1 - th) ** 2)) ** 2
     for i in range(n_pow):
-        nc_count = nc_counts.get(i, 0)
-        ace_count = ace_counts.get(i, 0)
-        count = lm * nc_count +  (1 - lm) * ace_count
-        tot_count += count
+        nc_prob = nc_counts.get(i, 0) / shots
+        sparse_prob = sparse_counts.get(i, 0) / shots
+        exp = lm * nc_prob +  (1 - lm) * sparse_prob
         ideal = ideal_probs[i]
-        exp = count / shots
-
-        experiment[i] = count
 
         # L2 distance
+        m_diff_sqr += (exp - u_u) ** 2
         diff_sqr += (ideal - exp) ** 2
         noise += nlm * exp * (1 - exp) / shots
 
@@ -290,15 +280,15 @@ def calc_stats(ideal_probs, nc_counts, ace_counts, shots, depth, hamming_n, magi
 
         # QV / HOG
         if ideal > threshold:
-            sum_hog_prob += count
+            sum_hog_prob += exp
 
     # Print to check that weight matches shots:
     # print(tot_count)
 
+    m_l2_diff = m_diff_sqr ** (1 / 2)
     l2_diff = diff_sqr ** (1 / 2)
     l2_diff_debiased = math.sqrt(max(diff_sqr - noise, 0.0))
     xeb = numer / denom
-    sum_hog_prob /= tot_count
 
     exp_top_n = top_n(hamming_n, experiment)
     con_top_n = top_n(hamming_n, ideal_probs)
@@ -319,6 +309,7 @@ def calc_stats(ideal_probs, nc_counts, ace_counts, shots, depth, hamming_n, magi
         "sparse_mb": sparse_mb_limit,
         "l2_difference": float(l2_diff),
         "l2_difference_debiased": float(l2_diff_debiased),
+        "l2_difference_with_mean": float(m_l2_diff),
         "xeb": float(xeb),
         "hog_prob": float(sum_hog_prob),
         "hamming_distance_n": min(hamming_n, n_pow >> 1),
@@ -347,7 +338,7 @@ def main():
     if len(sys.argv) > 5:
         ace_qb_limit = int(sys.argv[5])
 
-    sparse_mb_limit = 8
+    sparse_mb_limit = 1
     if len(sys.argv) > 6:
         sparse_mb_limit = int(sys.argv[6])
 

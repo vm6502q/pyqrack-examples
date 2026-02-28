@@ -353,7 +353,7 @@ def main():
     if len(sys.argv) > 5:
         ace_qb_limit = int(sys.argv[5])
 
-    sparse_mb_limit = 8
+    sparse_mb_limit = 1
     if len(sys.argv) > 6:
         sparse_mb_limit = int(sys.argv[6])
 
