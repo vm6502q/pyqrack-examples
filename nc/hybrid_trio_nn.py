@@ -287,7 +287,7 @@ def calc_stats(ideal_probs, nc_counts, ace_counts, sparse_counts, shots, depth, 
         # L2 distance
         m_diff_sqr += (exp - u_u) ** 2
         diff_sqr += (ideal - exp) ** 2
-        noise += nlm * exp * (1 - exp) / (shots >> 1)
+        noise += nlm * exp * (1 - exp) / shots
 
         # XEB / EPLG
         denom += (ideal - u_u) ** 2

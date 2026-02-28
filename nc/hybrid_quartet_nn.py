@@ -275,19 +275,19 @@ def calc_stats(ideal_probs, nc_counts, ace_counts, sparse_counts, shots, depth, 
     experiment = [0] * n_pow
     # If this is a perfect square, don't use ACE.
     lm = ((1 - 1 / math.sqrt(2)) ** (magic / n))
-    th = 2 / 3
-    nlm = (lm ** 2) + ((1 - lm) ** 2)
+    th = 7 / 8
+    nlm = (lm ** 2) + ((th * (1 - lm)) ** 2)
     for i in range(n_pow):
         nc_prob = nc_counts.get(i, 0) / shots
         ace_prob = ace_counts.get(i, 0) / shots
         sparse_prob = sparse_counts.get(i, 0) / shots
-        exp = (1 - th) * (lm * nc_prob +  (1 - lm) * (ace_prob + sparse_prob) / 2) + th * u_u
+        exp = lm * nc_prob +  (1 - lm) * (th * (ace_prob + sparse_prob) / 2 + (1 - th) * u_u)
         ideal = ideal_probs[i]
 
         # L2 distance
         m_diff_sqr += (exp - u_u) ** 2
         diff_sqr += (ideal - exp) ** 2
-        noise += nlm * exp * (1 - exp) / (shots >> 1)
+        noise += nlm * exp * (1 - exp) / shots
 
         # XEB / EPLG
         denom += (ideal - u_u) ** 2
