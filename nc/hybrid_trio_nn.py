@@ -273,7 +273,6 @@ def calc_stats(ideal_probs, nc_counts, ace_counts, sparse_counts, shots, depth, 
     denom = 0
     sum_hog_prob = 0
     experiment = [0] * n_pow
-    # If this is a perfect square, don't use ACE.
     lm = ((1 - 1 / math.sqrt(2)) ** (magic / n))
     th = 1 / 2
     nlm = (lm ** 2) + ((1 - lm) * (th ** 2 + (1 - th) ** 2)) ** 2
