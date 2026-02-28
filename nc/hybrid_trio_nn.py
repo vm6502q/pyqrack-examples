@@ -334,7 +334,7 @@ def calc_stats(ideal_probs, nc_counts, ace_counts, sparse_counts, shots, depth, 
 def main():
     if len(sys.argv) < 3:
         raise RuntimeError(
-            "Usage: python3 rcs_nn_2n_plus_2_qiskit_validation.py [width] [depth] [use_rz] [magic] [ace_qb_limit] [sparse_mb_limit]"
+            "Usage: python3 rcs_nn_2n_plus_2_qiskit_validation.py [width] [depth] [use_rz] [magic] [sparse_mb_limit] [ace_qb_limit]"
         )
 
     n_qubits = n_qubits = int(sys.argv[1])
@@ -348,13 +348,13 @@ def main():
     if len(sys.argv) > 4:
         magic = int(sys.argv[4])
 
-    ace_qb_limit = (n_qubits + 1) >> 1
-    if len(sys.argv) > 5:
-        ace_qb_limit = int(sys.argv[5])
-
     sparse_mb_limit = 1
+    if len(sys.argv) > 5:
+        sparse_mb_limit = int(sys.argv[5])
+
+    ace_qb_limit = (n_qubits + 1) >> 1
     if len(sys.argv) > 6:
-        sparse_mb_limit = int(sys.argv[6])
+        ace_qb_limit = int(sys.argv[6])
 
     # Run the benchmarks
     bench_qrack(n_qubits, depth, use_rz, magic, ace_qb_limit, sparse_mb_limit)
