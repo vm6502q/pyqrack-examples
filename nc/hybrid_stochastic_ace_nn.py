@@ -250,6 +250,7 @@ def calc_stats(ideal_probs, nc_counts, ace_counts, shots, depth, hamming_n, magi
     n = int(round(math.log2(n_pow)))
     threshold = statistics.median(ideal_probs)
     u_u = 1 / n_pow
+    m_diff_sqr = 0
     diff_sqr = 0
     noise = 0
     numer = 0
@@ -258,21 +259,18 @@ def calc_stats(ideal_probs, nc_counts, ace_counts, shots, depth, hamming_n, magi
     experiment = [0] * n_pow
     # If this is a perfect square, don't use ACE.
     lm = ((1 - 1 / math.sqrt(2)) ** (magic / n))
+    th = 1 / 3
     nlm = (lm ** 2) + ((1 - lm) ** 2)
-    tot_count = 0
     for i in range(n_pow):
-        nc_count = nc_counts.get(i, 0)
-        ace_count = ace_counts.get(i, 0)
-        count = lm * nc_count +  (1 - lm) * ace_count
-        tot_count += count
+        nc_prob = nc_counts.get(i, 0) / shots
+        ace_prob = ace_counts.get(i, 0) / shots
+        exp = lm * nc_prob +  (1 - lm) * ace_prob
         ideal = ideal_probs[i]
-        exp = count / shots
-
-        experiment[i] = count
 
         # L2 distance
+        m_diff_sqr += (exp - u_u) ** 2
         diff_sqr += (ideal - exp) ** 2
-        noise += nlm * exp * (1 - exp) / shots
+        noise += nlm * exp * (1 - exp) / (shots >> 1)
 
         # XEB / EPLG
         denom += (ideal - u_u) ** 2
@@ -280,15 +278,15 @@ def calc_stats(ideal_probs, nc_counts, ace_counts, shots, depth, hamming_n, magi
 
         # QV / HOG
         if ideal > threshold:
-            sum_hog_prob += count
+            sum_hog_prob += exp
 
     # Print to check that weight matches shots:
     # print(tot_count)
 
+    m_l2_diff = m_diff_sqr ** (1 / 2)
     l2_diff = diff_sqr ** (1 / 2)
     l2_diff_debiased = math.sqrt(max(diff_sqr - noise, 0.0))
     xeb = numer / denom
-    sum_hog_prob /= tot_count
 
     exp_top_n = top_n(hamming_n, experiment)
     con_top_n = top_n(hamming_n, ideal_probs)
@@ -305,9 +303,10 @@ def calc_stats(ideal_probs, nc_counts, ace_counts, shots, depth, hamming_n, magi
         "depth": depth,
         "magic": magic,
         "shots":shots,
-        "ace_qb" : ace_qb,
+        "ace_qb": ace_qb,
         "l2_difference": float(l2_diff),
         "l2_difference_debiased": float(l2_diff_debiased),
+        "l2_difference_with_mean": float(m_l2_diff),
         "xeb": float(xeb),
         "hog_prob": float(sum_hog_prob),
         "hamming_distance_n": min(hamming_n, n_pow >> 1),
