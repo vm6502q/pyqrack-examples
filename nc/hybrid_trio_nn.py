@@ -348,7 +348,7 @@ def main():
     if len(sys.argv) > 4:
         magic = int(sys.argv[4])
 
-    sparse_mb_limit = 1
+    sparse_mb_limit = 4
     if len(sys.argv) > 5:
         sparse_mb_limit = int(sys.argv[5])
 

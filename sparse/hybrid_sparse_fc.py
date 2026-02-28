@@ -254,7 +254,7 @@ def main():
     n_qubits = n_qubits = int(sys.argv[1])
     depth = int(sys.argv[2])
 
-    sparse_mb_limit = 1
+    sparse_mb_limit = 4
     if len(sys.argv) > 3:
         sparse_mb_limit = int(sys.argv[3])
 
