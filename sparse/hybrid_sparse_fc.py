@@ -1,0 +1,272 @@
+# How good are Google's own "patch circuits" and "elided circuits" as a direct XEB approximation to full Sycamore circuits?
+# (Are they better than the 2019 Sycamore hardware?)
+
+import math
+import random
+import statistics
+import sys
+
+from collections import Counter
+
+import numpy as np
+
+from pyqrack import QrackSimulator, QrackStabilizer
+
+from qiskit import QuantumCircuit
+from qiskit.compiler import transpile
+from qiskit_aer.backends import AerSimulator
+from qiskit.quantum_info import Statevector
+
+
+def factor_width(width):
+    col_len = math.floor(math.sqrt(width))
+    while ((width // col_len) * col_len) != width:
+        col_len -= 1
+    row_len = width // col_len
+    if col_len == 1:
+        raise Exception("ERROR: Can't simulate prime number width!")
+
+    return (row_len, col_len)
+
+
+# By Gemini (Google Search AI)
+def int_to_bitstring(integer, length):
+    return bin(integer)[2:].zfill(length)
+
+
+# By Elara (OpenAI custom GPT)
+def hamming_distance(s1, s2, n):
+    return sum(
+        ch1 != ch2 for ch1, ch2 in zip(int_to_bitstring(s1, n), int_to_bitstring(s2, n))
+    )
+
+
+# From https://stackoverflow.com/questions/13070461/get-indices-of-the-top-n-values-of-a-list#answer-38835860
+def top_n(n, a):
+    median_index = len(a) >> 1
+    if n > median_index:
+        n = median_index
+    return np.argsort(a)[-n:]
+
+
+def cx(sim, q1, q2):
+    sim.cx(q1, q2)
+
+
+def cy(sim, q1, q2):
+    sim.cy(q1, q2)
+
+
+def cz(sim, q1, q2):
+    sim.cz(q1, q2)
+
+
+def acx(sim, q1, q2):
+    sim.x(q1)
+    sim.cx(q1, q2)
+    sim.x(q1)
+
+
+def acy(sim, q1, q2):
+    sim.x(q1)
+    sim.cy(q1, q2)
+    sim.x(q1)
+
+
+def acz(sim, q1, q2):
+    sim.x(q1)
+    sim.cz(q1, q2)
+    sim.x(q1)
+
+
+def swap(sim, q1, q2):
+    sim.swap(q1, q2)
+
+
+def iswap(sim, q1, q2):
+    sim.swap(q1, q2)
+    sim.cz(q1, q2)
+    sim.s(q1)
+    sim.s(q2)
+
+
+def iiswap(sim, q1, q2):
+    sim.s(q2)
+    sim.s(q1)
+    sim.cz(q1, q2)
+    sim.swap(q1, q2)
+
+
+def pswap(sim, q1, q2):
+    sim.cz(q1, q2)
+    sim.swap(q1, q2)
+
+
+def mswap(sim, q1, q2):
+    sim.swap(q1, q2)
+    sim.cz(q1, q2)
+
+
+def nswap(sim, q1, q2):
+    sim.cz(q1, q2)
+    sim.swap(q1, q2)
+    sim.cz(q1, q2)
+
+
+def bench_qrack(n_qubits, depth, ace_qb_limit, sparse_mb_limit):
+    # This is a "nearest-neighbor" coupler random circuit.
+    gateSequence = [0, 3, 2, 1, 2, 1, 0, 3]
+    two_bit_gates = swap, pswap, mswap, nswap, iswap, iiswap, cx, cy, cz, acx, acy, acz
+    row_len, col_len = factor_width(n_qubits)
+
+    hamming_n = 2048
+    shots = 1 << min(16, (n_qubits + 2))
+    lcv_range = range(n_qubits)
+    all_bits = list(lcv_range)
+    control = AerSimulator(method="statevector")
+
+    qc = QuantumCircuit(n_qubits)
+    for d in range(depth):
+        # Single-qubit gates
+        for i in lcv_range:
+            th = random.uniform(0, 2 * math.pi)
+            ph = random.uniform(0, 2 * math.pi)
+            lm = random.uniform(0, 2 * math.pi)
+            qc.u(th, ph, lm, i)
+
+        # 2-qubit couplers
+        unused_bits = all_bits.copy()
+        random.shuffle(unused_bits)
+        while len(unused_bits) > 1:
+            c = unused_bits.pop()
+            t = unused_bits.pop()
+            qc.cx(c, t)
+
+    ace = QrackSimulator(n_qubits)
+    # Split at least into 2 patches
+    ace_qb = n_qubits
+    while ace_qb > ace_qb_limit:
+        ace_qb = (ace_qb + 1) >> 1
+    ace.set_ace_max_qb(ace_qb)
+    ace.run_qiskit_circuit(qc, shots=0)
+    ace_counts = dict(Counter(ace.measure_shots(list(range(n_qubits)), shots)))
+    
+    sparse = QrackSimulator(
+        n_qubits,
+        isSchmidtDecompose=False,
+        isStabilizerHybrid=False,
+        isOpenCL=False,
+        isPaged=False,
+        isSparse=True
+    )
+    # Split at least into 2 patches
+    sparse.set_sparse_ace_max_mb(sparse_mb_limit)
+    sparse.run_qiskit_circuit(qc, shots=0)
+    sparse_counts = dict(Counter(sparse.measure_shots(list(range(n_qubits)), shots)))
+
+    aer_qc = qc.copy()
+    aer_qc.save_statevector()
+    job = control.run(aer_qc)
+    control_probs = Statevector(job.result().get_statevector()).probabilities()
+
+    results = calc_stats(
+        control_probs, ace_counts, sparse_counts, shots, d + 1, hamming_n, ace_qb, sparse_mb_limit
+    )
+    print(results)
+
+
+def calc_stats(ideal_probs, ace_counts, sparse_counts, shots, depth, hamming_n, ace_qb, sparse_mb_limit):
+    # For QV, we compare probabilities of (ideal) "heavy outputs."
+    # If the probability is above 2/3, the protocol certifies/passes the qubit width.
+    n_pow = len(ideal_probs)
+    n = int(round(math.log2(n_pow)))
+    threshold = statistics.median(ideal_probs)
+    u_u = 1 / n_pow
+    m_diff_sqr = 0
+    diff_sqr = 0
+    noise = 0
+    numer = 0
+    denom = 0
+    sum_hog_prob = 0
+    experiment = [0] * n_pow
+    # If this is a perfect square, don't use ACE.
+    lm = 1 / 2
+    nlm = (lm ** 2) + (1 - lm) ** 2
+    for i in range(n_pow):
+        ace_prob = ace_counts.get(i, 0) / shots
+        sparse_prob = sparse_counts.get(i, 0) / shots
+        exp = (1 - lm) * ace_prob + lm * sparse_prob
+        ideal = ideal_probs[i]
+
+        # L2 distance
+        m_diff_sqr += (exp - u_u) ** 2
+        diff_sqr += (ideal - exp) ** 2
+        noise += nlm * exp * (1 - exp) / shots
+
+        # XEB / EPLG
+        denom += (ideal - u_u) ** 2
+        numer += (ideal - u_u) * (exp - u_u)
+
+        # QV / HOG
+        if ideal > threshold:
+            sum_hog_prob += exp
+
+    # Print to check that weight matches shots:
+    # print(tot_count)
+
+    m_l2_diff = m_diff_sqr ** (1 / 2)
+    l2_diff = diff_sqr ** (1 / 2)
+    l2_diff_debiased = math.sqrt(max(diff_sqr - noise, 0.0))
+    xeb = numer / denom
+
+    exp_top_n = top_n(hamming_n, experiment)
+    con_top_n = top_n(hamming_n, ideal_probs)
+
+    # By Elara (OpenAI custom GPT)
+    # Compute Hamming distances between each ACE bitstring and its closest in control case
+    min_distances = [
+        min(hamming_distance(a, r, n) for r in con_top_n) for a in exp_top_n
+    ]
+    avg_hamming_distance = np.mean(min_distances)
+
+    return {
+        "qubits": n,
+        "depth": depth,
+        "shots":shots,
+        "ace_qb": ace_qb,
+        "sparse_mb": sparse_mb_limit,
+        "l2_difference": float(l2_diff),
+        "l2_difference_debiased": float(l2_diff_debiased),
+        "l2_difference_with_mean": float(m_l2_diff),
+        "xeb": float(xeb),
+        "hog_prob": float(sum_hog_prob),
+        "hamming_distance_n": min(hamming_n, n_pow >> 1),
+        "hamming_distance_set_avg": float(avg_hamming_distance),
+    }
+
+
+def main():
+    if len(sys.argv) < 3:
+        raise RuntimeError(
+            "Usage: python3 rcs_nn_2n_plus_2_qiskit_validation.py [width] [depth] [ace_qb_limit] [sparse_mb_limit]"
+        )
+
+    n_qubits = n_qubits = int(sys.argv[1])
+    depth = int(sys.argv[2])
+
+    ace_qb_limit = (n_qubits + 1) >> 1
+    if len(sys.argv) > 5:
+        ace_qb_limit = int(sys.argv[5])
+
+    sparse_mb_limit = 1
+    if len(sys.argv) > 6:
+        sparse_mb_limit = int(sys.argv[6])
+
+    # Run the benchmarks
+    bench_qrack(n_qubits, depth, ace_qb_limit, sparse_mb_limit)
+
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
