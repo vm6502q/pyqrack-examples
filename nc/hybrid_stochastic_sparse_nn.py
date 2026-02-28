@@ -231,7 +231,7 @@ def bench_qrack(n_qubits, depth, use_rz, magic, ace_qb_limit, sparse_mb_limit):
     sparse.set_ace_max_qb(ace_qb)
     sparse.run_qiskit_circuit(qc_ace, shots=0)
     sparse_counts = dict(
-        Counter(sparse.measure_shots(list(range(n_qubits)), shots >> 1))
+        Counter(sparse.measure_shots(list(range(n_qubits)), shots))
     )
 
     aer_qc = qc.copy()
@@ -261,8 +261,7 @@ def calc_stats(ideal_probs, nc_counts, sparse_counts, shots, depth, hamming_n, m
     experiment = [0] * n_pow
     # If this is a perfect square, don't use ACE.
     lm = ((1 - 1 / math.sqrt(2)) ** (magic / n))
-    th = 1 / 2
-    nlm = (lm ** 2) + ((1 - lm) * (th ** 2 + (1 - th) ** 2)) ** 2
+    nlm = (lm ** 2) + (1 - lm) ** 2
     for i in range(n_pow):
         nc_prob = nc_counts.get(i, 0) / shots
         sparse_prob = sparse_counts.get(i, 0) / shots

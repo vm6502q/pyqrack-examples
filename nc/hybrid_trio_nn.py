@@ -230,7 +230,7 @@ def bench_qrack(n_qubits, depth, use_rz, magic, ace_qb_limit, sparse_mb_limit):
     ace.set_ace_max_qb(ace_qb)
     ace.run_qiskit_circuit(qc_ace, shots=0)
     ace_counts = dict(
-        Counter(ace.measure_shots(list(range(n_qubits)), shots >> 1))
+        Counter(ace.measure_shots(list(range(n_qubits)), shots))
     )
     
     sparse = QrackSimulator(
@@ -245,7 +245,7 @@ def bench_qrack(n_qubits, depth, use_rz, magic, ace_qb_limit, sparse_mb_limit):
     sparse.set_sparse_ace_max_mb(sparse_mb_limit)
     sparse.run_qiskit_circuit(qc_ace, shots=0)
     sparse_counts = dict(
-        Counter(sparse.measure_shots(list(range(n_qubits)), shots >> 1))
+        Counter(sparse.measure_shots(list(range(n_qubits)), shots))
     )
 
     aer_qc = qc.copy()
