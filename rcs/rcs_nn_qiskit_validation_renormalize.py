@@ -164,7 +164,7 @@ def bench_qrack(width, depth):
 def calc_stats(ideal_probs, counts, depth, shots, ace_qb):
     # For QV, we compare probabilities of (ideal) "heavy outputs."
     # If the probability is above 2/3, the protocol certifies/passes the qubit width.
-    lm = 0.95 ** -(depth)
+    lm = 0.95 ** (1 / depth)
     n_pow = len(ideal_probs)
     n = int(round(math.log2(n_pow)))
     threshold = statistics.median(ideal_probs)
