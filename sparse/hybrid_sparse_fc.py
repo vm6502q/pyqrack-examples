@@ -255,12 +255,12 @@ def main():
     depth = int(sys.argv[2])
 
     ace_qb_limit = (n_qubits + 1) >> 1
-    if len(sys.argv) > 5:
-        ace_qb_limit = int(sys.argv[5])
+    if len(sys.argv) > 3:
+        ace_qb_limit = int(sys.argv[3])
 
     sparse_mb_limit = 1
-    if len(sys.argv) > 6:
-        sparse_mb_limit = int(sys.argv[6])
+    if len(sys.argv) > 4:
+        sparse_mb_limit = int(sys.argv[4])
 
     # Run the benchmarks
     bench_qrack(n_qubits, depth, ace_qb_limit, sparse_mb_limit)
