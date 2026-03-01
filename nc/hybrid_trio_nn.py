@@ -243,6 +243,7 @@ def bench_qrack(n_qubits, depth, use_rz, magic, ace_qb_limit, sparse_mb_limit):
     )
     # Split at least into 2 patches
     sparse.set_sparse_ace_max_mb(sparse_mb_limit)
+    sparse.set_sprp(1.0 / (4 * (2 ** n_qubits)))
     sparse.run_qiskit_circuit(qc_ace, shots=0)
     sparse_counts = dict(
         Counter(sparse.measure_shots(list(range(n_qubits)), shots))
