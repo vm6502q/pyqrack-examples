@@ -10,12 +10,7 @@ from collections import Counter
 
 import numpy as np
 
-from pyqrack import QrackSimulator, QrackStabilizer
-
-from qiskit import QuantumCircuit
-from qiskit.compiler import transpile
-from qiskit_aer.backends import AerSimulator
-from qiskit.quantum_info import Statevector
+from pyqrack import QrackSimulator
 
 
 def factor_width(width):
@@ -123,24 +118,8 @@ def bench_qrack(n_qubits, depth, ace_qb_limit, sparse_mb_limit):
     shots = 1 << min(16, (n_qubits + 2))
     lcv_range = range(n_qubits)
     all_bits = list(lcv_range)
-    control = AerSimulator(method="statevector")
 
-    qc = QuantumCircuit(n_qubits)
-    for d in range(depth):
-        # Single-qubit gates
-        for i in lcv_range:
-            th = random.uniform(0, 2 * math.pi)
-            ph = random.uniform(0, 2 * math.pi)
-            lm = random.uniform(0, 2 * math.pi)
-            qc.u(th, ph, lm, i)
-
-        # 2-qubit couplers
-        unused_bits = all_bits.copy()
-        random.shuffle(unused_bits)
-        while len(unused_bits) > 1:
-            c = unused_bits.pop()
-            t = unused_bits.pop()
-            qc.cx(c, t)
+    ideal = QrackSimulator(n_qubits)
 
     ace = QrackSimulator(n_qubits)
     # Split at least into 2 patches
@@ -148,9 +127,7 @@ def bench_qrack(n_qubits, depth, ace_qb_limit, sparse_mb_limit):
     while ace_qb > ace_qb_limit:
         ace_qb = (ace_qb + 1) >> 1
     ace.set_ace_max_qb(ace_qb)
-    ace.run_qiskit_circuit(qc, shots=0)
-    ace_counts = dict(Counter(ace.measure_shots(list(range(n_qubits)), shots)))
-    
+
     sparse = QrackSimulator(
         n_qubits,
         isSchmidtDecompose=False,
@@ -159,18 +136,34 @@ def bench_qrack(n_qubits, depth, ace_qb_limit, sparse_mb_limit):
         isPaged=False,
         isSparse=True
     )
-    # Split at least into 2 patches
     sparse.set_sparse_ace_max_mb(sparse_mb_limit)
     sprp = 1.0 / ((n_qubits - 1) * (2 ** n_qubits))
     if sprp > 1.7763568394002505e-15:
         sparse.set_sprp(sprp)
-    sparse.run_qiskit_circuit(qc, shots=0)
-    sparse_counts = dict(Counter(sparse.measure_shots(list(range(n_qubits)), shots)))
 
-    aer_qc = qc.copy()
-    aer_qc.save_statevector()
-    job = control.run(aer_qc)
-    control_probs = Statevector(job.result().get_statevector()).probabilities()
+    for d in range(depth):
+        # Single-qubit gates
+        for i in lcv_range:
+            th = random.uniform(0, 2 * math.pi)
+            ph = random.uniform(0, 2 * math.pi)
+            lm = random.uniform(0, 2 * math.pi)
+            ideal.u(i, th, ph, lm)
+            ace.u(i, th, ph, lm)
+            sparse.u(i, th, ph, lm)
+
+        # 2-qubit couplers
+        unused_bits = all_bits.copy()
+        random.shuffle(unused_bits)
+        while len(unused_bits) > 1:
+            c = unused_bits.pop()
+            t = unused_bits.pop()
+            ideal.mcx([c], t)
+            ace.mcx([c], t)
+            sparse.mcx([c], t)
+
+    ace_counts = dict(Counter(ace.measure_shots(list(range(n_qubits)), shots)))
+    sparse_counts = dict(Counter(sparse.measure_shots(list(range(n_qubits)), shots)))
+    control_probs = ideal.out_probs()
 
     results = calc_stats(
         control_probs, ace_counts, sparse_counts, shots, d + 1, hamming_n, ace_qb, sparse_mb_limit
