@@ -140,8 +140,6 @@ def bench_qrack(width, depth, cycles):
         "marginal_prob": experiment_probs
     }
 
-    return calc_stats(control_probs, experiment_counts, d + 1, shots), pauli_strings
-
 
 def act_string(otoc, string):
     for i in range(len(string)):
