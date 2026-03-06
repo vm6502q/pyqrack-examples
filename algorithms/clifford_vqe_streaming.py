@@ -396,18 +396,7 @@ while is_charge_update:
 
     if n_electrons != r_electrons or multiplicity != r_multiplicity:
         print()
-        print("Regresssed electron count doesn't match the assumptions!")
-        print("Running again with the natural parameters replacing your assumptions:")
-        print(f"charge = {r_charge}")
-        print(f"multiplicity = {r_multiplicity}")
-        print()
-
-        charge = r_charge
-        multiplicity = r_multiplicity
-        is_charge_update = True
-
-        print()
-        print("Regresssed electron count doesn't match the assumptions!")
+        print("Regresssed electron count or multiplicity doesn't match the assumptions!")
         print("Running again with the natural parameters replacing your assumptions:")
         print(f"charge = {r_charge}")
         print(f"multiplicity = {r_multiplicity}")
