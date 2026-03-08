@@ -33,10 +33,10 @@ print(f"multiplicity = {multiplicity}")
 
 # geometry = [("H", (0.0, 0.0, 0.0)), ("H", (0.0, 0.0, 0.74))]  # H2 Molecule
 
-geometry = [
-    ("H", (-1.0, 0.0, -1.0)), ("H", (-1.0, 0.0, 1.00)),
-    ("H", (1.0, 0.0, -1.0)), ("H", (1.0, 0.0, 1.00))
-]  # H4 Dissociation (hard for Hartree-Fock)
+# geometry = [
+#     ("H", (-1.0, 0.0, -1.0)), ("H", (-1.0, 0.0, 1.00)),
+#     ("H", (1.0, 0.0, -1.0)), ("H", (1.0, 0.0, 1.00))
+# ]  # H4 Dissociation (hard for Hartree-Fock)
 
 # Helium (and lighter):
 
@@ -46,7 +46,7 @@ geometry = [
 
 # geometry = [('Li', (0.0, 0.0, 0.0)), ('H', (0.0, 0.0, 1.596))]  # equilibrium
 # geometry = [('Li', (0.0, 0.0, 0.0)), ('H', (0.0, 0.0, 2.5))]   # stretched
-# geometry = [('Li', (0.0, 0.0, 0.0)), ('H', (0.0, 0.0, 4.0))]   # near dissociation
+geometry = [('Li', (0.0, 0.0, 0.0)), ('H', (0.0, 0.0, 4.0))]   # near dissociation
 
 # Beryllium (and lighter):
 
