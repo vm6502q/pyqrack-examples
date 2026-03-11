@@ -33,7 +33,7 @@ def bench_qrack(width, depth, sdrp, is_sparse):
     # chi controls approximation quality vs. speed
     # chi = width is cheap; chi = width**2 is closer to exact
     # for QV circuits at modest width, chi = 2*width is a reasonable start
-    chi = width * width
+    chi = min(width ** 2, 1 << width)
 
     # CircuitMPS maintains state as MPS with bounded bond dimension
     # Gate application is O(chi^2 * width) per gate instead of exact

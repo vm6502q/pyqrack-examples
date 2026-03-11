@@ -28,13 +28,13 @@ def int_to_bitstring(integer, length):
 def bench_qrack(width, depth, sdrp, is_sparse):
     lcv_range = range(width)
     all_bits = list(lcv_range)
-    retained = width * width
-    checked = min(1 << width, retained * width)
+    retained = width ** 2
+    checked = min(1 << width, retained ** 2)
 
     # chi controls approximation quality vs. speed
     # chi = width is cheap; chi = width**2 is closer to exact
     # for QV circuits at modest width, chi = 2*width is a reasonable start
-    chi = width * width
+    chi = min(width ** 2, 1 << width)
 
     # CircuitMPS maintains state as MPS with bounded bond dimension
     # Gate application is O(chi^2 * width) per gate instead of exact
@@ -111,7 +111,7 @@ def calc_stats(ideal_probs, exp_probs):
     n_pow = len(ideal_probs)
     n = int(round(math.log2(n_pow)))
     mean_guess = 1 / n_pow
-    model = min(1.0, n ** -3)
+    model = 1 / 2
     threshold = statistics.median(ideal_probs)
     u_u = statistics.mean(ideal_probs)
     numer = 0
