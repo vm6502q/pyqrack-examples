@@ -111,7 +111,7 @@ def calc_stats(ideal_probs, exp_probs):
     n_pow = len(ideal_probs)
     n = int(round(math.log2(n_pow)))
     mean_guess = 1 / n_pow
-    model = min(1.0, n ** (-2.5 / n))
+    model = min(1.0, n ** -3)
     threshold = statistics.median(ideal_probs)
     u_u = statistics.mean(ideal_probs)
     numer = 0
