@@ -29,7 +29,7 @@ def bench_qrack(width, depth, sdrp, is_sparse):
     lcv_range = range(width)
     all_bits = list(lcv_range)
     retained = width ** 3
-    checked = min(1 << 16, 1 << (width + 2))
+    checked = min(1 << 20, 1 << (width + 2))
 
     # chi controls approximation quality vs. speed
     # chi = width is cheap; chi = width**2 is closer to exact
