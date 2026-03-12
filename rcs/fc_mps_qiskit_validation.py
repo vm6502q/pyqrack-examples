@@ -28,7 +28,7 @@ def int_to_bitstring(integer, length):
 def bench_qrack(width, depth, sdrp, is_sparse):
     lcv_range = range(width)
     all_bits = list(lcv_range)
-    retained = width ** 3
+    retained = min(width ** 2, 1 << (width - 1))
     checked = min(1 << 20, 1 << (width + 2))
 
     # chi controls approximation quality vs. speed

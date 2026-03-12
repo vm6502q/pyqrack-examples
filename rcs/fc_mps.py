@@ -28,7 +28,8 @@ def int_to_bitstring(integer, length):
 def bench_qrack(width, depth, sdrp, is_sparse):
     lcv_range = range(width)
     all_bits = list(lcv_range)
-    shots = min(1 << 20, 1 << (width + 2))
+    retained = min(width ** 2, 1 << (width - 1))
+    checked = min(1 << 20, 1 << (width + 2))
 
     # chi controls approximation quality vs. speed
     # chi = width is cheap; chi = width**2 is closer to exact
@@ -58,12 +59,11 @@ def bench_qrack(width, depth, sdrp, is_sparse):
             t = unused_bits.pop()
             rcs.cx(c, t)
             quimb_rcs.apply_gate('CX', c, t, tags=f"LAYER_{d}")
-        # if len(unused_bits) > 0:
-        #     excluded[d] = unused_bits.pop()
 
     with open("fc_tn.qpy", "wb") as file:
         qpy.dump(rcs, file)
 
+    # Run Qrack for heavy output sieve
     if is_sparse:
         experiment = QrackSimulator(width, isTensorNetwork=False, isOpenCL=False, isSparse=True)
     else:
@@ -71,41 +71,28 @@ def bench_qrack(width, depth, sdrp, is_sparse):
     if sdrp > 0:
         experiment.set_sdrp(sdrp)
     experiment.run_qiskit_circuit(rcs)
-    experiment_counts = dict(Counter(experiment.measure_shots(all_bits, shots)))
-    experiment_counts = sorted(experiment_counts.items(), key=operator.itemgetter(1), reverse=True)
     highest_prob = experiment.highest_prob_perm()
+    experiment_counts = dict(Counter(experiment.measure_shots(all_bits, checked)))
+    experiment_counts[highest_prob] = checked
+    experiment_counts = sorted(experiment_counts.items(), key=operator.itemgetter(1), reverse=True)
     experiment = None
 
-    for l in range(depth):
-        for q in range(width):
-            quimb_rcs.psi.contract([f'I{q}', f'LAYER_{l}'], which='all')
-
-    # for p in range(2):
-    #     s = 1 << p
-    #     for l in range(0, depth - s + 1, s):
-    #         l_end = l + s - 1
-    #         for q in range(width):
-    #             if excluded[l] == q or excluded[l_end] == q:
-    #                 continue
-    #             quimb_rcs.psi.contract_between(['CX', f'I{q}', f'LAYER_{l}'], ['CX', f'I{q}', f'LAYER_{l_end}'])
-
-    retained = width * width
+    # Approximate amplitude estimation via MPS
+    # amplitude() on CircuitMPS is O(chi^2 * width) per call
+    # vs. O(exp(treewidth)) for exact contraction
     n_pow = 1 << width
-    u_u =  1 / n_pow
-    idx = 0
+    u_u = 1 / n_pow
     ideal_amps = {}
     sum_probs = 0
-    amp = complex(quimb_rcs.amplitude(int_to_bitstring(highest_prob, width), backend="jax"))4prob = float((abs(amp) ** 2).real)
-    if prob <= u_u:
-        continue
-    ideal_amps[key] = amp
-    sum_probs += prob
+
     for count_tuple in experiment_counts:
         if len(ideal_amps) >= retained and count_tuple[1] < 2:
             break
         key = count_tuple[0]
-        amp = complex(quimb_rcs.amplitude(int_to_bitstring(key, width), backend="jax"))
-        prob = float((abs(amp) ** 2).real)
+        bitstring = int_to_bitstring(key, width)
+        # Approximate amplitude from MPS — cheap inner product
+        amp = complex(quimb_rcs.amplitude(bitstring))
+        prob = abs(amp) ** 2
         if prob <= u_u:
             continue
         ideal_amps[key] = amp
