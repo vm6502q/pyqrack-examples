@@ -67,7 +67,7 @@ def bench_qrack(width, depth, sdrp, is_sparse):
     if is_sparse:
         experiment = QrackSimulator(width, isTensorNetwork=False, isOpenCL=False, isSparse=True)
     else:
-        experiment = QrackSimulator(width, isTensorNetwork=False)
+        experiment = QrackSimulator(width)
     if sdrp > 0:
         experiment.set_sdrp(sdrp)
     experiment.run_qiskit_circuit(rcs)
@@ -98,11 +98,13 @@ def bench_qrack(width, depth, sdrp, is_sparse):
         ideal_amps[key] = amp
         sum_probs += prob
 
+    with open('fc_mps.out, "w") as f:
+         json.dump(ideal_amps, f)
+
     return {
         "qubits": width,
         "depth": depth,
         "sum_sieved_probs": sum_probs,
-        "sieved_amps": ideal_amps
     }
 
 
@@ -114,7 +116,7 @@ def main():
 
     width = int(sys.argv[1])
     depth = int(sys.argv[2])
-    sdrp = 0.1464466
+    sdrp = 0 # (1.0 - 1.0 / math.sqrt(2)) / 2.0
     is_sparse = False
     if len(sys.argv) > 3:
         sdrp = float(sys.argv[3])

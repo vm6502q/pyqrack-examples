@@ -152,7 +152,7 @@ def main():
 
     width = int(sys.argv[1])
     depth = int(sys.argv[2])
-    sdrp = (1.0 - 1.0 / math.sqrt(2)) / 2.0
+    sdrp = 0 # (1.0 - 1.0 / math.sqrt(2)) / 2.0
     is_sparse = False
     if len(sys.argv) > 3:
         sdrp = float(sys.argv[3])
