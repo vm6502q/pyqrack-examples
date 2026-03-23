@@ -62,7 +62,7 @@ def bench_qrack(width, depth, sdrp, is_sparse):
     if is_sparse:
         experiment = QrackSimulator(width, isTensorNetwork=False, isOpenCL=False, isSparse=True)
     else:
-        experiment = QrackSimulator(width, isTensorNetwork=False)
+        experiment = QrackSimulator(width)
     if sdrp > 0:
         experiment.set_sdrp(sdrp)
     experiment.run_qiskit_circuit(rcs)
