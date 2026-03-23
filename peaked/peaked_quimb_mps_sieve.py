@@ -34,7 +34,7 @@ def run_qasm(is_sparse, file_in):
     basis_gates = QrackSimulator.get_qiskit_basis_gates()
     qc = transpile(qc, basis_gates=basis_gates)
     n_qubits = qc.num_qubits
-    shots = n_qubits ** 3
+    shots = min(1 << 20, 1 << (n_qubits + 2))
 
     sim = QrackSimulator(n_qubits, isSparse = is_sparse, isOpenCL = not is_sparse)
     sim.run_qiskit_circuit(qc, shots=0)
@@ -52,7 +52,7 @@ def run_qasm(is_sparse, file_in):
 
     # quimb_c = quimb_circuit(qc)
     chi = min(qc.num_qubits ** 3, 1 << qc.num_qubits)
-    quimb_c = tn.CircuitMPS(qc.num_qubits, max_bond=chi)
+    quimb_c = tn.CircuitMPS(n_qubits, max_bond=chi)
 
     # Gate name mapping: Qiskit → quimb
     GATE_MAP = {
