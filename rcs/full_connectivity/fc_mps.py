@@ -98,7 +98,7 @@ def bench_qrack(width, depth, sdrp, is_sparse):
         ideal_amps[key] = amp
         sum_probs += prob
 
-    with open('fc_mps.out, "w") as f:
+    with open('fc_mps.out', 'w') as f:
          json.dump(ideal_amps, f)
 
     return {
