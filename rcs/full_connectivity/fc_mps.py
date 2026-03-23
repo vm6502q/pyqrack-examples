@@ -100,7 +100,7 @@ def bench_qrack(width, depth, sdrp, is_sparse):
         sum_probs += prob
 
     with open('fc_mps.out', 'w') as f:
-         json.dump(ideal_amps, f)
+         json.dump(str(ideal_amps), f)
 
     return {
         "qubits": width,
