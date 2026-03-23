@@ -20,7 +20,7 @@ def run_qasm(file_in, file_out):
     qc = QuantumCircuit.from_qasm_file(file_in)
     basis_gates = QrackSimulator.get_qiskit_basis_gates()
     qc = transpile(qc, basis_gates=basis_gates)
-    sim = QrackSimulator(qc.num_qubits, isTensorNetwork=False)
+    sim = QrackSimulator(qc.num_qubits)
     sim.run_qiskit_circuit(qc, shots=0)
     print("Fidelity estimate: " + str(sim.get_unitary_fidelity()))
     # shots = dict(Counter(sim.measure_shots(list(range(qc.num_qubits)), shot_count)))
