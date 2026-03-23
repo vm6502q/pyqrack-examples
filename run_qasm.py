@@ -28,15 +28,15 @@ def run_qasm(file_in, file_out):
     #     json.dump(shots, f)
     # max_key = max(shots, key=shots.get)
     max_key = sim.highest_prob_perm()
+    rtl = int_to_bitstring(max_key, qc.num_qubits, False)
+    ltr = int_to_bitstring(max_key, qc.num_qubits, True)
+    print(f"Right-to-left, least-to-most significant: {rtl}")
+    print(f"Left-to-right, least-to-most significant: {ltr}")
     bit_string = int_to_bitstring(max_key, qc.num_qubits, True)
     b_array = [True if b == "1" else False for b in list(bit_string)]
     prob = sim.prob_perm(list(range(qc.num_qubits)), b_array)
     # print(f"Total shots: {shot_count}")
     # print(f"Peak counts: {(max_key, shots[max_key])}")
-    rtl = int_to_bitstring(max_key, qc.num_qubits, False)
-    ltr = int_to_bitstring(max_key, qc.num_qubits, True)
-    print(f"Right-to-left, least-to-most significant: {rtl}")
-    print(f"Left-to-right, least-to-most significant: {ltr}")
     print(f"Probability: {prob}")
 
 
