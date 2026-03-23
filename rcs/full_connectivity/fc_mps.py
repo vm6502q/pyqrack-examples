@@ -60,7 +60,7 @@ def bench_qrack(width, depth, sdrp, is_sparse):
             rcs.cx(c, t)
             quimb_rcs.apply_gate('CX', c, t, tags=f"LAYER_{d}")
 
-    with open("fc_tn.qpy", "wb") as file:
+    with open("fc_mps.qpy", "wb") as file:
         qpy.dump(rcs, file)
 
     # Run Qrack for heavy output sieve
