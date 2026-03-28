@@ -108,7 +108,7 @@ def bench_qrack(n_qubits, depth, use_rz, magic, ace_qb_limit):
         ace_qb = (ace_qb + 1) >> 1
     qc.set_ace_max_qb(ace_qb)
 
-    rz_opportunities = n_qubits * depth * 3
+    rz_opportunities = n_qubits * depth * 2
     rz_positions = []
     while len(rz_positions) < magic:
         rz_position = random.randint(0, rz_opportunities - 1)
@@ -121,7 +121,7 @@ def bench_qrack(n_qubits, depth, use_rz, magic, ace_qb_limit):
         # Single-qubit gates
         for i in lcv_range:
             # Single-qubit gates
-            for _ in range(3):
+            for _ in range(2):
                 qc.h(i)
                 qe.h(i)
                 # s_count = random.randint(0, 3)

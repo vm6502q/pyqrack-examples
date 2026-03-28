@@ -93,8 +93,8 @@ def bench_qrack(width_depth):
     for _ in range(depth):
         # Single-qubit gates
         for i in lcv_range:
-            for _ in range(3):
-                # x-z-x Euler axes
+            for _ in range(2):
+                # x-z Euler axes (no "roll")
                 sim.h(i)
                 sim.r(Pauli.PauliZ, random.uniform(0, 2 * math.pi), i)
 

@@ -78,7 +78,7 @@ def bench_qrack(width, depth, sdrp, is_sparse):
     for d in range(depth):
         # Single-qubit gates
         for i in lcv_range:
-            for b in range(3):
+            for b in range(2):
                 rcs.h(i)
                 rcs.rz(random.uniform(0, 2 * math.pi), i)
 

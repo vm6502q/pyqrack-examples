@@ -23,7 +23,7 @@ def bench_qrack(width, depth):
     for _ in range(depth):
         # Single-qubit gates
         for i in lcv_range:
-            for _ in range(3):
+            for _ in range(2):
                 experiment.h(i)
                 experiment.r(Pauli.PauliZ, random.uniform(0, 2 * math.pi), i)
 

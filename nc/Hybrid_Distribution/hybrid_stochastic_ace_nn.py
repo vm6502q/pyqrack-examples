@@ -125,7 +125,7 @@ def bench_qrack(n_qubits, depth, use_rz, magic, ace_qb_limit):
     all_bits = list(lcv_range)
     control = AerSimulator(method="statevector")
 
-    rz_opportunities = n_qubits * depth * 3
+    rz_opportunities = n_qubits * depth * 2
     rz_positions = []
     while len(rz_positions) < magic:
         rz_position = random.randint(0, rz_opportunities - 1)
@@ -140,7 +140,7 @@ def bench_qrack(n_qubits, depth, use_rz, magic, ace_qb_limit):
         # Single-qubit gates
         for i in lcv_range:
             # Single-qubit gates
-            for _ in range(3):
+            for _ in range(2):
                 qc.h(i)
                 # s_count = random.randint(0, 3)
                 s_count = random.randint(0, 7)

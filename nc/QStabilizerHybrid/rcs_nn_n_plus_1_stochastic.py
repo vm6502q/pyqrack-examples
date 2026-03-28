@@ -100,7 +100,7 @@ def bench_qrack(width, use_rz):
     all_bits = list(lcv_range)
 
     rz_count = width + 1
-    rz_opportunities = width * width * 3
+    rz_opportunities = width * width * 2
     rz_positions = []
     while len(rz_positions) < rz_count:
         rz_position = random.randint(0, rz_opportunities - 1)
@@ -120,7 +120,7 @@ def bench_qrack(width, use_rz):
         # Single-qubit gates
         for i in lcv_range:
             # Single-qubit gates
-            for i in range(3):
+            for i in range(2):
                 qc.h(i)
                 # s_count = random.randint(0, 3)
                 s_count = random.randint(0, 7)

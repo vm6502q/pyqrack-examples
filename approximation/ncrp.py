@@ -81,9 +81,8 @@ def bench_qrack(width, depth, magic, ncrp):
     for i in range(depth):
         # Single bit gates
         for j in range(width):
-            for _ in range(3):
-                # We're trying to cover 3 Pauli axes
-                # with Euler angle axes x-z-x.
+            for _ in range(2):
+                # We're trying to cover 2 Pauli axes (ignoring "roll") with Euler angle axes x-z.
                 sim.h(j)
 
                 # We can trace out a quarter rotations around the Bloch sphere with stabilizer.

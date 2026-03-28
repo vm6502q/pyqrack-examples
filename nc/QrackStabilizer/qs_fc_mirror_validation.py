@@ -120,7 +120,7 @@ def bench_qrack(n_qubits, magic):
     print(f"{n_qubits} qubits, square circuit, {magic} units of 'magic', then mirrored for double")
 
     rz_count = magic
-    rz_opportunities = n_qubits * n_qubits * 3
+    rz_opportunities = n_qubits * n_qubits * 2
     rz_positions = []
     while len(rz_positions) < rz_count:
         rz_position = random.randint(0, rz_opportunities - 1)
@@ -134,7 +134,7 @@ def bench_qrack(n_qubits, magic):
         # Single-qubit gates
         for i in lcv_range:
             # Single-qubit gates
-            for _ in range(3):
+            for _ in range(2):
                 qc.h(i)
                 s_count = random.randint(0, 3)
                 if s_count & 1:

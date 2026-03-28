@@ -30,8 +30,8 @@ def factor_width(width):
 
 
 def rand_u3(sim, q):
-    for _ in range(3):
-        # x-z-x Euler angles
+    for _ in range(2):
+        # x-z Euler angles (no "roll")
         sim.h(q)
         sim.rz(random.uniform(0, 2 * math.pi), q)
 
