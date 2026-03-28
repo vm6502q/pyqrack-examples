@@ -44,7 +44,7 @@ def bench_qrack(n_qubits, hamming_n):
     lcv_range = range(n_qubits)
     all_bits = list(lcv_range)
 
-    rz_count = n_qubits + 1
+    rz_count = int(round(math.sqrt(n_qubits)))
     rz_opportunities = n_qubits * n_qubits * 2
     rz_positions = []
     while len(rz_positions) < rz_count:
@@ -93,10 +93,10 @@ def bench_qrack(n_qubits, hamming_n):
         job = control.run(aer_qc)
         control_probs = Statevector(job.result().get_statevector()).probabilities()
 
-        print(calc_stats(control_probs, experiment_counts, shots, d + 1, hamming_n))
+        print(calc_stats(control_probs, experiment_counts, shots, d + 1, hamming_n, rz_count))
 
 
-def calc_stats(ideal_probs, counts, shots, depth, hamming_n):
+def calc_stats(ideal_probs, counts, shots, depth, hamming_n, rz_count):
     # For QV, we compare probabilities of (ideal) "heavy outputs."
     # If the probability is above 2/3, the protocol certifies/passes the qubit width.
     n_pow = len(ideal_probs)
@@ -143,6 +143,7 @@ def calc_stats(ideal_probs, counts, shots, depth, hamming_n):
     return {
         "qubits": n,
         "depth": depth,
+        "magic": rz_count,
         "l2_difference": float(l2_difference),
         "xeb": float(xeb),
         "hog_prob": float(hog_prob),
@@ -152,12 +153,7 @@ def calc_stats(ideal_probs, counts, shots, depth, hamming_n):
 
 
 def main():
-    if len(sys.argv) < 2:
-        raise RuntimeError(
-            "Usage: python3 qs_fc_2n_plus_2_qiskit_validation.py [width] [hamming_n]"
-        )
-
-    n_qubits = 56
+    n_qubits = 16
     hamming_n = 2048
     if len(sys.argv) > 1:
         n_qubits = int(sys.argv[1])

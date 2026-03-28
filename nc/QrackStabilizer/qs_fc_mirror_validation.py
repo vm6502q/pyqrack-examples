@@ -179,7 +179,7 @@ def main():
     n_qubits = 36
     if len(sys.argv) > 1:
         n_qubits = int(sys.argv[1])
-    magic = 9
+    magic = 6
     if len(sys.argv) > 2:
         magic = int(sys.argv[2])
 
