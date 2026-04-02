@@ -51,7 +51,7 @@ def bench_qrack(width, depth, trials, sdrp):
             experiment.run_qiskit_circuit(circ)
 
             # The point is to test whether XEB survives with a TurboQuant-based compression approach
-            experiment.lossy_out_to_file("fc.svtq")
+            experiment.lossy_out_to_file("fc.svtq", p=6)
             experiment.lossy_in_from_file("fc.svtq")
 
             circ_aer = circ.copy()
