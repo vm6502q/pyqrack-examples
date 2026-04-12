@@ -95,7 +95,6 @@ def bench_qrack(width, depth, sdrp, is_sparse):
     ideal_probs = {k: abs(v)**2 / sum_probs for k, v in ideal_amps.items()}
 
     # Qrack control for XEB reference
-    rcs.save_statevector()
     control = QrackSimulator(width)
     control.run_qiskit_circuit(rcs, shots=0)
     control_probs = control.out_probs()
