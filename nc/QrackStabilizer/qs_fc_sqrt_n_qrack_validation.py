@@ -10,7 +10,7 @@ from collections import Counter
 
 import numpy as np
 
-from pyqrack import QrackSimulator, QrackStabilizer
+from pyqrack import QrackSimulator, QrackStabilizer, Pauli
 
 from qiskit import QuantumCircuit
 
@@ -51,6 +51,7 @@ def bench_qrack(n_qubits, hamming_n):
         rz_positions.append(rz_position)
 
     qc = QuantumCircuit(n_qubits)
+    control = QrackSimulator(n_qubits)
     gate_count = 0
     for d in range(n_qubits):
         # Single-qubit gates
@@ -58,14 +59,18 @@ def bench_qrack(n_qubits, hamming_n):
             # Single-qubit gates
             for _ in range(2):
                 qc.h(i)
+                control.h(i)
                 s_count = random.randint(0, 3)
                 if s_count & 1:
                     qc.z(i)
+                    control.z(i)
                 if s_count & 2:
                     qc.s(i)
+                    control.s(i)
                 if gate_count in rz_positions:
                     angle = random.uniform(0, math.pi / 2)
                     qc.rz(angle, i)
+                    control.r(Pauli.PauliZ, angle, i)
                 gate_count = gate_count + 1
 
         # 2-qubit couplers
@@ -75,6 +80,7 @@ def bench_qrack(n_qubits, hamming_n):
             c = unused_bits.pop()
             t = unused_bits.pop()
             qc.cx(c, t)
+            control.mcx([c], t)
 
         # Round to nearest Clifford circuit
         exp_shots = []
@@ -84,8 +90,6 @@ def bench_qrack(n_qubits, hamming_n):
             exp_shots.append(experiment.m_all());
         experiment_counts = dict(Counter(exp_shots))
 
-        control = QrackSimulator(n_qubits)
-        control.run_qiskit_circuit(qc, shots=0)
         control_probs = control.out_probs()
 
         print(calc_stats(control_probs, experiment_counts, shots, d + 1, hamming_n, rz_count))
