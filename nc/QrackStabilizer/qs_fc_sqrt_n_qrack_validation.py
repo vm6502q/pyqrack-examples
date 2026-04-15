@@ -10,12 +10,9 @@ from collections import Counter
 
 import numpy as np
 
-from pyqrack import QrackStabilizer
+from pyqrack import QrackSimulator, QrackStabilizer
 
 from qiskit import QuantumCircuit
-from qiskit.compiler import transpile
-from qiskit_aer.backends import AerSimulator
-from qiskit.quantum_info import Statevector
 
 
 # By Gemini (Google Search AI)
@@ -87,11 +84,9 @@ def bench_qrack(n_qubits, hamming_n):
             exp_shots.append(experiment.m_all());
         experiment_counts = dict(Counter(exp_shots))
 
-        aer_qc = qc.copy()
-        aer_qc.save_statevector()
-        control = AerSimulator(method="statevector")
-        job = control.run(aer_qc)
-        control_probs = Statevector(job.result().get_statevector()).probabilities()
+        control = QrackSimulator(n_qubits)
+        control.run_qiskit_circuit(qc, shots=0)
+        control_probs = control.out_probs()
 
         print(calc_stats(control_probs, experiment_counts, shots, d + 1, hamming_n, rz_count))
 

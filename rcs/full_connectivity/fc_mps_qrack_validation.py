@@ -16,6 +16,9 @@ from qiskit import QuantumCircuit
 import quimb.tensor as tn
 from qiskit_quimb import quimb_circuit
 
+import jax
+import jax.numpy as jnp
+
 
 # Function by Google search AI
 def int_to_bitstring(integer, length):
@@ -26,8 +29,8 @@ def int_to_bitstring(integer, length):
 def bench_qrack(width, depth, sdrp, is_sparse):
     lcv_range = range(width)
     all_bits = list(lcv_range)
-    retained = min(width ** 2, 1 << (width - 1))
-    checked = min(1 << 20, 1 << (width + 2))
+    retained = min(width ** 2, 1 << width)
+    checked = min(width ** 2, 1 << width)
 
     # chi controls approximation quality vs. speed
     # chi = width is cheap; chi = width**2 is closer to exact
@@ -36,7 +39,7 @@ def bench_qrack(width, depth, sdrp, is_sparse):
 
     # CircuitMPS maintains state as MPS with bounded bond dimension
     # Gate application is O(chi^2 * width) per gate instead of exact
-    quimb_rcs = tn.CircuitMPS(width, max_bond=chi)
+    quimb_rcs = tn.CircuitMPS(width, max_bond=chi, to_backend=jnp.array)
 
     rcs = QuantumCircuit(width)
 

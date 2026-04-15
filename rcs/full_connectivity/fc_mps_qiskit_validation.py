@@ -18,6 +18,9 @@ from qiskit.quantum_info import Statevector
 import quimb.tensor as tn
 from qiskit_quimb import quimb_circuit
 
+import jax
+import jax.numpy as jnp
+
 
 # Function by Google search AI
 def int_to_bitstring(integer, length):
@@ -38,7 +41,7 @@ def bench_qrack(width, depth, sdrp, is_sparse):
 
     # CircuitMPS maintains state as MPS with bounded bond dimension
     # Gate application is O(chi^2 * width) per gate instead of exact
-    quimb_rcs = tn.CircuitMPS(width, max_bond=chi)
+    quimb_rcs = tn.CircuitMPS(width, max_bond=chi, to_backend=jnp.array)
 
     rcs = QuantumCircuit(width)
 
