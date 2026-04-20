@@ -1,169 +1,140 @@
-# How good are Google's own "patch circuits" and "elided circuits" as a direct XEB approximation to full Sycamore circuits?
-# (Are they better than the 2019 Sycamore hardware?)
+# Quantum volume protocol certification
 
 import math
 import random
 import sys
 import time
+import tracemalloc
 
 from pyqrack import QrackSimulator
 
 from qiskit import QuantumCircuit
-from qiskit.compiler import transpile
+
+import threading, pynvml
 
 
-def count_set_bits(n):
-    return bin(n).count("1")
+# See https://discuss.pytorch.org/t/measuring-peak-memory-usage-tracemalloc-for-pytorch/34067/6
+# for GPU memory usage monitoring
+def gpu_mem_used(id):
+    handle = pynvml.nvmlDeviceGetHandleByIndex(id)
+    info = pynvml.nvmlDeviceGetMemoryInfo(handle)
+    return info.used
 
 
-def bench_qrack(width, depth, trials, sdrp, is_obfuscated):
-    # This is a "nearest-neighbor" coupler random circuit.
-    shots = 100
-    n_perm = 1 << width
-    lcv_range = range(width)
+def peak_monitor_start():
+    global peak_monitoring
+    peak_monitoring = True
+
+    # this thread samples RAM usage as long as the current epoch of the fit loop is running
+    peak_monitor_thread = threading.Thread(target=peak_monitor_func)
+    peak_monitor_thread.daemon = True
+    peak_monitor_thread.start()
+
+
+def peak_monitor_stop():
+    global peak_monitoring
+    peak_monitoring = False
+
+
+def peak_monitor_func():
+    global nvml_peak, peak_monitoring
+    nvml_peak = 0
+
+    while True:
+        nvml_peak = max(gpu_mem_used(0), nvml_peak)
+        if not peak_monitoring:
+            break
+        time.sleep(0.1)  # 0.1sec
+
+
+def bench_qrack(n, sdrp=0):
+    global nvml_peak, peak_monitoring
+
+    lcv_range = range(n)
     all_bits = list(lcv_range)
+    x_op = [0, 1, 1, 0]
+    shots = 100
 
-    results = {
-        "qubits": width,
-        "depth": depth,
-        "trials": trials,
-        "sdrp": sdrp,
-        "forward_seconds_avg": 0,
-        "transpile_seconds_avg": 0,
-        "backward_seconds_avg": 0,
-        "fidelity_avg": 0,
-        "midpoint_weight_avg": 0,
-        "terminal_distance_avg": 0,
-        "hamming_fidelity_avg": 0,
-    }
+    circ = QuantumCircuit(n)
+    for d in range(n):
+        # Single-qubit gates
+        for i in lcv_range:
+            th = random.uniform(0, 2 * math.pi)
+            ph = random.uniform(0, 2 * math.pi)
+            lm = random.uniform(0, 2 * math.pi)
+            circ.u(th, ph, lm, i)
 
-    for trial in range(trials):
-        circ = QuantumCircuit(width)
-        for d in range(depth):
-            # Single-qubit gates
-            for i in lcv_range:
-                circ.u(random.uniform(0, 2 * math.pi), random.uniform(0, 2 * math.pi), random.uniform(0, 2 * math.pi), i)
-                # for _ in range(2):
-                #     circ.h(i)
-                #     circ.rz(random.uniform(0, 2 * math.pi), i)
+        # 2-qubit couplers
+        unused_bits = all_bits.copy()
+        random.shuffle(unused_bits)
+        while len(unused_bits) > 1:
+            c = unused_bits.pop()
+            t = unused_bits.pop()
+            circ.cx(c, t)
 
-            # 2-qubit couplers
-            unused_bits = all_bits.copy()
-            random.shuffle(unused_bits)
-            while len(unused_bits) > 1:
-                c = unused_bits.pop()
-                t = unused_bits.pop()
-                circ.cx(c, t)
+    traced_memory_start = tracemalloc.get_traced_memory()
+    peak_monitoring = False
+    nvml_peak = 0
+    pynvml.nvmlInit()
+    peak_monitor_start()
+    start = time.perf_counter()
 
-        start = time.perf_counter()
+    sim = QrackSimulator(n, isStabilizerHybrid=False)
+    if sdrp > 0:
+        sim.set_sdrp(sdrp)
+    # Run the experiment.
+    sim.run_qiskit_circuit(circ)
+    sim.run_qiskit_circuit(circ.inverse())
 
-        experiment = QrackSimulator(width)
-        if sdrp > 0:
-            experiment.set_sdrp(sdrp)
+    terminal = sim.measure_shots(all_bits, shots)
+    fidelity_exp = terminal.count(0) / shots
+    fidelity_est = sim.get_unitary_fidelity()
 
-        # To ensure no dependence on initial |0> state,
-        # initialize to a random permutation.
-        rand_perm = random.randint(0, n_perm - 1)
-        for bit_index in range(width):
-            if (rand_perm >> bit_index) & 1:
-                experiment.x(bit_index)
+    del sim
 
-        # Run the experiment.
-        experiment.run_qiskit_circuit(circ)
-        # Collect the experimental observable results.
-        midpoint = experiment.measure_shots(all_bits, shots)
+    interval = time.perf_counter() - start
+    traced_memory_end = tracemalloc.get_traced_memory()
+    nvml_after = gpu_mem_used(0)
+    peak_monitor_stop()
+    tracemalloc.stop()
 
-        forward_seconds = time.perf_counter() - start
-
-        # Optionally "obfuscate" the circuit adjoint.
-        if is_obfuscated:
-            adj_circ = transpile(circ, optimization_level=3)
-            adj_circ = transpile(
-                adj_circ,
-                optimization_level=3,
-                basis_gates=[
-                    "u",
-                    "x",
-                    "y",
-                    "z",
-                    "s",
-                    "sdg",
-                    "t",
-                    "tdg",
-                    "cx",
-                    "cy",
-                    "cz",
-                    "cp",
-                    "swap",
-                    "iswap",
-                ],
-            ).inverse()
-        else:
-            adj_circ = circ.inverse()
-
-        transpile_seconds = time.perf_counter() - (forward_seconds + start)
-
-        # Uncompute the experiment
-        experiment.run_qiskit_circuit(adj_circ)
-        # Uncompute state preparation
-        for bit_index in range(width):
-            if (rand_perm >> bit_index) & 1:
-                experiment.x(bit_index)
-
-        # Check whether the experiment and state preparation
-        # ("...and measurement", SPAM) is observably uncomputed.
-        terminal = experiment.measure_shots(all_bits, shots)
-
-        backward_seconds = time.perf_counter() - (
-            transpile_seconds + forward_seconds + start
-        )
-
-        # Experiment results
-        hamming_weight = sum(count_set_bits(r) for r in midpoint) / shots
-        # Validation
-        hamming_distance = sum(count_set_bits(r) for r in terminal) / shots
-
-        results["forward_seconds_avg"] += forward_seconds
-        results["transpile_seconds_avg"] += transpile_seconds
-        results["backward_seconds_avg"] += backward_seconds
-        results["fidelity_avg"] += terminal.count(0) / shots
-        results["midpoint_weight_avg"] += hamming_weight
-        results["terminal_distance_avg"] += hamming_distance
-        results["hamming_fidelity_avg"] += (
-            hamming_weight - hamming_distance
-        ) / hamming_weight
-
-    results["forward_seconds_avg"] /= trials
-    results["transpile_seconds_avg"] /= trials
-    results["backward_seconds_avg"] /= trials
-    results["fidelity_avg"] /= trials
-    results["midpoint_weight_avg"] /= trials
-    results["terminal_distance_avg"] /= trials
-    results["hamming_fidelity_avg"] /= trials
-
-    return results
+    return (
+        interval,
+        fidelity_est,
+        fidelity_exp,
+        (traced_memory_end[1] - traced_memory_start[0]) / 1024,
+        (nvml_peak - nvml_after) / (1024 * 1024),
+    )
 
 
 def main():
-    if len(sys.argv) < 3:
-        raise RuntimeError(
-            "Usage: python3 mirror_nn_depth_series.py [width] [depth] [trials] [is_obfuscated]"
-        )
-
-    width = int(sys.argv[1])
-    depth = int(sys.argv[2])
-    trials = 1
+    n = 20
     sdrp = 0
-    is_obfuscated = False
-    if len(sys.argv) > 3:
-        trials = int(sys.argv[3])
-    if len(sys.argv) > 4:
-        sdrp = float(sys.argv[4])
-    if len(sys.argv) > 5:
-        is_obfuscated = sys.argv[5] not in ["False", "0"]
+    if len(sys.argv) > 1:
+        n = int(sys.argv[1])
+    if len(sys.argv) > 2:
+        sdrp = float(sys.argv[2])
+    n_pow = 1 << n
 
-    # Run the benchmarks
-    print(bench_qrack(width, depth, trials, sdrp, is_obfuscated))
+    results = bench_qrack(n, sdrp)
+
+    interval = results[0]
+    fidelity_est = results[1]
+    fidelity_exp = results[2]
+    memory_cpu = results[3]
+    memory_gpu = results[4]
+
+    print(
+        {
+            "qubits": n,
+            "sdrp": sdrp,
+            "seconds": interval,
+            "fidelity_est": fidelity_est,
+            "fidelity_exp": fidelity_exp,
+            "peak_cpu_mb": memory_cpu,
+            "peak_gpu_mb": memory_gpu,
+        }
+    )
 
     return 0
 
