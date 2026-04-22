@@ -18,6 +18,8 @@ def main():
         step_count = int(sys.argv[2])
 
     sim = QrackSimulator(lattice_qb_count + 1)
+
+    # Define this origin state as "0" and let sign carry in arithmetic 
     sim.x(sign_qubit)
 
     for _ in range(step_count):
@@ -34,6 +36,8 @@ def main():
     print("Expected position:", exp_pos)
     hi_pos = sim.highest_prob_perm() - sign_power
     print("Most-likely position:", hi_pos)
+    ori_pos = sim.prob_perm(lattice_qubits, [False] * sign_qubit + [True])
+    print("Origin probability:", ori_pos)
     obs_pos = (sim.m_all() & ~(1 << coin_qubit)) - sign_power
     print("Observed position:", obs_pos)
 
