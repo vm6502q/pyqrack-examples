@@ -27,8 +27,12 @@ def main():
         sim.mcsub(1, [coin_qubit], lattice_qubits)
         sim.x(coin_qubit)
 
+    print("Lattice qubits:", lattice_qb_count)
+    print("Weyl ladder dimensions:", 1 << lattice_qb_count)
     exp_pos = sim.permutation_expectation(lattice_qubits) - sign_power
     print("Expected position:", exp_pos)
+    hi_pos = sim.highest_prob_perm()
+    print("Most-likely position:", hi_pos)
     obs_pos = (sim.m_all() & ~(1 << coin_qubit)) - sign_power
     print("Observed position:", obs_pos)
 
