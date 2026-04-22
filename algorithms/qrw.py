@@ -13,7 +13,7 @@ def main():
     coin_qubit = lattice_qb_count
     sign_qubit = lattice_qb_count - 1
     sign_power = 1 << sign_qubit
-    step_count = sign_power - 1
+    step_count = 10
     if len(sys.argv) > 2:
         step_count = int(sys.argv[2])
 
