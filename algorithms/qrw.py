@@ -32,7 +32,7 @@ def main():
     print("Step count:", step_count)
     exp_pos = sim.permutation_expectation(lattice_qubits) - sign_power
     print("Expected position:", exp_pos)
-    hi_pos = sim.highest_prob_perm()
+    hi_pos = sim.highest_prob_perm() - sign_power
     print("Most-likely position:", hi_pos)
     obs_pos = (sim.m_all() & ~(1 << coin_qubit)) - sign_power
     print("Observed position:", obs_pos)
