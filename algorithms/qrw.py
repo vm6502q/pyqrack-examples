@@ -29,6 +29,7 @@ def main():
 
     print("Lattice qubits:", lattice_qb_count)
     print("Weyl ladder dimensions:", 1 << lattice_qb_count)
+    print("Step count:", step_count)
     exp_pos = sim.permutation_expectation(lattice_qubits) - sign_power
     print("Expected position:", exp_pos)
     hi_pos = sim.highest_prob_perm()
