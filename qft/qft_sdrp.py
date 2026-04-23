@@ -111,7 +111,7 @@ def main():
         n = int(sys.argv[1])
     sdrp = (1-1/math.sqrt(2))/2
     if len(sys.argv) > 2:
-        sdrp = int(sys.argv[1])
+        sdrp = int(sys.argv[2])
 
     print(bench_qrack(n, sdrp))
 
