@@ -11,7 +11,7 @@ from pyqrack import QrackSimulator
 from qiskit import QuantumCircuit
 
 
-def calc_stats(ideal_probs, exp_probs):
+def calc_stats(ideal_probs, exp_probs, sdrp):
     # For QV, we compare probabilities of (ideal) "heavy outputs."
     # If the probability is above 2/3, the protocol certifies/passes the qubit width.
     n_pow = len(ideal_probs)
@@ -44,6 +44,7 @@ def calc_stats(ideal_probs, exp_probs):
 
     return {
         "qubits": n,
+        "sdrp": sdrp,
         "xeb": float(xeb),
         "hog_prob": float(hog_prob),
         "l2_diff": float(rss),
@@ -74,7 +75,7 @@ def qft(n, circuit):
     qft(n, circuit)
 
 
-def bench_qrack(n):
+def bench_qrack(n, sdrp):
     circ = QuantumCircuit(n)
 
     # GHZ state
@@ -90,20 +91,25 @@ def bench_qrack(n):
     control = control.out_probs()
 
     experiment = QrackSimulator(n, isBinaryDecisionTree=True)
+    if sdrp > 0:
+        experiment.set_sdrp(sdrp)
     experiment.run_qiskit_circuit(circ, shots=0)
     experiment = experiment.out_probs()
 
-    return calc_stats(control, experiment)
+    return calc_stats(control, experiment, sdrp)
 
 
 def main():
-    bench_qrack(1)
+    bench_qrack(1, 0)
 
-    n = 8
+    n = 16
     if len(sys.argv) > 1:
         n = int(sys.argv[1])
+    sdrp = (1-1/math.sqrt(2))/2
+    if len(sys.argv) > 2:
+        sdrp = int(sys.argv[1])
 
-    print(bench_qrack(n))
+    print(bench_qrack(n, sdrp))
 
     return 0
 
