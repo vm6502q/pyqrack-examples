@@ -77,7 +77,7 @@ def bench_qrack(n):
 def main():
     bench_qrack(1)
 
-    n = 18
+    n = 8
     if len(sys.argv) > 1:
         n = int(sys.argv[1])
 
