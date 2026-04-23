@@ -119,7 +119,7 @@ def run_dj(n_input):
 
 
 def main():
-    n_input = 4
+    n_input = 10
     if len(sys.argv) > 1:
         n_input = int(sys.argv[1])
 
