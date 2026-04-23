@@ -6,7 +6,9 @@ import random
 import sys
 
 from pyqrack import QrackStabilizer
+
 from qiskit import QuantumCircuit
+from qiskit.compiler import transpile
 
 
 def toffoli_clifford_t(circ, c1, c2, t):
@@ -102,6 +104,26 @@ def run_dj(n_input):
     )
 
     deutsch_jozsa(circ, input_qubits, output_qubit, ancilla, nonlinear_balanced_oracle_fn)
+    
+    basis_gates = [
+        "rz",
+        "h",
+        "x",
+        "y",
+        "z",
+        "sx",
+        "sxdg",
+        "s",
+        "sdg",
+        "t",
+        "tdg",
+        "cx",
+        "cy",
+        "cz",
+        "swap",
+        "iswap",
+    ]
+    circ = transpile(circ, optimization_level=3, basis_gates=basis_gates)
 
     sim = QrackStabilizer(n_total)
     sim.run_qiskit_circuit(circ, shots=0)
