@@ -86,11 +86,11 @@ def bench_qrack(n, sdrp):
     qft(n, circ)
     reverse(n, circ)
 
-    control = QrackSimulator(n, isBinaryDecisionTree=False)
+    control = QrackSimulator(n)
     control.run_qiskit_circuit(circ, shots=0)
     control = control.out_probs()
 
-    experiment = QrackSimulator(n, isBinaryDecisionTree=True)
+    experiment = QrackSimulator(n)
     if sdrp > 0:
         experiment.set_sdrp(sdrp)
     experiment.run_qiskit_circuit(circ, shots=0)
