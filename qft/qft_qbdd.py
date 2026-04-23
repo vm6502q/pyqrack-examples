@@ -24,8 +24,9 @@ def calc_stats(ideal_probs, exp_probs):
     denom = 0
     hog_prob = 0
     sqr_diff = 0
+    m_sqr_diff = 0
     for i in range(n_pow):
-        exp = (1 - model) * (exp_probs[i] if i in exp_probs else 0) + model * mean_guess
+        exp = exp_probs[i]
         ideal = ideal_probs[i]
 
         # XEB / EPLG
@@ -34,6 +35,7 @@ def calc_stats(ideal_probs, exp_probs):
 
         # L2 norm
         sqr_diff += (ideal - exp) ** 2
+        m_sqr_diff += (ideal - mean_guess) ** 2
 
         # QV / HOG
         if ideal > threshold:
@@ -41,12 +43,14 @@ def calc_stats(ideal_probs, exp_probs):
 
     xeb = numer / denom
     rss = math.sqrt(sqr_diff)
+    mf_rss = math.sqrt(m_sqr_diff)
 
     return {
         "qubits": n,
         "xeb": float(xeb),
         "hog_prob": float(hog_prob),
         "l2_diff": float(rss),
+        "mf_l2_diff": float(mf_rss)
     }
 
 
