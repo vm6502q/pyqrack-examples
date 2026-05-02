@@ -51,7 +51,7 @@ def run_qasm(power, is_sparse, file_in):
             is_first_inner = True
 
             # Run the original circuit
-            sim = QrackSimulator(n_qubits, isSparse = is_sparse, isOpenCL = not is_sparse)
+            sim = QrackSimulator(n_qubits, is_sparse = is_sparse, is_gpu = not is_sparse)
             sim.run_qiskit_circuit(qc, shots=0)
 
             while len(fixed_bits.keys()) < n_qubits:

@@ -40,7 +40,7 @@ def balanced_oracle(sim):
 
 def main():
     # Prepare the initial register state:
-    sim = QrackSimulator(num_qubits, isOpenCL=False)
+    sim = QrackSimulator(num_qubits, is_opencl=False)
     sim.x(num_qubits - 1)
     for i in range(num_qubits):
         sim.h(i)
@@ -67,7 +67,7 @@ def main():
     print()
 
     # Prepare the initial register state:
-    sim = QrackSimulator(num_qubits, isOpenCL=False)
+    sim = QrackSimulator(num_qubits, is_opencl=False)
     sim.x(num_qubits - 1)
     for i in range(num_qubits):
         sim.h(i)
@@ -94,7 +94,7 @@ def main():
     print()
 
     # Prepare the initial register state:
-    sim = QrackSimulator(num_qubits, isOpenCL=False)
+    sim = QrackSimulator(num_qubits, is_opencl=False)
     sim.x(num_qubits - 1)
     for i in range(num_qubits):
         sim.h(i)

@@ -78,7 +78,7 @@ def bench_qrack(width_depth):
     # This is a "nearest-neighbor" coupler random circuit.
     start = time.perf_counter()
 
-    sim = QrackSimulator(width, isBinaryDecisionTree=True)
+    sim = QrackSimulator(width, is_binary_decision_tree=True)
 
     lcv_range = range(width)
 

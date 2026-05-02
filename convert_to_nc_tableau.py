@@ -30,7 +30,7 @@ def convert_to_augmented_tableau(file_in, file_out):
         "iswap",
     ]
     qc = transpile(qc, basis_gates=basis_gates)
-    sim = QrackSimulator(qc.num_qubits, isTensorNetwork=False, isSchmidtDecompose=False, isStabilizerHybrid=True)
+    sim = QrackSimulator(qc.num_qubits, is_near_clifford_tableau_writer=True)
     sim.run_qiskit_circuit(qc, shots=0)
     sim.out_to_file(file_out)
 

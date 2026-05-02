@@ -47,7 +47,7 @@ def bench_qrack(depth):
 
     width = 54
 
-    sim = QrackSimulator(width, isBinaryDecisionTree=True)
+    sim = QrackSimulator(width, is_binary_decision_tree=True)
 
     lcv_range = range(width)
 

@@ -57,7 +57,7 @@ def bench_qrack(width, depth, trials, sdrp, is_obfuscated):
 
         start = time.perf_counter()
 
-        experiment = QrackSimulator(width, isOpenCL=False, isSparse=True)
+        experiment = QrackSimulator(width, is_gpu=False, is_sparse=True)
         if sdrp > 0:
             experiment.set_sdrp(sdrp)
 

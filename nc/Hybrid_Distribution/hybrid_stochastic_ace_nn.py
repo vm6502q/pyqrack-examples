@@ -197,9 +197,7 @@ def bench_qrack(n_qubits, depth, use_rz, magic, ace_qb_limit):
 
     ace = QrackSimulator(
         n_qubits,
-        isTensorNetwork=True,
-        isSchmidtDecompose=True,
-        isStabilizerHybrid=False
+        is_stabilizer_hybrid=False
     )
     # Split at least into 2 patches
     ace_qb = n_qubits

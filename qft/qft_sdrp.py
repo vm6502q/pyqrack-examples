@@ -97,6 +97,7 @@ def bench_qrack(n, sdrp):
     experiment = QrackSimulator(n)
     if sdrp > 0:
         experiment.set_sdrp(sdrp)
+    experiment.set_ace_max_qb(2)
     experiment.run_qiskit_circuit(circ, shots=0)
     experiment = experiment.out_probs()
 

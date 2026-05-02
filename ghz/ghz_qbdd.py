@@ -12,7 +12,7 @@ from pyqrack import QrackSimulator
 def bench_qrack(n):
     start = time.perf_counter()
 
-    sim = QrackSimulator(n, isSchmidtDecompose=False, isBinaryDecisionTree=True)
+    sim = QrackSimulator(n, is_binary_decision_tree=True)
 
     sim.h(0)
     for q in range(n - 1):
@@ -27,8 +27,6 @@ def bench_qrack(n):
 
 def main():
     bench_qrack(1)
-
-    os.environ["QRACK_QTENSORNETWORK_THRESHOLD_QB"] = "-1"
 
     max_qb = 24
     samples = 1

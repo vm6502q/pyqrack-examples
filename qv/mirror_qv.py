@@ -79,7 +79,7 @@ def bench_qrack(n, sdrp=0):
     peak_monitor_start()
     start = time.perf_counter()
 
-    sim = QrackSimulator(n, isStabilizerHybrid=False)
+    sim = QrackSimulator(n)
     if sdrp > 0:
         sim.set_sdrp(sdrp)
     # Run the experiment.

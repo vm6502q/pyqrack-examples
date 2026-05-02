@@ -36,7 +36,7 @@ def run_qasm(is_sparse, file_in):
     n_qubits = qc.num_qubits
     shots = min(1 << 20, 1 << (n_qubits + 2))
 
-    sim = QrackSimulator(n_qubits, isSparse = is_sparse, isOpenCL = not is_sparse)
+    sim = QrackSimulator(n_qubits, is_sparse = is_sparse, is_gpu = not is_gpu)
     sim.run_qiskit_circuit(qc, shots=0)
 
     highest_prob = sim.highest_prob_perm()

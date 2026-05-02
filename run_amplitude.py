@@ -25,7 +25,7 @@ def run_qasm(file_in, file_out):
     basis_gates = ['h', 's', 't', 'rx', 'ry', 'rz', 'cx', 'cy', 'cz', 'swap', 'iswap', 'ccx', 'ccz', 'cswap', 'u3']
     qc_quimb = transpile(qc_orig, basis_gates=basis_gates)
     quimb_circ = quimb_circuit(qc_quimb)
-    bitstring = "0010001100101011000011101100011010"
+    bitstring = "0010"
     print(f"Bit string: {bitstring}")
     best_prob = abs(quimb_circ.amplitude(bitstring)) ** 2
     print(f"Probability: {best_prob}")

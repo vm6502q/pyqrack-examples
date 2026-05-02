@@ -59,11 +59,9 @@ def bench_qrack(n):
 
     sim = QrackSimulator(
         n,
-        isStabilizerHybrid=True,
-        isTensorNetwork=False,
-        isSchmidtDecomposeMulti=False,
-        isSchmidtDecompose=False,
-        isOpenCL=False,
+        is_stabilizer_hybrid=True,
+        is_schmidt_decompose=False,
+        is_gpu=False,
     )
 
     # Run a near-Clifford circuit

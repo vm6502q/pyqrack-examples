@@ -180,19 +180,15 @@ def bench_qrack(n):
 
     nc_sim = QrackSimulator(
         n,
-        isStabilizerHybrid=True,
-        isTensorNetwork=False,
-        isSchmidtDecomposeMulti=False,
-        isSchmidtDecompose=False,
+        is_stabilizer_hybrid=True,
+        is_schmidt_decompose=False,
     )
     qcircuit.run(nc_sim)
 
     sv_sim = QrackSimulator(
         n,
-        isStabilizerHybrid=False,
-        isTensorNetwork=False,
-        isSchmidtDecomposeMulti=False,
-        isSchmidtDecompose=False,
+        is_stabilizer_hybrid=False,
+        is_schmidt_decompose=False,
     )
     qcircuit.run(sv_sim)
 

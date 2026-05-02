@@ -30,7 +30,7 @@ def calc_fidelity(ideal_ket, split_ket):
 
 def main():
     control = QrackSimulator(2)
-    experiment = QrackSimulator(2, isTensorNetwork=False, isStabilizerHybrid=False)
+    experiment = QrackSimulator(2)
 
     # Prepare a Bell pair.
     control.h(0)

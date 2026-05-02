@@ -219,9 +219,8 @@ def bench_qrack(n_qubits, depth, use_rz, magic, ace_qb_limit, sparse_mb_limit):
 
     sparse = QrackSimulator(
         n_qubits,
-        isOpenCL=False,
-        isPaged=False,
-        isSparse=True
+        is_gpu=False,
+        is_sparse=True
     )
     # Split at least into 2 patches
     sparse.set_sparse_ace_max_mb(sparse_mb_limit)

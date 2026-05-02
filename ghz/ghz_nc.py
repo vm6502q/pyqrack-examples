@@ -12,7 +12,7 @@ def bench_qrack(n):
     start = time.perf_counter()
 
     sim = QrackSimulator(
-        n, isTensorNetwork=False, isSchmidtDecompose=False, isStabilizerHybrid=True
+        n, is_schmidt_decompose=False, is_stabilizer_hybrid=True
     )
 
     sim.h(0)

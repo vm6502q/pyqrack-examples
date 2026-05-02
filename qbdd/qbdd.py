@@ -13,7 +13,7 @@ from pyqrack import QrackSimulator
 def bench_qrack(width, sdrp):
     start = time.perf_counter()
 
-    sim = QrackSimulator(width, isBinaryDecisionTree=True)
+    sim = QrackSimulator(width, is_binary_decision_tree=True)
     two_bit_gates = sim.mcx, sim.mcy, sim.mcz, sim.macx, sim.macy, sim.macz
     if sdrp > 0:
         sim.set_sdrp(sdrp)

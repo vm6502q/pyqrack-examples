@@ -89,9 +89,8 @@ def bench_qrack(n_qubits, depth, use_rz, magic, ace_qb_limit):
 
     qe = QrackSimulator(
         n_qubits,
-        isTensorNetwork=False,
-        isSchmidtDecompose=False,
-        isStabilizerHybrid=True,
+        is_schmidt_decompose=False,
+        is_stabilizer_hybrid=True,
     )
     # Round closer to a Clifford circuit
     qe.set_use_exact_near_clifford(False)
