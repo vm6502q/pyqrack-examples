@@ -155,11 +155,7 @@ def bench_qrack(n_qubits, magic):
             qc.cx(c, t)
 
     qc = qc.compose(qc.inverse())
-    experiment = QrackSimulator(
-        n_qubits,
-        is_schmidt_decompose=False,
-        is_stabilizer_hybrid=True,
-    )
+    experiment = QrackSimulator(n_qubits, is_near_clifford_tableau_writer=True)
     # Round to nearest Clifford circuit
     experiment.set_use_exact_near_clifford(False)
     experiment.run_qiskit_circuit(qc)

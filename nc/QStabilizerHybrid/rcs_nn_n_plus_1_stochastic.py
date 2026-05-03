@@ -166,11 +166,7 @@ def bench_qrack(width, use_rz):
                 g = random.choice(two_bit_gates)
                 g(qc, b1, b2)
 
-        experiment = QrackSimulator(
-            width,
-            is_schmidt_decompose=False,
-            is_stabilizer_hybrid=True,
-        )
+        experiment = QrackSimulator(width, is_near_clifford_tableau_writer=True)
         # Round to nearest Clifford circuit
         experiment.set_use_exact_near_clifford(False)
         experiment.run_qiskit_circuit(qc)

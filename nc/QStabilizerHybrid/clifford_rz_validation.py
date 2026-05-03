@@ -178,11 +178,7 @@ def bench_qrack(n):
     qcircuit = QrackCircuit(is_collapse=False)
     random_circuit(n, 6, qcircuit)
 
-    nc_sim = QrackSimulator(
-        n,
-        is_stabilizer_hybrid=True,
-        is_schmidt_decompose=False,
-    )
+    nc_sim = QrackSimulator(n, is_near_clifford_tableau_writer=True)
     qcircuit.run(nc_sim)
 
     sv_sim = QrackSimulator(

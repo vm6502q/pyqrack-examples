@@ -28,11 +28,7 @@ def bench_qrack(n_qubits, use_rz):
 
     start = time.perf_counter()
 
-    experiment = QrackSimulator(
-        n_qubits,
-        is_schmidt_decompose=False,
-        is_stabilizer_hybrid=True,
-    )
+    experiment = QrackSimulator(n_qubits, is_near_clifford_tableau_writer=True)
     # Round to nearest Clifford circuit
     experiment.set_use_exact_near_clifford(False)
 

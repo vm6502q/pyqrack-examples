@@ -57,12 +57,7 @@ def bench_qrack(n):
     # This is a demonstration of near-Clifford capabilities, with Clifford+RZ gate set.
     start = time.perf_counter()
 
-    sim = QrackSimulator(
-        n,
-        is_stabilizer_hybrid=True,
-        is_schmidt_decompose=False,
-        is_gpu=False,
-    )
+    sim = QrackSimulator(n, is_near_clifford_tableau_writer=True)
 
     # Run a near-Clifford circuit
     random_circuit(n, 3, sim)

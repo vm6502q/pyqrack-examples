@@ -180,7 +180,7 @@ def bench_qrack(n, magic):
     start = time.perf_counter()
     qcircuit = QrackCircuit(is_collapse=False)
     magic = random_circuit(n, magic, qcircuit)
-    qsim = QrackSimulator(n)
+    qsim = QrackSimulator(n, is_near_clifford_tableau_writer=True)
     qcircuit.run(qsim)
     qcircuit.inverse().run(qsim)
 

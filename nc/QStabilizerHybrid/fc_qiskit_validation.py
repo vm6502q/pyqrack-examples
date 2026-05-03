@@ -66,11 +66,7 @@ def bench_qrack(width, depth, trials):
                 t = unused_bits.pop()
                 circ.cx(c, t)
 
-            experiment = QrackSimulator(
-                width,
-                is_schmidt_decompose=False,
-                is_stabilizer_hybrid=True,
-            )
+            experiment = QrackSimulator(width, is_near_clifford_tableau_writer=True)
             # Round to nearest Clifford circuit
             experiment.set_ncrp(1.0)
             nc_circ = transpile(circ, optimization_level=3, basis_gates=basis_gates)
