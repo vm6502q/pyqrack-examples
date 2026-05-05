@@ -28,7 +28,7 @@ def int_to_bitstring(integer, length):
 
 
 # Modified to use MPS by (Anthropic) Claude
-def bench_qrack(width, depth, sdrp, is_sparse):
+def bench_qrack(width, depth, sdrp):
     lcv_range = range(width)
     all_bits = list(lcv_range)
     retained = min(width ** 2, 1 << (width - 1))
@@ -62,10 +62,7 @@ def bench_qrack(width, depth, sdrp, is_sparse):
             quimb_rcs.apply_gate('CX', c, t)
 
     # Run Qrack for heavy output sieve
-    if is_sparse:
-        experiment = QrackSimulator(width, isTensorNetwork=False, isOpenCL=False, isSparse=True)
-    else:
-        experiment = QrackSimulator(width)
+    experiment = QrackSimulator(width)
     if sdrp > 0:
         experiment.set_sdrp(sdrp)
     experiment.run_qiskit_circuit(rcs)
@@ -150,20 +147,17 @@ def calc_stats(ideal_probs, exp_probs):
 def main():
     if len(sys.argv) < 3:
         raise RuntimeError(
-            "Usage: python3 fc_qiskit_validation.py [width] [depth] [sdrp] [is_sparse]"
+            "Usage: python3 fc_qiskit_validation.py [width] [depth] [sdrp]"
         )
 
     width = int(sys.argv[1])
     depth = int(sys.argv[2])
     sdrp = 0 # (1.0 - 1.0 / math.sqrt(2)) / 2.0
-    is_sparse = False
     if len(sys.argv) > 3:
         sdrp = float(sys.argv[3])
-    if len(sys.argv) > 4:
-        is_sparse = sys.argv[4] not in ["False", "0"]
 
     # Run the benchmarks
-    print(bench_qrack(width, depth, sdrp, is_sparse))
+    print(bench_qrack(width, depth, sdrp))
 
     return 0
 
