@@ -2,7 +2,9 @@
 Useful and "cool" example scripts for PyQrack
 
 ## Introduction
-[PyQrack](https://github.com/unitaryfund/pyqrack) is the official Python wrapper for the (C++) [Qrack](https://github.com/unitaryfund/qrack) quantum computer simulator and framework. [Examples already exist as a Jupyter Notebook collection](https://github.vom/vm6502q/pyqrack-jupyter).
+[PyQrack](https://github.com/unitaryfund/pyqrack) is the official Python wrapper for the (C++) [Qrack](https://github.com/unitaryfund/qrack) quantum computer simulator and framework. [PyQrackIsing](https://github.com/vm6502q/pyqrackising) is another Python library for hard optimization problems (like MaxCut and Traveling Salesman Problem) and materials physics models like _"tranverse field Ising model" ("TFIM")_ and _"Fermi-Hubbard model."_ [A limited selection of examples also exists as a Jupyter Notebook collection](https://github.vom/vm6502q/pyqrack-jupyter).
+
+Notably, this repository manages to collect together a number of challenges against _"quantum supremacy"_ and _"quantum advantage"_ with heuristics from the Qrack framework that seem to match or exceed common _"noisy-intermediate scale quantum" ("NISQ")_ fidelity circa 2026. (We also include other instructive usage examples for PyQrack and PyQrackIsing.)
 
 Most people with interest in quantum computing would probably be happy to consume PyQrack via Jupyter Notebook and Jupyter Lab. However, while Qrack recognizes and supports that popular ("data science") workflow, relying on so many development environment and runtime dependencies is, basically, antithetical to the original point and design of the Qrack project. Qrack has _no_ required dependencies whatsoever, except for the C ABI, `libc6`, as a dependency of any C or C++ "pure-language" code project. Qrack optionally provides GPU acceleration via choice of OpenCL or CUDA, but even this is an _optional_ dependency that can be omitted. 128-bit floating point math can optionally be supplied by the [Boost libraries](https://www.boost.org/), but even Qrack's ("big integers") "arbitrary precision integers," when demanded according to user build settings, is _"pure language standard."_
 
