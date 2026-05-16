@@ -9,6 +9,13 @@
 # full-state simulator — both are classical patch approximations of the same
 # circuit with gate shadows at their respective boundaries.
 #
+# Memory note: for a grid of row_len x col_len qubits, the vertical patch
+# splits into (col_len//2) and (col_len - col_len//2) columns per row.
+# The larger patch has row_len * ceil(col_len/2) qubits. out_probs() on
+# that patch requires 8 * 2^(patch_size) bytes. For n=54 (6x9) this is
+# ~8GB for the 30-qubit patch. Prefer widths where max patch <= 24 qubits
+# (e.g. n=42 for 6x7, n=35 for 5x7, n=30 for 5x6).
+#
 # By (Anthropic) Claude, working from Dan Strano's scripts and prompting.
 
 import math
@@ -60,21 +67,19 @@ def make_patches(width, row_len, col_len, axis):
     return patch, local_idx
 
 
-def build_quadrant_tables(width, patch_a, local_a, patch_b, local_b):
+def get_quadrants(width, patch_h, local_h, patch_v, local_v):
     """
-    For each qubit, record which (A-local bit, B-local bit) it contributes to,
-    grouped by quadrant (A-patch, B-patch).
-    Returns q00, q01, q10, q11 — each a list of (a_local_bit, b_local_bit) pairs.
+    Return four lists of (h_local_bit, v_local_bit) pairs, one per quadrant:
+      q00: H-patch0 ∩ V-patch0
+      q01: H-patch0 ∩ V-patch1
+      q10: H-patch1 ∩ V-patch0
+      q11: H-patch1 ∩ V-patch1
     """
-    q00 = []; q01 = []; q10 = []; q11 = []
-    for q in range(width):
-        entry = (int(local_a[q]), int(local_b[q]))
-        ap = int(patch_a[q]); bp = int(patch_b[q])
-        if   ap == 0 and bp == 0: q00.append(entry)
-        elif ap == 0 and bp == 1: q01.append(entry)
-        elif ap == 1 and bp == 0: q10.append(entry)
-        else:                     q11.append(entry)
-    return q00, q01, q10, q11
+    q = [[], [], [], []]
+    for i in range(width):
+        q[int(patch_h[i]) * 2 + int(patch_v[i])].append(
+            (int(local_h[i]), int(local_v[i])))
+    return q[0], q[1], q[2], q[3]
 
 
 # ---------------------------------------------------------------------------
@@ -84,115 +89,105 @@ def build_quadrant_tables(width, patch_a, local_a, patch_b, local_b):
 def _prob(sim, q, patch, local_idx):
     return sim[patch[q]].prob(local_idx[q])
 
-def _x(sim, q, patch, local_idx):    sim[patch[q]].x(local_idx[q])
-def _z(sim, q, patch, local_idx):    sim[patch[q]].z(local_idx[q])
-def _h(sim, q, patch, local_idx):    sim[patch[q]].h(local_idx[q])
-def _s(sim, q, patch, local_idx):    sim[patch[q]].s(local_idx[q])
-def _adjs(sim, q, patch, local_idx): sim[patch[q]].adjs(local_idx[q])
+def _x(sim, q, p, l):    sim[p[q]].x(l[q])
+def _z(sim, q, p, l):    sim[p[q]].z(l[q])
+def _h(sim, q, p, l):    sim[p[q]].h(l[q])
+def _s(sim, q, p, l):    sim[p[q]].s(l[q])
+def _adjs(sim, q, p, l): sim[p[q]].adjs(l[q])
 
 
-def ct_pair_prob(sim, q1, q2, patch, local_idx):
-    p1 = _prob(sim, q1, patch, local_idx)
-    p2 = _prob(sim, q2, patch, local_idx)
+def ct_pair_prob(sim, q1, q2, p, l):
+    p1 = sim[p[q1]].prob(l[q1])
+    p2 = sim[p[q2]].prob(l[q2])
     return (p2, q1) if p1 < p2 else (p1, q2)
 
 
-def cz_shadow(sim, q1, q2, patch, local_idx, anti=False):
-    if anti: _x(sim, q1, patch, local_idx)
-    prob_max, t = ct_pair_prob(sim, q1, q2, patch, local_idx)
-    if prob_max > 0.5: _z(sim, t, patch, local_idx)
-    if anti: _x(sim, q1, patch, local_idx)
+def cz_shadow(sim, q1, q2, p, l, anti=False):
+    if anti: _x(sim, q1, p, l)
+    prob_max, t = ct_pair_prob(sim, q1, q2, p, l)
+    if prob_max > 0.5: _z(sim, t, p, l)
+    if anti: _x(sim, q1, p, l)
 
 
-def cx_shadow(sim, c, t, patch, local_idx, anti=False):
-    _h(sim, t, patch, local_idx)
-    cz_shadow(sim, c, t, patch, local_idx, anti)
-    _h(sim, t, patch, local_idx)
+def cx_shadow(sim, c, t, p, l, anti=False):
+    _h(sim, t, p, l); cz_shadow(sim, c, t, p, l, anti); _h(sim, t, p, l)
 
 
-def cy_shadow(sim, c, t, patch, local_idx, anti=False):
-    _adjs(sim, t, patch, local_idx)
-    cx_shadow(sim, c, t, patch, local_idx, anti)
-    _s(sim, t, patch, local_idx)
+def cy_shadow(sim, c, t, p, l, anti=False):
+    _adjs(sim, t, p, l); cx_shadow(sim, c, t, p, l, anti); _s(sim, t, p, l)
 
 
-def swap_shadow(sim, q1, q2, patch, local_idx):
-    cx_shadow(sim, q1, q2, patch, local_idx)
-    cx_shadow(sim, q2, q1, patch, local_idx)
-    cx_shadow(sim, q1, q2, patch, local_idx)
+def swap_shadow(sim, q1, q2, p, l):
+    cx_shadow(sim, q1, q2, p, l)
+    cx_shadow(sim, q2, q1, p, l)
+    cx_shadow(sim, q1, q2, p, l)
 
 
-def _same(q1, q2, patch): return patch[q1] == patch[q2]
-def _lq(q, local_idx):    return int(local_idx[q])
-def _p(q, patch):         return int(patch[q])
+def _same(q1, q2, p): return p[q1] == p[q2]
+def _lq(q, l):        return int(l[q])
+def _pp(q, p):        return int(p[q])
 
 
-def cx(sim, q1, q2, patch, local_idx):
-    if not _same(q1, q2, patch): cx_shadow(sim, q1, q2, patch, local_idx)
-    else: sim[_p(q1,patch)].mcx([_lq(q1,local_idx)], _lq(q2,local_idx))
+def cx(sim, q1, q2, p, l):
+    if not _same(q1,q2,p): cx_shadow(sim,q1,q2,p,l)
+    else: sim[_pp(q1,p)].mcx([_lq(q1,l)],_lq(q2,l))
 
-def cy(sim, q1, q2, patch, local_idx):
-    if not _same(q1, q2, patch): cy_shadow(sim, q1, q2, patch, local_idx)
-    else: sim[_p(q1,patch)].mcy([_lq(q1,local_idx)], _lq(q2,local_idx))
+def cy(sim, q1, q2, p, l):
+    if not _same(q1,q2,p): cy_shadow(sim,q1,q2,p,l)
+    else: sim[_pp(q1,p)].mcy([_lq(q1,l)],_lq(q2,l))
 
-def cz(sim, q1, q2, patch, local_idx):
-    if not _same(q1, q2, patch): cz_shadow(sim, q1, q2, patch, local_idx)
-    else: sim[_p(q1,patch)].mcz([_lq(q1,local_idx)], _lq(q2,local_idx))
+def cz(sim, q1, q2, p, l):
+    if not _same(q1,q2,p): cz_shadow(sim,q1,q2,p,l)
+    else: sim[_pp(q1,p)].mcz([_lq(q1,l)],_lq(q2,l))
 
-def acx(sim, q1, q2, patch, local_idx):
-    if not _same(q1, q2, patch): cx_shadow(sim, q1, q2, patch, local_idx, True)
-    else: sim[_p(q1,patch)].macx([_lq(q1,local_idx)], _lq(q2,local_idx))
+def acx(sim, q1, q2, p, l):
+    if not _same(q1,q2,p): cx_shadow(sim,q1,q2,p,l,True)
+    else: sim[_pp(q1,p)].macx([_lq(q1,l)],_lq(q2,l))
 
-def acy(sim, q1, q2, patch, local_idx):
-    if not _same(q1, q2, patch): cy_shadow(sim, q1, q2, patch, local_idx, True)
-    else: sim[_p(q1,patch)].macy([_lq(q1,local_idx)], _lq(q2,local_idx))
+def acy(sim, q1, q2, p, l):
+    if not _same(q1,q2,p): cy_shadow(sim,q1,q2,p,l,True)
+    else: sim[_pp(q1,p)].macy([_lq(q1,l)],_lq(q2,l))
 
-def acz(sim, q1, q2, patch, local_idx):
-    if not _same(q1, q2, patch): cz_shadow(sim, q1, q2, patch, local_idx, True)
-    else: sim[_p(q1,patch)].macz([_lq(q1,local_idx)], _lq(q2,local_idx))
+def acz(sim, q1, q2, p, l):
+    if not _same(q1,q2,p): cz_shadow(sim,q1,q2,p,l,True)
+    else: sim[_pp(q1,p)].macz([_lq(q1,l)],_lq(q2,l))
 
-def swap(sim, q1, q2, patch, local_idx):
-    if not _same(q1, q2, patch): swap_shadow(sim, q1, q2, patch, local_idx)
-    else: sim[_p(q1,patch)].swap(_lq(q1,local_idx), _lq(q2,local_idx))
+def swap(sim, q1, q2, p, l):
+    if not _same(q1,q2,p): swap_shadow(sim,q1,q2,p,l)
+    else: sim[_pp(q1,p)].swap(_lq(q1,l),_lq(q2,l))
 
-def iswap(sim, q1, q2, patch, local_idx):
-    if not _same(q1, q2, patch):
-        swap_shadow(sim, q1, q2, patch, local_idx)
-        cz_shadow(sim, q1, q2, patch, local_idx)
-        _s(sim, q1, patch, local_idx); _s(sim, q2, patch, local_idx)
-    else: sim[_p(q1,patch)].iswap(_lq(q1,local_idx), _lq(q2,local_idx))
+def iswap(sim, q1, q2, p, l):
+    if not _same(q1,q2,p):
+        swap_shadow(sim,q1,q2,p,l); cz_shadow(sim,q1,q2,p,l)
+        _s(sim,q1,p,l); _s(sim,q2,p,l)
+    else: sim[_pp(q1,p)].iswap(_lq(q1,l),_lq(q2,l))
 
-def iiswap(sim, q1, q2, patch, local_idx):
-    if not _same(q1, q2, patch):
-        _s(sim, q1, patch, local_idx); _s(sim, q2, patch, local_idx)
-        cz_shadow(sim, q1, q2, patch, local_idx)
-        swap_shadow(sim, q1, q2, patch, local_idx)
-    else: sim[_p(q1,patch)].adjiswap(_lq(q1,local_idx), _lq(q2,local_idx))
+def iiswap(sim, q1, q2, p, l):
+    if not _same(q1,q2,p):
+        _s(sim,q1,p,l); _s(sim,q2,p,l)
+        cz_shadow(sim,q1,q2,p,l); swap_shadow(sim,q1,q2,p,l)
+    else: sim[_pp(q1,p)].adjiswap(_lq(q1,l),_lq(q2,l))
 
-def pswap(sim, q1, q2, patch, local_idx):
-    if not _same(q1, q2, patch):
-        cz_shadow(sim, q1, q2, patch, local_idx)
-        swap_shadow(sim, q1, q2, patch, local_idx)
+def pswap(sim, q1, q2, p, l):
+    if not _same(q1,q2,p):
+        cz_shadow(sim,q1,q2,p,l); swap_shadow(sim,q1,q2,p,l)
     else:
-        p=_p(q1,patch); l1=_lq(q1,local_idx); l2=_lq(q2,local_idx)
-        sim[p].mcz([l1],l2); sim[p].swap(l1,l2)
+        pp=_pp(q1,p); l1=_lq(q1,l); l2=_lq(q2,l)
+        sim[pp].mcz([l1],l2); sim[pp].swap(l1,l2)
 
-def mswap(sim, q1, q2, patch, local_idx):
-    if not _same(q1, q2, patch):
-        swap_shadow(sim, q1, q2, patch, local_idx)
-        cz_shadow(sim, q1, q2, patch, local_idx)
+def mswap(sim, q1, q2, p, l):
+    if not _same(q1,q2,p):
+        swap_shadow(sim,q1,q2,p,l); cz_shadow(sim,q1,q2,p,l)
     else:
-        p=_p(q1,patch); l1=_lq(q1,local_idx); l2=_lq(q2,local_idx)
-        sim[p].swap(l1,l2); sim[p].mcz([l1],l2)
+        pp=_pp(q1,p); l1=_lq(q1,l); l2=_lq(q2,l)
+        sim[pp].swap(l1,l2); sim[pp].mcz([l1],l2)
 
-def nswap(sim, q1, q2, patch, local_idx):
-    if not _same(q1, q2, patch):
-        cz_shadow(sim, q1, q2, patch, local_idx)
-        swap_shadow(sim, q1, q2, patch, local_idx)
-        cz_shadow(sim, q1, q2, patch, local_idx)
+def nswap(sim, q1, q2, p, l):
+    if not _same(q1,q2,p):
+        cz_shadow(sim,q1,q2,p,l); swap_shadow(sim,q1,q2,p,l); cz_shadow(sim,q1,q2,p,l)
     else:
-        p=_p(q1,patch); l1=_lq(q1,local_idx); l2=_lq(q2,local_idx)
-        sim[p].mcz([l1],l2); sim[p].swap(l1,l2); sim[p].mcz([l1],l2)
+        pp=_pp(q1,p); l1=_lq(q1,l); l2=_lq(q2,l)
+        sim[pp].mcz([l1],l2); sim[pp].swap(l1,l2); sim[pp].mcz([l1],l2)
 
 
 TWO_BIT_GATES = swap, pswap, mswap, nswap, iswap, iiswap, cx, cy, cz, acx, acy, acz
@@ -238,35 +233,57 @@ def run_circuit(width, depth, row_len, col_len, patch, local_idx, rng_state):
 
 
 # ---------------------------------------------------------------------------
-# XEB — vectorised for denom, Monte Carlo for cross-term
+# XEB — exact via quadrant tensor contraction
 # ---------------------------------------------------------------------------
 
-def mc_cross_sum(a0, a1, b0, b1, q00, q01, q10, q11, n_samples):
+def _build_tensor_a(arr, qa, qb):
     """
-    Monte Carlo estimate of sum_i P_A(i)*P_B(i) by sampling ia~a0, ib~a1
-    then decoding to jc, jd using the quadrant index tables.
+    T[k_qa, k_qb] where k_qa indexes qa-bits of the distribution index (a_local).
+    Vectorised using np.add.at.
     """
-    ia = np.random.choice(len(a0), size=n_samples, p=a0)
-    ib = np.random.choice(len(a1), size=n_samples, p=a1)
-
-    jc = np.zeros(n_samples, dtype=np.int64)
-    jd = np.zeros(n_samples, dtype=np.int64)
-
-    for (a_local, b_local) in q00:
-        jc |= ((ia >> a_local) & 1).astype(np.int64) << b_local
-    for (a_local, b_local) in q01:
-        jd |= ((ia >> a_local) & 1).astype(np.int64) << b_local
-    for (a_local, b_local) in q10:
-        jc |= ((ib >> a_local) & 1).astype(np.int64) << b_local
-    for (a_local, b_local) in q11:
-        jd |= ((ib >> a_local) & 1).astype(np.int64) << b_local
-
-    return float(np.mean(b0[jc] * b1[jd]))
+    na, nb = len(qa), len(qb)
+    ia = np.arange(len(arr), dtype=np.int64)
+    ka = np.zeros(len(arr), dtype=np.int64)
+    kb = np.zeros(len(arr), dtype=np.int64)
+    for k, (al, bl) in enumerate(qa): ka |= ((ia >> al) & 1) << k
+    for k, (al, bl) in enumerate(qb): kb |= ((ia >> al) & 1) << k
+    T = np.zeros((1 << na, 1 << nb), dtype=np.float64)
+    np.add.at(T, (ka, kb), arr)
+    return T
 
 
-def calc_xeb(probs_a, probs_b, n, n0_a, n1_a,
-             q00, q01, q10, q11, depth, label_a, label_b,
-             n_samples=1_000_000):
+def _build_tensor_b(arr, qa, qb):
+    """
+    U[k_qa, k_qb] where indices come from b_local bits (second element of pairs).
+    """
+    na, nb = len(qa), len(qb)
+    jc = np.arange(len(arr), dtype=np.int64)
+    ka = np.zeros(len(arr), dtype=np.int64)
+    kb = np.zeros(len(arr), dtype=np.int64)
+    for k, (al, bl) in enumerate(qa): ka |= ((jc >> bl) & 1) << k
+    for k, (al, bl) in enumerate(qb): kb |= ((jc >> bl) & 1) << k
+    U = np.zeros((1 << na, 1 << nb), dtype=np.float64)
+    np.add.at(U, (ka, kb), arr)
+    return U
+
+
+def calc_xeb(probs_a, probs_b, n, q00, q01, q10, q11, depth, label_a, label_b):
+    """
+    Exact XEB via quadrant tensor contraction.
+
+    cross = sum_i P_A(i)*P_B(i)
+          = einsum('ij,kl,ik,jl', T, S, U, V)
+    where:
+      T[k00,k01] = a0 marginalised to quadrant bits
+      S[k10,k11] = a1 marginalised to quadrant bits
+      U[k00,k10] = b0 marginalised to quadrant bits
+      V[k01,k11] = b1 marginalised to quadrant bits
+
+    Contraction path (optimal for equal quadrant sizes):
+      Step 1: IL[k00,k11] = sum_{k01} T[k00,k01] * V[k01,k11]  (T @ V)
+      Step 2: IK[k00,k10] = sum_{k11} IL[k00,k11] * S[k10,k11].T  (IL @ S.T)
+      Step 3: cross = sum_{k00,k10} IK[k00,k10] * U[k00,k10]
+    """
     u_u = 1.0 / (1 << n)
 
     a0 = np.asarray(probs_a[0], dtype=np.float64)
@@ -274,28 +291,24 @@ def calc_xeb(probs_a, probs_b, n, n0_a, n1_a,
     b0 = np.asarray(probs_b[0], dtype=np.float64)
     b1 = np.asarray(probs_b[1], dtype=np.float64)
 
-    # denom = sum_i (P_A(i) - u)^2 = dot(a0,a0)*dot(a1,a1) - 2u + u^2*2^n
+    # denom = dot(a0,a0)*dot(a1,a1) - 2u + u^2*2^n
     denom = (float(np.dot(a0, a0)) * float(np.dot(a1, a1))
              - 2.0 * u_u + u_u * u_u * (1 << n))
 
-    # cross = sum_i P_A(i)*P_B(i)  estimated via MC
-    if n <= 28:
-        # Small enough: build full index table and compute exactly
-        idx_a0 = np.zeros(1 << n, dtype=np.int32)
-        idx_a1 = np.zeros(1 << n, dtype=np.int32)
-        idx_b0 = np.zeros(1 << n, dtype=np.int32)
-        idx_b1 = np.zeros(1 << n, dtype=np.int32)
-        for i in range(1 << n):
-            ia = ib = jc = jd = 0
-            for al, bl in q00: ia |= ((i>>al)&1)<<al; jc |= ((i>>al)&1)<<bl  # noqa
-            # Actually need the physical qubit mapping — use MC for simplicity
-            pass
-        # Fall through to MC for correctness
-        cross = mc_cross_sum(a0, a1, b0, b1, q00, q01, q10, q11, n_samples)
-    else:
-        cross = mc_cross_sum(a0, a1, b0, b1, q00, q01, q10, q11, n_samples)
+    # Build quadrant tensors
+    T = _build_tensor_a(a0, q00, q01)   # [k00, k01]
+    S = _build_tensor_a(a1, q10, q11)   # [k10, k11]
+    U = _build_tensor_b(b0, q00, q10)   # [k00, k10]
+    V = _build_tensor_b(b1, q01, q11)   # [k01, k11]
 
-    # numer = cross - 2u + u^2*2^n
+    # Exact contraction: einsum('ij,kl,ik,jl', T, S, U, V)
+    # Step 1: IL = T @ V  [k00, k11]
+    IL = T @ V
+    # Step 2: IK = IL @ S.T  [k00, k10]
+    IK = IL @ S.T
+    # Step 3: cross = sum(IK * U)
+    cross = float(np.sum(IK * U))
+
     numer = cross - 2.0 * u_u + u_u * u_u * (1 << n)
     xeb   = numer / denom if denom != 0.0 else float("nan")
 
@@ -304,7 +317,6 @@ def calc_xeb(probs_a, probs_b, n, n0_a, n1_a,
         "experiment": label_b,
         "qubits":     n,
         "depth":      depth,
-        "n_samples":  n_samples,
         "xeb":        float(xeb),
     }
 
@@ -313,7 +325,7 @@ def calc_xeb(probs_a, probs_b, n, n0_a, n1_a,
 # Main benchmark
 # ---------------------------------------------------------------------------
 
-def bench_qrack(width, depth, n_samples=1_000_000):
+def bench_qrack(width, depth):
     row_len, col_len = factor_width(width)
 
     patch_h, local_h = make_patches(width, row_len, col_len, 'horizontal')
@@ -321,45 +333,49 @@ def bench_qrack(width, depth, n_samples=1_000_000):
 
     n0_h = int(np.sum(patch_h == 0)); n1_h = int(np.sum(patch_h == 1))
     n0_v = int(np.sum(patch_v == 0)); n1_v = int(np.sum(patch_v == 1))
+    max_patch = max(n0_h, n1_h, n0_v, n1_v)
 
     print(f"Grid: {row_len} x {col_len}")
     print(f"Horizontal split: {n0_h} + {n1_h} qubits (top/bottom rows)")
     print(f"Vertical   split: {n0_v} + {n1_v} qubits (left/right cols)")
+    print(f"Largest patch: {max_patch} qubits ({2**max_patch * 8 / 1e6:.0f} MB for out_probs)")
 
     if np.array_equal(patch_h, patch_v):
         print("WARNING: horizontal and vertical splits are identical on this grid!")
-        print("Try a non-square grid (e.g. width=35 for 5x7).")
+        print("Suggest: n=42 (6x7), n=35 (5x7), or n=30 (5x6).")
         return
 
-    # Quadrant index tables for each XEB direction
-    q00_hv, q01_hv, q10_hv, q11_hv = build_quadrant_tables(
-        width, patch_h, local_h, patch_v, local_v)
-    q00_vh, q01_vh, q10_vh, q11_vh = build_quadrant_tables(
-        width, patch_v, local_v, patch_h, local_h)
+    if max_patch > 28:
+        gb = 2**max_patch * 8 / 1e9
+        print(f"WARNING: largest patch requires {gb:.1f} GB for out_probs(). "
+              f"This will likely OOM. Suggest n<=42.")
+        return
+
+    q00_hv, q01_hv, q10_hv, q11_hv = get_quadrants(width, patch_h, local_h, patch_v, local_v)
+    q00_vh, q01_vh, q10_vh, q11_vh = get_quadrants(width, patch_v, local_v, patch_h, local_h)
 
     rng_state = random.getstate()
-
     probs_h = run_circuit(width, depth, row_len, col_len, patch_h, local_h, rng_state)
     probs_v = run_circuit(width, depth, row_len, col_len, patch_v, local_v, rng_state)
 
-    print(calc_xeb(probs_h, probs_v, width, n0_h, n1_h,
+    print(calc_xeb(probs_h, probs_v, width,
                    q00_hv, q01_hv, q10_hv, q11_hv,
-                   depth, "horizontal", "vertical", n_samples))
+                   depth, "horizontal", "vertical"))
 
-    print(calc_xeb(probs_v, probs_h, width, n0_v, n1_v,
+    print(calc_xeb(probs_v, probs_h, width,
                    q00_vh, q01_vh, q10_vh, q11_vh,
-                   depth, "vertical", "horizontal", n_samples))
+                   depth, "vertical", "horizontal"))
 
 
 def main():
     if len(sys.argv) < 3:
         raise RuntimeError(
-            "Usage: python3 rcs_nn_qrack_validation_hv.py [width] [depth] [n_samples=1000000]"
+            "Usage: python3 rcs_nn_qrack_validation_hv.py [width] [depth]\n"
+            "Recommended widths: 42 (6x7), 35 (5x7), 30 (5x6)"
         )
-    width  = int(sys.argv[1])
-    depth  = int(sys.argv[2])
-    n_samp = int(sys.argv[3]) if len(sys.argv) > 3 else 1_000_000
-    bench_qrack(width, depth, n_samp)
+    width = int(sys.argv[1])
+    depth = int(sys.argv[2])
+    bench_qrack(width, depth)
     return 0
 
 
