@@ -250,7 +250,7 @@ def bench_qrack(width, depth):
     # This is a "nearest-neighbor" coupler random circuit.
     patch_bound = (width + 1) >> 1
     shots = 1 << min(width + 2, 20)
-    ace_qb = (width + 3) >> 2
+    ace_qb = (width + 1) >> 1
     control = QrackSimulator(width)
     control.set_ace_max_qb(ace_qb)
     experiment = [QrackSimulator((width + 1) >> 1), QrackSimulator(width >> 1)]
