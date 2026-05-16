@@ -22,9 +22,15 @@ def factor_width(width):
     return (row_len, col_len)
 
 
-def ct_pair_prob(sim, q1, q2):
-    p1 = sim.prob(q1)
-    p2 = sim.prob(q2)
+def ct_pair_prob(sim, q1, q2, bound):
+    if q1 < bound:
+        p1 = sim[0].prob(q1)
+    else:
+        p1 = sim[1].prob(q1 - bound)
+    if q2 < bound:
+        p2 = sim[0].prob(q2)
+    else:
+        p2 = sim[1].prob(q2 - bound)
 
     if p1 < p2:
         return p2, q1
@@ -32,130 +38,209 @@ def ct_pair_prob(sim, q1, q2):
     return p1, q2
 
 
-def cz_shadow(sim, q1, q2, anti=False):
+def cz_shadow(sim, q1, q2, bound, anti=False):
     if anti:
-        sim.x(q1)
-    prob_max, t = ct_pair_prob(sim, q1, q2)
+        if q1 < bound:
+            sim[0].x(q1)
+        else:
+            sim[1].x(q1 - bound)
+    prob_max, t = ct_pair_prob(sim, q1, q2, bound)
     if prob_max > 0.5:
-        sim.z(t)
+        if t < bound:
+            sim[0].z(t)
+        else:
+            sim[1].z(t - bound)
     if anti:
-        sim.x(q1)
+        if q1 < bound:
+            sim[0].x(q1)
+        else:
+            sim[1].x(q1 - bound)
 
 
-def cx_shadow(sim, c, t, anti=False):
-    sim.h(t)
-    cz_shadow(sim, c, t, anti)
-    sim.h(t)
+def cx_shadow(sim, c, t, bound, anti=False):
+    if t < bound:
+        sim[0].h(t)
+        cz_shadow(sim, c, t, bound, anti)
+        sim[0].h(t)
+    else:
+        sim[1].h(t - bound)
+        cz_shadow(sim, c, t, bound, anti)
+        sim[1].h(t - bound)
 
 
-def cy_shadow(sim, c, t, anti=False):
-    sim.adjs(t)
-    cx_shadow(sim, c, t, anti)
-    sim.s(t)
+def cy_shadow(sim, c, t, bound, anti=False):
+    if t < bound:
+        sim[0].adjs(t)
+        cx_shadow(sim, c, t, bound, anti)
+        sim[0].s(t)
+    else:
+        sim[1].adjs(t - bound)
+        cx_shadow(sim, c, t, bound, anti)
+        sim[1].s(t - bound)
 
 
-def swap_shadow(sim, q1, q2):
-    cx_shadow(sim, q1, q2)
-    cx_shadow(sim, q2, q1)
-    cx_shadow(sim, q1, q2)
+def swap_shadow(sim, q1, q2, bound):
+    cx_shadow(sim, q1, q2, bound)
+    cx_shadow(sim, q2, q1, bound)
+    cx_shadow(sim, q1, q2, bound)
 
 
 def cx(sim, q1, q2, bound):
     if ((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound)):
-        cx_shadow(sim, q1, q2)
+        cx_shadow(sim, q1, q2, bound)
+    elif q1 < bound:
+        sim[0].mcx([q1], q2)
     else:
-        sim.mcx([q1], q2)
+        q1 -= bound
+        q2 -= bound
+        sim[1].mcx([q1], q2)
 
 
 def cy(sim, q1, q2, bound):
     if ((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound)):
-        cy_shadow(sim, q1, q2)
+        cy_shadow(sim, q1, q2, bound)
+    elif q1 < bound:
+        sim[0].mcy([q1], q2)
     else:
-        sim.mcy([q1], q2)
+        q1 -= bound
+        q2 -= bound
+        sim[1].mcy([q1], q2)
 
 
 def cz(sim, q1, q2, bound):
     if ((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound)):
-        cz_shadow(sim, q1, q2)
+        cz_shadow(sim, q1, q2, bound)
+    elif q1 < bound:
+        sim[0].mcz([q1], q2)
     else:
-        sim.mcz([q1], q2)
+        q1 -= bound
+        q2 -= bound
+        sim[1].mcz([q1], q2)
 
 
 def acx(sim, q1, q2, bound):
     if ((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound)):
-        cx_shadow(sim, q1, q2, True)
+        cx_shadow(sim, q1, q2, bound, True)
+    elif q1 < bound:
+        sim[0].macx([q1], q2)
     else:
-        sim.macx([q1], q2)
+        q1 -= bound
+        q2 -= bound
+        sim[1].macx([q1], q2)
 
 
 def acy(sim, q1, q2, bound):
     if ((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound)):
-        cy_shadow(sim, q1, q2, True)
+        cy_shadow(sim, q1, q2, bound, True)
+    elif q1 < bound:
+        sim[0].macy([q1], q2)
     else:
-        sim.macy([q1], q2)
+        q1 -= bound
+        q2 -= bound
+        sim[1].macy([q1], q2)
 
 
 def acz(sim, q1, q2, bound):
     if ((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound)):
-        cz_shadow(sim, q1, q2, True)
+        cz_shadow(sim, q1, q2, bound, True)
+    elif q1 < bound:
+        sim[0].macz([q1], q2)
     else:
-        sim.macz([q1], q2)
+        q1 -= bound
+        q2 -= bound
+        sim[1].macz([q1], q2)
 
 
 def swap(sim, q1, q2, bound):
     if ((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound)):
-        swap_shadow(sim, q1, q2)
+        swap_shadow(sim, q1, q2, bound)
+    elif q1 < bound:
+        sim[0].swap(q1, q2)
     else:
-        sim.swap(q1, q2)
+        q1 -= bound
+        q2 -= bound
+        sim[1].swap(q1, q2)
 
 
 def iswap(sim, q1, q2, bound):
     if ((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound)):
-        swap_shadow(sim, q1, q2)
-        cz_shadow(sim, q1, q2)
-        sim.s(q1)
-        sim.s(q2)
+        swap_shadow(sim, q1, q2, bound)
+        cz_shadow(sim, q1, q2, bound)
+        if q1 < bound:
+            sim[0].s(q1)
+            sim[1].s(q2 - bound)
+        else:
+            sim[1].s(q1 - bound)
+            sim[0].s(q2)
+    elif q1 < bound:
+        sim[0].iswap(q1, q2)
     else:
-        sim.iswap(q1, q2)
+        q1 -= bound
+        q2 -= bound
+        sim[1].iswap(q1, q2)
 
 
 def iiswap(sim, q1, q2, bound):
     if ((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound)):
-        sim.adjs(q1)
-        sim.adjs(q2)
-        cz_shadow(sim, q1, q2)
-        swap_shadow(sim, q1, q2)
+        if q1 < bound:
+            sim[0].s(q1)
+            sim[1].s(q2 - bound)
+        else:
+            sim[1].s(q1 - bound)
+            sim[0].s(q2)
+        cz_shadow(sim, q1, q2, bound)
+        swap_shadow(sim, q1, q2, bound)
+    elif q1 < bound:
+        sim[0].adjiswap(q1, q2)
     else:
-        sim.adjiswap(q1, q2)
+        q1 -= bound
+        q2 -= bound
+        sim[1].adjiswap(q1, q2)
 
 
 def pswap(sim, q1, q2, bound):
     if ((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound)):
-        cz_shadow(sim, q1, q2)
-        swap_shadow(sim, q1, q2)
+        cz_shadow(sim, q1, q2, bound)
+        swap_shadow(sim, q1, q2, bound)
+    elif q1 < bound:
+        sim[0].mcz([q1], q2)
+        sim[0].swap(q1, q2)
     else:
-        sim.mcz([q1], q2)
-        sim.swap(q1, q2)
+        q1 -= bound
+        q2 -= bound
+        sim[1].mcz([q1], q2)
+        sim[1].swap(q1, q2)
 
 
 def mswap(sim, q1, q2, bound):
     if ((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound)):
-        swap_shadow(sim, q1, q2)
-        cz_shadow(sim, q1, q2)
+        swap_shadow(sim, q1, q2, bound)
+        cz_shadow(sim, q1, q2, bound)
+    elif q1 < bound:
+        sim[0].swap(q1, q2)
+        sim[0].mcz([q1], q2)
     else:
-        sim.swap(q1, q2)
-        sim.mcz([q1], q2)
+        q1 -= bound
+        q2 -= bound
+        sim[1].swap(q1, q2)
+        sim[1].mcz([q1], q2)
 
 
 def nswap(sim, q1, q2, bound):
     if ((q1 < bound) and (q2 >= bound)) or ((q2 < bound) and (q1 >= bound)):
-        cz_shadow(sim, q1, q2)
-        swap_shadow(sim, q1, q2)
-        cz_shadow(sim, q1, q2)
+        cz_shadow(sim, q1, q2, bound)
+        swap_shadow(sim, q1, q2, bound)
+        cz_shadow(sim, q1, q2, bound)
+    elif q1 < bound:
+        sim[0].mcz([q1], q2)
+        sim[0].swap(q1, q2)
+        sim[0].mcz([q1], q2)
     else:
-        sim.mcz([q1], q2)
-        sim.swap(q1, q2)
-        sim.mcz([q1], q2)
+        q1 -= bound
+        q2 -= bound
+        sim[1].mcz([q1], q2)
+        sim[1].swap(q1, q2)
+        sim[1].mcz([q1], q2)
 
 
 def bench_qrack(width, depth):
@@ -165,7 +250,7 @@ def bench_qrack(width, depth):
     ace_qb = (width + 3) >> 2
     control = QrackSimulator(width)
     control.set_ace_max_qb(ace_qb)
-    experiment = QrackSimulator(width)
+    experiment = [QrackSimulator((width + 1) >> 1), QrackSimulator(width >> 1)]
 
     lcv_range = range(width)
     all_bits = list(lcv_range)
@@ -182,7 +267,10 @@ def bench_qrack(width, depth):
             th = random.uniform(0, 2 * math.pi)
             ph = random.uniform(0, 2 * math.pi)
             lm = random.uniform(0, 2 * math.pi)
-            experiment.u(i, th, ph, lm)
+            if i < patch_bound:
+                experiment[0].u(i, th, ph, lm)
+            else:
+                experiment[1].u(i - patch_bound, th, ph, lm)
             control.u(i, th, ph, lm)
 
         # Nearest-neighbor couplers:
@@ -208,22 +296,19 @@ def bench_qrack(width, depth):
                 b1 = row * row_len + col
                 b2 = temp_row * row_len + temp_col
 
-                if (b1 >= width) or (b2 >= width):
-                    continue
-                
-                if b1 == b2:
+                if (b1 == b2) or (b1 >= width) or (b2 >= width):
                     continue
 
                 g = random.choice(two_bit_gates)
                 g(experiment, b1, b2, patch_bound)
 
-    experiment_counts = dict(Counter(experiment.measure_shots(all_bits, shots)))
+    experiment_probs = [experiment[0].out_probs(), experiment[1].out_probs()]
     control_counts = dict(Counter(control.measure_shots(all_bits, shots)))
 
-    print(calc_stats(control_counts, experiment_counts, width, d + 1, shots, ace_qb))
+    print(calc_stats(control_counts, experiment_probs, width, d + 1, shots, ace_qb, patch_bound))
 
 
-def calc_stats(ideal_counts, counts, n, depth, shots, ace_qb):
+def calc_stats(control_counts, experiment_probs, n, depth, shots, ace_qb, bound):
     # For QV, we compare probabilities of (ideal) "heavy outputs."
     # If the probability is above 2/3, the protocol certifies/passes the qubit width.
     n_pow = 1 << n
@@ -231,9 +316,12 @@ def calc_stats(ideal_counts, counts, n, depth, shots, ace_qb):
     numer = 0
     denom = 0
     sum_hog_counts = 0
+    bound_pow = (1 << bound) - 1
     for i in range(n_pow):
-        count = counts[i] if i in counts else 0
-        ideal = (ideal_counts[i] / shots) if i in ideal_counts else 0
+        # Note that the reversal of "control" and "experiment" here is inientional
+        # and just an issue with consistent labeling
+        count = control_counts[i] if i in control_counts else 0
+        ideal = experiment_probs[0][i & bound_pow] * experiment_probs[1][i >> bound]
 
         # XEB / EPLG
         denom += (ideal - u_u) ** 2
