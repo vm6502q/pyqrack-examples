@@ -7,7 +7,6 @@ import statistics
 import sys
 
 import numpy as np
-from numba import njit, prange
 
 from collections import Counter
 
