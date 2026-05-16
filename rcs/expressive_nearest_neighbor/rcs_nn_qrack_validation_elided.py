@@ -6,6 +6,9 @@ import random
 import statistics
 import sys
 
+import numpy as np
+from numba import njit, prange
+
 from collections import Counter
 
 from pyqrack import QrackSimulator
@@ -308,32 +311,57 @@ def bench_qrack(width, depth):
     print(calc_stats(control_counts, experiment_probs, width, d + 1, shots, ace_qb, patch_bound))
 
 
-def calc_stats(control_counts, experiment_probs, n, depth, shots, ace_qb, bound):
-    # For QV, we compare probabilities of (ideal) "heavy outputs."
-    # If the probability is above 2/3, the protocol certifies/passes the qubit width.
-    n_pow = 1 << n
-    u_u = 1 / n_pow
-    numer = 0
-    denom = 0
-    sum_hog_counts = 0
-    bound_pow = (1 << bound) - 1
-    for i in range(n_pow):
-        # Note that the reversal of "control" and "experiment" here is inientional
-        # and just an issue with consistent labeling
-        count = control_counts[i] if i in control_counts else 0
-        ideal = experiment_probs[0][i & bound_pow] * experiment_probs[1][i >> bound]
+# By (Anthropic) Claude
+@njit(parallel=True, cache=True)
+def _numer_sparse(keys, vals, exp_low, exp_high, bound_pow, bound, shots, u_u):
+    acc = np.zeros(len(keys), dtype=np.float64)
+    for k in prange(len(keys)):
+        idx   = keys[k]
+        ideal = exp_low[idx & bound_pow] * exp_high[idx >> bound]
+        acc[k] = (ideal - u_u) * (vals[k] / shots)
+    return acc.sum()
 
-        # XEB / EPLG
-        denom += (ideal - u_u) ** 2
-        numer += (ideal - u_u) * ((count / shots) - u_u)
+
+# Parallelized by (Anthropic) Claude
+def calc_stats(control_counts, experiment_probs, n, depth, shots, ace_qb, bound):
+    n_pow     = 1 << n
+    u_u       = 1.0 / n_pow
+    bound_pow = (1 << bound) - 1
+
+    exp_low  = np.asarray(experiment_probs[0], dtype=np.float64)
+    exp_high = np.asarray(experiment_probs[1], dtype=np.float64)
+
+    # --- denom: sum_i (ideal_i - u_u)^2 ---
+    # ideal_i = exp_low[i & bound_pow] * exp_high[i >> bound]
+    # This factorises over the outer product of exp_low and exp_high,
+    # so we never need to iterate over 2^n states.
+    #
+    # sum_i (p_l * p_h - u_u)^2
+    #   = sum_l sum_h (p_l*p_h)^2  -  2*u_u * sum_l sum_h p_l*p_h  +  u_u^2 * n_pow
+    #   = (sum_l p_l^2)(sum_h p_h^2)  -  2*u_u * 1  +  u_u^2 * n_pow
+    #   (since sum_l p_l * count_l = 1 over the full marginals)
+    sum_sq_low  = float(np.dot(exp_low,  exp_low))
+    sum_sq_high = float(np.dot(exp_high, exp_high))
+    denom = sum_sq_low * sum_sq_high - 2.0 * u_u + u_u * u_u * n_pow
+
+    # --- numer: sum_i (ideal_i - u_u) * (count_i/shots - u_u) ---
+    # The u_u cross-terms vanish:
+    #   sum_i (ideal_i - u_u) * (-u_u) = -u_u * (sum ideal_i - n_pow*u_u) = 0
+    #   sum_i (ideal_i - u_u) * (count_i/shots) — only non-zero where count_i > 0
+    # So numer = sum_{i in counts} (ideal_i - u_u) * count_i/shots
+    # which is a sum over only the observed bitstrings.
+
+    keys = np.array(list(control_counts.keys()), dtype=np.int64)
+    vals = np.array(list(control_counts.values()), dtype=np.float64)
+    numer = _numer_sparse(keys, vals, exp_low, exp_high, bound_pow, bound, float(shots), u_u)
 
     xeb = numer / denom
 
     return {
-        "qubits": n,
+        "qubits":       n,
         "ace_qb_limit": ace_qb,
-        "depth": depth,
-        "xeb": float(xeb),
+        "depth":        depth,
+        "xeb":          float(xeb),
     }
 
 
