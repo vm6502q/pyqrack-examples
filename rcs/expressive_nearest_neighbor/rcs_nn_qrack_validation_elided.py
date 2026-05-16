@@ -309,18 +309,14 @@ def bench_qrack(width, depth):
 
 
 def _numer_sparse(control, exp_low, exp_high, n, n_pow, bound_pow, bound, u_u):
-    # Precompute ideal for all i vectorised — avoids recomputing in the loop
-    idx_arr    = np.arange(n_pow, dtype=np.int64)
-    ideal_arr  = exp_low[idx_arr & bound_pow] * exp_high[idx_arr >> bound]
-    weight_arr = ideal_arr - u_u   # (ideal - u_u) factor, shape (n_pow,)
-
     q   = list(range(n))
     acc = 0.0
     for idx in range(n_pow):
-        if weight_arr[idx] == 0.0:
+        ideal = exp_low[idx & bound_pow] * exp_high[idx >> bound] - u_u
+        if ideal == 0.0:
             continue
         c = [(idx >> b) & 1 == 1 for b in range(n)]
-        acc += weight_arr[idx] * control.prob_perm(q, c)
+        acc += ideal * control.prob_perm(q, c)
 
     return acc
 
