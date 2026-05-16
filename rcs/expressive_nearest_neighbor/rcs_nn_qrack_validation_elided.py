@@ -249,7 +249,6 @@ def nswap(sim, q1, q2, bound):
 def bench_qrack(width, depth):
     # This is a "nearest-neighbor" coupler random circuit.
     patch_bound = (width + 1) >> 1
-    shots = 1 << min(width + 2, 20)
     ace_qb = (width + 1) >> 1
     control = QrackSimulator(width)
     control.set_ace_max_qb(ace_qb)
@@ -306,24 +305,27 @@ def bench_qrack(width, depth):
                 g(experiment, b1, b2, patch_bound)
 
     experiment_probs = [experiment[0].out_probs(), experiment[1].out_probs()]
-    control_counts = dict(Counter(control.measure_shots(all_bits, shots)))
 
-    print(calc_stats(control_counts, experiment_probs, width, d + 1, shots, ace_qb, patch_bound))
+    print(calc_stats(control, experiment_probs, width, d + 1, ace_qb, patch_bound))
 
 
 # By (Anthropic) Claude
-@njit(parallel=True, cache=True)
-def _numer_sparse(keys, vals, exp_low, exp_high, bound_pow, bound, shots, u_u):
-    acc = np.zeros(len(keys), dtype=np.float64)
-    for k in prange(len(keys)):
-        idx   = keys[k]
+def _numer_sparse(control, exp_low, exp_high, n, n_pow, bound_pow, bound, u_u):
+    q = list(range(n))
+    acc = 0.0
+    for idx in range(n_pow):
         ideal = exp_low[idx & bound_pow] * exp_high[idx >> bound]
-        acc[k] = (ideal - u_u) * (vals[k] / shots)
-    return acc.sum()
+        c = [False] * n
+        for b in range(n):
+            if (idx >> b) & 1:
+                c[b] = True
+        acc += (ideal - u_u) * control.prob_perm(q, c)
+
+    return acc
 
 
 # Parallelized by (Anthropic) Claude
-def calc_stats(control_counts, experiment_probs, n, depth, shots, ace_qb, bound):
+def calc_stats(control, experiment_probs, n, depth, ace_qb, bound):
     n_pow     = 1 << n
     u_u       = 1.0 / n_pow
     bound_pow = (1 << bound) - 1
@@ -351,9 +353,7 @@ def calc_stats(control_counts, experiment_probs, n, depth, shots, ace_qb, bound)
     # So numer = sum_{i in counts} (ideal_i - u_u) * count_i/shots
     # which is a sum over only the observed bitstrings.
 
-    keys = np.array(list(control_counts.keys()), dtype=np.int64)
-    vals = np.array(list(control_counts.values()), dtype=np.float64)
-    numer = _numer_sparse(keys, vals, exp_low, exp_high, bound_pow, bound, float(shots), u_u)
+    numer = _numer_sparse(control, exp_low, exp_high, n, n_pow, bound_pow, bound, u_u)
 
     xeb = numer / denom
 
