@@ -44,6 +44,7 @@ def bench_qrack(width, p, b, w):
     
     # Load directly into simulator state
     sim.in_ket(amps)
+    sim.separate(list(range(width >> 1)))
     sim.lossy_out_to_file("lda.svtq", p=p, b=b)
 
     szd = w * n_entries / 4
