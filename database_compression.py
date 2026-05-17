@@ -74,7 +74,7 @@ def main():
     if len(sys.argv) > 3:
         b = int(sys.argv[3])
 
-    w = 24
+    w = 23
     if len(sys.argv) > 4:
         w = int(sys.argv[4])
 
