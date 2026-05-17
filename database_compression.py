@@ -71,7 +71,7 @@ def main():
     if len(sys.argv) > 2:
         p = int(sys.argv[2])
 
-    b = 3
+    b = 4
     if len(sys.argv) > 3:
         b = int(sys.argv[3])
 
