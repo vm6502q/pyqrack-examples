@@ -53,16 +53,15 @@ def make_patches(width, row_len, col_len, axis):
     patch     = np.empty(width, dtype=np.int32)
     local_idx = np.empty(width, dtype=np.int32)
     if axis == 'horizontal':
-        cut = (row_len >> 1) * col_len
         ctr = [0, 0]
-        for i in range(width):
-            p = 0 if i < cut else 1
-            patch[i] = p; local_idx[i] = ctr[p]; ctr[p] += 1
+        for i in range(width >> 1):
+            patch[i] = 0; local_idx[i] = ctr[0]; ctr[0] += 1
+        for i in range(width >> 1, width):
+            patch[i] = 1; local_idx[i] = ctr[1]; ctr[1] += 1
     else:
-        v_cols = col_len >> 1
         ctr = [0, 0]
         for i in range(width):
-            p = 0 if (i % col_len) < v_cols else 1
+            p = i & 1
             patch[i] = p; local_idx[i] = ctr[p]; ctr[p] += 1
     return patch, local_idx
 
@@ -89,6 +88,7 @@ def get_quadrants(width, patch_h, local_h, patch_v, local_v):
 def _prob(sim, q, patch, local_idx):
     return sim[patch[q]].prob(local_idx[q])
 
+
 def _x(sim, q, p, l):    sim[p[q]].x(l[q])
 def _z(sim, q, p, l):    sim[p[q]].z(l[q])
 def _h(sim, q, p, l):    sim[p[q]].h(l[q])
@@ -111,16 +111,6 @@ def cz_shadow(sim, q1, q2, p, l, anti=False):
 
 def cx_shadow(sim, c, t, p, l, anti=False):
     _h(sim, t, p, l); cz_shadow(sim, c, t, p, l, anti); _h(sim, t, p, l)
-
-
-def cy_shadow(sim, c, t, p, l, anti=False):
-    _adjs(sim, t, p, l); cx_shadow(sim, c, t, p, l, anti); _s(sim, t, p, l)
-
-
-def swap_shadow(sim, q1, q2, p, l):
-    cx_shadow(sim, q1, q2, p, l)
-    cx_shadow(sim, q2, q1, p, l)
-    cx_shadow(sim, q1, q2, p, l)
 
 
 def _same(q1, q2, p): return p[q1] == p[q2]
