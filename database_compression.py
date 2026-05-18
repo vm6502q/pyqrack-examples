@@ -139,6 +139,88 @@ def amps_to_bits_gray(amps, w, n_bits):
 
 
 # ---------------------------------------------------------------------------
+# Encoding: 'radius' mode
+# Data is encoded in the MAGNITUDE (radius) of each amplitude only.
+# Each amplitude gets w bits of data packed into its radius via Gray code,
+# and a uniformly random phase factor.
+#
+# This makes Z-basis probabilities |a_i|^2 the sole data carrier.
+# Phases are nonphysical noise — randomized at encode, ignored at decode.
+# Result: Z-basis prob. overlap survives separate() and global phase
+# scrambling with near-perfect fidelity.
+#
+# Data density: w bits per amplitude (vs 2*w for gray/plane).
+# Decode: read |a_i|, recover Gray bucket, extract w bits.
+# ---------------------------------------------------------------------------
+
+def bits_to_amps_radius(bits, w, n_amps):
+    """
+    Encode w bits per amplitude in the radius.
+    Radius is mapped from Gray bucket to [step/2, 1] (avoiding zero).
+    Phase is uniformly random — carries no data.
+    """
+    levels  = 1 << w
+    levels_m_1 = levels - 1
+    n_bits  = w * n_amps
+    amps    = []
+    norm_sq = 0.0
+    bit_pos = 0
+    total   = len(bits)
+    i_max   = 0
+    n_max   = 0.0
+
+    for i in range(n_amps):
+        bucket = 0
+        for b in range(w):
+            bit = bits[bit_pos] if bit_pos < total else 0
+            bucket |= bit << b
+            bit_pos += 1
+        # Gray -> linear bucket index
+        linear = from_gray(bucket)
+        # Map to radius in (0, 1]: r = (linear + 0.5) / levels
+        # This keeps all radii strictly positive (no zero-magnitude amplitudes)
+        # and uniformly spaced in probability space after squaring.
+        r = (linear + 0.5) / levels
+        # Random phase — carries no data, makes state look Haar-random
+        phase = random.uniform(0.0, 2.0 * math.pi)
+        re = r * math.cos(phase)
+        im = r * math.sin(phase)
+        amps.append(complex(re, im))
+        nrm = r * r
+        norm_sq += nrm
+        if nrm > n_max:
+            i_max = i
+            n_max = nrm
+
+    norm = math.sqrt(norm_sq)
+    return [a / norm for a in amps], norm, i_max
+
+
+def amps_to_bits_radius(amps, w, n_bits, norm):
+    """
+    Decode w bits per amplitude from the radius |a_i|.
+    Phase is ignored entirely.
+    """
+    levels = 1 << w
+    bits   = []
+
+    for amp in amps:
+        if len(bits) >= n_bits:
+            break
+        r = abs(amp) * norm
+        # Recover linear bucket: r = (linear + 0.5) / levels  =>
+        # linear = floor(r * levels)  clamped to [0, levels-1]
+        linear = int(r * levels)
+        linear = max(0, min(levels - 1, linear))
+        bucket = to_gray(linear)
+        for b in range(w):
+            if len(bits) >= n_bits: break
+            bits.append((bucket >> b) & 1)
+
+    return bits
+
+
+# ---------------------------------------------------------------------------
 # Encoding: 'sign' mode
 # w=1: only the sign of each coordinate encodes data (1 bit re, 1 bit im).
 # Most robust: a sign flip requires quantization error > amplitude magnitude
@@ -165,17 +247,18 @@ def bits_to_amps_sign(bits, n_amps):
         norm_sq += re*re + im*im
 
     norm = math.sqrt(norm_sq)
-    return [a / norm for a in amps], norm
+    return [a / norm for a in amps], norm, 0
 
 
-def amps_to_bits_sign(amps, n_bits):
+def amps_to_bits_sign(amps, n_bits, norm):
     bits = []
     for amp in amps:
+        amp *= norm
         if len(bits) >= n_bits: break
         bits.append(1 if amp.real >= 0.0 else 0)
         if len(bits) >= n_bits: break
         bits.append(1 if amp.imag >= 0.0 else 0)
-    return bits, 0
+    return bits
 
 
 # ---------------------------------------------------------------------------
@@ -236,13 +319,14 @@ def bits_to_amps_plane(bits, w, n_amps):
     return [a / norm for a in amps], norm, i_max
 
 
-def amps_to_bits_plane(amps, w, n_bits, n_amps):
+def amps_to_bits_plane(amps, w, n_bits, n_amps, norm):
     levels = 1 << w
     step   = 2.0 / levels
 
     re_gray_bits = []
     im_gray_bits = []
     for amp in amps:
+        amp *= norm
         re_lin = max(0, min(levels-1, int((amp.real + 1.0) / step)))
         im_lin = max(0, min(levels-1, int((amp.imag + 1.0) / step)))
         rg = to_gray(re_lin)
@@ -271,16 +355,18 @@ def bench_qrack(width, p, b, w, mode='gray', do_separate=True):
 
     if mode == 'sign':
         n_bits = 2 * n_amps          # 1 bit per coordinate
-        bits_per_amp = 2
+    elif mode == 'radius':
+        n_bits = w * n_amps          # w bits per amplitude (magnitude only)
     else:
-        n_bits = 2 * w * n_amps      # w bits per coordinate
-        bits_per_amp = 2 * w
+        n_bits = 2 * w * n_amps      # w bits per coordinate (re and im)
 
     orig_bits = [random.randint(0, 1) for _ in range(n_bits)]
 
     # Encode
     if mode == 'sign':
         amps, norm, key = bits_to_amps_sign(orig_bits, n_amps)
+    elif mode == 'radius':
+        amps, norm, key = bits_to_amps_radius(orig_bits, w, n_amps)
     elif mode == 'plane':
         amps, norm, key = bits_to_amps_plane(orig_bits, w, n_amps)
     else:  # 'gray'
@@ -310,12 +396,25 @@ def bench_qrack(width, p, b, w, mode='gray', do_separate=True):
     print(f"XEB fidelity:             {xeb:.6f}")
     print(f"Z-basis prob. diff.:      {prob_diff:.6f}")
 
+    # Hamming fidelity — decode recovered amplitudes back to bits
+    if mode == 'radius':
+        rec = amps_to_bits_radius(e_amps, w, n_bits, norm)
+    elif mode == 'sign':
+        rec = amps_to_bits_sign(e_amps, n_bits, norm)
+    elif mode == 'plane':
+        rec = amps_to_bits_plane(e_amps, w, n_bits, n_amps, norm)
+    else:
+        rec = amps_to_bits_gray(e_amps, w, n_bits)
+    hf, errors = hamming_fidelity(orig_bits, rec)
+    print(f"Hamming fidelity:         {hf:.6f}  ({errors} errors / {n_bits} bits)")
+
     return {
         "mode":              mode,
         "compression_ratio": szd / szf,
         "l2":                l2,
         "xeb":               xeb,
-        "prob_diff":         prob_diff
+        "prob_diff":         prob_diff,
+        "hamming":           hf,
     }
 
 
