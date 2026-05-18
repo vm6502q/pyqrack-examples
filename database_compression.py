@@ -12,6 +12,42 @@ def calc_fidelity(ideal_ket, split_ket):
     s = sum([x * y.conjugate() for x, y in zip(ideal_ket, split_ket)])
     return (s * s.conjugate()).real
 
+def calc_stats(ideal_ket, split_ket):
+    n_pow = len(ideal_ket)
+    n = int(round(math.log2(n_pow)))
+    u_u = 1 / n_pow
+    numer = 0
+    denom = 0
+    hog_prob = 0
+    sqr_diff = 0
+    l2 = 0
+    for i in range(n_pow):
+        split = split_ket[i]
+        ideal = ideal_ket[i]
+
+        # L2 norm
+        l2 += split * ideal.conjugate()
+
+        split = (split * split.conjugate()).real
+        ideal = (ideal * ideal.conjugate()).real
+
+        # XEB / EPLG
+        denom += (ideal - u_u) ** 2
+        numer += (ideal - u_u) * (split - u_u)
+
+        # L2 norm
+        sqr_diff += (ideal - split) ** 2
+
+    l2 = (l2 * l2.conjugate()).real
+    xeb = numer / denom
+    rss = math.sqrt(sqr_diff)
+
+    return {
+        "qubits": n,
+        "xeb": float(xeb),
+        "l2_fidelity": float(l2),
+        "prob_diff": float(rss),
+    }
 
 # ---------------------------------------------------------------------------
 # Gray code helpers
@@ -33,8 +69,9 @@ def bench_qrack(width, p, b, w):
     # width key qubits, no value qubit needed
     # Each of the 2^width amplitudes encodes 2*p bits of data
     sim = QrackSimulator(width)
-    
-    levels = 1 << w  # quantization levels per coordinate
+
+    levels = (1 << w)
+    levels_m_1 = levels - 1
     n_entries = 1 << width
     
     # Generate random data: 2*p bits per entry
@@ -48,8 +85,8 @@ def bench_qrack(width, p, b, w):
         re_bits = from_gray(d & ((1 << w) - 1))        # low w bits
         im_bits = from_gray((d >> w) & ((1 << w) - 1)) # high w bits
         # Map to [-1, 1]: bucket centre
-        re = (1 + (re_bits << 1) - levels)
-        im = (1 + (im_bits << 1) - levels)
+        re = ((re_bits << 1) - levels_m_1) / levels
+        im = ((im_bits << 1) - levels_m_1) / levels
         amps.append(complex(re, im))
         norm_sq += re * re + im * im
     
@@ -71,9 +108,9 @@ def bench_qrack(width, p, b, w):
     sim.lossy_in_from_file("lda.svtq")
     e_amps = sim.out_ket()
     del sim
-    
-    fidelity = calc_fidelity(amps, e_amps)
-    print(f"Fidelity: {fidelity}")
+
+    print("Fidelity statistics:")
+    print(calc_stats(amps, e_amps))
 
 
 def main():
