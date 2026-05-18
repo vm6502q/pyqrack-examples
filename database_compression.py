@@ -13,6 +13,21 @@ def calc_fidelity(ideal_ket, split_ket):
     return (s * s.conjugate()).real
 
 
+# ---------------------------------------------------------------------------
+# Gray code helpers
+# ---------------------------------------------------------------------------
+
+def to_gray(n):
+    return n ^ (n >> 1)
+
+def from_gray(n):
+    mask = n >> 1
+    while mask:
+        n ^= mask
+        mask >>= 1
+    return n
+
+
 # Encoding by (Anthropic) Claude
 def bench_qrack(width, p, b, w):
     # width key qubits, no value qubit needed
@@ -30,8 +45,8 @@ def bench_qrack(width, p, b, w):
     amps = []
     norm_sq = 0.0
     for d in range(n_entries):
-        re_bits = d & ((1 << w) - 1)        # low w bits
-        im_bits = (d >> w) & ((1 << w) - 1) # high w bits
+        re_bits = from_gray(d & ((1 << w) - 1))        # low w bits
+        im_bits = from_gray((d >> w) & ((1 << w) - 1)) # high w bits
         # Map to [-1, 1]: bucket centre
         re = (re_bits + 0.5) / levels * 2.0 - 1.0
         im = (im_bits + 0.5) / levels * 2.0 - 1.0
