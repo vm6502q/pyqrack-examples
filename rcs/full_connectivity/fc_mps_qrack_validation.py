@@ -116,8 +116,8 @@ def bench_qrack(width, depth, sdrp=0.0):
     dict with xeb, hog_prob, l2_diff
     """
     all_bits     = list(range(width))
-    n_candidates = min(width ** 2, 1 << width)
-    chi          = min(width ** 3, 1 << width)   # width^2 is usually sufficient
+    n_candidates = min(width ** 2,   1 << width)
+    chi          = min(width ** 2.5, 1 << width)   # width^2 is usually sufficient
 
     # Build circuit in both Qiskit (for Qrack) and quimb MPS (for amplitude queries)
     qc      = QuantumCircuit(width)
