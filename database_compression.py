@@ -39,9 +39,28 @@ def from_gray(n):
 # Fidelity metrics
 # ---------------------------------------------------------------------------
 
-def calc_fidelity_ket(ideal_ket, split_ket):
-    s = sum(x * y.conjugate() for x, y in zip(ideal_ket, split_ket))
-    return (s * s.conjugate()).real
+def calc_stats(ideal_ket, split_ket):
+    n_pow = len(ideal_ket)
+    u_u = 1.0 / n_pow
+    numer = 0.0
+    denom = 0.0
+    l2 = 0.0
+    prob_diff = 0.0
+
+    for i in range(n_pow):
+        c = ideal_ket[i]
+        e = split_ket[i]
+        l2 += e * c.conjugate()
+        p_i = abs(c) ** 2
+        q_i = abs(e) ** 2
+        numer += (p_i - u_u) * (q_i - u_u)
+        denom += (p_i - u_u) ** 2
+        prob_diff += (p_i - q_i) ** 2
+
+    xeb = numer / denom if denom > 0 else 0.0
+    l2 = (l2 * l2.conjugate()).real
+
+    return xeb, l2, prob_diff
 
 
 def hamming_fidelity(orig_bits, recovered_bits):
@@ -286,13 +305,17 @@ def bench_qrack(width, p, b, w, mode='gray', do_separate=True):
     e_amps = sim2.out_ket()
     del sim2
 
-    ket_fidelity = calc_fidelity_ket(amps, e_amps)
-    print(f"Inner-product fidelity:   {ket_fidelity:.6f}")
+    xeb, l2, prob_diff = calc_stats(amps, e_amps)
+    print(f"Inner-product fidelity:   {l2:.6f}")
+    print(f"XEB fidelity:             {xeb:.6f}")
+    print(f"Z-basis prob. diff.:      {prob_diff:.6f}")
 
     return {
-        "mode":             mode,
+        "mode":              mode,
         "compression_ratio": szd / szf,
-        "ket_fidelity":     ket_fidelity,
+        "l2":                l2,
+        "xeb":               xeb,
+        "prob_diff":         prob_diff
     }
 
 
