@@ -90,7 +90,7 @@ def main():
     if len(sys.argv) > 3:
         b = int(sys.argv[3])
 
-    w = 23
+    w = 12
     if len(sys.argv) > 4:
         w = int(sys.argv[4])
 
