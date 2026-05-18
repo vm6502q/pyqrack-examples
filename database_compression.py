@@ -17,7 +17,8 @@ def calc_fidelity_ket(ideal_ket, split_ket):
     return (s * s.conjugate()).real
 
 
-def hamming_fidelity(orig_bits, recovered_bits, n):
+def hamming_fidelity(orig_bits, recovered_bits):
+    n = len(orig_bits)
     if n == 0:
         return 1.0
     errors = sum(a != b for a, b in zip(orig_bits, recovered_bits))
@@ -111,12 +112,12 @@ def bench_qrack(width, p, b, w):
     bits_per_amp = 2 * w
     
     # Generate random data: 2*p bits per entry
-    data = [random.getrandbits(2 * w) for _ in range(n_amps)]
-    amps, norm = bits_to_amps_gray(data, w, n_amps)
+    orig_bits = [random.randint(0, 1) for _ in range(n_bits)]
+    amps, norm = bits_to_amps_gray(orig_bits, w, n_amps)
     
     # Load directly into simulator state
     sim.in_ket(amps)
-    sim.separate(list(range(width >> 1)))
+    # sim.separate(list(range(width >> 1)))
     sim.lossy_out_to_file("lda.svtq", p=p, b=b)
 
     szd = w * n_amps / 4
@@ -133,7 +134,7 @@ def bench_qrack(width, p, b, w):
     print(f"Ket fidelity: {fidelity}")
 
     recovered_bits = amps_to_bits_gray(e_amps, w, n_bits)
-    hf, errors = hamming_fidelity(data, recovered_bits, n_amps * 2 * w)
+    hf, errors = hamming_fidelity(orig_bits, recovered_bits)
     print(f"Hamming fidelity:         {(n_bits - errors) / n_bits}  "
           f"({errors} bit errors / {n_bits} total bits)")
 
