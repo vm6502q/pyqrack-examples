@@ -46,8 +46,9 @@ def calc_stats(ideal_ket, split_ket):
     l2 = 0.0
     prob_diff = 0.0
     for i in range(n_pow):
-        p_i = (ideal_ket[i] * ideal_ket[i].conjugate()).real
-        q_i = (split_ket[i] * split_ket[i].conjugate()).real
+        ideal, split = ideal_ket[i], split_ket[i]
+        p_i = (ideal * ideal.conjugate()).real
+        q_i = (split * split.conjugate()).real
         numer += (p_i - u_u) * (q_i - u_u)
         denom += (p_i - u_u) ** 2
         l2    += (p_i - q_i) ** 2
