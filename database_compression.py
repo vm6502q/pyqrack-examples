@@ -48,8 +48,8 @@ def bench_qrack(width, p, b, w):
         re_bits = from_gray(d & ((1 << w) - 1))        # low w bits
         im_bits = from_gray((d >> w) & ((1 << w) - 1)) # high w bits
         # Map to [-1, 1]: bucket centre
-        re = 1 / (levels << 2) + (re_bits / (levels << 1) - 1)
-        im = 1 / (levels << 2) + (im_bits / (levels << 1) - 1)
+        re = (1 + (re_bits << 1) - levels) / levels
+        im = (1 + (im_bits << 1) - levels) / levels
         amps.append(complex(re, im))
         norm_sq += re * re + im * im
     
