@@ -160,6 +160,7 @@ def calc_stats(ideal_ket, split_ket, depth, ace_qb):
         "qubits": n,
         "ace_qb_limit": ace_qb,
         "depth": depth,
+        "l2": float(l2),
         "xeb": float(xeb),
         "hog_prob": float(hog_prob),
         "prob_diff": float(prob_diff)
