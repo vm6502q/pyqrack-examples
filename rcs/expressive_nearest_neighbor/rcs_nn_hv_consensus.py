@@ -601,12 +601,32 @@ def bench_qrack_consensus(width, depth):
     xeb_ci   = float(np.dot(ideal_c, cons_c)) / denom_i if denom_i > 0 else float('nan')
     hog_ci   = float(P_cons[ideal_probs > float(np.median(ideal_probs))].sum())
 
+    # Symmetrized outer product density matrix.
+    # rho = (|psi_H><psi_V| + |psi_V><psi_H|) / 2
+    # diagonal: rho[i,i] = Re(psi_H[i] * psi_V[i].conj())
+    # P_H and P_V are real probability vectors (not kets), so we need the
+    # kets from _expand_probs — but those are real-valued too (separable approx).
+    # For real vectors: Re(a * b) = a * b, so this reduces to the geometric mean
+    # sign-preserving product. Take sqrt of abs and restore sign:
+    P_dm = np.sqrt(np.abs(P_H * P_V)) * np.sign(P_H * P_V + 1e-300)
+    P_dm = np.maximum(P_dm, 0.0)
+    dm_sum = P_dm.sum()
+    if dm_sum > 0:
+        P_dm /= dm_sum
+    ideal_c_dm = ideal_probs - u_u
+    dm_c       = P_dm - u_u
+    denom_dm   = float(np.dot(ideal_c_dm, ideal_c_dm))
+    xeb_dm     = float(np.dot(ideal_c_dm, dm_c)) / denom_dm if denom_dm > 0 else float('nan')
+    hog_dm     = float(P_dm[ideal_probs > float(np.median(ideal_probs))].sum())
+
     print("--- Consensus vs ideal ---")
     print({
         "qubits":              width,
         "depth":               depth,
         "xeb_consensus_ideal": xeb_ci,
         "hog_consensus_ideal": hog_ci,
+        "xeb_dm_ideal":        xeb_dm,
+        "hog_dm_ideal":        hog_dm,
     })
 
 

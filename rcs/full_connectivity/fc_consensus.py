@@ -225,6 +225,24 @@ def bench_qrack(width, depth, sdrp=0.0):
     xeb_cons_ideal, hog_cons_ideal = calc_stats(
         ideal_probs, cons_probs)
 
+    # -----------------------------------------------------------------------
+    # Symmetrized outer product density matrix.
+    # rho = (|psi_A><psi_B| + |psi_B><psi_A|) / 2
+    # diagonal: rho[i,i] = Re(psi_A[i] * psi_B[i].conj())
+    # This is a heuristic for the ideal state that incorporates cross-instance
+    # coherence without requiring global phase canonicalization beyond what
+    # the common gauge already provides.
+    # Use instances 0 and 2 (most Kendall-distant pair).
+    # -----------------------------------------------------------------------
+    p_dm = (kets[0] * kets[2].conj() + kets[2] * kets[0].conj()).real / 2.0
+    # Shift to non-negative (diagonal of a valid density matrix is non-negative,
+    # but numerical errors from approximate orthogonality can give small negatives)
+    p_dm = np.maximum(p_dm, 0.0)
+    dm_sum = p_dm.sum()
+    if dm_sum > 0:
+        p_dm /= dm_sum
+    xeb_dm, hog_dm = calc_stats(ideal_probs, p_dm)
+
     xeb_vs_cons = []
     for k in kets:
         xeb_i, _, _ = calc_stats_np(k, mix)
@@ -240,6 +258,9 @@ def bench_qrack(width, depth, sdrp=0.0):
         # Consensus state vs ideal (full probability comparison)
         "xeb_cons_vs_ideal":  xeb_cons_ideal,
         "hog_cons_vs_ideal":  hog_cons_ideal,
+        # Density matrix (incoherent mixture of two orthogonal instances)
+        "xeb_dm_vs_ideal":    xeb_dm,
+        "hog_dm_vs_ideal":    hog_dm,
         # Instance consensus quality
         "xeb_consensus_mean": float(np.mean(xeb_vs_cons)),
     }
