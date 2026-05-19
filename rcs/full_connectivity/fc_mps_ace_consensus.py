@@ -160,9 +160,13 @@ def bench_qrack(width, depth, sdrp=0.0, chi=None):
     del sim_ideal
 
     # -----------------------------------------------------------------------
-    # Two ACE consensus instances
+    # Two ACE consensus instances — sampling only, no statevector materialization.
+    # measure_shots samples proportionally to probability; above-uniform outputs
+    # are overrepresented. Union of both instances covers the heavy tail broadly.
     # -----------------------------------------------------------------------
-    kets = []
+    n_shots  = n_candidates
+    all_bits = list(range(width))
+    sampled_candidates = set()
     for inst in range(n_inst):
         random.setstate(rng_state)
         sim = QrackSimulator(width)
@@ -170,27 +174,14 @@ def bench_qrack(width, depth, sdrp=0.0, chi=None):
             sim.set_sdrp(sdrp)
         sim.set_ace_max_qb((width + 1) >> 1)
         sim.run_qiskit_circuit(qc, shots=0)
-        kets.append(np.asarray(sim.out_ket(), dtype=np.complex128))
+        shots = sim.measure_shots(all_bits, n_shots)
+        sampled_candidates.update(int(s) for s in shots)
         del sim
 
     t_ace = time.perf_counter() - t_start
+    candidates = sorted(sampled_candidates)
 
-    # Phase canonicalize to common gauge
-    mean_p    = sum((k * k.conj()).real for k in kets) / n_inst
-    gauge_idx = int(np.argmax(mean_p > u_u))
-    phase_fixed = []
-    for k in kets:
-        ref = k[gauge_idx]
-        phase = ref / abs(ref) if abs(ref) > 1e-30 else 1.0
-        phase_fixed.append(k / phase)
-
-    # Symmetrized density matrix diagonal
-    p_dm = (phase_fixed[0] * phase_fixed[1].conj() +
-            phase_fixed[1] * phase_fixed[0].conj()).real
-    p_dm = np.maximum(p_dm, 0.0)
-    s = p_dm.sum()
-    if s > 0:
-        p_dm /= s
+    # (p_dm not computed — sampling-only pipeline needs no statevector)
 
     # -----------------------------------------------------------------------
     # Sieve: top n_candidates by p_dm → MPS amplitude estimation
@@ -202,86 +193,68 @@ def bench_qrack(width, depth, sdrp=0.0, chi=None):
     # Light (below median): inverted p_dm (2*u_u - p_dm), renormalized,
     #                        then mapped below u_u for structured suppression.
     # Both tails contribute positively to XEB numerator.
-    # Split at u_u exactly — the XEB mean field baseline.
-    # Outputs with p_dm > u_u are heavy: (p_i - u_u) > 0, so q_i should be > u_u.
-    # Outputs with p_dm < u_u are light: (p_i - u_u) < 0, so q_i should be < u_u.
-    # Outputs at exactly u_u contribute zero to XEB regardless — assign anywhere.
-    top_mask  = p_dm > u_u    # above mean field: heavy
-    bot_mask  = p_dm <= u_u   # at or below mean field: light
-    top_idx   = np.where(top_mask)[0]
-    bot_idx   = np.where(bot_mask)[0]
-
-    # MPS amplitude queries for ALL heavy candidates via trie contraction
+    # MPS amplitude queries for all sampled candidates via trie contraction.
+    # MPS determines whether each ACE-sampled candidate is truly heavy or light
+    # relative to u_u — routing to the correct tail accordingly.
     t_mps_start = time.perf_counter()
-    candidate_tuples = [_int_to_bittuple(int(i), width) for i in top_idx]
+    candidate_tuples = [_int_to_bittuple(int(i), width) for i in candidates]
     amp_map = batch_amplitudes_trie(mps_sim.psi, candidate_tuples)
-
-    heavy = {}
-    for idx, bs_tup in zip(top_idx, candidate_tuples):
-        amp = amp_map.get(bs_tup, 0.0 + 0.0j)
-        p   = amp.real**2 + amp.imag**2
-        if p > 0:
-            heavy[int(idx)] = p
     t_mps = time.perf_counter() - t_mps_start
 
+    # Route by MPS probability vs u_u (XEB mean-field baseline)
+    heavy = {}           # p_mps > u_u : contribute q_i > u_u
+    light_raw = {}       # p_mps <= u_u: contribute q_i < u_u
+    for idx, bs_tup in zip(candidates, candidate_tuples):
+        amp = amp_map.get(bs_tup, 0.0 + 0.0j)
+        p   = amp.real**2 + amp.imag**2
+        if p > u_u:
+            heavy[int(idx)] = p
+        elif p > 0:
+            light_raw[int(idx)] = max(0.0, 2.0 * u_u - p)
+
+    # Normalize heavy
     s_h = sum(heavy.values())
     if s_h > 0:
         heavy = {k: v / s_h for k, v in heavy.items()}
 
-    # Light tail: invert p_dm so lightest outputs get highest raw weight,
-    # then map below u_u so they are properly suppressed in the final mix.
-    light_raw = {int(i): max(0.0, 2.0 * u_u - float(p_dm[i])) for i in bot_idx}
+    # Normalize light and map below u_u for structured suppression
     s_l = sum(light_raw.values())
     if s_l > 0:
         light = {k: max(0.0, u_u - (v / s_l) * u_u) for k, v in light_raw.items()}
-        s_l2 = sum(light.values())
+        s_l2  = sum(light.values())
         if s_l2 > 0:
             light = {k: v / s_l2 for k, v in light.items()}
     else:
         light = {}
 
-    # Combine 50/50 heavy + light (exhaustive: every output in one or the other)
-    all_keys = set(heavy) | set(light)
-    combined = {k: 0.5 * heavy.get(k, 0.0) + 0.5 * light.get(k, 0.0)
-                for k in all_keys}
-    s_c = sum(combined.values())
-    if s_c > 0:
-        combined = {k: v / s_c for k, v in combined.items()}
+    # Equal weight to whichever tails are non-empty
+    n_nonempty = (1 if heavy else 0) + (1 if light else 0)
+    if n_nonempty == 0:
+        combined = {}
+    else:
+        w        = 1.0 / n_nonempty
+        all_keys = set(heavy) | set(light)
+        combined = {k: w * heavy.get(k, 0.0) + w * light.get(k, 0.0)
+                    for k in all_keys}
+        s_c = sum(combined.values())
+        if s_c > 0:
+            combined = {k: v / s_c for k, v in combined.items()}
 
     t_elapsed = time.perf_counter() - t_start
-
     xeb_sieve, hog_sieve = calc_stats_sparse(ideal_probs, combined, n_pow)
-    xeb_dm,    hog_dm    = calc_stats(ideal_probs, p_dm)
-
-    # ACE-only sieve for comparison (p_dm for heavy, no MPS)
-    heavy_dm = {int(i): float(p_dm[i]) for i in top_idx}
-    s_hd = sum(heavy_dm.values())
-    if s_hd > 0:
-        heavy_dm = {k: v / s_hd for k, v in heavy_dm.items()}
-    all_keys_dm = set(heavy_dm) | set(light)
-    combined_dm = {k: 0.5 * heavy_dm.get(k, 0.0) + 0.5 * light.get(k, 0.0)
-                   for k in all_keys_dm}
-    s_cd = sum(combined_dm.values())
-    if s_cd > 0:
-        combined_dm = {k: v / s_cd for k, v in combined_dm.items()}
-    xeb_ace_only, hog_ace_only = calc_stats_sparse(ideal_probs, combined_dm, n_pow)
 
     return {
         "width":          width,
         "depth":          depth,
         "chi":            chi,
+        "n_sampled":      len(candidates),
+        "n_heavy":        len(heavy),
+        "n_light":        len(light),
         "seconds_total":  t_elapsed,
         "seconds_ace":    t_ace,
         "seconds_mps":    t_mps,
-        # Headline: ACE sieve + MPS amplitude estimation
-        "xeb_sieve_mps":  xeb_sieve,
-        "hog_sieve_mps":  hog_sieve,
-        # ACE sieve only (p_dm for heavy estimates, no MPS)
-        "xeb_sieve_ace":  xeb_ace_only,
-        "hog_sieve_ace":  hog_ace_only,
-        # Full density matrix comparison
-        "xeb_dm":         xeb_dm,
-        "hog_dm":         hog_dm,
+        "xeb_sieve":      xeb_sieve,
+        "hog_sieve":      hog_sieve,
     }
 
 
