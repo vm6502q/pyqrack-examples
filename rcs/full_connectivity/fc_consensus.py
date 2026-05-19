@@ -198,6 +198,8 @@ def bench_qrack(width, depth, sdrp=0.0):
     exp_probs_sparse = {int(k): (v / s) for k, v in exp_probs_sparse.items()}
 
     xeb_sparse, hog_sparse = calc_stats_sparse(ideal_probs, exp_probs_sparse, n_pow)
+    del exp_probs_sparse
+    del _exp_probs_sparse
 
     # -----------------------------------------------------------------------
     # Cross-instance and consensus-vs-ideal diagnostics
