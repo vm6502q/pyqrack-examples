@@ -193,10 +193,10 @@ def bench_qrack(width, depth, sdrp=0.0):
     xeb_ab, l2_ab, pd_ab = calc_stats(ket_a, ket_b)
 
     # A vs consensus
-    xeb_ac, l2_ac, pd_ac = calc_stats_np(mix, ka)
+    xeb_ac, l2_ac, pd_ac = calc_stats_np(ka, mix)
 
     # B vs consensus
-    xeb_bc, l2_bc, pd_bc = calc_stats_np(mix, kb)
+    xeb_bc, l2_bc, pd_bc = calc_stats_np(kb, mix)
 
     # Ideal vs consensus
     xeb_ic, l2_ac, pd_ac = calc_stats_np(ki, mix)
