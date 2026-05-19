@@ -120,7 +120,7 @@ def bench_qrack(width, depth, sdrp=0.0, chi=None):
     lcv_range    = range(width)
     all_bits     = list(lcv_range)
     n_inst       = 2
-    n_candidates = width ** 3
+    n_candidates = width ** 2
     n_pow        = 1 << width
     u_u          = 1.0 / n_pow
 
@@ -196,14 +196,22 @@ def bench_qrack(width, depth, sdrp=0.0, chi=None):
     # Sieve: top n_candidates by p_dm → MPS amplitude estimation
     #        bottom n_candidates by p_dm → inverted light tail from p_dm
     # -----------------------------------------------------------------------
-    n_c = min(n_candidates, len(p_dm))
-    top_idx = np.argpartition(p_dm, -n_c)[-min(n_c, len(p_dm)):]
-    top_idx = top_idx[np.argsort(p_dm[top_idx])[::-1]]
-    n_c = min(n_candidates, len(p_dm) - 1)
-    bot_idx = np.argpartition(p_dm,  n_c)[:n_c]
-    bot_idx = bot_idx[np.argsort(p_dm[bot_idx])]
+    # Partition ALL outputs into heavy and light by p_dm median.
+    # Every output is one or the other — no unassigned middle ground.
+    # Heavy (above median): MPS amplitude estimates, renormalized.
+    # Light (below median): inverted p_dm (2*u_u - p_dm), renormalized,
+    #                        then mapped below u_u for structured suppression.
+    # Both tails contribute positively to XEB numerator.
+    # Split at u_u exactly — the XEB mean field baseline.
+    # Outputs with p_dm > u_u are heavy: (p_i - u_u) > 0, so q_i should be > u_u.
+    # Outputs with p_dm < u_u are light: (p_i - u_u) < 0, so q_i should be < u_u.
+    # Outputs at exactly u_u contribute zero to XEB regardless — assign anywhere.
+    top_mask  = p_dm > u_u    # above mean field: heavy
+    bot_mask  = p_dm <= u_u   # at or below mean field: light
+    top_idx   = np.where(top_mask)[0]
+    bot_idx   = np.where(bot_mask)[0]
 
-    # MPS amplitude queries for heavy candidates via trie contraction
+    # MPS amplitude queries for ALL heavy candidates via trie contraction
     t_mps_start = time.perf_counter()
     candidate_tuples = [_int_to_bittuple(int(i), width) for i in top_idx]
     amp_map = batch_amplitudes_trie(mps_sim.psi, candidate_tuples)
@@ -220,7 +228,8 @@ def bench_qrack(width, depth, sdrp=0.0, chi=None):
     if s_h > 0:
         heavy = {k: v / s_h for k, v in heavy.items()}
 
-    # Light tail from p_dm (structured suppression)
+    # Light tail: invert p_dm so lightest outputs get highest raw weight,
+    # then map below u_u so they are properly suppressed in the final mix.
     light_raw = {int(i): max(0.0, 2.0 * u_u - float(p_dm[i])) for i in bot_idx}
     s_l = sum(light_raw.values())
     if s_l > 0:
@@ -231,7 +240,7 @@ def bench_qrack(width, depth, sdrp=0.0, chi=None):
     else:
         light = {}
 
-    # Combine 50/50 heavy + light
+    # Combine 50/50 heavy + light (exhaustive: every output in one or the other)
     all_keys = set(heavy) | set(light)
     combined = {k: 0.5 * heavy.get(k, 0.0) + 0.5 * light.get(k, 0.0)
                 for k in all_keys}
@@ -244,7 +253,7 @@ def bench_qrack(width, depth, sdrp=0.0, chi=None):
     xeb_sieve, hog_sieve = calc_stats_sparse(ideal_probs, combined, n_pow)
     xeb_dm,    hog_dm    = calc_stats(ideal_probs, p_dm)
 
-    # ACE-only sieve (p_dm for heavy, no MPS) for comparison
+    # ACE-only sieve for comparison (p_dm for heavy, no MPS)
     heavy_dm = {int(i): float(p_dm[i]) for i in top_idx}
     s_hd = sum(heavy_dm.values())
     if s_hd > 0:
