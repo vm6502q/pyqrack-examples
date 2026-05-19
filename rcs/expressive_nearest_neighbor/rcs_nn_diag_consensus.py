@@ -257,6 +257,70 @@ def hadamard_transform(v):
 # Statistics
 # ---------------------------------------------------------------------------
 
+def sieve_and_score(ideal_probs, p_dm, n_pow, n_candidates, u_u):
+    """
+    Sieve heavy and light tails from p_dm, combine as a sparse probability
+    estimate, then mix 50/50 with uniform (QV protocol).
+
+    Heavy tail: top n_candidates by p_dm, renormalized.
+    Light tail: bottom n_candidates by p_dm, inverted via (2*u_u - p_dm[i]),
+                renormalized — peaks where p_dm is smallest, asserting suppression.
+    Combined:   50% heavy + 50% light (equal weight to both tails).
+    Final mix:  50% combined + 50% uniform (QV protocol).
+
+    Both tails contribute positively to XEB: heavy outputs push q_i above u_u
+    where p_i > u_u; light outputs push q_i below u_u where p_i < u_u.
+    """
+    # Heavy tail
+    top_idx = np.argpartition(p_dm, -n_candidates)[-n_candidates:]
+    top_idx = top_idx[np.argsort(p_dm[top_idx])[::-1]]
+    heavy = {int(i): float(p_dm[i]) for i in top_idx}
+    s_h = sum(heavy.values())
+    if s_h > 0:
+        heavy = {k: v / s_h for k, v in heavy.items()}
+
+    # Light tail: invert p_dm so lightest outputs get highest weight
+    bot_idx = np.argpartition(p_dm, n_candidates)[:n_candidates]
+    bot_idx = bot_idx[np.argsort(p_dm[bot_idx])]
+    light_raw = {int(i): max(0.0, 2.0 * u_u - float(p_dm[i])) for i in bot_idx}
+    s_l = sum(light_raw.values())
+    if s_l > 0:
+        # Normalize to sum 1, then invert back: light entries should be
+        # *below* u_u in the final distribution, so we use (u_u - normalized_weight)
+        # clipped to [0, u_u]. This keeps the light tail properly suppressed.
+        light = {k: max(0.0, u_u - (v / s_l) * u_u) for k, v in light_raw.items()}
+        s_l2 = sum(light.values())
+        if s_l2 > 0:
+            light = {k: v / s_l2 for k, v in light.items()}
+    else:
+        light = {}
+
+    # Combine: 50% heavy + 50% light (union of keys)
+    all_keys = set(heavy) | set(light)
+    combined = {k: 0.5 * heavy.get(k, 0.0) + 0.5 * light.get(k, 0.0)
+                for k in all_keys}
+    s_c = sum(combined.values())
+    if s_c > 0:
+        combined = {k: v / s_c for k, v in combined.items()}
+
+    return calc_stats_sparse(ideal_probs, combined, n_pow)
+
+
+def calc_stats_sparse(ideal_probs, exp_probs_sparse, n_pow):
+    u_u   = 1.0 / n_pow
+    model = 0.5
+    exp_dense = np.zeros(n_pow, dtype=np.float64)
+    for k, v in exp_probs_sparse.items():
+        exp_dense[k] = v
+    exp_mixed = (1.0 - model) * exp_dense + model * u_u
+    p_c   = ideal_probs - u_u
+    q_c   = exp_mixed   - u_u
+    denom = float(np.dot(p_c, p_c))
+    xeb   = float(np.dot(p_c, q_c)) / denom if denom > 0 else 0.0
+    hog   = float(exp_mixed[ideal_probs > float(np.median(ideal_probs))].sum())
+    return xeb, hog
+
+
 def calc_stats(ideal_probs, split_probs):
     n_pow = len(ideal_probs); u_u = 1.0/n_pow
     p=np.asarray(ideal_probs,dtype=np.float64); q=np.asarray(split_probs,dtype=np.float64)
@@ -359,17 +423,23 @@ def bench_qrack(width, depth):
     P_D  = np.abs(psis[0])**2; P_D  /= P_D.sum()
     P_AD = np.abs(psis[1])**2; P_AD /= P_AD.sum()
 
+    n_candidates = min(width ** 2, 1 << width)
+
     xeb_dm,  hog_dm  = calc_stats(ideal_probs, p_dm)
     xeb_had, hog_had = calc_stats(ideal_probs, p_had)
     xeb_d,   hog_d   = calc_stats(ideal_probs, P_D)
     xeb_ad,  hog_ad  = calc_stats(ideal_probs, P_AD)
 
+    # Sieve heavy+light tails from symmetrized density matrix diagonal
+    xeb_sieve, hog_sieve = sieve_and_score(ideal_probs, p_dm, n_pow, n_candidates, u_u)
+
     return {
-        "width":    width, "depth":   depth, "seconds": t_elapsed,
-        "xeb_dm":  xeb_dm,  "hog_dm":  hog_dm,
-        "xeb_had": xeb_had, "hog_had": hog_had,
-        "xeb_d":   xeb_d,   "hog_d":   hog_d,
-        "xeb_ad":  xeb_ad,  "hog_ad":  hog_ad,
+        "width":      width, "depth":     depth, "seconds":   t_elapsed,
+        "xeb_sieve":  xeb_sieve,  "hog_sieve":  hog_sieve,
+        "xeb_dm":     xeb_dm,     "hog_dm":     hog_dm,
+        "xeb_had":    xeb_had,    "hog_had":    hog_had,
+        "xeb_d":      xeb_d,      "hog_d":      hog_d,
+        "xeb_ad":     xeb_ad,     "hog_ad":     hog_ad,
     }
 
 
