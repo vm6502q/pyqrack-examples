@@ -124,7 +124,7 @@ def bench_qrack(width, depth, sdrp=0.0):
     ket_a = sim_a.out_ket()
 
     # -----------------------------------------------------------------------
-    # Instance B — reversed coupler order within each layer
+    # Instance B — every-other coupler order within each layer
     # -----------------------------------------------------------------------
     random.setstate(rng_state)
     for _ in range(depth):
