@@ -382,7 +382,8 @@ def bench_qrack(width, depth):
 
     phi_had = np.where(supp_h_had & supp_v_had, (phi_h_had + phi_v_had) / 2.0,
               np.where(supp_h_had, phi_h_had,
-              np.where(supp_v_had, phi_v_had, 0.0)))
+              np.where(supp_v_had, phi_v_had,
+                       (phi_h_had + phi_v_had) / 2.0)))  # no support: average (best separable approx)
 
     psi_had = hadamard_transform(phi_had) / np.sqrt(n_pow)
     p_had   = np.abs(psi_had) ** 2
