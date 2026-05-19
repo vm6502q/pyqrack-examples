@@ -225,6 +225,17 @@ def run_ideal_circuit(width, depth, row_len, col_len, rng_state):
 # Statistics
 # ---------------------------------------------------------------------------
 
+def calc_stats(ideal_probs, split_probs):
+    n_pow = len(ideal_probs); u_u = 1.0/n_pow
+    p = np.asarray(ideal_probs, dtype=np.float64)
+    q = np.asarray(split_probs, dtype=np.float64)
+    p_c = p-u_u; q_c = q-u_u
+    denom = float(np.dot(p_c,p_c))
+    xeb   = float(np.dot(p_c,q_c))/denom if denom>0 else 0.0
+    hog   = float(q[p>float(np.median(p))].sum())
+    return xeb, hog
+
+
 def calc_stats_sparse(ideal_probs, exp_probs_sparse, n_pow):
     u_u = 1.0/n_pow; model = 0.5
     exp_dense = np.zeros(n_pow, dtype=np.float64)
@@ -312,12 +323,57 @@ def bench_qrack(width, depth):
 
     xeb_sieve, hog_sieve = calc_stats_sparse(ideal_probs, combined, n_pow)
 
+    # -----------------------------------------------------------------------
+    # ACE direct probability comparison.
+    # Query out_probs() from each patch circuit, expand to full 2^n vector
+    # via separability assumption, average: (P_d + P_ad) / 2.
+    # -----------------------------------------------------------------------
+    def run_patch_probs(patch, local_idx):
+        random.setstate(rng_state)
+        n0 = int(np.sum(patch==0)); n1 = int(np.sum(patch==1))
+        sim = [QrackSimulator(n0), QrackSimulator(n1)]
+        gateSequence = [0,3,2,1,2,1,0,3]
+        for _ in range(depth):
+            for i in range(width):
+                th, ph, lm = (random.uniform(0,2*math.pi) for _ in range(3))
+                sim[patch[i]].u(local_idx[i],th,ph,lm)
+            gate=gateSequence.pop(0); gateSequence.append(gate)
+            for row in range(1,row_len,2):
+                for col in range(col_len):
+                    tr=row+(1 if(gate&2)else -1); tc=col+(1 if(gate&1)else 0)
+                    if tr<0: tr+=row_len
+                    if tc<0: tc+=col_len
+                    if tr>=row_len: tr-=row_len
+                    if tc>=col_len: tc-=col_len
+                    b1=row*row_len+col; b2=tr*row_len+tc
+                    if (b1==b2)or(b1>=width)or(b2>=width): continue
+                    g=random.choice(TWO_BIT_GATES); g(sim,b1,b2,patch,local_idx)
+        p0 = np.asarray(sim[0].out_probs(), dtype=np.float64)
+        p1 = np.asarray(sim[1].out_probs(), dtype=np.float64)
+        # Expand separable product to full 2^n vector
+        idx0 = np.zeros(n_pow, dtype=np.int64)
+        idx1 = np.zeros(n_pow, dtype=np.int64)
+        for q in range(width):
+            bit_q = (np.arange(n_pow, dtype=np.int64) >> q) & 1
+            if patch[q] == 0: idx0 |= bit_q << int(local_idx[q])
+            else:              idx1 |= bit_q << int(local_idx[q])
+        return p0[idx0] * p1[idx1]
+
+    P_d  = run_patch_probs(patch_d,  local_d)
+    P_ad = run_patch_probs(patch_ad, local_ad)
+    ace_avg_probs = (P_d + P_ad) / 2.0
+    xeb_ace, hog_ace = calc_stats_sparse(
+        ideal_probs,
+        {i: float(ace_avg_probs[i]) for i in range(n_pow) if ace_avg_probs[i] > u_u},
+        n_pow)
+
     return {
         "width":    width, "depth":   depth,
         "n_unique": len(counts),
         "n_heavy":  len(heavy), "n_light": len(light),
         "seconds":  t_elapsed,
-        "xeb_sieve": xeb_sieve, "hog_sieve": hog_sieve,
+        "xeb_sieve":   xeb_sieve,   "hog_sieve":   hog_sieve,
+        "xeb_ace_avg": xeb_ace,     "hog_ace_avg": hog_ace,
     }
 
 

@@ -173,6 +173,37 @@ def bench_qrack(width, depth, sdrp=0.0):
 
     xeb_sieve, hog_sieve = calc_stats_sparse(ideal_probs, combined, n_pow)
 
+    # -----------------------------------------------------------------------
+    # ACE direct probability comparison.
+    # Run two fresh ACE instances and query out_probs() directly.
+    # Average probability: (p0[i] + p1[i]) / 2  (incoherent mixture).
+    # Equivalent to equal superposition probability |psi_avg|^2 with
+    # 1/sqrt(2) amplitude normalization per instance.
+    # -----------------------------------------------------------------------
+    ace_probs_list = []
+    for inst in range(n_inst):
+        random.setstate(rng_state)
+        sim = QrackSimulator(width)
+        if sdrp > 0.0:
+            sim.set_sdrp(sdrp)
+        sim.set_ace_max_qb((width + 1) >> 1)
+        for _ in range(depth):
+            for i in lcv_range:
+                th, ph, lm = (random.uniform(0, 2*math.pi) for _ in range(3))
+                sim.u(i, th, ph, lm)
+            pairs = []
+            unused = all_bits.copy(); random.shuffle(unused)
+            while len(unused) > 1:
+                pairs.append((unused.pop(), unused.pop()))
+            for c, t in _order_pairs(pairs, inst):
+                sim.mcx([c], t)
+        ace_probs_list.append(np.asarray(sim.out_probs(), dtype=np.float64))
+        del sim
+
+    # Incoherent average: 1/2 * (p0 + p1)
+    ace_avg_probs = sum(ace_probs_list) / n_inst
+    xeb_ace, hog_ace = calc_stats(ideal_probs, ace_avg_probs)
+
     return {
         "width":        width,
         "depth":        depth,
@@ -182,6 +213,8 @@ def bench_qrack(width, depth, sdrp=0.0):
         "seconds":      t_elapsed,
         "xeb_sieve":    xeb_sieve,
         "hog_sieve":    hog_sieve,
+        "xeb_ace_avg":  xeb_ace,
+        "hog_ace_avg":  hog_ace,
     }
 
 
