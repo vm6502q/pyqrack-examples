@@ -193,6 +193,23 @@ def nswap(sim, q1, q2, p, l):
 TWO_BIT_GATES = swap, pswap, mswap, nswap, iswap, iiswap, cx, cy, cz, acx, acy, acz
 
 
+# Single-simulator gate wrappers for the ideal (non-patched) circuit
+def _cx_i(sim, q1, q2):   sim.mcx([q1], q2)
+def _cy_i(sim, q1, q2):   sim.mcy([q1], q2)
+def _cz_i(sim, q1, q2):   sim.mcz([q1], q2)
+def _acx_i(sim, q1, q2):  sim.macx([q1], q2)
+def _acy_i(sim, q1, q2):  sim.macy([q1], q2)
+def _acz_i(sim, q1, q2):  sim.macz([q1], q2)
+def _sw_i(sim, q1, q2):   sim.swap(q1, q2)
+def _isw_i(sim, q1, q2):  sim.iswap(q1, q2)
+def _iisw_i(sim, q1, q2): sim.adjiswap(q1, q2)
+def _psw_i(sim, q1, q2):  sim.mcz([q1], q2); sim.swap(q1, q2)
+def _msw_i(sim, q1, q2):  sim.swap(q1, q2);  sim.mcz([q1], q2)
+def _nsw_i(sim, q1, q2):  sim.mcz([q1], q2); sim.swap(q1, q2); sim.mcz([q1], q2)
+TWO_BIT_GATES_IDEAL = _sw_i, _psw_i, _msw_i, _nsw_i, _isw_i, _iisw_i, \
+                      _cx_i, _cy_i, _cz_i, _acx_i, _acy_i, _acz_i
+
+
 # ---------------------------------------------------------------------------
 # Circuit runner
 # ---------------------------------------------------------------------------
@@ -230,6 +247,40 @@ def run_circuit(width, depth, row_len, col_len, patch, local_idx, rng_state):
                 g(sim, b1, b2, patch, local_idx)
 
     return [sim[0].out_probs(), sim[1].out_probs()]
+
+
+def run_circuit_ideal(width, depth, row_len, col_len, rng_state):
+    """Full statevector simulation — no patch boundary, ground truth."""
+    random.setstate(rng_state)
+    sim = QrackSimulator(width)
+    gateSequence = [0, 3, 2, 1, 2, 1, 0, 3]
+
+    for _ in range(depth):
+        for i in range(width):
+            th = random.uniform(0, 2 * math.pi)
+            ph = random.uniform(0, 2 * math.pi)
+            lm = random.uniform(0, 2 * math.pi)
+            sim.u(i, th, ph, lm)
+
+        gate = gateSequence.pop(0)
+        gateSequence.append(gate)
+
+        for row in range(1, row_len, 2):
+            for col in range(col_len):
+                temp_row = row + (1 if (gate & 2) else -1)
+                temp_col = col + (1 if (gate & 1) else 0)
+                if temp_row < 0:        temp_row += row_len
+                if temp_col < 0:        temp_col += col_len
+                if temp_row >= row_len: temp_row -= row_len
+                if temp_col >= col_len: temp_col -= col_len
+                b1 = row * row_len + col
+                b2 = temp_row * row_len + temp_col
+                if (b1 == b2) or (b1 >= width) or (b2 >= width):
+                    continue
+                g = random.choice(TWO_BIT_GATES_IDEAL)
+                g(sim, b1, b2)
+
+    return np.asarray(sim.out_probs(), dtype=np.float64)
 
 
 # ---------------------------------------------------------------------------
@@ -514,6 +565,7 @@ def bench_qrack_consensus(width, depth):
     rng_state = random.getstate()
     probs_h = run_circuit(width, depth, row_len, col_len, patch_h, local_h, rng_state)
     probs_v = run_circuit(width, depth, row_len, col_len, patch_v, local_v, rng_state)
+    ideal_probs = run_circuit_ideal(width, depth, row_len, col_len, rng_state)
 
     # Original patch-vs-patch XEB (kept for comparison)
     print("--- Patch vs patch XEB ---")
@@ -524,14 +576,38 @@ def bench_qrack_consensus(width, depth):
                    q00_vh, q01_vh, q10_vh, q11_vh,
                    depth, "vertical", "horizontal"))
 
-    # Consensus XEB
+    # Consensus XEB (patch vs patch)
     print("--- Consensus XEB ---")
-    print(calc_xeb_consensus(
+    consensus_result = calc_xeb_consensus(
         probs_h, probs_v, width,
         patch_h, local_h, patch_v, local_v,
         q00_hv, q01_hv, q10_hv, q11_hv,
         q00_vh, q01_vh, q10_vh, q11_vh,
-        depth))
+        depth)
+    print(consensus_result)
+
+    # Consensus vs ideal — the honest comparison
+    P_H = _expand_probs(probs_h, width, patch_h, local_h)
+    P_V = _expand_probs(probs_v, width, patch_v, local_v)
+    P_cons = np.sqrt(np.maximum(P_H * P_V, 0.0))
+    cons_sum = P_cons.sum()
+    if cons_sum > 0:
+        P_cons /= cons_sum
+
+    u_u      = 1.0 / (1 << width)
+    ideal_c  = ideal_probs - u_u
+    cons_c   = P_cons - u_u
+    denom_i  = float(np.dot(ideal_c, ideal_c))
+    xeb_ci   = float(np.dot(ideal_c, cons_c)) / denom_i if denom_i > 0 else float('nan')
+    hog_ci   = float(P_cons[ideal_probs > float(np.median(ideal_probs))].sum())
+
+    print("--- Consensus vs ideal ---")
+    print({
+        "qubits":              width,
+        "depth":               depth,
+        "xeb_consensus_ideal": xeb_ci,
+        "hog_consensus_ideal": hog_ci,
+    })
 
 
 def main():
