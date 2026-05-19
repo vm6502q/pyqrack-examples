@@ -167,7 +167,10 @@ def bench_qrack(width, depth, sdrp=0.0):
     # -----------------------------------------------------------------------
     ka = np.asarray(ket_a, dtype=np.complex128)
     kb = np.asarray(ket_b, dtype=np.complex128)
-    mix = (ka + kb) / math.sqrt(2.0)
+    mix = (ka + kb) / 2.0
+    mix_norm = float(np.sqrt((mix * mix.conj()).real.sum()))
+    if mix_norm > 0:
+        mix /= mix_norm
 
     # A vs B (how different are the two instances?)
     xeb_ab, l2_ab, pd_ab = calc_stats(ket_a, ket_b)
