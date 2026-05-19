@@ -181,7 +181,7 @@ def bench_qrack(width, depth, sdrp=0.0):
     top_idx    = np.argpartition(cons_probs, -n_candidates)[-n_candidates:]
     top_idx    = top_idx[np.argsort(cons_probs[top_idx])[::-1]]
     bottom_idx = np.argpartition(cons_probs, n_candidates)[n_candidates:]
-    bottom_idx = top_idx[np.argsort(cons_probs[top_idx])[::1]]
+    bottom_idx = bottom_idx[np.argsort(cons_probs[bottom_idx])[::1]]
 
     # Sparse ideal: consensus-identified candidates, probability from consensus,
     # renormalized, then 50/50 mixed with uniform (QV protocol)
