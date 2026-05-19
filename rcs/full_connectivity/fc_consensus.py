@@ -90,8 +90,10 @@ def bench_qrack(width, depth, sdrp=0.0):
     if sdrp > 0.0:
         sim_a.set_sdrp(sdrp)
         sim_b.set_sdrp(sdrp)
-    sim_a.set_ace_max_qb(width >> 1)
-    sim_b.set_ace_max_qb(width >> 1)
+    # Split into 4 subsystems, to demonstrate ~30-32 qubits per segment
+    # for 4 segments on a GPU, in proof-of-concept.
+    sim_a.set_ace_max_qb((width + 3) >> 2)
+    sim_b.set_ace_max_qb((width + 3) >> 2)
 
     rng_state = random.getstate()   # snapshot so both instances replay identically
 
