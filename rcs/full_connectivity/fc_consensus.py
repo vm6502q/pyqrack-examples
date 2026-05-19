@@ -191,7 +191,7 @@ def bench_qrack(width, depth, sdrp=0.0):
 
     _exp_probs_sparse = {int(i): float(2 * u_u - cons_probs[i]) for i in bottom_idx}
     s = sum(_exp_probs_sparse.values())
-    _exp_probs_sparse = {int(k): (2 * u_u - (v / s)) for k, v in _exp_probs_sparse.items()}
+    _exp_probs_sparse = {int(k): max(0.0, (2 * u_u - (v / s))) for k, v in _exp_probs_sparse.items()}
 
     exp_probs_sparse = {int(k): exp_probs_sparse.get(k, 0) + _exp_probs_sparse.get(k, 0) for k in set(exp_probs_sparse) | set(_exp_probs_sparse)}
     s = sum(exp_probs_sparse.values())
