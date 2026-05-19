@@ -86,6 +86,19 @@ def calc_stats_sparse(ideal_probs, exp_probs_sparse, n_pow):
     return xeb, hog
 
 
+def calc_stats(ideal_probs, split_probs):
+    n_pow  = len(ideal_probs)
+    u_u    = 1.0 / n_pow
+    p      = np.asarray(ideal_probs, dtype=np.float64)
+    q      = np.asarray(split_probs, dtype=np.float64)
+    p_c    = p - u_u
+    q_c    = q - u_u
+    denom  = float(np.dot(p_c, p_c))
+    xeb    = float(np.dot(p_c, q_c)) / denom if denom > 0 else 0.0
+    hog    = float(q[p > float(np.median(p))].sum())
+    return xeb, hog
+
+
 # ---------------------------------------------------------------------------
 # Benchmark
 # ---------------------------------------------------------------------------
@@ -209,7 +222,7 @@ def bench_qrack(width, depth, sdrp=0.0):
         xeb_ij, _, _ = calc_stats_np(kets[i], kets[j])
         cross_xeb[f"xeb_{i}_vs_{j}"] = xeb_ij
 
-    xeb_cons_ideal, l2_cons_ideal, hog_cons_ideal = calc_stats_np(
+    xeb_cons_ideal, hog_cons_ideal = calc_stats(
         ideal_probs, cons_probs)
 
     xeb_vs_cons = []
@@ -226,7 +239,6 @@ def bench_qrack(width, depth, sdrp=0.0):
         "hog_sparse":         hog_sparse,
         # Consensus state vs ideal (full probability comparison)
         "xeb_cons_vs_ideal":  xeb_cons_ideal,
-        "l2_cons_vs_ideal":   l2_cons_ideal,
         "hog_cons_vs_ideal":  hog_cons_ideal,
         # Instance consensus quality
         "xeb_consensus_mean": float(np.mean(xeb_vs_cons)),
