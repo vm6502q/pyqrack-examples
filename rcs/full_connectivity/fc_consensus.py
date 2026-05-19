@@ -194,6 +194,8 @@ def bench_qrack(width, depth, sdrp=0.0):
     _exp_probs_sparse = {int(k): (2.0 - (v / s)) for k, v in _exp_probs_sparse.items()}
 
     exp_probs_sparse = {int(k): exp_probs_sparse.get(k, 0) + _exp_probs_sparse.get(k, 0) for k in set(exp_probs_sparse) | set(_exp_probs_sparse)}
+    s = sum(exp_probs_sparse.values())
+    exp_probs_sparse = {int(k): (v / s) for k, v in exp_probs_sparse.items()}
 
     xeb_sparse, hog_sparse = calc_stats_sparse(ideal_probs, exp_probs_sparse, n_pow)
 
