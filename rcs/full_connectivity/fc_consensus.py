@@ -138,7 +138,7 @@ def bench_qrack(width, depth, sdrp=0.0):
     for s in sims:
         if sdrp > 0.0:
             s.set_sdrp(sdrp)
-        s.set_ace_max_qb((width + 3) >> 2)
+        s.set_ace_max_qb((width + 1) >> 1)
 
     rng_state = random.getstate()
     t_start   = time.perf_counter()
@@ -239,7 +239,7 @@ def bench_qrack(width, depth, sdrp=0.0):
     # ACE subsystem partition: inst 0 uses lower/upper qubit halves,
     # inst 1 uses even/odd qubit indices.
     # -----------------------------------------------------------------------
-    ace_qb      = (width + 3) >> 2
+    ace_qb      = (width + 1) >> 1
     mask0_seq   = (1 << ace_qb) - 1
     mask1_seq   = ((1 << n_pow.bit_length() - 1) - 1) ^ mask0_seq if n_pow > 1 else 0
     mask1_seq   = ((1 << width) - 1) ^ mask0_seq
