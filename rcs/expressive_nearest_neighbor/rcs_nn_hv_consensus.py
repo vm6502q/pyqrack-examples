@@ -219,6 +219,26 @@ def run_ideal_circuit(width, depth, row_len, col_len, rng_state):
     return np.asarray(sim.out_probs(), dtype=np.float64)
 
 
+
+# ---------------------------------------------------------------------------
+# Walsh-Hadamard transform (fast, O(n * 2^n))
+# ---------------------------------------------------------------------------
+
+def hadamard_transform(v):
+    """Unnormalized Walsh-Hadamard transform. Inverse = hadamard_transform(v) / len(v)."""
+    n = len(v)
+    h = v.copy()
+    step = 1
+    while step < n:
+        for i in range(0, n, step * 2):
+            lo = h[i:i+step].copy()
+            hi = h[i+step:i+2*step].copy()
+            h[i:i+step]        = lo + hi
+            h[i+step:i+2*step] = lo - hi
+        step *= 2
+    return h
+
+
 # ---------------------------------------------------------------------------
 # Statistics
 # ---------------------------------------------------------------------------
@@ -304,6 +324,25 @@ def bench_qrack(width, depth):
     psi_h = full_ket((ket_h0, ket_h1), patch_h, local_h)
     psi_v = full_ket((ket_v0, ket_v1), patch_v, local_v)
 
+    # -----------------------------------------------------------------------
+    # Phase canonicalization: rotate each ket so that the amplitude at the
+    # common gauge index (first above-uniform index in the ensemble mean field)
+    # is real and positive.  Same index for all kets => common gauge.
+    # -----------------------------------------------------------------------
+    kets = [psi_h, psi_v]
+    n_pow   = 1 << width
+    u_u     = 1.0 / n_pow
+    mean_p  = sum((k * k.conj()).real for k in kets) / len(kets)
+    gauge_idx = int(np.argmax(mean_p > u_u))
+
+    phase_fixed = []
+    for k in kets:
+        ref   = k[gauge_idx]
+        phase = ref / abs(ref) if abs(ref) > 1e-30 else 1.0
+        phase_fixed.append(k / phase)
+    psi_h = phase_fixed[0]
+    psi_v = phase_fixed[1]
+
     # Symmetrized outer-product density matrix diagonal
     p_dm = (psi_h * psi_v.conj() + psi_v * psi_h.conj()).real
     p_dm = np.maximum(p_dm, 0.0)
@@ -316,12 +355,36 @@ def bench_qrack(width, depth):
     xeb_h,   hog_h   = calc_stats(ideal_probs, P_H)
     xeb_v,   hog_v   = calc_stats(ideal_probs, P_V)
 
+    # -----------------------------------------------------------------------
+    # Hadamard-basis piecewise combination.
+    # Transform each patch ket to Hadamard basis, combine piecewise:
+    #   - only one patch has support: full weight
+    #   - both patches have support: average
+    # Transform back to computational basis for XEB/HOG.
+    # -----------------------------------------------------------------------
+    phi_h  = hadamard_transform(psi_h) / np.sqrt(n_pow)
+    phi_v  = hadamard_transform(psi_v) / np.sqrt(n_pow)
+    thresh = 1.0 / np.sqrt(n_pow)
+    supp_h = np.abs(phi_h) > thresh
+    supp_v = np.abs(phi_v) > thresh
+    phi_had = np.where(supp_h & supp_v, (phi_h + phi_v) / 2.0,
+              np.where(supp_h, phi_h,
+              np.where(supp_v, phi_v, 0.0)))
+    psi_had = hadamard_transform(phi_had) / np.sqrt(n_pow)
+    p_had   = np.abs(psi_had) ** 2
+    had_sum = p_had.sum()
+    if had_sum > 0:
+        p_had /= had_sum
+    xeb_had, hog_had = calc_stats(ideal_probs, p_had)
+
     return {
         "width":        width,
         "depth":        depth,
         "seconds":      t_elapsed,
         "xeb_dm":       xeb_dm,
         "hog_dm":       hog_dm,
+        "xeb_had":      xeb_had,
+        "hog_had":      hog_had,
         "xeb_h":        xeb_h,
         "hog_h":        hog_h,
         "xeb_v":        xeb_v,

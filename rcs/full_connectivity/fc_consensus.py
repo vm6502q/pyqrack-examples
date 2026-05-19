@@ -45,6 +45,26 @@ def _order_pairs(pairs, inst):
     return [pairs[i] for i in range(1, k, 2)] +            [pairs[i] for i in range(0, k, 2)]
 
 
+
+# ---------------------------------------------------------------------------
+# Walsh-Hadamard transform (fast, O(n * 2^n))
+# ---------------------------------------------------------------------------
+
+def hadamard_transform(v):
+    """Unnormalized Walsh-Hadamard transform. Inverse = hadamard_transform(v) / len(v)."""
+    n = len(v)
+    h = v.copy()
+    step = 1
+    while step < n:
+        for i in range(0, n, step * 2):
+            lo = h[i:i+step].copy()
+            hi = h[i+step:i+2*step].copy()
+            h[i:i+step]        = lo + hi
+            h[i+step:i+2*step] = lo - hi
+        step *= 2
+    return h
+
+
 # ---------------------------------------------------------------------------
 # Statistics
 # ---------------------------------------------------------------------------
@@ -167,6 +187,22 @@ def bench_qrack(width, depth, sdrp=0.0):
     t_elapsed = time.perf_counter() - t_start
 
     # -----------------------------------------------------------------------
+    # Phase canonicalization: rotate each ket so that the amplitude at the
+    # common gauge index (first above-uniform index in the ensemble mean field)
+    # is real and positive.  Same index for all kets => common gauge.
+    # -----------------------------------------------------------------------
+    n_pow   = 1 << width
+    u_u     = 1.0 / n_pow
+    mean_p  = sum((k * k.conj()).real for k in kets) / n_inst
+    gauge_idx = int(np.argmax(mean_p > u_u))
+
+    phase_fixed = []
+    for k in kets:
+        ref   = k[gauge_idx]
+        phase = ref / abs(ref) if abs(ref) > 1e-30 else 1.0
+        phase_fixed.append(k / phase)
+
+    # -----------------------------------------------------------------------
     # Symmetrized outer product density matrix.
     # rho = (|psi_A><psi_B| + |psi_B><psi_A|) / 2
     # diagonal: rho[i,i] = Re(psi_A[i] * psi_B[i].conj())
@@ -175,7 +211,7 @@ def bench_qrack(width, depth, sdrp=0.0):
     # the common gauge already provides.
     # Use instances 0 and 1 (the two orthogonal cuts).
     # -----------------------------------------------------------------------
-    p_dm = (kets[0] * kets[1].conj() + kets[1] * kets[0].conj()).real
+    p_dm = (phase_fixed[0] * phase_fixed[1].conj() + phase_fixed[1] * phase_fixed[0].conj()).real
     # Shift to non-negative (diagonal of a valid density matrix is non-negative,
     # but numerical errors from approximate orthogonality can give small negatives)
     p_dm = np.maximum(p_dm, 0.0)
@@ -184,6 +220,29 @@ def bench_qrack(width, depth, sdrp=0.0):
         p_dm /= dm_sum
 
     xeb_dm, hog_dm = calc_stats(ideal_probs, p_dm)
+
+    # -----------------------------------------------------------------------
+    # Hadamard-basis piecewise combination.
+    # Transform each patch ket to Hadamard basis, combine piecewise:
+    #   - only one patch has support (|phi| > threshold): full weight
+    #   - both patches have support: average
+    # Transform back to computational basis for XEB/HOG.
+    # -----------------------------------------------------------------------
+    n_pow   = 1 << width
+    phi_0   = hadamard_transform(phase_fixed[0]) / np.sqrt(n_pow)
+    phi_1   = hadamard_transform(phase_fixed[1]) / np.sqrt(n_pow)
+    thresh  = 1.0 / np.sqrt(n_pow)   # above uniform in Hadamard basis
+    supp_0  = np.abs(phi_0) > thresh
+    supp_1  = np.abs(phi_1) > thresh
+    phi_had = np.where(supp_0 & supp_1, (phi_0 + phi_1) / 2.0,
+              np.where(supp_0, phi_0,
+              np.where(supp_1, phi_1, 0.0)))
+    psi_had = hadamard_transform(phi_had) / np.sqrt(n_pow)
+    p_had   = np.abs(psi_had) ** 2
+    had_sum = p_had.sum()
+    if had_sum > 0:
+        p_had /= had_sum
+    xeb_had, hog_had = calc_stats(ideal_probs, p_had)
 
     xeb_vs_cons = []
     for k in kets:
@@ -194,9 +253,10 @@ def bench_qrack(width, depth, sdrp=0.0):
         "width":              width,
         "depth":              depth,
         "seconds":            t_elapsed,
-        # Density matrix (incoherent mixture of two orthogonal instances)
         "xeb_dm_vs_ideal":    xeb_dm,
         "hog_dm_vs_ideal":    hog_dm,
+        "xeb_had_vs_ideal":   xeb_had,
+        "hog_had_vs_ideal":   hog_had,
     }
 
     for i, x in enumerate(xeb_vs_cons):
