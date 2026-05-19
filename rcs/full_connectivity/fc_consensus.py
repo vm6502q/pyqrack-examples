@@ -141,17 +141,13 @@ def bench_qrack(width, depth, sdrp=0.0):
         while len(unused) > 1:
             pairs.append((unused.pop(), unused.pop()))
 
-        for i in range(0, width >> 1, 2):
-            pair = pairs[i]
-            c = pair[0]
-            t = pair[1]
-            sim_b.mcx([c], t)
-
         for i in range(1, width >> 1, 2):
             pair = pairs[i]
-            c = pair[0]
-            t = pair[1]
-            sim_b.mcx([c], t)
+            sim_b.mcx([pair[0]], pair[1])
+
+        for i in range(0, width >> 1, 2):
+            pair = pairs[i]
+            sim_b.mcx([pair[0]], pair[1])
 
         # Reversed presentation order — same gates, different ACE greedy path
         for c, t in reversed(pairs):
