@@ -355,21 +355,35 @@ def bench_qrack(width, depth):
     xeb_h,   hog_h   = calc_stats(ideal_probs, P_H)
     xeb_v,   hog_v   = calc_stats(ideal_probs, P_V)
 
+# -----------------------------------------------------------------------
+    # Hadamard-basis piecewise combination using patch support structure.
+    #
+    # A Hadamard index s is supported by a patch if all set bits of s lie
+    # within one of its two sub-regions (does not straddle the boundary).
+    # Single support: full weight. Double support: average. None: zero.
     # -----------------------------------------------------------------------
-    # Hadamard-basis piecewise combination.
-    # Transform each patch ket to Hadamard basis, combine piecewise:
-    #   - only one patch has support: full weight
-    #   - both patches have support: average
-    # Transform back to computational basis for XEB/HOG.
-    # -----------------------------------------------------------------------
-    phi_h  = hadamard_transform(psi_h) / np.sqrt(n_pow)
-    phi_v  = hadamard_transform(psi_v) / np.sqrt(n_pow)
-    thresh = 1.0 / np.sqrt(n_pow)
-    supp_h = np.abs(phi_h) > thresh
-    supp_v = np.abs(phi_v) > thresh
-    phi_had = np.where(supp_h & supp_v, (phi_h + phi_v) / 2.0,
-              np.where(supp_h, phi_h,
-              np.where(supp_v, phi_v, 0.0)))
+    mask0_h = mask1_h = 0
+    for q in range(width):
+        if patch_h[q] == 0: mask0_h |= 1 << q
+        else:                mask1_h |= 1 << q
+    mask0_v = mask1_v = 0
+    for q in range(width):
+        if patch_v[q] == 0: mask0_v |= 1 << q
+        else:                mask1_v |= 1 << q
+
+    def _within(s, m0, m1):
+        return ((s & m0) == s) or ((s & m1) == s)
+
+    supp_h_had = np.array([_within(s, mask0_h, mask1_h) for s in range(n_pow)])
+    supp_v_had = np.array([_within(s, mask0_v, mask1_v) for s in range(n_pow)])
+
+    phi_h_had = hadamard_transform(psi_h) / np.sqrt(n_pow)
+    phi_v_had = hadamard_transform(psi_v) / np.sqrt(n_pow)
+
+    phi_had = np.where(supp_h_had & supp_v_had, (phi_h_had + phi_v_had) / 2.0,
+              np.where(supp_h_had, phi_h_had,
+              np.where(supp_v_had, phi_v_had, 0.0)))
+
     psi_had = hadamard_transform(phi_had) / np.sqrt(n_pow)
     p_had   = np.abs(psi_had) ** 2
     had_sum = p_had.sum()

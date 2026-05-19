@@ -221,22 +221,44 @@ def bench_qrack(width, depth, sdrp=0.0):
 
     xeb_dm, hog_dm = calc_stats(ideal_probs, p_dm)
 
+# -----------------------------------------------------------------------
+    # Hadamard-basis piecewise combination using patch support structure.
+    #
+    # A Hadamard index s represents coherence between computational basis
+    # states differing in the bits set in s.  This cross term is supported
+    # by a patch approximation only if all set bits of s lie entirely within
+    # one of that patch's two sub-regions (i.e., s does not straddle the
+    # patch boundary).
+    #
+    # For each Hadamard index s:
+    #   single support (H only or V only): take full weight from that patch
+    #   double support (both H and V):     average the two
+    #   no support (straddles both):       zero (boundary artifact)
+    #
+    # For the fully-connected case the two "patches" are defined by the
+    # ACE subsystem partition: inst 0 uses lower/upper qubit halves,
+    # inst 1 uses even/odd qubit indices.
     # -----------------------------------------------------------------------
-    # Hadamard-basis piecewise combination.
-    # Transform each patch ket to Hadamard basis, combine piecewise:
-    #   - only one patch has support (|phi| > threshold): full weight
-    #   - both patches have support: average
-    # Transform back to computational basis for XEB/HOG.
-    # -----------------------------------------------------------------------
-    n_pow   = 1 << width
+    ace_qb      = (width + 3) >> 2
+    mask0_seq   = (1 << ace_qb) - 1
+    mask1_seq   = ((1 << n_pow.bit_length() - 1) - 1) ^ mask0_seq if n_pow > 1 else 0
+    mask1_seq   = ((1 << width) - 1) ^ mask0_seq
+    mask0_stride = sum(1 << i for i in range(0, width, 2))
+    mask1_stride = sum(1 << i for i in range(1, width, 2))
+
+    def _within(s, m0, m1):
+        return ((s & m0) == s) or ((s & m1) == s)
+
+    supp_0_had = np.array([_within(s, mask0_seq,    mask1_seq)    for s in range(n_pow)])
+    supp_1_had = np.array([_within(s, mask0_stride, mask1_stride) for s in range(n_pow)])
+
     phi_0   = hadamard_transform(phase_fixed[0]) / np.sqrt(n_pow)
     phi_1   = hadamard_transform(phase_fixed[1]) / np.sqrt(n_pow)
-    thresh  = 1.0 / np.sqrt(n_pow)   # above uniform in Hadamard basis
-    supp_0  = np.abs(phi_0) > thresh
-    supp_1  = np.abs(phi_1) > thresh
-    phi_had = np.where(supp_0 & supp_1, (phi_0 + phi_1) / 2.0,
-              np.where(supp_0, phi_0,
-              np.where(supp_1, phi_1, 0.0)))
+
+    phi_had = np.where(supp_0_had & supp_1_had, (phi_0 + phi_1) / 2.0,
+              np.where(supp_0_had, phi_0,
+              np.where(supp_1_had, phi_1, 0.0)))
+
     psi_had = hadamard_transform(phi_had) / np.sqrt(n_pow)
     p_had   = np.abs(psi_had) ** 2
     had_sum = p_had.sum()
