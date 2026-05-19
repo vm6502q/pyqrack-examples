@@ -120,7 +120,7 @@ def bench_qrack(width, depth, sdrp=0.0, chi=None):
     lcv_range    = range(width)
     all_bits     = list(lcv_range)
     n_inst       = 2
-    n_candidates = width ** 2
+    n_candidates = width ** 3
     n_pow        = 1 << width
     u_u          = 1.0 / n_pow
 
@@ -196,9 +196,11 @@ def bench_qrack(width, depth, sdrp=0.0, chi=None):
     # Sieve: top n_candidates by p_dm → MPS amplitude estimation
     #        bottom n_candidates by p_dm → inverted light tail from p_dm
     # -----------------------------------------------------------------------
-    top_idx = np.argpartition(p_dm, -n_candidates)[-n_candidates:]
+    n_c = min(n_candidates, len(p_dm))
+    top_idx = np.argpartition(p_dm, -n_c)[-min(n_c, len(p_dm)):]
     top_idx = top_idx[np.argsort(p_dm[top_idx])[::-1]]
-    bot_idx = np.argpartition(p_dm,  n_candidates)[:n_candidates]
+    n_c = min(n_candidates, len(p_dm) - 1)
+    bot_idx = np.argpartition(p_dm,  n_c)[:n_c]
     bot_idx = bot_idx[np.argsort(p_dm[bot_idx])]
 
     # MPS amplitude queries for heavy candidates via trie contraction
