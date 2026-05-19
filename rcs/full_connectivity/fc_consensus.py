@@ -139,7 +139,7 @@ def bench_qrack(width, depth, sdrp=0.0):
         while len(unused) > 1:
             c = unused.pop()
             t = unused.pop()
-            sim_i.mcx([c], t)
+            sim_a.mcx([c], t)
 
     ket_a = sim_a.out_ket()
 
