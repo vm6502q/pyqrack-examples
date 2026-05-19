@@ -1,15 +1,24 @@
-# Fully-connected RCS with built-in greedy ACE consensus.
+# Fully-connected RCS with 4-instance greedy ACE consensus.
 #
-# Two QrackSimulator instances run the same random circuit, but receive
-# the 2-qubit couplers in REVERSED order within each layer.  ACE's greedy
-# boundary selection is order-dependent, so the two instances develop
-# approximately orthogonal separability structures — the same idea as the
-# explicit H/V patch split, but achieved for free by reordering commuting
-# gates rather than running shadow circuits.
+# Four QrackSimulator instances run the same random circuit, receiving
+# the 2-qubit couplers in four different orderings within each layer.
+# ACE's greedy boundary selection is order-dependent, so the four instances
+# develop approximately mutually orthogonal separability structures.
 #
-# The equal mixture of the two statevectors is the consensus heuristic state.
-# Statistics are computed against that mixture as both "ideal" and "experiment,"
-# and also cross-ways (instance A as ideal, mixture as experiment, and vice versa).
+# Ordering strategy: quarter-rotation of the coupler pair list.
+# Instance i starts at offset i*k//4 in the shuffled pair list (wrapping
+# around), so each instance "leads" with a different quarter of the couplers.
+# This maximally separates the greedy fusion entry points across ACE's four
+# subsystems and gives uniform pairwise Kendall distances between orderings.
+#
+# Additionally, instances 2 and 3 apply an odd/even stride interleave on top
+# of their quarter-rotation — giving a two-level hierarchy (rotation at the
+# block level, stride at the element level) that mirrors the exponential
+# structure of the statevector subsystem decomposition.
+#
+# The coherent superposition of all four is the consensus heuristic state.
+# For four mutually orthogonal unit vectors, the sum has norm 2, so:
+#   mix = (ka + kb + kc + kd) / 2.0   (exact normalization, no sqrt needed)
 #
 # By Dan Strano and (Anthropic) Claude.
 
@@ -23,53 +32,58 @@ from pyqrack import QrackSimulator
 
 
 # ---------------------------------------------------------------------------
+# Coupler ordering strategies
+# ---------------------------------------------------------------------------
+
+def _order_pairs(pairs, inst):
+    """
+    Return pairs in the ordering for instance `inst` (0-3).
+
+    Bit 1 of inst: quarter-rotation (0 = no rotation, 1 = rotate by k//2)
+    Bit 0 of inst: stride interleave (0 = contiguous, 1 = odds-then-evens)
+
+    This gives four orderings with a two-level structure:
+      inst 0: natural              [0,1,2,3,4,5,6,7]
+      inst 1: stride               [1,3,5,7,0,2,4,6]
+      inst 2: half-rotation        [4,5,6,7,0,1,2,3]
+      inst 3: half-rotation+stride [5,7,1,3,4,6,0,2]
+    """
+    k = len(pairs)
+    if k == 0:
+        return pairs
+
+    # Bit 1: half-rotation (offset by k//2)
+    offset = (k >> 1) if (inst & 2) else 0
+    rotated = pairs[offset:] + pairs[:offset]
+
+    # Bit 0: odd/even stride interleave
+    if inst & 1:
+        rotated = [rotated[i] for i in range(1, k, 2)] + \
+                  [rotated[i] for i in range(0, k, 2)]
+
+    return rotated
+
+
+# ---------------------------------------------------------------------------
 # Statistics
 # ---------------------------------------------------------------------------
 
-def calc_stats(ideal_ket, split_ket):
-    n_pow = len(ideal_ket)
-    u_u = 1.0 / n_pow
-    numer = 0.0
-    denom = 0.0
-    l2 = 0.0
-    prob_diff = 0.0
-
-    for i in range(n_pow):
-        c = ideal_ket[i]
-        e = split_ket[i]
-        l2 += e * c.conjugate()
-        p_i = (c * c.conjugate()).real
-        q_i = (e * e.conjugate()).real
-        numer += (p_i - u_u) * (q_i - u_u)
-        denom += (p_i - u_u) ** 2
-        prob_diff += (p_i - q_i) ** 2
-
-    xeb = numer / denom if denom > 0 else 0.0
-    l2 = (l2 * l2.conjugate()).real
-
-    return xeb, l2, prob_diff
-
-
 def calc_stats_np(ideal_ket, split_ket):
-    """Vectorised version of calc_stats for the mixture (which is a numpy array)."""
-    n_pow = len(ideal_ket)
-    u_u   = 1.0 / n_pow
-
-    ideal  = np.asarray(ideal_ket,  dtype=np.complex128)
-    split  = np.asarray(split_ket,  dtype=np.complex128)
-
-    l2        = complex(np.dot(split, ideal.conj()))
-    l2        = (l2 * l2.conjugate()).real
-    p         = (ideal * ideal.conj()).real
-    q         = (split * split.conj()).real
-    p_c       = p - u_u
-    q_c       = q - u_u
-    numer     = float(np.dot(p_c, q_c))
-    denom     = float(np.dot(p_c, p_c))
-    xeb       = numer / denom if denom > 0 else 0.0
-    prob_diff = float(np.sum((p - q) ** 2))
-
-    return xeb, l2, prob_diff
+    """Vectorised XEB, L2 inner-product fidelity, prob_diff."""
+    n_pow  = len(ideal_ket)
+    u_u    = 1.0 / n_pow
+    ideal  = np.asarray(ideal_ket, dtype=np.complex128)
+    split  = np.asarray(split_ket, dtype=np.complex128)
+    l2     = complex(np.dot(split, ideal.conj()))
+    l2     = (l2 * l2.conjugate()).real
+    p      = (ideal * ideal.conj()).real
+    q      = (split * split.conj()).real
+    p_c    = p - u_u
+    q_c    = q - u_u
+    denom  = float(np.dot(p_c, p_c))
+    xeb    = float(np.dot(p_c, q_c)) / denom if denom > 0 else 0.0
+    pd     = float(np.sum((p - q) ** 2))
+    return xeb, l2, pd
 
 
 # ---------------------------------------------------------------------------
@@ -79,123 +93,84 @@ def calc_stats_np(ideal_ket, split_ket):
 def bench_qrack(width, depth, sdrp=0.0):
     lcv_range = range(width)
     all_bits  = list(lcv_range)
+    n_inst    = 4
 
-    # Instance A: couplers applied in the shuffled order (natural greedy)
-    # Instance B: couplers applied in the REVERSED shuffled order
-    # Both see identical single-qubit gates and the same set of coupler pairs —
-    # only the presentation order to ACE differs, biasing its greedy
-    # boundary choices toward approximately orthogonal separability structures.
-    sim_a = QrackSimulator(width)
-    sim_b = QrackSimulator(width)
-    if sdrp > 0.0:
-        sim_a.set_sdrp(sdrp)
-        sim_b.set_sdrp(sdrp)
-    # Split into 4 subsystems, to demonstrate ~30-32 qubits per segment
-    # for 4 segments on a GPU, in proof-of-concept.
-    sim_a.set_ace_max_qb((width + 3) >> 2)
-    sim_b.set_ace_max_qb((width + 3) >> 2)
+    sims = [QrackSimulator(width) for _ in range(n_inst)]
+    for s in sims:
+        if sdrp > 0.0:
+            s.set_sdrp(sdrp)
+        # ~width/4 qubits per ACE segment — four segments per GPU.
+        s.set_ace_max_qb((width + 3) >> 2)
 
-    rng_state = random.getstate()   # snapshot so both instances replay identically
+    rng_state = random.getstate()
+    t_start   = time.perf_counter()
 
-    t_start = time.perf_counter()
+    kets = []
+    for inst in range(n_inst):
+        random.setstate(rng_state)
+        sim = sims[inst]
 
-    # -----------------------------------------------------------------------
-    # Instance A — natural coupler order
-    # -----------------------------------------------------------------------
-    random.setstate(rng_state)
-    for _ in range(depth):
-        for i in lcv_range:
-            th = random.uniform(0, 2 * math.pi)
-            ph = random.uniform(0, 2 * math.pi)
-            lm = random.uniform(0, 2 * math.pi)
-            sim_a.u(i, th, ph, lm)
+        for _ in range(depth):
+            # Identical single-qubit gates
+            for i in lcv_range:
+                th = random.uniform(0, 2 * math.pi)
+                ph = random.uniform(0, 2 * math.pi)
+                lm = random.uniform(0, 2 * math.pi)
+                sim.u(i, th, ph, lm)
 
-        pairs = []
-        unused = all_bits.copy()
-        random.shuffle(unused)
-        while len(unused) > 1:
-            c = unused.pop()
-            t = unused.pop()
-            pairs.append((c, t))
+            # Build pair list (same shuffle for all instances via RNG replay)
+            pairs = []
+            unused = all_bits.copy()
+            random.shuffle(unused)
+            while len(unused) > 1:
+                c = unused.pop()
+                t = unused.pop()
+                pairs.append((c, t))
 
-        for c, t in pairs:
-            sim_a.mcx([c], t)
+            # Apply couplers in the instance-specific order
+            for c, t in _order_pairs(pairs, inst):
+                sim.mcx([c], t)
 
-    ket_a = sim_a.out_ket()
-
-    # -----------------------------------------------------------------------
-    # Instance B — every-other coupler order within each layer
-    # -----------------------------------------------------------------------
-    random.setstate(rng_state)
-    for _ in range(depth):
-        for i in lcv_range:
-            th = random.uniform(0, 2 * math.pi)
-            ph = random.uniform(0, 2 * math.pi)
-            lm = random.uniform(0, 2 * math.pi)
-            sim_b.u(i, th, ph, lm)
-
-        pairs = []
-        unused = all_bits.copy()
-        random.shuffle(unused)
-        coupler_order = []
-        while len(unused) > 1:
-            pairs.append((unused.pop(), unused.pop()))
-
-        for i in range(1, width >> 1, 2):
-            pair = pairs[i]
-            sim_b.mcx([pair[0]], pair[1])
-
-        for i in range(0, width >> 1, 2):
-            pair = pairs[i]
-            sim_b.mcx([pair[0]], pair[1])
-
-        # Reversed presentation order — same gates, different ACE greedy path
-        for c, t in reversed(pairs):
-            sim_b.mcx([c], t)
-
-    ket_b = sim_b.out_ket()
+        kets.append(np.asarray(sim.out_ket(), dtype=np.complex128))
 
     t_elapsed = time.perf_counter() - t_start
 
     # -----------------------------------------------------------------------
-    # Consensus: equal mixture of the two statevectors
-    # (as a coherent superposition, since we would normalize the average)
+    # Consensus: average vectors (which might not be perfectly orthogonal)
     # -----------------------------------------------------------------------
-    ka = np.asarray(ket_a, dtype=np.complex128)
-    kb = np.asarray(ket_b, dtype=np.complex128)
-    mix = (ka + kb) / 2.0
+    mix = sum(kets) / len(kets)
     mix_norm = float(np.sqrt((mix * mix.conj()).real.sum()))
     if mix_norm > 0:
         mix /= mix_norm
 
-    # A vs B (how different are the two instances?)
-    xeb_ab, l2_ab, pd_ab = calc_stats(ket_a, ket_b)
+    # Cross-instance statistics (should approach zero for orthogonal instances)
+    from itertools import combinations
+    cross = {}
+    for i, j in combinations(range(n_inst), 2):
+        xeb_ij, l2_ij, _ = calc_stats_np(kets[i], kets[j])
+        cross[f"xeb_{i}_vs_{j}"] = xeb_ij
+        cross[f"l2_{i}_vs_{j}"]  = l2_ij
 
-    # A vs consensus
-    xeb_ac, l2_ac, pd_ac = calc_stats_np(ka, mix)
+    # Each instance vs consensus
+    xeb_vs  = []
+    l2_vs   = []
+    for i, k in enumerate(kets):
+        xeb_i, l2_i, _ = calc_stats_np(k, mix)
+        xeb_vs.append(xeb_i)
+        l2_vs.append(l2_i)
 
-    # B vs consensus
-    xeb_bc, l2_bc, pd_bc = calc_stats_np(kb, mix)
-
-    # Consensus self-consistency: treat A as ideal, consensus as experiment,
-    # then B as ideal, consensus as experiment — average XEB is the headline figure
-    xeb_mean = (xeb_ac + xeb_bc) / 2.0
-
-    return {
-        "width":          width,
-        "depth":          depth,
-        "seconds":        t_elapsed,
-        # Cross-instance agreement (low = orthogonal, high = redundant)
-        "xeb_A_vs_B":     xeb_ab,
-        "l2_A_vs_B":      l2_ab,
-        "prob_diff_A_B":  pd_ab,
-        # Consensus quality
-        "xeb_A_vs_cons":  xeb_ac,
-        "xeb_B_vs_cons":  xeb_bc,
-        "xeb_consensus":  xeb_mean,
-        "l2_A_vs_cons":   l2_ac,
-        "l2_B_vs_cons":   l2_bc,
+    result = {
+        "width":         width,
+        "depth":         depth,
+        "seconds":       t_elapsed,
+        "xeb_consensus": float(np.mean(xeb_vs)),
     }
+    for i in range(n_inst):
+        result[f"xeb_{i}_vs_cons"] = xeb_vs[i]
+        result[f"l2_{i}_vs_cons"]  = l2_vs[i]
+    result.update(cross)
+
+    return result
 
 
 # ---------------------------------------------------------------------------
