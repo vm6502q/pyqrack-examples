@@ -235,42 +235,6 @@ def calc_stats(ideal_probs, split_probs):
     return xeb, hog
 
 
-def calc_stats_sparse(ideal_probs, exp_probs_sparse, n_pow):
-    u_u   = 1.0 / n_pow
-    model = 0.5
-    exp_dense = np.zeros(n_pow, dtype=np.float64)
-    for k, v in exp_probs_sparse.items():
-        exp_dense[k] = v
-    exp_mixed = (1.0 - model) * exp_dense + model * u_u
-    p_c   = ideal_probs - u_u; q_c = exp_mixed - u_u
-    denom = float(np.dot(p_c, p_c))
-    xeb   = float(np.dot(p_c, q_c)) / denom if denom > 0 else 0.0
-    hog   = float(exp_mixed[ideal_probs > float(np.median(ideal_probs))].sum())
-    return xeb, hog
-
-
-def sieve_and_score(ideal_probs, p_dm, n_pow, n_candidates, u_u):
-    """Sieve from p_dm, build sparse estimate, return xeb_sparse and hog_sparse."""
-    top_idx    = np.argpartition(p_dm, -n_candidates)[-n_candidates:]
-    top_idx    = top_idx[np.argsort(p_dm[top_idx])[::-1]]
-    bottom_idx = np.argpartition(p_dm,  n_candidates)[:n_candidates]
-    bottom_idx = bottom_idx[np.argsort(p_dm[bottom_idx])]
-
-    exp_h = {int(i): float(p_dm[i]) for i in top_idx}
-    s = sum(exp_h.values()); exp_h = {k: v/s for k,v in exp_h.items()}
-
-    exp_l = {int(i): max(0.0, float(2*u_u - p_dm[i])) for i in bottom_idx}
-    s = sum(exp_l.values())
-    exp_l = {k: max(0.0, 2*u_u - v/s) for k,v in exp_l.items()} if s > 0 else exp_l
-
-    exp_all = {k: exp_h.get(k,0) + exp_l.get(k,0)
-               for k in set(exp_h)|set(exp_l)}
-    s = sum(exp_all.values())
-    exp_all = {k: v/s for k,v in exp_all.items()}
-
-    return calc_stats_sparse(ideal_probs, exp_all, n_pow)
-
-
 # ---------------------------------------------------------------------------
 # Benchmark
 # ---------------------------------------------------------------------------
@@ -340,38 +304,24 @@ def bench_qrack(width, depth):
     psi_h = full_ket((ket_h0, ket_h1), patch_h, local_h)
     psi_v = full_ket((ket_v0, ket_v1), patch_v, local_v)
 
-    # Phase canonicalize
-    for psi in (psi_h, psi_v):
-        ref = psi[gauge_idx]
-        if abs(ref) > 1e-30:
-            psi /= (ref / abs(ref))
-
     # Symmetrized outer-product density matrix diagonal
-    p_dm = (psi_h * psi_v.conj() + psi_v * psi_h.conj()).real / 2.0
+    p_dm = (psi_h * psi_v.conj() + psi_v * psi_h.conj()).real
     p_dm = np.maximum(p_dm, 0.0)
     dm_sum = p_dm.sum()
     if dm_sum > 0:
         p_dm /= dm_sum
 
-    # Sieve from density matrix
-    xeb_sparse, hog_sparse = sieve_and_score(ideal_probs, p_dm, n_pow, n_candidates, u_u)
-
     # Full comparisons
     xeb_dm,  hog_dm  = calc_stats(ideal_probs, p_dm)
     xeb_h,   hog_h   = calc_stats(ideal_probs, P_H)
     xeb_v,   hog_v   = calc_stats(ideal_probs, P_V)
-    xeb_avg, hog_avg = calc_stats(ideal_probs, (P_H + P_V) / 2.0)
 
     return {
         "width":        width,
         "depth":        depth,
         "seconds":      t_elapsed,
-        "xeb_sparse":   xeb_sparse,
-        "hog_sparse":   hog_sparse,
         "xeb_dm":       xeb_dm,
         "hog_dm":       hog_dm,
-        "xeb_avg_hv":   xeb_avg,
-        "hog_avg_hv":   hog_avg,
         "xeb_h":        xeb_h,
         "hog_h":        hog_h,
         "xeb_v":        xeb_v,
