@@ -1,18 +1,20 @@
-# Fully-connected RCS with built-in greedy ACE consensus.
+# Fully-connected RCS with sampling-based greedy ACE consensus.
 #
-# Four QrackSimulator instances run the same random circuit with different
-# coupler orderings, developing approximately orthogonal separability structures.
-# Their coherent superposition (consensus state) identifies heavy outputs.
+# Two QrackSimulator instances run the same random circuit with different
+# coupler orderings (sequential vs stride), developing approximately
+# orthogonal ACE separability structures.  Each instance contributes
+# measure_shots samples — no statevector materialization, scalable to
+# arbitrarily large width.
 #
-# The consensus state replaces MPS amplitude queries: we sieve the top width**2
-# heavy-output candidates by consensus probability, estimate each candidate's
-# probability from the (phase-canonicalized, renormalized) consensus state,
-# then mix 50/50 with uniform — exactly the QV protocol from the MPS script.
-# XEB and HOG are computed against a full ideal simulator for ground truth.
+# MPS is NOT used here; this is pure ACE sampling.  The union of samples
+# from both instances is the candidate set.  XEB and HOG are computed
+# against a full ideal simulator (present only for ground-truth validation
+# at small scale; drop sim_ideal for true large-scale deployment).
 #
-# Coupler orderings (two orthogonal cuts):
-#   inst 0: natural   [0,1,2,...,k-1]          — sequential
-#   inst 1: stride    [1,3,5,...,0,2,4,...]     — every-other starting from second
+# Sieve: all sampled candidates go through u_u routing:
+#   heavy (count > mean_count): q_i set above u_u
+#   light (count <= mean_count): q_i set below u_u
+# Both tails contribute positively to XEB.
 #
 # By Dan Strano and (Anthropic) Claude.
 
@@ -20,7 +22,7 @@ import math
 import random
 import sys
 import time
-from itertools import combinations
+from collections import Counter
 
 import numpy as np
 from pyqrack import QrackSimulator
@@ -31,74 +33,24 @@ from pyqrack import QrackSimulator
 # ---------------------------------------------------------------------------
 
 def _order_pairs(pairs, inst):
-    """
-    inst 0: natural order          [0,1,2,...,k-1]
-    inst 1: stride (every-other,   [1,3,5,...,0,2,4,...])
-            odds first then evens — orthogonal ACE greedy path
-    """
     k = len(pairs)
-    if k == 0:
+    if k == 0 or inst == 0:
         return pairs
-    if inst == 0:
-        return pairs
-    # inst 1: odds-first stride
-    return [pairs[i] for i in range(1, k, 2)] +            [pairs[i] for i in range(0, k, 2)]
-
-
-
-# ---------------------------------------------------------------------------
-# Walsh-Hadamard transform (fast, O(n * 2^n))
-# ---------------------------------------------------------------------------
-
-def hadamard_transform(v):
-    """Unnormalized Walsh-Hadamard transform. Inverse = hadamard_transform(v) / len(v)."""
-    n = len(v)
-    h = v.copy()
-    step = 1
-    while step < n:
-        for i in range(0, n, step * 2):
-            lo = h[i:i+step].copy()
-            hi = h[i+step:i+2*step].copy()
-            h[i:i+step]        = lo + hi
-            h[i+step:i+2*step] = lo - hi
-        step *= 2
-    return h
+    return [pairs[i] for i in range(1, k, 2)] + \
+           [pairs[i] for i in range(0, k, 2)]
 
 
 # ---------------------------------------------------------------------------
 # Statistics
 # ---------------------------------------------------------------------------
 
-def calc_stats_np(ideal_ket, split_ket):
-    n_pow  = len(ideal_ket)
-    u_u    = 1.0 / n_pow
-    ideal  = np.asarray(ideal_ket, dtype=np.complex128)
-    split  = np.asarray(split_ket, dtype=np.complex128)
-    l2     = complex(np.dot(split, ideal.conj()))
-    l2     = (l2 * l2.conjugate()).real
-    p      = (ideal * ideal.conj()).real
-    q      = (split * split.conj()).real
-    p_c    = p - u_u
-    q_c    = q - u_u
-    denom  = float(np.dot(p_c, p_c))
-    xeb    = float(np.dot(p_c, q_c)) / denom if denom > 0 else 0.0
-    hog    = float(q[p > float(np.median(p))].sum())
-    return xeb, l2, hog
-
-
 def calc_stats_sparse(ideal_probs, exp_probs_sparse, n_pow):
-    """
-    XEB and HOG from a full ideal probability vector and a sparse
-    experimental distribution (50/50 mixed with uniform, QV protocol).
-    """
-    u_u     = 1.0 / n_pow
-    model   = 0.5
-
+    u_u   = 1.0 / n_pow
+    model = 0.5
     exp_dense = np.zeros(n_pow, dtype=np.float64)
     for k, v in exp_probs_sparse.items():
         exp_dense[k] = v
     exp_mixed = (1.0 - model) * exp_dense + model * u_u
-
     p_c   = ideal_probs - u_u
     q_c   = exp_mixed   - u_u
     denom = float(np.dot(p_c, p_c))
@@ -107,65 +59,14 @@ def calc_stats_sparse(ideal_probs, exp_probs_sparse, n_pow):
     return xeb, hog
 
 
-def sieve_and_score(ideal_probs, p_dm, n_pow, n_candidates, u_u):
-    """
-    Sieve heavy and light tails from p_dm, combine as a sparse probability
-    estimate, then mix 50/50 with uniform (QV protocol).
-
-    Heavy tail: top n_candidates by p_dm, renormalized.
-    Light tail: bottom n_candidates by p_dm, inverted via (2*u_u - p_dm[i]),
-                renormalized — peaks where p_dm is smallest, asserting suppression.
-    Combined:   50% heavy + 50% light (equal weight to both tails).
-    Final mix:  50% combined + 50% uniform (QV protocol).
-
-    Both tails contribute positively to XEB: heavy outputs push q_i above u_u
-    where p_i > u_u; light outputs push q_i below u_u where p_i < u_u.
-    """
-    # Heavy tail
-    top_idx = np.argpartition(p_dm, -n_candidates)[-n_candidates:]
-    top_idx = top_idx[np.argsort(p_dm[top_idx])[::-1]]
-    heavy = {int(i): float(p_dm[i]) for i in top_idx}
-    s_h = sum(heavy.values())
-    if s_h > 0:
-        heavy = {k: v / s_h for k, v in heavy.items()}
-
-    # Light tail: invert p_dm so lightest outputs get highest weight
-    bot_idx = np.argpartition(p_dm, n_candidates)[:n_candidates]
-    bot_idx = bot_idx[np.argsort(p_dm[bot_idx])]
-    light_raw = {int(i): max(0.0, 2.0 * u_u - float(p_dm[i])) for i in bot_idx}
-    s_l = sum(light_raw.values())
-    if s_l > 0:
-        # Normalize to sum 1, then invert back: light entries should be
-        # *below* u_u in the final distribution, so we use (u_u - normalized_weight)
-        # clipped to [0, u_u]. This keeps the light tail properly suppressed.
-        light = {k: max(0.0, u_u - (v / s_l) * u_u) for k, v in light_raw.items()}
-        s_l2 = sum(light.values())
-        if s_l2 > 0:
-            light = {k: v / s_l2 for k, v in light.items()}
-    else:
-        light = {}
-
-    # Combine: 50% heavy + 50% light (union of keys)
-    all_keys = set(heavy) | set(light)
-    combined = {k: 0.5 * heavy.get(k, 0.0) + 0.5 * light.get(k, 0.0)
-                for k in all_keys}
-    s_c = sum(combined.values())
-    if s_c > 0:
-        combined = {k: v / s_c for k, v in combined.items()}
-
-    return calc_stats_sparse(ideal_probs, combined, n_pow)
-
-
 def calc_stats(ideal_probs, split_probs):
-    n_pow  = len(ideal_probs)
-    u_u    = 1.0 / n_pow
-    p      = np.asarray(ideal_probs, dtype=np.float64)
-    q      = np.asarray(split_probs, dtype=np.float64)
-    p_c    = p - u_u
-    q_c    = q - u_u
-    denom  = float(np.dot(p_c, p_c))
-    xeb    = float(np.dot(p_c, q_c)) / denom if denom > 0 else 0.0
-    hog    = float(q[p > float(np.median(p))].sum())
+    n_pow = len(ideal_probs); u_u = 1.0 / n_pow
+    p = np.asarray(ideal_probs, dtype=np.float64)
+    q = np.asarray(split_probs, dtype=np.float64)
+    p_c = p - u_u; q_c = q - u_u
+    denom = float(np.dot(p_c, p_c))
+    xeb   = float(np.dot(p_c, q_c)) / denom if denom > 0 else 0.0
+    hog   = float(q[p > float(np.median(p))].sum())
     return xeb, hog
 
 
@@ -177,169 +78,111 @@ def bench_qrack(width, depth, sdrp=0.0):
     lcv_range    = range(width)
     all_bits     = list(lcv_range)
     n_inst       = 2
-    n_candidates = min(width ** 2, 1 << width)
-
-    # Full ideal simulator (no ACE limit) — ground truth
-    sim_ideal = QrackSimulator(width)
-
-    # Four consensus instances with ACE limit
-    sims = [QrackSimulator(width) for _ in range(n_inst)]
-    for s in sims:
-        if sdrp > 0.0:
-            s.set_sdrp(sdrp)
-        s.set_ace_max_qb((width + 1) >> 1)
+    n_shots      = width ** 3      # shots per instance
+    n_pow        = 1 << width
+    u_u          = 1.0 / n_pow
 
     rng_state = random.getstate()
     t_start   = time.perf_counter()
 
     # -----------------------------------------------------------------------
-    # Ideal — full simulation, no ACE limit
+    # Ideal — full simulation for ground-truth validation (small scale only)
     # -----------------------------------------------------------------------
     random.setstate(rng_state)
+    sim_ideal = QrackSimulator(width)
     for _ in range(depth):
         for i in lcv_range:
-            th = random.uniform(0, 2 * math.pi)
-            ph = random.uniform(0, 2 * math.pi)
-            lm = random.uniform(0, 2 * math.pi)
+            th, ph, lm = (random.uniform(0, 2*math.pi) for _ in range(3))
             sim_ideal.u(i, th, ph, lm)
-        unused = all_bits.copy()
-        random.shuffle(unused)
+        unused = all_bits.copy(); random.shuffle(unused)
         while len(unused) > 1:
             c = unused.pop(); t = unused.pop()
             sim_ideal.mcx([c], t)
-
     ideal_probs = np.asarray(sim_ideal.out_probs(), dtype=np.float64)
     del sim_ideal
 
     # -----------------------------------------------------------------------
-    # Two consensus instances
+    # Two ACE instances — measure_shots only, no out_ket
     # -----------------------------------------------------------------------
-    kets = []
+    counts = Counter()
     for inst in range(n_inst):
         random.setstate(rng_state)
-        sim = sims[inst]
+        sim = QrackSimulator(width)
+        if sdrp > 0.0:
+            sim.set_sdrp(sdrp)
+        sim.set_ace_max_qb((width + 1) >> 1)
         for _ in range(depth):
             for i in lcv_range:
-                th = random.uniform(0, 2 * math.pi)
-                ph = random.uniform(0, 2 * math.pi)
-                lm = random.uniform(0, 2 * math.pi)
+                th, ph, lm = (random.uniform(0, 2*math.pi) for _ in range(3))
                 sim.u(i, th, ph, lm)
             pairs = []
-            unused = all_bits.copy()
-            random.shuffle(unused)
+            unused = all_bits.copy(); random.shuffle(unused)
             while len(unused) > 1:
                 pairs.append((unused.pop(), unused.pop()))
             for c, t in _order_pairs(pairs, inst):
                 sim.mcx([c], t)
-        kets.append(np.asarray(sim.out_ket(), dtype=np.complex128))
+        shots = sim.measure_shots(all_bits, n_shots)
+        counts.update(int(s) for s in shots)
+        del sim
 
     t_elapsed = time.perf_counter() - t_start
 
     # -----------------------------------------------------------------------
-    # Phase canonicalization: rotate each ket so that the amplitude at the
-    # common gauge index (first above-uniform index in the ensemble mean field)
-    # is real and positive.  Same index for all kets => common gauge.
+    # Route candidates by sample count vs mean count (proxy for u_u)
+    # mean_count = total_shots / n_pow  (expected count under uniform)
+    # heavy: count > mean_count  →  q_i above u_u
+    # light: count <= mean_count →  q_i below u_u
     # -----------------------------------------------------------------------
-    n_pow   = 1 << width
-    u_u     = 1.0 / n_pow
-    mean_p  = sum((k * k.conj()).real for k in kets) / n_inst
-    gauge_idx = int(np.argmax(mean_p > u_u))
+    total_shots = n_inst * n_shots
+    mean_count  = total_shots * u_u   # = total_shots / n_pow
 
-    phase_fixed = []
-    for k in kets:
-        ref   = k[gauge_idx]
-        phase = ref / abs(ref) if abs(ref) > 1e-30 else 1.0
-        phase_fixed.append(k / phase)
+    heavy_raw = {}
+    light_raw = {}
+    for outcome, cnt in counts.items():
+        if cnt > mean_count:
+            heavy_raw[outcome] = float(cnt)
+        else:
+            # Invert: lightest outputs (smallest count) get highest raw weight
+            light_raw[outcome] = max(0.0, 2.0 * mean_count - cnt)
 
-    # -----------------------------------------------------------------------
-    # Symmetrized outer product density matrix.
-    # rho = (|psi_A><psi_B| + |psi_B><psi_A|) / 2
-    # diagonal: rho[i,i] = Re(psi_A[i] * psi_B[i].conj())
-    # This is a heuristic for the ideal state that incorporates cross-instance
-    # coherence without requiring global phase canonicalization beyond what
-    # the common gauge already provides.
-    # Use instances 0 and 1 (the two orthogonal cuts).
-    # -----------------------------------------------------------------------
-    p_dm = (phase_fixed[0] * phase_fixed[1].conj() + phase_fixed[1] * phase_fixed[0].conj()).real
-    # Shift to non-negative (diagonal of a valid density matrix is non-negative,
-    # but numerical errors from approximate orthogonality can give small negatives)
-    p_dm = np.maximum(p_dm, 0.0)
-    dm_sum = p_dm.sum()
-    if dm_sum > 0:
-        p_dm /= dm_sum
+    # Normalize heavy → probability estimates above u_u
+    s_h = sum(heavy_raw.values())
+    heavy = {k: v / s_h for k, v in heavy_raw.items()} if s_h > 0 else {}
 
-    xeb_dm, hog_dm = calc_stats(ideal_probs, p_dm)
+    # Normalize light raw weights, then map below u_u for suppression
+    s_l = sum(light_raw.values())
+    if s_l > 0:
+        light = {k: max(0.0, u_u - (v / s_l) * u_u) for k, v in light_raw.items()}
+        s_l2  = sum(light.values())
+        light = {k: v / s_l2 for k, v in light.items()} if s_l2 > 0 else {}
+    else:
+        light = {}
 
-    # Sieve heavy+light tails from symmetrized density matrix diagonal
-    xeb_sieve, hog_sieve = sieve_and_score(ideal_probs, p_dm, n_pow, n_candidates, u_u)
+    # Equal weight to non-empty tails, then 50/50 mix with uniform (QV protocol)
+    n_nonempty = (1 if heavy else 0) + (1 if light else 0)
+    if n_nonempty == 0:
+        combined = {}
+    else:
+        w        = 1.0 / n_nonempty
+        all_keys = set(heavy) | set(light)
+        combined = {k: w * heavy.get(k, 0.0) + w * light.get(k, 0.0)
+                    for k in all_keys}
+        s_c = sum(combined.values())
+        if s_c > 0:
+            combined = {k: v / s_c for k, v in combined.items()}
 
-# -----------------------------------------------------------------------
-    # Hadamard-basis piecewise combination using patch support structure.
-    #
-    # A Hadamard index s represents coherence between computational basis
-    # states differing in the bits set in s.  This cross term is supported
-    # by a patch approximation only if all set bits of s lie entirely within
-    # one of that patch's two sub-regions (i.e., s does not straddle the
-    # patch boundary).
-    #
-    # For each Hadamard index s:
-    #   single support (H only or V only): take full weight from that patch
-    #   double support (both H and V):     average the two
-    #   no support (straddles both):       zero (boundary artifact)
-    #
-    # For the fully-connected case the two "patches" are defined by the
-    # ACE subsystem partition: inst 0 uses lower/upper qubit halves,
-    # inst 1 uses even/odd qubit indices.
-    # -----------------------------------------------------------------------
-    ace_qb      = (width + 1) >> 1
-    mask0_seq   = (1 << ace_qb) - 1
-    mask1_seq   = ((1 << n_pow.bit_length() - 1) - 1) ^ mask0_seq if n_pow > 1 else 0
-    mask1_seq   = ((1 << width) - 1) ^ mask0_seq
-    mask0_stride = sum(1 << i for i in range(0, width, 2))
-    mask1_stride = sum(1 << i for i in range(1, width, 2))
+    xeb_sieve, hog_sieve = calc_stats_sparse(ideal_probs, combined, n_pow)
 
-    def _within(s, m0, m1):
-        return ((s & m0) == s) or ((s & m1) == s)
-
-    supp_0_had = np.array([_within(s, mask0_seq,    mask1_seq)    for s in range(n_pow)])
-    supp_1_had = np.array([_within(s, mask0_stride, mask1_stride) for s in range(n_pow)])
-
-    phi_0   = hadamard_transform(phase_fixed[0]) / np.sqrt(n_pow)
-    phi_1   = hadamard_transform(phase_fixed[1]) / np.sqrt(n_pow)
-
-    phi_had = np.where(supp_0_had & supp_1_had, (phi_0 + phi_1) / 2.0,
-              np.where(supp_0_had, phi_0,
-              np.where(supp_1_had, phi_1,
-                       (phi_0 + phi_1) / 2.0)))  # no support: average (best separable approx)
-
-    psi_had = hadamard_transform(phi_had) / np.sqrt(n_pow)
-    p_had   = np.abs(psi_had) ** 2
-    had_sum = p_had.sum()
-    if had_sum > 0:
-        p_had /= had_sum
-    xeb_had, hog_had = calc_stats(ideal_probs, p_had)
-
-    xeb_vs_cons = []
-    for k in kets:
-        xeb_i, _, _ = calc_stats_np(k, p_dm)
-        xeb_vs_cons.append(xeb_i)
-
-    result = {
-        "width":              width,
-        "depth":              depth,
-        "seconds":            t_elapsed,
-        "xeb_sieve":          xeb_sieve,
-        "hog_sieve":          hog_sieve,
-        "xeb_dm_vs_ideal":    xeb_dm,
-        "hog_dm_vs_ideal":    hog_dm,
-        "xeb_had_vs_ideal":   xeb_had,
-        "hog_had_vs_ideal":   hog_had,
+    return {
+        "width":        width,
+        "depth":        depth,
+        "n_unique":     len(counts),
+        "n_heavy":      len(heavy),
+        "n_light":      len(light),
+        "seconds":      t_elapsed,
+        "xeb_sieve":    xeb_sieve,
+        "hog_sieve":    hog_sieve,
     }
-
-    for i, x in enumerate(xeb_vs_cons):
-        result[f"xeb_{i}_vs_cons"] = x
-
-    return result
 
 
 # ---------------------------------------------------------------------------
@@ -348,18 +191,14 @@ def bench_qrack(width, depth, sdrp=0.0):
 
 def main():
     if len(sys.argv) < 3:
-        raise RuntimeError(
-            "Usage: python3 fc_consensus.py [width] [depth] [sdrp=0]"
-        )
+        raise RuntimeError("Usage: python3 fc_consensus.py [width] [depth] [sdrp=0]")
     width = int(sys.argv[1])
     depth = int(sys.argv[2])
     sdrp  = float(sys.argv[3]) if len(sys.argv) > 3 else 0.0
-
     result = bench_qrack(width, depth, sdrp)
     for k, v in result.items():
         print(f"  {k}: {v}")
     return 0
-
 
 if __name__ == "__main__":
     sys.exit(main())
