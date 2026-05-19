@@ -180,7 +180,7 @@ def bench_qrack(width, depth, sdrp=0.0):
     # Equivalent to equal superposition probability |psi_avg|^2 with
     # 1/sqrt(2) amplitude normalization per instance.
     # -----------------------------------------------------------------------
-    ace_probs_list = []
+    ace_sims = []
     for inst in range(n_inst):
         random.setstate(rng_state)
         sim = QrackSimulator(width)
@@ -197,12 +197,30 @@ def bench_qrack(width, depth, sdrp=0.0):
                 pairs.append((unused.pop(), unused.pop()))
             for c, t in _order_pairs(pairs, inst):
                 sim.mcx([c], t)
-        ace_probs_list.append(np.asarray(sim.out_probs(), dtype=np.float64))
-        del sim
+        ace_sims.append(sim)
 
-    # Incoherent average: 1/2 * (p0 + p1)
-    ace_avg_probs = sum(ace_probs_list) / n_inst
-    xeb_ace, hog_ace = calc_stats(ideal_probs, ace_avg_probs)
+    q_bits = list(range(width))
+    ace_sparse = {}
+    for outcome in counts:
+        bits = [(outcome >> b) & 1 for b in range(width)]
+        p_avg = sum(s.prob_perm(q_bits, bits) for s in ace_sims) / n_inst
+        if p_avg > 0:
+            ace_sparse[outcome] = p_avg
+    for s in ace_sims: del s
+
+    xeb_ace, hog_ace = calc_stats_sparse(ideal_probs, ace_sparse, n_pow)
+
+    # -----------------------------------------------------------------------
+    # Equal mixture of sieve and ACE prob_perm distributions.
+    # Uncorrelated errors between the two methods should average out.
+    # -----------------------------------------------------------------------
+    all_mix_keys = set(combined) | set(ace_sparse)
+    mixed = {k: 0.5 * combined.get(k, 0.0) + 0.5 * ace_sparse.get(k, 0.0)
+             for k in all_mix_keys}
+    s_mix = sum(mixed.values())
+    if s_mix > 0:
+        mixed = {k: v / s_mix for k, v in mixed.items()}
+    xeb_mix, hog_mix = calc_stats_sparse(ideal_probs, mixed, n_pow)
 
     return {
         "width":        width,
@@ -215,6 +233,8 @@ def bench_qrack(width, depth, sdrp=0.0):
         "hog_sieve":    hog_sieve,
         "xeb_ace_avg":  xeb_ace,
         "hog_ace_avg":  hog_ace,
+        "xeb_mix":      xeb_mix,
+        "hog_mix":      hog_mix,
     }
 
 

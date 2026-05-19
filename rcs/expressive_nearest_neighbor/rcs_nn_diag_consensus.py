@@ -324,11 +324,12 @@ def bench_qrack(width, depth):
     xeb_sieve, hog_sieve = calc_stats_sparse(ideal_probs, combined, n_pow)
 
     # -----------------------------------------------------------------------
-    # ACE direct probability comparison.
-    # Query out_probs() from each patch circuit, expand to full 2^n vector
-    # via separability assumption, average: (P_d + P_ad) / 2.
+    # ACE direct probability via prob_perm — scalable, no out_probs.
+    # Each patch circuit contributes a separable joint probability:
+    # p(outcome) = prob_perm(patch0 qubits) * prob_perm(patch1 qubits).
+    # Average over both patch configurations (1/2 marginal weight each).
     # -----------------------------------------------------------------------
-    def run_patch_probs(patch, local_idx):
+    def make_patch_sim(patch, local_idx):
         random.setstate(rng_state)
         n0 = int(np.sum(patch==0)); n1 = int(np.sum(patch==1))
         sim = [QrackSimulator(n0), QrackSimulator(n1)]
@@ -348,24 +349,42 @@ def bench_qrack(width, depth):
                     b1=row*row_len+col; b2=tr*row_len+tc
                     if (b1==b2)or(b1>=width)or(b2>=width): continue
                     g=random.choice(TWO_BIT_GATES); g(sim,b1,b2,patch,local_idx)
-        p0 = np.asarray(sim[0].out_probs(), dtype=np.float64)
-        p1 = np.asarray(sim[1].out_probs(), dtype=np.float64)
-        # Expand separable product to full 2^n vector
-        idx0 = np.zeros(n_pow, dtype=np.int64)
-        idx1 = np.zeros(n_pow, dtype=np.int64)
-        for q in range(width):
-            bit_q = (np.arange(n_pow, dtype=np.int64) >> q) & 1
-            if patch[q] == 0: idx0 |= bit_q << int(local_idx[q])
-            else:              idx1 |= bit_q << int(local_idx[q])
-        return p0[idx0] * p1[idx1]
+        return sim
 
-    P_d  = run_patch_probs(patch_d,  local_d)
-    P_ad = run_patch_probs(patch_ad, local_ad)
-    ace_avg_probs = (P_d + P_ad) / 2.0
-    xeb_ace, hog_ace = calc_stats_sparse(
-        ideal_probs,
-        {i: float(ace_avg_probs[i]) for i in range(n_pow) if ace_avg_probs[i] > u_u},
-        n_pow)
+    sim_d  = make_patch_sim(patch_d,  local_d)
+    sim_ad = make_patch_sim(patch_ad, local_ad)
+
+    def patch_prob(sim_pair, patch, local_idx, outcome):
+        # Separable joint probability via prob_perm on each subsystem
+        q0 = [int(local_idx[q]) for q in range(width) if patch[q] == 0]
+        c0 = [(outcome >> q) & 1  for q in range(width) if patch[q] == 0]
+        q1 = [int(local_idx[q]) for q in range(width) if patch[q] == 1]
+        c1 = [(outcome >> q) & 1  for q in range(width) if patch[q] == 1]
+        p0 = sim_pair[0].prob_perm(q0, c0) if q0 else 1.0
+        p1 = sim_pair[1].prob_perm(q1, c1) if q1 else 1.0
+        return p0 * p1
+
+    ace_sparse = {}
+    for outcome in counts:
+        p_avg = 0.5 * patch_prob(sim_d,  patch_d,  local_d,  outcome) +                 0.5 * patch_prob(sim_ad, patch_ad, local_ad, outcome)
+        if p_avg > 0:
+            ace_sparse[outcome] = p_avg
+    for s in sim_d:  del s
+    for s in sim_ad: del s
+
+    xeb_ace, hog_ace = calc_stats_sparse(ideal_probs, ace_sparse, n_pow)
+
+    # -----------------------------------------------------------------------
+    # Equal mixture of sieve and ACE prob_perm distributions.
+    # If errors are largely uncorrelated, the mixture outperforms either alone.
+    # -----------------------------------------------------------------------
+    all_mix_keys = set(combined) | set(ace_sparse)
+    mixed = {k: 0.5 * combined.get(k, 0.0) + 0.5 * ace_sparse.get(k, 0.0)
+             for k in all_mix_keys}
+    s_mix = sum(mixed.values())
+    if s_mix > 0:
+        mixed = {k: v / s_mix for k, v in mixed.items()}
+    xeb_mix, hog_mix = calc_stats_sparse(ideal_probs, mixed, n_pow)
 
     return {
         "width":    width, "depth":   depth,
@@ -374,6 +393,7 @@ def bench_qrack(width, depth):
         "seconds":  t_elapsed,
         "xeb_sieve":   xeb_sieve,   "hog_sieve":   hog_sieve,
         "xeb_ace_avg": xeb_ace,     "hog_ace_avg": hog_ace,
+        "xeb_mix":     xeb_mix,     "hog_mix":     hog_mix,
     }
 
 
