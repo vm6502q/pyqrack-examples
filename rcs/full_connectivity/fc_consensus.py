@@ -10,11 +10,9 @@
 # then mix 50/50 with uniform — exactly the QV protocol from the MPS script.
 # XEB and HOG are computed against a full ideal simulator for ground truth.
 #
-# Coupler orderings (2-bit Gray code on pair index):
-#   inst 0: natural              [0,1,2,...,k-1]
-#   inst 1: stride               [1,3,5,...,0,2,4,...]
-#   inst 2: half-rotation        [k/2,...,k-1,0,...,k/2-1]
-#   inst 3: half-rotation+stride [k/2+1,k/2+3,...,k/2,k/2+2,...]
+# Coupler orderings (two orthogonal cuts):
+#   inst 0: natural   [0,1,2,...,k-1]          — sequential
+#   inst 1: stride    [1,3,5,...,0,2,4,...]     — every-other starting from second
 #
 # By Dan Strano and (Anthropic) Claude.
 
@@ -33,15 +31,18 @@ from pyqrack import QrackSimulator
 # ---------------------------------------------------------------------------
 
 def _order_pairs(pairs, inst):
+    """
+    inst 0: natural order          [0,1,2,...,k-1]
+    inst 1: stride (every-other,   [1,3,5,...,0,2,4,...])
+            odds first then evens — orthogonal ACE greedy path
+    """
     k = len(pairs)
     if k == 0:
         return pairs
-    offset  = (k >> 1) if (inst & 2) else 0
-    rotated = pairs[offset:] + pairs[:offset]
-    if inst & 1:
-        rotated = [rotated[i] for i in range(1, k, 2)] + \
-                  [rotated[i] for i in range(0, k, 2)]
-    return rotated
+    if inst == 0:
+        return pairs
+    # inst 1: odds-first stride
+    return [pairs[i] for i in range(1, k, 2)] +            [pairs[i] for i in range(0, k, 2)]
 
 
 # ---------------------------------------------------------------------------
@@ -106,7 +107,7 @@ def calc_stats(ideal_probs, split_probs):
 def bench_qrack(width, depth, sdrp=0.0):
     lcv_range    = range(width)
     all_bits     = list(lcv_range)
-    n_inst       = 4
+    n_inst       = 2
     n_candidates = width ** 2
 
     # Full ideal simulator (no ACE limit) — ground truth
@@ -232,9 +233,9 @@ def bench_qrack(width, depth, sdrp=0.0):
     # This is a heuristic for the ideal state that incorporates cross-instance
     # coherence without requiring global phase canonicalization beyond what
     # the common gauge already provides.
-    # Use instances 0 and 2 (most Kendall-distant pair).
+    # Use instances 0 and 1 (the two orthogonal cuts).
     # -----------------------------------------------------------------------
-    p_dm = (kets[0] * kets[2].conj() + kets[2] * kets[0].conj()).real / 2.0
+    p_dm = (kets[0] * kets[1].conj() + kets[1] * kets[0].conj()).real / 2.0
     # Shift to non-negative (diagonal of a valid density matrix is non-negative,
     # but numerical errors from approximate orthogonality can give small negatives)
     p_dm = np.maximum(p_dm, 0.0)
