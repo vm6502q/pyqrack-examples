@@ -189,59 +189,53 @@ def bench_qrack(width, depth, sdrp=0.0):
         mix /= mix_norm
 
     # -----------------------------------------------------------------------
-    # Sieve: top n_candidates heavy outputs by consensus probability
+    # Symmetrized outer-product density matrix diagonal — used for sieving.
+    # rho[i,i] = Re(psi_A[i] * psi_B[i].conj())
+    # Phase-canonicalized kets share a common gauge, so this cross term is
+    # physically meaningful and a better heuristic than either |psi|^2 alone.
     # -----------------------------------------------------------------------
     cons_probs = (mix * mix.conj()).real   # shape (n_pow,)
-    top_idx    = np.argpartition(cons_probs, -n_candidates)[-n_candidates:]
-    top_idx    = top_idx[np.argsort(cons_probs[top_idx])[::-1]]
-    bottom_idx = np.argpartition(cons_probs, n_candidates)[:n_candidates]
-    bottom_idx = bottom_idx[np.argsort(cons_probs[bottom_idx])]
 
-    # Sparse ideal: consensus-identified candidates, probability from consensus,
-    # renormalized, then 50/50 mixed with uniform (QV protocol)
-    exp_probs_sparse = {int(i): float(cons_probs[i]) for i in top_idx}
+    p_dm = (phase_fixed[0] * phase_fixed[1].conj() +
+            phase_fixed[1] * phase_fixed[0].conj()).real / 2.0
+    p_dm = np.maximum(p_dm, 0.0)
+    dm_sum = p_dm.sum()
+    if dm_sum > 0:
+        p_dm /= dm_sum
+
+    # -----------------------------------------------------------------------
+    # Sieve: top n_candidates heavy/light outputs by density matrix probability
+    # -----------------------------------------------------------------------
+    top_idx    = np.argpartition(p_dm, -n_candidates)[-n_candidates:]
+    top_idx    = top_idx[np.argsort(p_dm[top_idx])[::-1]]
+    bottom_idx = np.argpartition(p_dm,  n_candidates)[:n_candidates]
+    bottom_idx = bottom_idx[np.argsort(p_dm[bottom_idx])]
+
+    exp_probs_sparse = {int(i): float(p_dm[i]) for i in top_idx}
     s = sum(exp_probs_sparse.values())
     exp_probs_sparse = {int(k): (v / s) for k, v in exp_probs_sparse.items()}
 
-    _exp_probs_sparse = {int(i): max(0.0, float(2 * u_u - cons_probs[i])) for i in bottom_idx}
+    _exp_probs_sparse = {int(i): max(0.0, float(2 * u_u - p_dm[i])) for i in bottom_idx}
     s = sum(_exp_probs_sparse.values())
     _exp_probs_sparse = {int(k): max(0.0, (2 * u_u - (v / s))) for k, v in _exp_probs_sparse.items()}
 
-    exp_probs_sparse = {int(k): exp_probs_sparse.get(k, 0) + _exp_probs_sparse.get(k, 0) for k in set(exp_probs_sparse) | set(_exp_probs_sparse)}
+    exp_probs_sparse = {int(k): exp_probs_sparse.get(k, 0) + _exp_probs_sparse.get(k, 0)
+                        for k in set(exp_probs_sparse) | set(_exp_probs_sparse)}
     s = sum(exp_probs_sparse.values())
     exp_probs_sparse = {int(k): (v / s) for k, v in exp_probs_sparse.items()}
 
     xeb_sparse, hog_sparse = calc_stats_sparse(ideal_probs, exp_probs_sparse, n_pow)
-    del exp_probs_sparse
-    del _exp_probs_sparse
+    del exp_probs_sparse, _exp_probs_sparse
 
     # -----------------------------------------------------------------------
-    # Cross-instance and consensus-vs-ideal diagnostics
+    # Cross-instance and full diagnostics
     # -----------------------------------------------------------------------
     cross_xeb = {}
     for i, j in combinations(range(n_inst), 2):
         xeb_ij, _, _ = calc_stats_np(kets[i], kets[j])
         cross_xeb[f"xeb_{i}_vs_{j}"] = xeb_ij
 
-    xeb_cons_ideal, hog_cons_ideal = calc_stats(
-        ideal_probs, cons_probs)
-
-    # -----------------------------------------------------------------------
-    # Symmetrized outer product density matrix.
-    # rho = (|psi_A><psi_B| + |psi_B><psi_A|) / 2
-    # diagonal: rho[i,i] = Re(psi_A[i] * psi_B[i].conj())
-    # This is a heuristic for the ideal state that incorporates cross-instance
-    # coherence without requiring global phase canonicalization beyond what
-    # the common gauge already provides.
-    # Use instances 0 and 1 (the two orthogonal cuts).
-    # -----------------------------------------------------------------------
-    p_dm = (kets[0] * kets[1].conj() + kets[1] * kets[0].conj()).real / 2.0
-    # Shift to non-negative (diagonal of a valid density matrix is non-negative,
-    # but numerical errors from approximate orthogonality can give small negatives)
-    p_dm = np.maximum(p_dm, 0.0)
-    dm_sum = p_dm.sum()
-    if dm_sum > 0:
-        p_dm /= dm_sum
+    xeb_cons_ideal, hog_cons_ideal = calc_stats(ideal_probs, cons_probs)
     xeb_dm, hog_dm = calc_stats(ideal_probs, p_dm)
 
     xeb_vs_cons = []
