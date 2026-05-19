@@ -17,8 +17,9 @@
 # structure of the statevector subsystem decomposition.
 #
 # The coherent superposition of all four is the consensus heuristic state.
-# For four mutually orthogonal unit vectors, the sum has norm 2, so:
-#   mix = (ka + kb + kc + kd) / 2.0   (exact normalization, no sqrt needed)
+# After phase canonicalization, the four kets are summed and renormalized.
+# Global phase of each ket is fixed so its largest amplitude is real positive,
+# making the coherent superposition physically well-defined.
 #
 # By Dan Strano and (Anthropic) Claude.
 
@@ -136,9 +137,34 @@ def bench_qrack(width, depth, sdrp=0.0):
     t_elapsed = time.perf_counter() - t_start
 
     # -----------------------------------------------------------------------
-    # Consensus: average vectors (which might not be perfectly orthogonal)
+    # Consensus: coherent superposition with global phase canonicalization.
+    #
+    # Global phase is unobservable but affects the coherent sum: two states
+    # that differ only by e^(iθ) are physically identical, but their sum
+    # can range from constructive to destructive interference depending on θ.
+    # We fix the gauge by rotating each ket so that its largest-magnitude
+    # amplitude is real and positive — the canonical phase reference.
+    # This makes the superposition physically meaningful rather than
+    # dependent on arbitrary numerical phase conventions.
+    #
+    # After summing, we renormalize without assuming perfect orthogonality.
     # -----------------------------------------------------------------------
-    mix = sum(kets) / len(kets)
+    # Choose a common gauge reference index: the first amplitude index
+    # where the ensemble mean probability exceeds the uniform baseline u_u.
+    # Using the same index for all kets puts them in a common gauge, so the
+    # coherent sum is physically meaningful (relative phases are preserved).
+    n_pow  = len(kets[0])
+    u_u    = 1.0 / n_pow
+    mean_p = sum((k * k.conj()).real for k in kets) / n_inst
+    gauge_idx = int(np.argmax(mean_p > u_u))   # first above-uniform index
+
+    phase_fixed = []
+    for k in kets:
+        ref   = k[gauge_idx]
+        phase = ref / abs(ref) if abs(ref) > 0 else 1.0
+        phase_fixed.append(k / phase)   # rotate so k[gauge_idx] is real positive
+
+    mix = sum(phase_fixed) / len(phase_fixed)
     mix_norm = float(np.sqrt((mix * mix.conj()).real.sum()))
     if mix_norm > 0:
         mix /= mix_norm
