@@ -233,7 +233,7 @@ def bench_qrack(width, depth, sdrp=0.0, chi=None):
     # -----------------------------------------------------------------------
     # Method 3: Equal mixture of MPS and ACE
     # -----------------------------------------------------------------------
-    mixed = ace_probs
+    mixed = ace_probs.copy()
     for k in set(mps_combined):
         mixed[k] += mps_combined[k]
     mixed /= 2
