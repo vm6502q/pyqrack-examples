@@ -227,18 +227,26 @@ def calc_stats_sparse(ideal_probs, exp_probs_sparse, n_pow):
 
 def route_heavy_light(prob_dict, u_u):
     heavy_raw = {}; light_raw = {}
+    p_h = 0.0; p_l = 0.0
     for outcome, p in prob_dict.items():
         if p > u_u:
             heavy_raw[outcome] = p
+            p_h += p
         elif p < u_u:
             light_raw[outcome] = 2 * u_u - p
-    s_h = 2 * sum(heavy_raw.values())
-    heavy = {k: v/s_h for k,v in heavy_raw.items()} if s_h > 0 else {}
+            p_l += p
+    s_h = sum(heavy_raw.values())
+    heavy = {k: p_h * v/s_h for k,v in heavy_raw.items()} if s_h > 0 else {}
     if light_raw:
-        s_l = 2 * sum(light_raw.values())
-        u_l = 1 / len(light_raw.items())
-        light = {k: u_l - v/s_l for k,v in light_raw.items()} if s_h > 0 else {}
-    return heavy | light
+        s_l = sum(light_raw.values())
+        u_l = 2 / len(light_raw.items())
+        light = {k: p_l * (u_l - v/s_l) for k,v in light_raw.items()} if s_h > 0 else {}
+
+    mix = heavy | light
+    s_m = sum(mix.values())
+    mix = {k: v/s_h for k,v in heavy_raw.items()}
+
+    return mix
 
 
 # ---------------------------------------------------------------------------
