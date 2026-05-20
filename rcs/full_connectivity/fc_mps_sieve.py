@@ -185,7 +185,6 @@ def bench_qrack(width, depth, sdrp=0.0, chi=None):
         "depth":        depth,
         "chi":          chi,
         "n_candidates": len(uniform_candidates),
-        "n_ace_probs":  len(ace_probs),
         "seconds":      t_elapsed,
         "xeb_mps":      xeb_mps,
         "hog_mps":      hog_mps,
