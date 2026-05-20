@@ -97,11 +97,14 @@ def calc_stats(ideal_probs, exp_probs, n_pow):
 
 def calc_stats_sparse(ideal_probs, exp_probs_sparse, n_pow):
     u_u   = 1.0 / n_pow
-    model = 0.5
-    exp_dense = np.zeros(n_pow, dtype=np.float64)
-    for k, v in exp_probs_sparse.items():
-        exp_dense[k] = v
-    exp_mixed = (1.0 - model) * exp_dense + model * u_u
+    h_probs, l_probs = exp_probs_sparse
+    h_dense = np.zeros(n_pow, dtype=np.float64)
+    for k, v in h_probs.items():
+        h_dense[k] = v
+    l_dense = h_dense.copy()
+    for k, v in l_probs.items():
+        l_dense[k] = v
+    exp_mixed = (h_dense + u_u * (l_dense + 1.0)) / 2.0
     p_c   = ideal_probs - u_u
     q_c   = exp_mixed   - u_u
     denom = float(np.dot(p_c, p_c))
@@ -119,17 +122,11 @@ def route_heavy_light(prob_dict, u_u):
         elif p < 0:
             light_raw[outcome] = p
     s_h = sum(heavy_raw.values())
-    n_h = len(heavy_raw.values())
-    heavy = {k:u_u * (1/n_h + v/s_h) for k,v in heavy_raw.items()} if s_h > 0 else {}
+    heavy = {k:v/s_h for k,v in heavy_raw.items()} if s_h > 0 else {}
     s_l = sum(light_raw.values())
-    n_l = len(light_raw.values())
-    light = {k:u_u * (1/n_l - v/s_l) for k,v in light_raw.items()} if s_l < 0 else {}
+    light = {k:-v/s_l for k,v in light_raw.items()} if s_l < 0 else {}
 
-    mix = heavy | light
-    s_m = sum(mix.values())
-    mix = {k: v/s_m for k,v in mix.items()}
-
-    return mix
+    return (heavy, light)
 
 
 # ---------------------------------------------------------------------------
@@ -221,17 +218,6 @@ def bench_qrack(width, depth, sdrp=0.0, chi=None):
 
     xeb_ace, hog_ace = calc_stats(ideal_probs, ace_probs, n_pow)
 
-    # -----------------------------------------------------------------------
-    # Method 3: Equal mixture of MPS and ACE
-    # -----------------------------------------------------------------------
-    mixed = ace_probs + u_u
-    for k in set(mps_combined):
-        mixed[k] += mps_combined[k]
-    mixed /= 2
-    xeb_mix, hog_mix = calc_stats(ideal_probs, mixed, n_pow)
-
-    t_elapsed = time.perf_counter() - t_start
-
     return {
         "width":        width,
         "depth":        depth,
@@ -243,8 +229,6 @@ def bench_qrack(width, depth, sdrp=0.0, chi=None):
         "hog_mps":      hog_mps,
         "xeb_ace":      xeb_ace,
         "hog_ace":      hog_ace,
-        "xeb_mix":      xeb_mix,
-        "hog_mix":      hog_mix,
     }
 
 
