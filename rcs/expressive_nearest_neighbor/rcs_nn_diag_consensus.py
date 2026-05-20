@@ -3,10 +3,11 @@
 # Three methods compared — identical logic to fc_consensus.py but using
 # the nearest-neighbor gate set (gateSequence, TWO_BIT_GATES) and topology.
 #
-# Method 1 — Uniform random MPS sieve:
-#   Pick width**3 candidates uniformly at random from [0, 2^n).
-#   Build MPS via quimb on the ideal nn circuit.
-#   Query MPS amplitude via trie contraction, route by p vs u_u.
+# Method 1 — Prefix-maximizing MPS sieve:
+#   Pick candidates that maximally share trie prefixes, minimizing
+#   redundant computation. Enumerate all suffixes beneath a random prefix
+#   so the trie evaluates the shared prefix once and fans out only at
+#   the suffix level. Route by p_mps vs u_u: heavy above, light below.
 #
 # Method 2 — Patch ACE prob_perm consensus:
 #   Two patch circuits (diagonal and anti-diagonal cuts) run the same nn circuit.
@@ -364,9 +365,38 @@ def bench_qrack(width, depth, chi=None):
     del sim_ideal
 
     # -----------------------------------------------------------------------
-    # Method 1: Uniform random MPS sieve
+    # Method 1: Prefix-maximizing MPS sieve.
+    # Choose candidates that maximally share trie prefixes, minimizing
+    # redundant computation in the trie contraction.
+    #
+    # Strategy: fix the top (width - suffix_bits) qubit values randomly,
+    # then enumerate all 2^suffix_bits suffixes. This gives n_candidates
+    # bitstrings that share a common prefix — the trie evaluates the shared
+    # prefix once and fans out only at the suffix level.
+    #
+    # suffix_bits = floor(log2(n_candidates)), so 2^suffix_bits <= n_candidates.
+    # Any remaining slots are filled with additional random prefix blocks.
     # -----------------------------------------------------------------------
-    uniform_candidates = random.sample(range(n_pow), min(n_candidates, n_pow))
+    suffix_bits   = int(math.log2(n_candidates))          # largest power of 2 <= n_candidates
+    n_full_blocks = n_candidates >> suffix_bits            # = 1 always (by construction)
+    prefix_bits   = width - suffix_bits
+
+    candidate_set = set()
+    attempts = 0
+    while len(candidate_set) < n_candidates and attempts < n_candidates * 4:
+        # Draw a random prefix, enumerate all suffixes beneath it
+        prefix = random.randrange(1 << prefix_bits) << suffix_bits
+        for suffix in range(1 << suffix_bits):
+            candidate_set.add(prefix | suffix)
+            if len(candidate_set) >= n_candidates:
+                break
+        attempts += 1
+
+    # Top up with uniform random if needed (shouldn't happen in practice)
+    while len(candidate_set) < n_candidates:
+        candidate_set.add(random.randrange(n_pow))
+
+    uniform_candidates = list(candidate_set)[:n_candidates]
     candidate_tuples   = [_int_to_bittuple(i, width) for i in uniform_candidates]
     amp_map = batch_amplitudes_trie(mps_sim.psi, candidate_tuples)
 
