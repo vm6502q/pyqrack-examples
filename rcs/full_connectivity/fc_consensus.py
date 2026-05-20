@@ -116,11 +116,13 @@ def route_heavy_light(prob_dict, u_u):
         if p > u_u:
             heavy_raw[outcome] = p
         elif p < u_u:
-            light_raw[outcome] = max(0.0, 2.0 * u_u - p)
+            light_raw[outcome] = 2 * u_u - p
     s_h = 2 * sum(heavy_raw.values())
     heavy = {k: v/s_h for k,v in heavy_raw.items()} if s_h > 0 else {}
-    s_l = sum(light_raw.values())
-    light = {k: (2.0 * u_u - v/s_h) / 2 for k,v in light_raw.items()} if s_h > 0 else {}
+    if light_raw:
+        s_l = 2 * sum(light_raw.values())
+        u_l = 1 / len(light_raw.items())
+        light = {k: u_l - v/s_l for k,v in light_raw.items()} if s_h > 0 else {}
     return heavy | light
 
 
