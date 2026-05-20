@@ -413,6 +413,8 @@ def bench_qrack(width, depth, chi=None):
 
     xeb_ace, hog_ace = calc_stats(ideal_probs, ace_probs, n_pow)
 
+    t_elapsed = time.perf_counter() - t_start
+
     return {
         "width":        width,
         "depth":        depth,
