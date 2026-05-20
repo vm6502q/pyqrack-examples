@@ -270,7 +270,7 @@ def bench_qrack(width, depth, chi=None):
     u_u          = 1.0 / n_pow
 
     if chi is None:
-        chi = min(int(width ** 2.5), int(math.sqrt(n_pow) + 0.5))
+        chi = min(width ** 3, int(math.sqrt(n_pow) + 0.5))
 
     patch_h, local_h = make_diagonal_patches(width, row_len, col_len)
     patch_v, local_v = make_antidiag_patches(width, row_len, col_len)
