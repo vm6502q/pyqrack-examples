@@ -1,19 +1,9 @@
-# Fully-connected RCS: uniform-random MPS sieve + ACE prob_perm consensus.
+# Fully-connected RCS: uniform-random MPS sieve.
 #
-# Three methods compared:
-#
-# Method 1 — Uniform random MPS sieve:
-#   Pick width**3 candidates uniformly at random from [0, 2^n).
+# Uniform random MPS sieve:
+#   Pick width**2 candidates uniformly at random from [0, 2^n).
 #   Query MPS amplitude for each via trie contraction.
 #   Route by p_mps vs u_u: heavy above, light below.
-#
-# Method 2 — ACE prob_perm consensus:
-#   Two ACE instances (sequential + stride coupler order).
-#   measure_shots to identify candidate set.
-#   prob_perm queries averaged over both instances.
-#   Route by p_ace vs u_u.
-#
-# Method 3 — Equal 50/50 mixture of Methods 1 and 2.
 #
 # XEB and HOG computed against a full ideal simulator (small scale only).
 #
