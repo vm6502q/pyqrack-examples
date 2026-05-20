@@ -87,12 +87,11 @@ def batch_amplitudes_trie(mps_psi, bitstrings):
 def calc_stats(ideal_probs, exp_probs, n_pow):
     u_u   = 1.0 / n_pow
     model = 0.5
-    exp_mixed = (1.0 - model) * exp_probs + model * u_u
     p_c   = ideal_probs - u_u
     q_c   = exp_probs   - u_u
     denom = float(np.dot(p_c, p_c))
     xeb   = float(np.dot(p_c, q_c)) / denom if denom > 0 else 0.0
-    hog   = float(exp_mixed[ideal_probs > float(np.median(ideal_probs))].sum())
+    hog   = float(exp_probs[ideal_probs > float(np.median(ideal_probs))].sum())
     return xeb, hog
 
 
@@ -112,33 +111,17 @@ def calc_stats_sparse(ideal_probs, exp_probs_sparse, n_pow):
 
 
 def route_heavy_light(prob_dict, u_u):
-    """Split a {outcome: probability} dict into heavy+light sparse estimate."""
     heavy_raw = {}; light_raw = {}
     for outcome, p in prob_dict.items():
         if p > u_u:
             heavy_raw[outcome] = p
-        elif p > 0:
+        elif p < u_u:
             light_raw[outcome] = max(0.0, 2.0 * u_u - p)
-
-    s_h = sum(heavy_raw.values())
+    s_h = 2 * sum(heavy_raw.values())
     heavy = {k: v/s_h for k,v in heavy_raw.items()} if s_h > 0 else {}
-
-    s_l = sum(light_raw.values())
-    if s_l > 0:
-        light = {k: max(0.0, u_u - (v/s_l)*u_u) for k,v in light_raw.items()}
-        s_l2  = sum(light.values())
-        light = {k: v/s_l2 for k,v in light.items()} if s_l2 > 0 else {}
-    else:
-        light = {}
-
-    n_ne = (1 if heavy else 0) + (1 if light else 0)
-    if n_ne == 0:
-        return {}
-    w = 1.0 / n_ne
-    all_keys = set(heavy) | set(light)
-    combined = {k: w*heavy.get(k,0.0) + w*light.get(k,0.0) for k in all_keys}
-    s_c = sum(combined.values())
-    return {k: v/s_c for k,v in combined.items()} if s_c > 0 else {}
+    s_l = 2 * sum(light_raw.values())
+    light = {k: 2.0 * u_u - v/s_h for k,v in light_raw.items()} if s_h > 0 else {}
+    return heavy | light
 
 
 # ---------------------------------------------------------------------------
