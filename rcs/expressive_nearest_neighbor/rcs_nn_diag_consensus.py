@@ -376,31 +376,27 @@ def bench_qrack(width, depth, chi=None):
 
 
     # -----------------------------------------------------------------------
-    # Method 1: Prefix-maximizing MPS sieve.
-    # Choose candidates that maximally share trie prefixes, minimizing
-    # redundant computation in the trie contraction.
+    # Prefix-fixing via quimb output indices.
     #
-    # Strategy: fix the top (width - suffix_bits) qubit values randomly,
-    # then enumerate all 2^suffix_bits suffixes. This gives n_candidates
-    # bitstrings that share a common prefix — the trie evaluates the shared
-    # prefix once and fans out only at the suffix level.
-    #
-    # suffix_bits = floor(log2(n_candidates)), so 2^suffix_bits <= n_candidates.
-    # Any remaining slots are filled with additional random prefix blocks.
+    # Build the full MPS, then use psi.to_dense() with prefix indices
+    # fixed and suffix indices as output — contracting all suffix amplitudes
+    # at once. This is the correct quimb API for "fix some bits, get all
+    # amplitudes over the remaining bits in one contraction."
     # -----------------------------------------------------------------------
+    suffix_bits = int(math.log2(n_candidates))
+    prefix_bits = width - suffix_bits
+    prefix_val  = random.randrange(1 << prefix_bits)
+
+    free_inds = [f'k{q}' for q in range(prefix_bits, width)]
+    fix       = {f'k{q}': (prefix_val >> q) & 1 for q in range(prefix_bits)}
+    psi_dense = np.array(mps_sim.psi.to_dense(free_inds, fix)).ravel()
+    # psi_dense[suffix] = amplitude <prefix_val, suffix | U | 0>
+
     uniform_candidates = [prefix_val | (suffix << prefix_bits)
                           for suffix in range(1 << suffix_bits)]
-    candidate_tuples   = [_int_to_bittuple(suffix, n_free)
-                          for suffix in range(1 << suffix_bits)]
-    # Densify the projected MPS over the free qubits.
-    # n_free = suffix_bits is small (log2 of n_candidates), so this is cheap.
-    # isel_ leaves irregular bond/physical index structure; to_dense is clean.
-    free_inds = [f'k{i}' for i in range(n_free)]
-    psi_dense = np.array(psi.to_dense(free_inds)).ravel()
 
     mps_probs = {}
-    for idx, bs_tup in zip(uniform_candidates, candidate_tuples):
-        suffix = sum(bs_tup[i] << i for i in range(n_free))
+    for suffix, idx in enumerate(uniform_candidates):
         amp = complex(psi_dense[suffix])
         p   = amp.real**2 + amp.imag**2
         if p > 0:
