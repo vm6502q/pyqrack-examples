@@ -114,18 +114,17 @@ def route_heavy_light(prob_dict, u_u):
     heavy_raw = {}; light_raw = {}
     p_h = 0.0; p_l = 0.0
     for outcome, p in prob_dict.items():
-        if p > u_u:
+        p -= u_u
+        if p > 0:
             heavy_raw[outcome] = p
             p_h += p
-        elif p < u_u:
-            light_raw[outcome] = 2 * u_u - p
+        elif p < 0:
+            light_raw[outcome] = p
             p_l += p
     s_h = sum(heavy_raw.values())
-    heavy = {k: p_h * v/s_h for k,v in heavy_raw.items()} if s_h > 0 else {}
-    if light_raw:
-        s_l = sum(light_raw.values())
-        u_l = 2 / len(light_raw.items())
-        light = {k: p_l * (u_l - v/s_l) for k,v in light_raw.items()} if s_h > 0 else {}
+    heavy = {k: v/s_h for k,v in heavy_raw.items()} if s_h > 0 else {}
+    s_l = sum(light_raw.values())
+    light = {k: max(-u_u, -v/s_l) for k,v in light_raw.items()} if s_l < 0 else {}
 
     mix = heavy | light
     s_m = sum(mix.values())
@@ -226,7 +225,7 @@ def bench_qrack(width, depth, sdrp=0.0, chi=None):
     # -----------------------------------------------------------------------
     # Method 3: Equal mixture of MPS and ACE
     # -----------------------------------------------------------------------
-    mixed = ace_probs.copy()
+    mixed = ace_probs + u_u
     for k in set(mps_combined):
         mixed[k] += mps_combined[k]
     mixed /= 2
