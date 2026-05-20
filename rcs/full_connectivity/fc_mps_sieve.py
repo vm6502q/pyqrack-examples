@@ -125,6 +125,7 @@ def bench_qrack(width, depth, sdrp=0.0, chi=None):
     # -----------------------------------------------------------------------
     # Build circuit once in Qiskit + quimb MPS from same RNG
     # -----------------------------------------------------------------------
+    t_circ = time.perf_counter()
     qc      = QuantumCircuit(width)
     mps_sim = tn.CircuitMPS(width, max_bond=chi, to_backend=jnp.array)
 
@@ -141,7 +142,9 @@ def bench_qrack(width, depth, sdrp=0.0, chi=None):
             qc.cx(c, t)
             mps_sim.apply_gate('CX', c, t)
 
-    t_start = time.perf_counter()
+    t_ideal = time.perf_counter()
+
+    print(f"mps_circuit_seconds: {t_ideal - t_circ}")
 
     # -----------------------------------------------------------------------
     # Ideal ground truth
@@ -151,6 +154,9 @@ def bench_qrack(width, depth, sdrp=0.0, chi=None):
     sim_ideal.run_qiskit_circuit(qc, shots=0)
     ideal_probs = np.asarray(sim_ideal.out_probs(), dtype=np.float64)
     del sim_ideal
+
+    t_start = time.perf_counter()
+    print(f"ideal_seconds: {t_start - t_ideal}")
 
     # -----------------------------------------------------------------------
     # Method 1: Prefix-maximizing MPS sieve.
@@ -201,13 +207,13 @@ def bench_qrack(width, depth, sdrp=0.0, chi=None):
     t_elapsed = time.perf_counter() - t_start
 
     return {
-        "width":        width,
-        "depth":        depth,
-        "chi":          chi,
-        "n_candidates": len(uniform_candidates),
-        "seconds":      t_elapsed,
-        "xeb_mps":      xeb_mps,
-        "hog_mps":      hog_mps,
+        "width":         width,
+        "depth":         depth,
+        "chi":           chi,
+        "n_candidates":  len(uniform_candidates),
+        "sieve_seconds": t_elapsed,
+        "xeb_mps":       xeb_mps,
+        "hog_mps":       hog_mps,
     }
 
 

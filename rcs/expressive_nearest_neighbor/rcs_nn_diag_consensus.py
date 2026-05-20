@@ -290,6 +290,7 @@ def bench_qrack(width, depth, chi=None):
     # -----------------------------------------------------------------------
     # Build circuit in Qiskit + quimb MPS simultaneously
     # -----------------------------------------------------------------------
+    t_circ  = time.perf_counter()
     qc      = QuantumCircuit(width)
     mps_sim = tn.CircuitMPS(width, max_bond=chi, to_backend=jnp.array)
 
@@ -352,16 +353,21 @@ def bench_qrack(width, depth, chi=None):
                     elif g_name=='acz': mps_sim.apply_gate('CZ',b1,b2)
                     mps_sim.apply_gate('X',b1)
 
-    t_start = time.perf_counter()
+    t_ideal = time.perf_counter()
+
+    print(f"mps_circuit_seconds: {t_ideal - t_circ}")
 
     # -----------------------------------------------------------------------
-    # Ideal ground truth via Qrack replaying Qiskit circuit
+    # Ideal ground truth
     # -----------------------------------------------------------------------
     sim_ideal = QrackSimulator(width)
     random.setstate(rng_state)
     sim_ideal.run_qiskit_circuit(qc, shots=0)
     ideal_probs = np.asarray(sim_ideal.out_probs(), dtype=np.float64)
     del sim_ideal
+
+    t_start = time.perf_counter()
+    print(f"ideal_seconds: {t_start - t_ideal}")
 
     # -----------------------------------------------------------------------
     # Method 1: Prefix-maximizing MPS sieve.
