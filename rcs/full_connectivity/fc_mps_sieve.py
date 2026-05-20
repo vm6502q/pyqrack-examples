@@ -70,14 +70,15 @@ def calc_stats_sparse(ideal_probs, exp_probs_sparse, n_pow):
     for k, v in h_probs.items():
         h_dense[k] = v
     # Light tail: normalized to sum 1 (stored positive), placed below uniform.
+    # Concatenate with heavy tail so it sums to 0.
     # l_dense encodes the shape of the light distribution.
-    l_dense = np.zeros(n_pow, dtype=np.float64)
+    l_dense = h_dense.copy()
     for k, v in l_probs.items():
         l_dense[k] = v
     # Final distribution:
     #   50% heavy tail (sums to 1, so contributes 0.5 total mass)
     #   50% mean field modulated by light tail:
-    #       u_u * (1 - l_dense) sums to u_u*(n_pow - 1) ≈ 1 - u_u ≈ 1
+    #       u_u * (1 - l_dense) sums to u_u*(n_pow - 1) = 1
     #       so u_u*(l_dense + 1)/2 contributes ~0.5 total mass
     # Combined exp_mixed sums to ~1 and is normalized.
     exp_mixed = (h_dense + u_u * (1.0 - l_dense)) / 2.0
