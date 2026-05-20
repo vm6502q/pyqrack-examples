@@ -95,24 +95,6 @@ def calc_stats(ideal_probs, exp_probs, n_pow):
     return xeb, hog
 
 
-def calc_stats_sparse(ideal_probs, exp_probs_sparse, n_pow):
-    u_u   = 1.0 / n_pow
-    h_probs, l_probs = exp_probs_sparse
-    h_dense = np.zeros(n_pow, dtype=np.float64)
-    for k, v in h_probs.items():
-        h_dense[k] = v
-    l_dense = h_dense.copy()
-    for k, v in l_probs.items():
-        l_dense[k] = v
-    exp_mixed = (h_dense + u_u * (l_dense + 1.0)) / 2.0
-    p_c   = ideal_probs - u_u
-    q_c   = exp_mixed   - u_u
-    denom = float(np.dot(p_c, p_c))
-    xeb   = float(np.dot(p_c, q_c)) / denom if denom > 0 else 0.0
-    hog   = float(exp_mixed[ideal_probs > float(np.median(ideal_probs))].sum())
-    return xeb, hog
-
-
 def route_heavy_light(prob_dict, u_u):
     heavy_raw = {}; light_raw = {}
     for outcome, p in prob_dict.items():
@@ -127,6 +109,31 @@ def route_heavy_light(prob_dict, u_u):
     light = {k:-v/s_l for k,v in light_raw.items()} if s_l < 0 else {}
 
     return (heavy, light)
+
+
+def calc_stats_sparse(ideal_probs, exp_probs_sparse, n_pow):
+    u_u   = 1.0 / n_pow
+    h_probs, l_probs = exp_probs_sparse
+    # Heavy tail normalizes to 1.0
+    h_dense = np.zeros(n_pow, dtype=np.float64)
+    for k, v in h_probs.items():
+        h_dense[k] = v
+    # We join heavy tail with 1.0 norm
+    # and light tail with -1.0 norm
+    # (for 0.0 in total)
+    l_dense = h_dense.copy()
+    for k, v in l_probs.items():
+        l_dense[k] = v
+    # 50% is heavy tail;
+    # 50% is mean field times (l_dense + 1.0)
+    # (This preserves overall normalization)
+    exp_mixed = (h_dense + u_u * (l_dense + 1.0)) / 2.0
+    p_c   = ideal_probs - u_u
+    q_c   = exp_mixed   - u_u
+    denom = float(np.dot(p_c, p_c))
+    xeb   = float(np.dot(p_c, q_c)) / denom if denom > 0 else 0.0
+    hog   = float(exp_mixed[ideal_probs > float(np.median(ideal_probs))].sum())
+    return xeb, hog
 
 
 # ---------------------------------------------------------------------------
