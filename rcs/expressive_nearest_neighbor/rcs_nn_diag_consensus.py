@@ -238,7 +238,7 @@ def route_heavy_light(prob_dict, u_u):
 def bench_qrack(width, depth, chi=None):
     row_len, col_len = factor_width(width)
     n_pow        = 1 << width
-    n_candidates = min(width ** 2, int(math.sqrt(n_pow) + 0.5))
+    n_candidates = min(width ** 3, int(math.sqrt(n_pow) + 0.5))
     u_u          = 1.0 / n_pow
 
     if chi is None:
