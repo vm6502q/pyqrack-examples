@@ -122,8 +122,6 @@ def bench_qrack(width, depth, sdrp=0.0, chi=None):
     if chi is None:
         chi = min(width ** 3, int(math.sqrt(n_pow) + 0.5))
 
-    print(chi)
-
     # -----------------------------------------------------------------------
     # Build circuit once in Qiskit + quimb MPS from same RNG
     # -----------------------------------------------------------------------
