@@ -24,39 +24,11 @@ from pyqrack import QrackSimulator
 
 
 # ---------------------------------------------------------------------------
-# Trie-based MPS amplitude contraction
+# Helper
 # ---------------------------------------------------------------------------
 
 def _int_to_bittuple(integer, length):
     return tuple((integer >> b) & 1 for b in range(length))
-
-
-def batch_amplitudes_trie(mps_psi, bitstrings):
-    tensors = [np.array(t.data) for t in mps_psi.tensors]
-    n       = len(tensors)
-    results = {}
-
-    def _recurse(site, env, group):
-        if site == n:
-            scalar = complex(env.flat[0]) if hasattr(env, 'flat') else complex(env)
-            for bs in group:
-                results[bs] = scalar
-            return
-        t = tensors[site]
-        by_bit = defaultdict(list)
-        for bs in group:
-            by_bit[bs[site]].append(bs)
-        for bit, subgroup in by_bit.items():
-            if site == 0:
-                new_env = t[:, bit].copy()
-            elif site == n - 1:
-                new_env = env @ t[:, bit]
-            else:
-                new_env = env @ t[:, :, bit]
-            _recurse(site + 1, new_env, subgroup)
-
-    _recurse(0, None, bitstrings)
-    return results
 
 
 # ---------------------------------------------------------------------------

@@ -161,7 +161,7 @@ TWO_BIT_GATES = swap,pswap,mswap,nswap,iswap,iiswap,cx,cy,cz,acx,acy,acz
 
 
 # ---------------------------------------------------------------------------
-# Trie-based MPS amplitude contraction
+# Helper
 # ---------------------------------------------------------------------------
 
 def _int_to_bittuple(integer, length):
