@@ -160,9 +160,6 @@ def bench_qrack(width, depth, sdrp=0.0, chi=None):
             qc.cx(c, t)
             mps_sim.apply_gate('CX', c, t)
 
-    t_ideal = time.perf_counter()
-    print(f"mps_circuit_seconds: {t_ideal - t_circ}")
-
     # Project out the prefix qubits by contracting each fixed site against
     # its basis vector. quimb MPS site indices are 'k0', 'k1', ..., 'k{n-1}'.
     # We contract site q against bra vector e_{b} = [1-b, b] (little-endian).
@@ -177,6 +174,9 @@ def bench_qrack(width, depth, sdrp=0.0, chi=None):
     # Re-index sites to 0..n_free-1 for the trie.
     for i, q in enumerate(range(prefix_bits, width)):
         psi.reindex_({f'k{q}': f'k{i}'})
+
+    t_ideal = time.perf_counter()
+    print(f"mps_circuit_seconds: {t_ideal - t_circ}")
 
     # -----------------------------------------------------------------------
     # Ideal ground truth (full width, Qrack)
