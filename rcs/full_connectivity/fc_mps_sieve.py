@@ -115,7 +115,7 @@ def bench_qrack(width, depth, sdrp=0.0, chi=None):
     all_bits     = list(lcv_range)
     n_inst       = 2
     n_pow        = 1 << width
-    scale        = min(width ** 2, int(math.sqrt(n_pow) + 0.5))
+    scale        = min(width ** 3, int(math.sqrt(n_pow) + 0.5))
     n_candidates = scale
     u_u          = 1.0 / n_pow
 
