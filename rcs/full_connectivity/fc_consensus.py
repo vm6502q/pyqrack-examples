@@ -1,20 +1,21 @@
-# Fully-connected RCS with sampling-based greedy ACE consensus.
+# Fully-connected RCS: uniform-random MPS sieve + ACE prob_perm consensus.
 #
-# Two QrackSimulator instances run the same random circuit with different
-# coupler orderings (sequential vs stride), developing approximately
-# orthogonal ACE separability structures.  Each instance contributes
-# measure_shots samples — no statevector materialization, scalable to
-# arbitrarily large width.
+# Three methods compared:
 #
-# MPS is NOT used here; this is pure ACE sampling.  The union of samples
-# from both instances is the candidate set.  XEB and HOG are computed
-# against a full ideal simulator (present only for ground-truth validation
-# at small scale; drop sim_ideal for true large-scale deployment).
+# Method 1 — Uniform random MPS sieve:
+#   Pick width**3 candidates uniformly at random from [0, 2^n).
+#   Query MPS amplitude for each via trie contraction.
+#   Route by p_mps vs u_u: heavy above, light below.
 #
-# Sieve: all sampled candidates go through u_u routing:
-#   heavy (count > mean_count): q_i set above u_u
-#   light (count <= mean_count): q_i set below u_u
-# Both tails contribute positively to XEB.
+# Method 2 — ACE prob_perm consensus:
+#   Two ACE instances (sequential + stride coupler order).
+#   measure_shots to identify candidate set.
+#   prob_perm queries averaged over both instances.
+#   Route by p_ace vs u_u.
+#
+# Method 3 — Equal 50/50 mixture of Methods 1 and 2.
+#
+# XEB and HOG computed against a full ideal simulator (small scale only).
 #
 # By Dan Strano and (Anthropic) Claude.
 
@@ -22,9 +23,12 @@ import math
 import random
 import sys
 import time
-from collections import Counter
+from collections import defaultdict
 
 import numpy as np
+import jax.numpy as jnp
+import quimb.tensor as tn
+from qiskit import QuantumCircuit
 from pyqrack import QrackSimulator
 
 
@@ -41,8 +45,56 @@ def _order_pairs(pairs, inst):
 
 
 # ---------------------------------------------------------------------------
+# Trie-based MPS amplitude contraction
+# ---------------------------------------------------------------------------
+
+def _int_to_bittuple(integer, length):
+    return tuple((integer >> b) & 1 for b in range(length))
+
+
+def batch_amplitudes_trie(mps_psi, bitstrings):
+    tensors = [np.array(t.data) for t in mps_psi.tensors]
+    n       = len(tensors)
+    results = {}
+
+    def _recurse(site, env, group):
+        if site == n:
+            scalar = complex(env.flat[0]) if hasattr(env, 'flat') else complex(env)
+            for bs in group:
+                results[bs] = scalar
+            return
+        t = tensors[site]
+        by_bit = defaultdict(list)
+        for bs in group:
+            by_bit[bs[site]].append(bs)
+        for bit, subgroup in by_bit.items():
+            if site == 0:
+                new_env = t[:, bit].copy()
+            elif site == n - 1:
+                new_env = env @ t[:, bit]
+            else:
+                new_env = env @ t[:, :, bit]
+            _recurse(site + 1, new_env, subgroup)
+
+    _recurse(0, None, bitstrings)
+    return results
+
+
+# ---------------------------------------------------------------------------
 # Statistics
 # ---------------------------------------------------------------------------
+
+def calc_stats(ideal_probs, exp_probs, n_pow):
+    u_u   = 1.0 / n_pow
+    model = 0.5
+    exp_mixed = (1.0 - model) * exp_probs + model * u_u
+    p_c   = ideal_probs - u_u
+    q_c   = exp_probs   - u_u
+    denom = float(np.dot(p_c, p_c))
+    xeb   = float(np.dot(p_c, q_c)) / denom if denom > 0 else 0.0
+    hog   = float(exp_mixed[ideal_probs > float(np.median(ideal_probs))].sum())
+    return xeb, hog
+
 
 def calc_stats_sparse(ideal_probs, exp_probs_sparse, n_pow):
     u_u   = 1.0 / n_pow
@@ -59,126 +111,105 @@ def calc_stats_sparse(ideal_probs, exp_probs_sparse, n_pow):
     return xeb, hog
 
 
-def calc_stats(ideal_probs, split_probs):
-    n_pow = len(ideal_probs); u_u = 1.0 / n_pow
-    p = np.asarray(ideal_probs, dtype=np.float64)
-    q = np.asarray(split_probs, dtype=np.float64)
-    p_c = p - u_u; q_c = q - u_u
-    denom = float(np.dot(p_c, p_c))
-    xeb   = float(np.dot(p_c, q_c)) / denom if denom > 0 else 0.0
-    hog   = float(q[p > float(np.median(p))].sum())
-    return xeb, hog
+def route_heavy_light(prob_dict, u_u):
+    """Split a {outcome: probability} dict into heavy+light sparse estimate."""
+    heavy_raw = {}; light_raw = {}
+    for outcome, p in prob_dict.items():
+        if p > u_u:
+            heavy_raw[outcome] = p
+        elif p > 0:
+            light_raw[outcome] = max(0.0, 2.0 * u_u - p)
+
+    s_h = sum(heavy_raw.values())
+    heavy = {k: v/s_h for k,v in heavy_raw.items()} if s_h > 0 else {}
+
+    s_l = sum(light_raw.values())
+    if s_l > 0:
+        light = {k: max(0.0, u_u - (v/s_l)*u_u) for k,v in light_raw.items()}
+        s_l2  = sum(light.values())
+        light = {k: v/s_l2 for k,v in light.items()} if s_l2 > 0 else {}
+    else:
+        light = {}
+
+    n_ne = (1 if heavy else 0) + (1 if light else 0)
+    if n_ne == 0:
+        return {}
+    w = 1.0 / n_ne
+    all_keys = set(heavy) | set(light)
+    combined = {k: w*heavy.get(k,0.0) + w*light.get(k,0.0) for k in all_keys}
+    s_c = sum(combined.values())
+    return {k: v/s_c for k,v in combined.items()} if s_c > 0 else {}
 
 
 # ---------------------------------------------------------------------------
 # Benchmark
 # ---------------------------------------------------------------------------
 
-def bench_qrack(width, depth, sdrp=0.0):
+def bench_qrack(width, depth, sdrp=0.0, chi=None):
     lcv_range    = range(width)
     all_bits     = list(lcv_range)
     n_inst       = 2
-    n_shots      = width ** 3      # shots per instance
+    n_candidates = width ** 3
     n_pow        = 1 << width
     u_u          = 1.0 / n_pow
 
-    rng_state = random.getstate()
-    t_start   = time.perf_counter()
+    if chi is None:
+        chi = min(width ** 2, 1 << (width // 2))
 
     # -----------------------------------------------------------------------
-    # Ideal — full simulation for ground-truth validation (small scale only)
+    # Build circuit once in Qiskit + quimb MPS from same RNG
     # -----------------------------------------------------------------------
-    random.setstate(rng_state)
-    sim_ideal = QrackSimulator(width)
+    qc      = QuantumCircuit(width)
+    mps_sim = tn.CircuitMPS(width, max_bond=chi, to_backend=jnp.array)
+
+    rng_state = random.getstate()
     for _ in range(depth):
         for i in lcv_range:
             th, ph, lm = (random.uniform(0, 2*math.pi) for _ in range(3))
-            sim_ideal.u(i, th, ph, lm)
-        unused = all_bits.copy(); random.shuffle(unused)
-        while len(unused) > 1:
-            c = unused.pop(); t = unused.pop()
-            sim_ideal.mcx([c], t)
+            qc.u(th, ph, lm, i)
+            mps_sim.apply_gate('U3', th, ph, lm, i)
+        shuffled = all_bits[:]
+        random.shuffle(shuffled)
+        while len(shuffled) > 1:
+            c, t = shuffled.pop(), shuffled.pop()
+            qc.cx(c, t)
+            mps_sim.apply_gate('CX', c, t)
+
+    t_start = time.perf_counter()
+
+    # -----------------------------------------------------------------------
+    # Ideal ground truth
+    # -----------------------------------------------------------------------
+    sim_ideal = QrackSimulator(width)
+    random.setstate(rng_state)
+    sim_ideal.run_qiskit_circuit(qc, shots=0)
     ideal_probs = np.asarray(sim_ideal.out_probs(), dtype=np.float64)
     del sim_ideal
 
     # -----------------------------------------------------------------------
-    # Two ACE instances — measure_shots only, no out_ket
+    # Method 1: Uniform random MPS sieve
+    # Pick n_candidates uniformly, query MPS, route by p vs u_u
     # -----------------------------------------------------------------------
-    counts = Counter()
-    for inst in range(n_inst):
-        random.setstate(rng_state)
-        sim = QrackSimulator(width)
-        if sdrp > 0.0:
-            sim.set_sdrp(sdrp)
-        sim.set_ace_max_qb((width + 1) >> 1)
-        for _ in range(depth):
-            for i in lcv_range:
-                th, ph, lm = (random.uniform(0, 2*math.pi) for _ in range(3))
-                sim.u(i, th, ph, lm)
-            pairs = []
-            unused = all_bits.copy(); random.shuffle(unused)
-            while len(unused) > 1:
-                pairs.append((unused.pop(), unused.pop()))
-            for c, t in _order_pairs(pairs, inst):
-                sim.mcx([c], t)
-        shots = sim.measure_shots(all_bits, n_shots)
-        counts.update(int(s) for s in shots)
-        del sim
+    uniform_candidates = random.sample(range(n_pow), min(n_candidates, n_pow))
+    candidate_tuples   = [_int_to_bittuple(i, width) for i in uniform_candidates]
+    amp_map = batch_amplitudes_trie(mps_sim.psi, candidate_tuples)
 
-    t_elapsed = time.perf_counter() - t_start
+    mps_probs = {}
+    for idx, bs_tup in zip(uniform_candidates, candidate_tuples):
+        amp = amp_map.get(bs_tup, 0.0+0.0j)
+        p   = amp.real**2 + amp.imag**2
+        if p > 0:
+            mps_probs[int(idx)] = p
+
+    mps_combined = route_heavy_light(mps_probs, u_u)
+    xeb_mps, hog_mps = calc_stats_sparse(ideal_probs, mps_combined, n_pow)
 
     # -----------------------------------------------------------------------
-    # Route candidates by sample count vs mean count (proxy for u_u)
-    # mean_count = total_shots / n_pow  (expected count under uniform)
-    # heavy: count > mean_count  →  q_i above u_u
-    # light: count <= mean_count →  q_i below u_u
-    # -----------------------------------------------------------------------
-    total_shots = n_inst * n_shots
-    mean_count  = total_shots * u_u   # = total_shots / n_pow
-
-    heavy_raw = {}
-    light_raw = {}
-    for outcome, cnt in counts.items():
-        if cnt > mean_count:
-            heavy_raw[outcome] = float(cnt)
-        else:
-            # Invert: lightest outputs (smallest count) get highest raw weight
-            light_raw[outcome] = max(0.0, 2.0 * mean_count - cnt)
-
-    # Normalize heavy → probability estimates above u_u
-    s_h = sum(heavy_raw.values())
-    heavy = {k: v / s_h for k, v in heavy_raw.items()} if s_h > 0 else {}
-
-    # Normalize light raw weights, then map below u_u for suppression
-    s_l = sum(light_raw.values())
-    if s_l > 0:
-        light = {k: max(0.0, u_u - (v / s_l) * u_u) for k, v in light_raw.items()}
-        s_l2  = sum(light.values())
-        light = {k: v / s_l2 for k, v in light.items()} if s_l2 > 0 else {}
-    else:
-        light = {}
-
-    # Equal weight to non-empty tails, then 50/50 mix with uniform (QV protocol)
-    n_nonempty = (1 if heavy else 0) + (1 if light else 0)
-    if n_nonempty == 0:
-        combined = {}
-    else:
-        w        = 1.0 / n_nonempty
-        all_keys = set(heavy) | set(light)
-        combined = {k: w * heavy.get(k, 0.0) + w * light.get(k, 0.0)
-                    for k in all_keys}
-        s_c = sum(combined.values())
-        if s_c > 0:
-            combined = {k: v / s_c for k, v in combined.items()}
-
-    xeb_sieve, hog_sieve = calc_stats_sparse(ideal_probs, combined, n_pow)
-
-    # -----------------------------------------------------------------------
-    # ACE direct probability comparison.
-    # Run two fresh ACE instances and query out_probs() directly.
-    # Average probability: (p0[i] + p1[i]) / 2  (incoherent mixture).
-    # Equivalent to equal superposition probability |psi_avg|^2 with
-    # 1/sqrt(2) amplitude normalization per instance.
+    # Method 2: ACE prob_perm over full Hilbert space.
+    # Since the ideal simulation is already materialized for ground truth,
+    # we can afford to walk all 2^n permutations with prob_perm — giving
+    # the complete ACE probability distribution, not just sampled candidates.
+    # Two ACE instances (sequential + stride); average their prob_perm values.
     # -----------------------------------------------------------------------
     ace_sims = []
     for inst in range(n_inst):
@@ -187,52 +218,40 @@ def bench_qrack(width, depth, sdrp=0.0):
         if sdrp > 0.0:
             sim.set_sdrp(sdrp)
         sim.set_ace_max_qb((width + 1) >> 1)
-        for _ in range(depth):
-            for i in lcv_range:
-                th, ph, lm = (random.uniform(0, 2*math.pi) for _ in range(3))
-                sim.u(i, th, ph, lm)
-            pairs = []
-            unused = all_bits.copy(); random.shuffle(unused)
-            while len(unused) > 1:
-                pairs.append((unused.pop(), unused.pop()))
-            for c, t in _order_pairs(pairs, inst):
-                sim.mcx([c], t)
+        sim.run_qiskit_circuit(qc, shots=0)
         ace_sims.append(sim)
 
     q_bits = list(range(width))
-    ace_sparse = {}
-    for outcome in counts:
-        bits = [(outcome >> b) & 1 for b in range(width)]
-        p_avg = sum(s.prob_perm(q_bits, bits) for s in ace_sims) / n_inst
-        if p_avg > 0:
-            ace_sparse[outcome] = p_avg
+    ace_probs = np.empty(n_pow, dtype=np.float64)
+    for outcome in range(n_pow):
+        bits  = [(outcome >> b) & 1 for b in range(width)]
+        ace_probs[outcome] = sum(s.prob_perm(q_bits, bits) for s in ace_sims) / n_inst
     for s in ace_sims: del s
 
-    xeb_ace, hog_ace = calc_stats_sparse(ideal_probs, ace_sparse, n_pow)
+    xeb_ace, hog_ace = calc_stats(ideal_probs, ace_probs, n_pow)
 
     # -----------------------------------------------------------------------
-    # Equal mixture of sieve and ACE prob_perm distributions.
-    # Uncorrelated errors between the two methods should average out.
+    # Method 3: Equal mixture of MPS and ACE
     # -----------------------------------------------------------------------
-    all_mix_keys = set(combined) | set(ace_sparse)
-    mixed = {k: 0.5 * combined.get(k, 0.0) + 0.5 * ace_sparse.get(k, 0.0)
-             for k in all_mix_keys}
-    s_mix = sum(mixed.values())
-    if s_mix > 0:
-        mixed = {k: v / s_mix for k, v in mixed.items()}
-    xeb_mix, hog_mix = calc_stats_sparse(ideal_probs, mixed, n_pow)
+    mixed = ace_probs
+    for k in set(mps_combined):
+        mixed[k] += mps_combined[k]
+    mixed /= 2
+    xeb_mix, hog_mix = calc_stats(ideal_probs, mixed, n_pow)
+
+    t_elapsed = time.perf_counter() - t_start
 
     return {
         "width":        width,
         "depth":        depth,
-        "n_unique":     len(counts),
-        "n_heavy":      len(heavy),
-        "n_light":      len(light),
+        "chi":          chi,
+        "n_candidates": len(uniform_candidates),
+        "n_ace_probs":  len(ace_probs),
         "seconds":      t_elapsed,
-        "xeb_sieve":    xeb_sieve,
-        "hog_sieve":    hog_sieve,
-        "xeb_ace_avg":  xeb_ace,
-        "hog_ace_avg":  hog_ace,
+        "xeb_mps":      xeb_mps,
+        "hog_mps":      hog_mps,
+        "xeb_ace":      xeb_ace,
+        "hog_ace":      hog_ace,
         "xeb_mix":      xeb_mix,
         "hog_mix":      hog_mix,
     }
@@ -244,11 +263,13 @@ def bench_qrack(width, depth, sdrp=0.0):
 
 def main():
     if len(sys.argv) < 3:
-        raise RuntimeError("Usage: python3 fc_consensus.py [width] [depth] [sdrp=0]")
+        raise RuntimeError(
+            "Usage: python3 fc_mps_uniform_consensus.py [width] [depth] [sdrp=0] [chi=auto]")
     width = int(sys.argv[1])
     depth = int(sys.argv[2])
     sdrp  = float(sys.argv[3]) if len(sys.argv) > 3 else 0.0
-    result = bench_qrack(width, depth, sdrp)
+    chi   = int(sys.argv[4])   if len(sys.argv) > 4 else None
+    result = bench_qrack(width, depth, sdrp, chi)
     for k, v in result.items():
         print(f"  {k}: {v}")
     return 0
