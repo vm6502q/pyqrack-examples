@@ -159,39 +159,20 @@ def bench_qrack(width, depth, sdrp=0.0, chi=None):
     print(f"ideal_seconds: {t_start - t_ideal}")
 
     # -----------------------------------------------------------------------
-    # Method 1: Prefix-maximizing MPS sieve.
-    # Choose candidates that maximally share trie prefixes, minimizing
-    # redundant computation in the trie contraction.
-    #
-    # Strategy: fix the top (width - suffix_bits) qubit values randomly,
-    # then enumerate all 2^suffix_bits suffixes. This gives n_candidates
-    # bitstrings that share a common prefix — the trie evaluates the shared
-    # prefix once and fans out only at the suffix level.
-    #
-    # suffix_bits = floor(log2(n_candidates)), so 2^suffix_bits <= n_candidates.
-    # Any remaining slots are filled with additional random prefix blocks.
+    # Prefix-maximizing MPS sieve via trie.
+    # Fix suffix_bits = floor(log2(n_candidates)) suffix qubits as free;
+    # draw a random prefix over the remaining prefix_bits qubits.
+    # Enumerate all 2^suffix_bits suffixes — trie shares the prefix
+    # contraction and fans out only at the suffix level.
     # -----------------------------------------------------------------------
-    suffix_bits   = int(math.log2(n_candidates))          # largest power of 2 <= n_candidates
-    n_full_blocks = n_candidates >> suffix_bits            # = 1 always (by construction)
-    prefix_bits   = width - suffix_bits
+    suffix_bits = int(math.log2(n_candidates))
+    prefix_bits = width - suffix_bits
+    prefix_val  = random.randrange(1 << prefix_bits)
 
-    candidate_set = set()
-    attempts = 0
-    while len(candidate_set) < n_candidates and attempts < n_candidates * 4:
-        # Draw a random prefix, enumerate all suffixes beneath it
-        prefix = random.randrange(1 << prefix_bits) << suffix_bits
-        for suffix in range(1 << suffix_bits):
-            candidate_set.add(prefix | suffix)
-            if len(candidate_set) >= n_candidates:
-                break
-        attempts += 1
-
-    # Top up with uniform random if needed (shouldn't happen in practice)
-    while len(candidate_set) < n_candidates:
-        candidate_set.add(random.randrange(n_pow))
-
-    uniform_candidates = list(candidate_set)[:n_candidates]
-    candidate_tuples   = [_int_to_bittuple(i, width) for i in uniform_candidates]
+    uniform_candidates = [prefix_val | (suffix << prefix_bits)
+                          for suffix in range(1 << suffix_bits)]
+    candidate_tuples   = [_int_to_bittuple(idx, width)
+                          for idx in uniform_candidates]
     amp_map = batch_amplitudes_trie(mps_sim.psi, candidate_tuples)
 
     mps_probs = {}

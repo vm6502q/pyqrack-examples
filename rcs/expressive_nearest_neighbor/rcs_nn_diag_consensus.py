@@ -200,17 +200,6 @@ def batch_amplitudes_trie(mps_psi, bitstrings):
 # Statistics
 # ---------------------------------------------------------------------------
 
-def calc_stats(ideal_probs, exp_probs, n_pow):
-    u_u   = 1.0 / n_pow
-    model = 0.5
-    p_c   = ideal_probs - u_u
-    q_c   = exp_probs   - u_u
-    denom = float(np.dot(p_c, p_c))
-    xeb   = float(np.dot(p_c, q_c)) / denom if denom > 0 else 0.0
-    hog   = float(exp_probs[ideal_probs > float(np.median(ideal_probs))].sum())
-    return xeb, hog
-
-
 def calc_stats_sparse(ideal_probs, exp_probs_sparse, n_pow):
     u_u = 1.0 / n_pow
     h_probs, l_probs = exp_probs_sparse
@@ -259,6 +248,26 @@ def route_heavy_light(prob_dict, u_u):
     return (heavy, light)
 
 
+def route_heavy_light(prob_dict, u_u):
+    # Work in the centered basis (p - u_u).
+    # Heavy: centered weight > 0, normalized to sum 1.
+    # Light: centered weight < 0, normalized so abs values sum to 1
+    #        (returned as negative values summing to -1).
+    # Returns (heavy, light) tuple for use in calc_stats_sparse.
+    heavy_raw = {}; light_raw = {}
+    for outcome, p in prob_dict.items():
+        c = p - u_u
+        if c > 0:
+            heavy_raw[outcome] = c
+        elif c < 0:
+            light_raw[outcome] = c
+    s_h = sum(heavy_raw.values())
+    heavy = {k: v/s_h for k, v in heavy_raw.items()} if s_h > 0 else {}
+    s_l = sum(light_raw.values())
+    light = {k: -v/s_l for k, v in light_raw.items()} if s_l < 0 else {}
+    return (heavy, light)
+
+
 # ---------------------------------------------------------------------------
 # Benchmark
 # ---------------------------------------------------------------------------
@@ -266,36 +275,39 @@ def route_heavy_light(prob_dict, u_u):
 def bench_qrack(width, depth, chi=None):
     row_len, col_len = factor_width(width)
     n_pow        = 1 << width
-    n_candidates = min(width ** 2, int(math.sqrt(n_pow) + 0.5))
+    n_candidates = min(width ** 3, int(math.sqrt(n_pow) + 0.5))
     u_u          = 1.0 / n_pow
 
     if chi is None:
         chi = int(math.sqrt(n_pow) + 0.5)
 
-    patch_h, local_h = make_diagonal_patches(width, row_len, col_len)
-    patch_v, local_v = make_antidiag_patches(width, row_len, col_len)
-
-    max_patch = max(int(np.sum(patch_h==0)), int(np.sum(patch_h==1)),
-                    int(np.sum(patch_v==0)), int(np.sum(patch_v==1)))
-
-    print(f"Grid: {row_len} x {col_len}, largest patch: {max_patch} qubits")
-
-    if np.array_equal(patch_h, patch_v):
-        print("WARNING: diagonal and anti-diagonal splits are identical!")
-        return
-    if max_patch > 28:
-        print(f"WARNING: {2**max_patch*8/1e9:.1f} GB needed for largest patch.")
-        return
-
     # -----------------------------------------------------------------------
-    # Build circuit in Qiskit + quimb MPS simultaneously
+    # Prefix-fixing via post-hoc MPS projection.
+    #
+    # Build the full circuit MPS on all `width` qubits (forward pass),
+    # then project out the prefix qubits by contracting each fixed site
+    # tensor against a computational basis bra vector [1,0] or [0,1].
+    # This collapses those sites out of the tensor network, leaving a
+    # reduced MPS over just the `suffix_bits` free qubits — equivalent
+    # to running the adjoint circuit from the fixed output state, but
+    # expressed directly in quimb's tensor network language without
+    # manually reversing gates.
+    #
+    # The projection is O(prefix_bits * chi^2) — negligible vs construction.
     # -----------------------------------------------------------------------
-    t_circ  = time.perf_counter()
-    qc      = QuantumCircuit(width)
-    mps_sim = tn.CircuitMPS(width, max_bond=chi, to_backend=jnp.array)
+    suffix_bits = int(math.log2(n_candidates))
+    prefix_bits = width - suffix_bits
+    n_free      = suffix_bits
+
+    # Draw a random prefix value
+    prefix_val  = random.randrange(1 << prefix_bits)
 
     rng_state     = random.getstate()
     gateSequence0 = [0,3,2,1,2,1,0,3]
+
+    t_circ    = time.perf_counter()
+    qc        = QuantumCircuit(width)
+    mps_sim   = tn.CircuitMPS(width, max_bond=chi, to_backend=jnp.array)
 
     random.setstate(rng_state)
     gateSequence = gateSequence0.copy()
@@ -353,6 +365,21 @@ def bench_qrack(width, depth, chi=None):
                     elif g_name=='acz': mps_sim.apply_gate('CZ',b1,b2)
                     mps_sim.apply_gate('X',b1)
 
+    # Project out the prefix qubits by contracting each fixed site against
+    # its basis vector. quimb MPS site indices are 'k0', 'k1', ..., 'k{n-1}'.
+    # We contract site q against bra vector e_{b} = [1-b, b] (little-endian).
+    psi = mps_sim.psi.copy()
+    for q in range(prefix_bits):
+        b     = (prefix_val >> q) & 1
+        bra_v = jnp.array([1.0 - b, float(b)], dtype=jnp.complex128)
+        site_ind = f'k{q}'
+        psi.isel_({site_ind: b})   # project site q onto basis state b in-place
+
+    # psi is now a tensor network over the free suffix qubits only.
+    # Re-index sites to 0..n_free-1 for the trie.
+    for i, q in enumerate(range(prefix_bits, width)):
+        psi.reindex_({f'k{q}': f'k{i}'})
+
     t_ideal = time.perf_counter()
 
     print(f"mps_circuit_seconds: {t_ideal - t_circ}")
@@ -369,40 +396,37 @@ def bench_qrack(width, depth, chi=None):
     t_start = time.perf_counter()
     print(f"ideal_seconds: {t_start - t_ideal}")
 
+    patch_h, local_h = make_diagonal_patches(width, row_len, col_len)
+    patch_v, local_v = make_antidiag_patches(width, row_len, col_len)
+
+    max_patch = max(int(np.sum(patch_h==0)), int(np.sum(patch_h==1)),
+                    int(np.sum(patch_v==0)), int(np.sum(patch_v==1)))
+
+    print(f"Grid: {row_len} x {col_len}, largest patch: {max_patch} qubits")
+
+    if np.array_equal(patch_h, patch_v):
+        print("WARNING: diagonal and anti-diagonal splits are identical!")
+        return
+    if max_patch > 28:
+        print(f"WARNING: {2**max_patch*8/1e9:.1f} GB needed for largest patch.")
+        return
+
+
     # -----------------------------------------------------------------------
-    # Method 1: Prefix-maximizing MPS sieve.
-    # Choose candidates that maximally share trie prefixes, minimizing
-    # redundant computation in the trie contraction.
-    #
-    # Strategy: fix the top (width - suffix_bits) qubit values randomly,
-    # then enumerate all 2^suffix_bits suffixes. This gives n_candidates
-    # bitstrings that share a common prefix — the trie evaluates the shared
-    # prefix once and fans out only at the suffix level.
-    #
-    # suffix_bits = floor(log2(n_candidates)), so 2^suffix_bits <= n_candidates.
-    # Any remaining slots are filled with additional random prefix blocks.
+    # Method 1: Prefix-maximizing MPS sieve via trie.
+    # Fix suffix_bits = floor(log2(n_candidates)) suffix qubits as free;
+    # draw a random prefix over the remaining prefix_bits qubits.
+    # Enumerate all 2^suffix_bits suffixes — trie shares the prefix
+    # contraction and fans out only at the suffix level.
     # -----------------------------------------------------------------------
-    suffix_bits   = int(math.log2(n_candidates))          # largest power of 2 <= n_candidates
-    n_full_blocks = n_candidates >> suffix_bits            # = 1 always (by construction)
-    prefix_bits   = width - suffix_bits
+    suffix_bits = int(math.log2(n_candidates))
+    prefix_bits = width - suffix_bits
+    prefix_val  = random.randrange(1 << prefix_bits)
 
-    candidate_set = set()
-    attempts = 0
-    while len(candidate_set) < n_candidates and attempts < n_candidates * 4:
-        # Draw a random prefix, enumerate all suffixes beneath it
-        prefix = random.randrange(1 << prefix_bits) << suffix_bits
-        for suffix in range(1 << suffix_bits):
-            candidate_set.add(prefix | suffix)
-            if len(candidate_set) >= n_candidates:
-                break
-        attempts += 1
-
-    # Top up with uniform random if needed (shouldn't happen in practice)
-    while len(candidate_set) < n_candidates:
-        candidate_set.add(random.randrange(n_pow))
-
-    uniform_candidates = list(candidate_set)[:n_candidates]
-    candidate_tuples   = [_int_to_bittuple(i, width) for i in uniform_candidates]
+    uniform_candidates = [prefix_val | (suffix << prefix_bits)
+                          for suffix in range(1 << suffix_bits)]
+    candidate_tuples   = [_int_to_bittuple(idx, width)
+                          for idx in uniform_candidates]
     amp_map = batch_amplitudes_trie(mps_sim.psi, candidate_tuples)
 
     mps_probs = {}
