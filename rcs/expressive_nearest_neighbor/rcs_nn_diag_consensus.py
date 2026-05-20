@@ -210,45 +210,51 @@ def calc_stats(ideal_probs, exp_probs, n_pow):
     return xeb, hog
 
 
-def route_heavy_light(prob_dict, u_u):
-    heavy_raw = {}; light_raw = {}
-    for outcome, p in prob_dict.items():
-        p -= u_u
-        if p > 0:
-            heavy_raw[outcome] = p
-        elif p < 0:
-            light_raw[outcome] = p
-    s_h = sum(heavy_raw.values())
-    heavy = {k:v/s_h for k,v in heavy_raw.items()} if s_h > 0 else {}
-    s_l = sum(light_raw.values())
-    light = {k:-v/s_l for k,v in light_raw.items()} if s_l < 0 else {}
-
-    return (heavy, light)
-
-
 def calc_stats_sparse(ideal_probs, exp_probs_sparse, n_pow):
-    u_u   = 1.0 / n_pow
+    u_u = 1.0 / n_pow
     h_probs, l_probs = exp_probs_sparse
-    # Heavy tail normalizes to 1.0
+    # Heavy tail: normalized to sum 1, placed above uniform.
     h_dense = np.zeros(n_pow, dtype=np.float64)
     for k, v in h_probs.items():
         h_dense[k] = v
-    # We join heavy tail with 1.0 norm
-    # and light tail with -1.0 norm
-    # (for 0.0 in total)
-    l_dense = h_dense.copy()
+    # Light tail: normalized to sum 1 (stored positive), placed below uniform.
+    # l_dense encodes the shape of the light distribution.
+    l_dense = np.zeros(n_pow, dtype=np.float64)
     for k, v in l_probs.items():
         l_dense[k] = v
-    # 50% is heavy tail;
-    # 50% is mean field times (l_dense + 1.0)
-    # (This preserves overall normalization)
-    exp_mixed = (h_dense + u_u * (l_dense + 1.0)) / 2.0
+    # Final distribution:
+    #   50% heavy tail (sums to 1, so contributes 0.5 total mass)
+    #   50% mean field modulated by light tail:
+    #       u_u * (1 - l_dense) sums to u_u*(n_pow - 1) ≈ 1 - u_u ≈ 1
+    #       so u_u*(l_dense + 1)/2 contributes ~0.5 total mass
+    # Combined exp_mixed sums to ~1 and is normalized.
+    exp_mixed = (h_dense + u_u * (1.0 - l_dense)) / 2.0
     p_c   = ideal_probs - u_u
     q_c   = exp_mixed   - u_u
     denom = float(np.dot(p_c, p_c))
     xeb   = float(np.dot(p_c, q_c)) / denom if denom > 0 else 0.0
     hog   = float(exp_mixed[ideal_probs > float(np.median(ideal_probs))].sum())
     return xeb, hog
+
+
+def route_heavy_light(prob_dict, u_u):
+    # Work in the centered basis (p - u_u).
+    # Heavy: centered weight > 0, normalized to sum 1.
+    # Light: centered weight < 0, normalized so abs values sum to 1
+    #        (returned as negative values summing to -1).
+    # Returns (heavy, light) tuple for use in calc_stats_sparse.
+    heavy_raw = {}; light_raw = {}
+    for outcome, p in prob_dict.items():
+        c = p - u_u
+        if c > 0:
+            heavy_raw[outcome] = c
+        elif c < 0:
+            light_raw[outcome] = c
+    s_h = sum(heavy_raw.values())
+    heavy = {k: v/s_h for k, v in heavy_raw.items()} if s_h > 0 else {}
+    s_l = sum(light_raw.values())
+    light = {k: -v/s_l for k, v in light_raw.items()} if s_l < 0 else {}
+    return (heavy, light)
 
 
 # ---------------------------------------------------------------------------
@@ -420,6 +426,23 @@ def bench_qrack(width, depth, chi=None):
 
     xeb_ace, hog_ace = calc_stats(ideal_probs, ace_probs, n_pow)
 
+    # -----------------------------------------------------------------------
+    # Method 3: Equal mixture of MPS sparse and ACE dense.
+    # MPS contributes via its heavy/light centered-basis sparse estimate;
+    # ACE contributes its full dense probability vector.
+    # Add the MPS h_dense contribution to ace_probs and divide by 2.
+    # -----------------------------------------------------------------------
+    h_probs, l_probs = mps_combined
+    mixed = ace_probs.copy()
+    # Add heavy tail: h_dense shifts selected outputs above uniform
+    for k, v in h_probs.items():
+        mixed[k] += v
+    # Add light modulation: u_u*(1 - l_dense) shifts selected outputs below uniform
+    for k, v in l_probs.items():
+        mixed[k] += u_u * (1.0 - v)
+    mixed /= 2.0
+    xeb_mix, hog_mix = calc_stats(ideal_probs, mixed, n_pow)
+
     t_elapsed = time.perf_counter() - t_start
 
     return {
@@ -432,6 +455,8 @@ def bench_qrack(width, depth, chi=None):
         "hog_mps":      hog_mps,
         "xeb_ace":      xeb_ace,
         "hog_ace":      hog_ace,
+        "xeb_mix":      xeb_mix,
+        "hog_mix":      hog_mix,
     }
 
 
