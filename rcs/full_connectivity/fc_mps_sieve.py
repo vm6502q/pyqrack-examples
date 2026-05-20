@@ -33,18 +33,6 @@ from pyqrack import QrackSimulator
 
 
 # ---------------------------------------------------------------------------
-# Coupler ordering
-# ---------------------------------------------------------------------------
-
-def _order_pairs(pairs, inst):
-    k = len(pairs)
-    if k == 0 or inst == 0:
-        return pairs
-    return [pairs[i] for i in range(1, k, 2)] + \
-           [pairs[i] for i in range(0, k, 2)]
-
-
-# ---------------------------------------------------------------------------
 # Trie-based MPS amplitude contraction
 # ---------------------------------------------------------------------------
 
@@ -83,18 +71,6 @@ def batch_amplitudes_trie(mps_psi, bitstrings):
 # ---------------------------------------------------------------------------
 # Statistics
 # ---------------------------------------------------------------------------
-
-def calc_stats(ideal_probs, exp_probs, n_pow):
-    u_u   = 1.0 / n_pow
-    model = 0.5
-    exp_mixed = (1.0 - model) * exp_probs + model * u_u
-    p_c   = ideal_probs - u_u
-    q_c   = exp_probs   - u_u
-    denom = float(np.dot(p_c, p_c))
-    xeb   = float(np.dot(p_c, q_c)) / denom if denom > 0 else 0.0
-    hog   = float(exp_mixed[ideal_probs > float(np.median(ideal_probs))].sum())
-    return xeb, hog
-
 
 def calc_stats_sparse(ideal_probs, exp_probs_sparse, n_pow):
     u_u = 1.0 / n_pow
@@ -147,12 +123,12 @@ def bench_qrack(width, depth, sdrp=0.0, chi=None):
     lcv_range    = range(width)
     all_bits     = list(lcv_range)
     n_inst       = 2
-    n_candidates = width ** 3
+    n_candidates = min(width ** 2, 1 << (width >> 1))
     n_pow        = 1 << width
     u_u          = 1.0 / n_pow
 
     if chi is None:
-        chi = min(width ** 2, 1 << (width // 2))
+        chi = min(width ** 2, 1 << (width >> 1))
 
     # -----------------------------------------------------------------------
     # Build circuit once in Qiskit + quimb MPS from same RNG
@@ -202,49 +178,6 @@ def bench_qrack(width, depth, sdrp=0.0, chi=None):
     mps_combined = route_heavy_light(mps_probs, u_u)
     xeb_mps, hog_mps = calc_stats_sparse(ideal_probs, mps_combined, n_pow)
 
-    # -----------------------------------------------------------------------
-    # Method 2: ACE prob_perm over full Hilbert space.
-    # Since the ideal simulation is already materialized for ground truth,
-    # we can afford to walk all 2^n permutations with prob_perm — giving
-    # the complete ACE probability distribution, not just sampled candidates.
-    # Two ACE instances (sequential + stride); average their prob_perm values.
-    # -----------------------------------------------------------------------
-    ace_sims = []
-    for inst in range(n_inst):
-        random.setstate(rng_state)
-        sim = QrackSimulator(width)
-        if sdrp > 0.0:
-            sim.set_sdrp(sdrp)
-        sim.set_ace_max_qb((width + 1) >> 1)
-        sim.run_qiskit_circuit(qc, shots=0)
-        ace_sims.append(sim)
-
-    q_bits = list(range(width))
-    ace_probs = np.empty(n_pow, dtype=np.float64)
-    for outcome in range(n_pow):
-        bits  = [(outcome >> b) & 1 for b in range(width)]
-        ace_probs[outcome] = sum(s.prob_perm(q_bits, bits) for s in ace_sims) / n_inst
-    for s in ace_sims: del s
-
-    xeb_ace, hog_ace = calc_stats(ideal_probs, ace_probs, n_pow)
-
-    # -----------------------------------------------------------------------
-    # Method 3: Equal mixture of MPS sparse and ACE dense.
-    # MPS contributes via its heavy/light centered-basis sparse estimate;
-    # ACE contributes its full dense probability vector.
-    # Add the MPS h_dense contribution to ace_probs and divide by 2.
-    # -----------------------------------------------------------------------
-    h_probs, l_probs = mps_combined
-    mixed = ace_probs.copy()
-    # Add heavy tail: h_dense shifts selected outputs above uniform
-    for k, v in h_probs.items():
-        mixed[k] += v
-    # Add light modulation: u_u*(1 - l_dense) shifts selected outputs below uniform
-    for k, v in l_probs.items():
-        mixed[k] += u_u * (1.0 - v)
-    mixed /= 2.0
-    xeb_mix, hog_mix = calc_stats(ideal_probs, mixed, n_pow)
-
     t_elapsed = time.perf_counter() - t_start
 
     return {
@@ -256,10 +189,6 @@ def bench_qrack(width, depth, sdrp=0.0, chi=None):
         "seconds":      t_elapsed,
         "xeb_mps":      xeb_mps,
         "hog_mps":      hog_mps,
-        "xeb_ace":      xeb_ace,
-        "hog_ace":      hog_ace,
-        "xeb_mix":      xeb_mix,
-        "hog_mix":      hog_mix,
     }
 
 

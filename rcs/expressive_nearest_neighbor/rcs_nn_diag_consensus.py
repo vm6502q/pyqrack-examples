@@ -264,11 +264,11 @@ def route_heavy_light(prob_dict, u_u):
 def bench_qrack(width, depth, chi=None):
     row_len, col_len = factor_width(width)
     n_pow        = 1 << width
-    n_candidates = width ** 3
+    n_candidates = min(width ** 2, 1 << (width >> 1))
     u_u          = 1.0 / n_pow
 
     if chi is None:
-        chi = min(width ** 2, 1 << (width // 2))
+        chi = min(width ** 2, 1 << (width >> 1))
 
     patch_h, local_h = make_diagonal_patches(width, row_len, col_len)
     patch_v, local_v = make_antidiag_patches(width, row_len, col_len)
