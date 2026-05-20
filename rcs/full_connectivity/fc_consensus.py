@@ -129,7 +129,7 @@ def route_heavy_light(prob_dict, u_u):
 
     mix = heavy | light
     s_m = sum(mix.values())
-    mix = {k: v/s_h for k,v in heavy_raw.items()}
+    mix = {k: v/s_m for k,v in mix.items()}
 
     return mix
 
