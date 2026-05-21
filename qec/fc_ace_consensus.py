@@ -14,6 +14,7 @@
 # By Dan Strano and (Anthropic) Claude.
 
 import math
+import os
 import random
 import sys
 import time
@@ -75,7 +76,11 @@ def bench_qrack(width, depth, sdrp=0.0):
     # Initialise three ACE instances and one ideal QrackSimulator.
     # All four start from |0> and receive gates layer by layer.
     # -----------------------------------------------------------------------
-    aces = [QrackAceBackend(width) for _ in range(n_inst)]
+    aces = [QrackAceBackend(width, long_range_columns=2) for _ in range(n_inst)]
+    if "QRACK_QUNIT_SEPARABILITY_THRESHOLD" not in os.environ:
+        for ace in aces:
+            for sim in ace.sim:
+                sim.set_sdrp(0.03)
 
     sim_ideal = QrackSimulator(width)
 
@@ -128,27 +133,28 @@ def bench_qrack(width, depth, sdrp=0.0):
         # report p~0.9 while the others report p~0.1; the majority (2 vs 1)
         # correctly votes for the ~0.1 outcome.
         # -------------------------------------------------------------------
-        marginals = np.zeros((n_inst, width), dtype=np.float64)
-        for inst, ace in enumerate(aces):
-            for q in lcv_range:
-                marginals[inst, q] = ace.prob(q)
+        # marginals = np.zeros((n_inst, width), dtype=np.float64)
+        # for inst, ace in enumerate(aces):
+        #     for q in lcv_range:
+        #         marginals[inst, q] = ace.prob(q)
 
         # Majority vote: average then threshold
-        avg_marginals = marginals.mean(axis=0)   # shape (width,)
+        # avg_marginals = marginals.mean(axis=0)   # shape (width,)
+
+        # Apply X corrections in a dedicated pass — before any further
+        # prob() calls or sampling — to avoid _correct() side-effects
+        # that can corrupt physical qubit indices during measure_shots.
+        # epsilon = aces[0]._epsilon
+        # for inst, ace in enumerate(aces):
+        #     for q in lcv_range:
+        #         if avg_marginals[q] > (0.5 + epsilon) and marginals[inst, q] < (0.5 - epsilon):
+        #             ace.x(q)
+        #         elif avg_marginals[q] < (0.5 - epsilon) and marginals[inst, q] > (0.5 + epsilon):
+        #             ace.x(q)
 
         pooled_counts = Counter()
         total_shots   = 0
-        epsilon = aces[0]._epsilon
         for inst, ace in enumerate(aces):
-            for q in lcv_range:
-                # Compare this instance's marginal against consensus.
-                # If they disagree on which side of 0.5 the qubit is on,
-                # apply X to flip the instance into agreement with the majority.
-                if avg_marginals[q] > (0.5 + epsilon) and marginals[inst, q] < (0.5 - epsilon):
-                    ace.x(q)
-                elif avg_marginals[q] < (0.5 - epsilon) and marginals[inst, q] > (0.5 + epsilon):
-                    ace.x(q)
-
             shots = ace.measure_shots(all_bits, n_shots)
             pooled_counts.update(shots)
             total_shots += n_shots
