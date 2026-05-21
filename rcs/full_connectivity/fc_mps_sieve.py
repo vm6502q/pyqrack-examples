@@ -120,7 +120,7 @@ def bench_qrack(width, depth, sdrp=0.0, chi=None):
     u_u          = 1.0 / n_pow
 
     if chi is None:
-        chi = int(math.sqrt(n_pow) + 0.5)
+        chi = min(width ** 3, int(math.sqrt(n_pow) + 0.5))
 
     # -----------------------------------------------------------------------
     # Build circuit once in Qiskit + quimb MPS from same RNG
@@ -205,7 +205,7 @@ def bench_qrack(width, depth, sdrp=0.0, chi=None):
 def main():
     if len(sys.argv) < 3:
         raise RuntimeError(
-            "Usage: python3 fc_mps_uniform_consensus.py [width] [depth] [sdrp=0] [chi=auto]")
+            "Usage: python3 fc_mps_sieve.py [width] [depth] [sdrp=0] [chi=auto]")
     width = int(sys.argv[1])
     depth = int(sys.argv[2])
     sdrp  = float(sys.argv[3]) if len(sys.argv) > 3 else 0.0

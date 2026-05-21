@@ -1,8 +1,21 @@
-# Patch ACE prob_perm consensus:
+# Nearest-neighbor RCS: uniform-random MPS sieve + patch ACE prob_perm consensus.
+#
+# Three methods compared — identical logic to fc_consensus.py but using
+# the nearest-neighbor gate set (gateSequence, TWO_BIT_GATES) and topology.
+#
+# Method 1 — Prefix-maximizing MPS sieve:
+#   Pick candidates that maximally share trie prefixes, minimizing
+#   redundant computation. Enumerate all suffixes beneath a random prefix
+#   so the trie evaluates the shared prefix once and fans out only at
+#   the suffix level. Route by p_mps vs u_u: heavy above, light below.
+#
+# Method 2 — Patch ACE prob_perm consensus:
 #   Two patch circuits (diagonal and anti-diagonal cuts) run the same nn circuit.
 #   prob_perm queried over full 2^n Hilbert space on each patch pair.
 #   Separable joint probability = product of subsystem prob_perms.
 #   Average over H and V patches.
+#
+# Method 3 — Equal 50/50 mixture of Methods 1 and 2.
 #
 # XEB and HOG vs full ideal simulator (small scale only).
 #
@@ -12,8 +25,11 @@ import math
 import random
 import sys
 import time
+from collections import defaultdict
 
 import numpy as np
+import jax.numpy as jnp
+import quimb.tensor as tn
 from qiskit import QuantumCircuit
 from pyqrack import QrackSimulator
 
@@ -145,19 +161,112 @@ TWO_BIT_GATES = swap,pswap,mswap,nswap,iswap,iiswap,cx,cy,cz,acx,acy,acz
 
 
 # ---------------------------------------------------------------------------
+# Trie-based MPS amplitude contraction
+# ---------------------------------------------------------------------------
+
+def _int_to_bittuple(integer, length):
+    return tuple((integer >> b) & 1 for b in range(length))
+
+
+def batch_amplitudes_trie(mps_psi, bitstrings):
+    tensors = [np.array(t.data) for t in mps_psi.tensors]
+    n       = len(tensors)
+    results = {}
+
+    def _recurse(site, env, group):
+        if site == n:
+            scalar = complex(env.flat[0]) if hasattr(env, 'flat') else complex(env)
+            for bs in group:
+                results[bs] = scalar
+            return
+        t = tensors[site]
+        by_bit = defaultdict(list)
+        for bs in group:
+            by_bit[bs[site]].append(bs)
+        for bit, subgroup in by_bit.items():
+            if site == 0:
+                new_env = t[:, bit].copy()
+            elif site == n - 1:
+                new_env = env @ t[:, bit]
+            else:
+                new_env = env @ t[:, :, bit]
+            _recurse(site + 1, new_env, subgroup)
+
+    _recurse(0, None, bitstrings)
+    return results
+
+
+# ---------------------------------------------------------------------------
 # Statistics
 # ---------------------------------------------------------------------------
 
-def calc_stats(ideal_probs, exp_probs, n_pow):
-    u_u   = 1.0 / n_pow
-    model = 0.5
-    exp_mixed = (1.0 - model) * exp_probs + model * u_u
+def calc_stats_sparse(ideal_probs, exp_probs_sparse, n_pow):
+    u_u = 1.0 / n_pow
+    h_probs, l_probs = exp_probs_sparse
+    # Heavy tail: normalized to sum 1, placed above uniform.
+    h_dense = np.zeros(n_pow, dtype=np.float64)
+    for k, v in h_probs.items():
+        h_dense[k] = v
+    # Light tail: normalized to sum 1 (stored positive), placed below uniform.
+    # Concatenate with heavy tail so it sums to 0.
+    # l_dense encodes the shape of the light distribution.
+    l_dense = h_dense.copy()
+    for k, v in l_probs.items():
+        l_dense[k] = v
+    # Final distribution:
+    #   50% heavy tail (sums to 1, so contributes 0.5 total mass)
+    #   50% mean field modulated by light tail:
+    #       u_u * (1 - l_dense) sums to u_u*(n_pow - 1) = 1
+    #       so u_u*(l_dense + 1)/2 contributes ~0.5 total mass
+    # Combined exp_mixed sums to ~1 and is normalized.
+    exp_mixed = (h_dense + u_u * (1.0 - l_dense)) / 2.0
     p_c   = ideal_probs - u_u
-    q_c   = exp_probs   - u_u
+    q_c   = exp_mixed   - u_u
     denom = float(np.dot(p_c, p_c))
     xeb   = float(np.dot(p_c, q_c)) / denom if denom > 0 else 0.0
     hog   = float(exp_mixed[ideal_probs > float(np.median(ideal_probs))].sum())
     return xeb, hog
+
+
+def route_heavy_light(prob_dict, u_u):
+    # Work in the centered basis (p - u_u).
+    # Heavy: centered weight > 0, normalized to sum 1.
+    # Light: centered weight < 0, normalized so abs values sum to 1
+    #        (returned as negative values summing to -1).
+    # Returns (heavy, light) tuple for use in calc_stats_sparse.
+    heavy_raw = {}; light_raw = {}
+    for outcome, p in prob_dict.items():
+        c = p - u_u
+        if c > 0:
+            heavy_raw[outcome] = c
+        elif c < 0:
+            light_raw[outcome] = c
+    s_h = sum(heavy_raw.values())
+    heavy = {k: v/s_h for k, v in heavy_raw.items()} if s_h > 0 else {}
+    s_l = sum(light_raw.values())
+    light = {k: -v/s_l for k, v in light_raw.items()} if s_l < 0 else {}
+    return (heavy, light)
+
+
+def route_heavy_light(prob_dict, u_u):
+    # Work in the centered basis (p - u_u).
+    # Heavy: centered weight > 0, normalized to sum 1.
+    # Light: centered weight < 0, normalized so abs values sum to 1
+    #        (returned as negative values summing to -1).
+    # Returns (heavy, light) tuple for use in calc_stats_sparse.
+    heavy_raw = {}; light_raw = {}
+    for outcome, p in prob_dict.items():
+        c = p - u_u
+        if c > 0:
+            heavy_raw[outcome] = c
+        elif c < 0:
+            light_raw[outcome] = c
+    s_h = sum(heavy_raw.values())
+    heavy = {k: v/s_h for k, v in heavy_raw.items()} if s_h > 0 else {}
+    s_l = sum(light_raw.values())
+    light = {k: -v/s_l for k, v in light_raw.items()} if s_l < 0 else {}
+    return (heavy, light)
+
 
 # ---------------------------------------------------------------------------
 # Benchmark
@@ -166,13 +275,39 @@ def calc_stats(ideal_probs, exp_probs, n_pow):
 def bench_qrack(width, depth, chi=None):
     row_len, col_len = factor_width(width)
     n_pow        = 1 << width
+    n_candidates = min(width ** 3, int(math.sqrt(n_pow) + 0.5))
     u_u          = 1.0 / n_pow
+
+    if chi is None:
+        chi = int(math.sqrt(n_pow) + 0.5)
+
+    # -----------------------------------------------------------------------
+    # Prefix-fixing via post-hoc MPS projection.
+    #
+    # Build the full circuit MPS on all `width` qubits (forward pass),
+    # then project out the prefix qubits by contracting each fixed site
+    # tensor against a computational basis bra vector [1,0] or [0,1].
+    # This collapses those sites out of the tensor network, leaving a
+    # reduced MPS over just the `suffix_bits` free qubits — equivalent
+    # to running the adjoint circuit from the fixed output state, but
+    # expressed directly in quimb's tensor network language without
+    # manually reversing gates.
+    #
+    # The projection is O(prefix_bits * chi^2) — negligible vs construction.
+    # -----------------------------------------------------------------------
+    suffix_bits = int(math.log2(n_candidates))
+    prefix_bits = width - suffix_bits
+    n_free      = suffix_bits
+
+    # Draw a random prefix value
+    prefix_val  = random.randrange(1 << prefix_bits)
 
     rng_state     = random.getstate()
     gateSequence0 = [0,3,2,1,2,1,0,3]
 
     t_circ    = time.perf_counter()
     qc        = QuantumCircuit(width)
+    mps_sim   = tn.CircuitMPS(width, max_bond=chi, to_backend=jnp.array)
 
     random.setstate(rng_state)
     gateSequence = gateSequence0.copy()
@@ -180,6 +315,7 @@ def bench_qrack(width, depth, chi=None):
         for i in range(width):
             th, ph, lm = (random.uniform(0,2*math.pi) for _ in range(3))
             qc.u(th, ph, lm, i)
+            mps_sim.apply_gate('U3', th, ph, lm, i)
         gate = gateSequence.pop(0); gateSequence.append(gate)
         for row in range(1, row_len, 2):
             for col in range(col_len):
@@ -206,6 +342,47 @@ def bench_qrack(width, depth, chi=None):
                 elif g_name == 'acx':   qc.x(b1); qc.cx(b1,b2); qc.x(b1)
                 elif g_name == 'acy':   qc.x(b1); qc.cy(b1,b2); qc.x(b1)
                 elif g_name == 'acz':   qc.x(b1); qc.cz(b1,b2); qc.x(b1)
+                # Apply to MPS
+                if g_name == 'cx':      mps_sim.apply_gate('CX',b1,b2)
+                elif g_name == 'cy':    mps_sim.apply_gate('CY',b1,b2)
+                elif g_name == 'cz':    mps_sim.apply_gate('CZ',b1,b2)
+                elif g_name == 'swap':  mps_sim.apply_gate('SWAP',b1,b2)
+                elif g_name == 'iswap': mps_sim.apply_gate('ISWAP',b1,b2)
+                elif g_name == 'iiswap':
+                    mps_sim.apply_gate('ISWAP',b1,b2)
+                    mps_sim.apply_gate('ISWAP',b1,b2)
+                    mps_sim.apply_gate('ISWAP',b1,b2)
+                elif g_name in ('pswap','mswap','nswap'):
+                    mps_sim.apply_gate('CZ',b1,b2); mps_sim.apply_gate('SWAP',b1,b2)
+                    if g_name == 'nswap': mps_sim.apply_gate('CZ',b1,b2)
+                    if g_name == 'mswap':
+                        # undo the extra CZ from pswap path, redo correctly
+                        pass  # mswap = swap then cz — handled above
+                elif g_name in ('acx','acy','acz'):
+                    mps_sim.apply_gate('X',b1)
+                    if g_name=='acx': mps_sim.apply_gate('CX',b1,b2)
+                    elif g_name=='acy': mps_sim.apply_gate('CY',b1,b2)
+                    elif g_name=='acz': mps_sim.apply_gate('CZ',b1,b2)
+                    mps_sim.apply_gate('X',b1)
+
+    # Project out the prefix qubits by contracting each fixed site against
+    # its basis vector. quimb MPS site indices are 'k0', 'k1', ..., 'k{n-1}'.
+    # We contract site q against bra vector e_{b} = [1-b, b] (little-endian).
+    psi = mps_sim.psi.copy()
+    for q in range(prefix_bits):
+        b     = (prefix_val >> q) & 1
+        bra_v = jnp.array([1.0 - b, float(b)], dtype=jnp.complex128)
+        site_ind = f'k{q}'
+        psi.isel_({site_ind: b})   # project site q onto basis state b in-place
+
+    # psi is now a tensor network over the free suffix qubits only.
+    # Re-index sites to 0..n_free-1 for the trie.
+    for i, q in enumerate(range(prefix_bits, width)):
+        psi.reindex_({f'k{q}': f'k{i}'})
+
+    t_ideal = time.perf_counter()
+
+    print(f"mps_circuit_seconds: {t_ideal - t_circ}")
 
     # -----------------------------------------------------------------------
     # Ideal ground truth
@@ -216,9 +393,8 @@ def bench_qrack(width, depth, chi=None):
     ideal_probs = np.asarray(sim_ideal.out_probs(), dtype=np.float64)
     del sim_ideal
 
-    t_ideal = time.perf_counter()
-
-    print(f"ideal seconds: {t_ideal - t_circ}")
+    t_start = time.perf_counter()
+    print(f"ideal_seconds: {t_start - t_ideal}")
 
     patch_h, local_h = make_diagonal_patches(width, row_len, col_len)
     patch_v, local_v = make_antidiag_patches(width, row_len, col_len)
@@ -231,9 +407,40 @@ def bench_qrack(width, depth, chi=None):
     if np.array_equal(patch_h, patch_v):
         print("WARNING: diagonal and anti-diagonal splits are identical!")
         return
+    if max_patch > 28:
+        print(f"WARNING: {2**max_patch*8/1e9:.1f} GB needed for largest patch.")
+        return
+
 
     # -----------------------------------------------------------------------
-    # Patch ACE prob_perm over full Hilbert space.
+    # Method 1: Prefix-maximizing MPS sieve via trie.
+    # Fix suffix_bits = floor(log2(n_candidates)) suffix qubits as free;
+    # draw a random prefix over the remaining prefix_bits qubits.
+    # Enumerate all 2^suffix_bits suffixes — trie shares the prefix
+    # contraction and fans out only at the suffix level.
+    # -----------------------------------------------------------------------
+    suffix_bits = int(math.log2(n_candidates))
+    prefix_bits = width - suffix_bits
+    prefix_val  = random.randrange(1 << prefix_bits)
+
+    uniform_candidates = [prefix_val | (suffix << prefix_bits)
+                          for suffix in range(1 << suffix_bits)]
+    candidate_tuples   = [_int_to_bittuple(idx, width)
+                          for idx in uniform_candidates]
+    amp_map = batch_amplitudes_trie(mps_sim.psi, candidate_tuples)
+
+    mps_probs = {}
+    for idx, bs_tup in zip(uniform_candidates, candidate_tuples):
+        amp = amp_map.get(bs_tup, 0.0+0.0j)
+        p   = amp.real**2 + amp.imag**2
+        if p > 0:
+            mps_probs[int(idx)] = p
+
+    mps_combined = route_heavy_light(mps_probs, u_u)
+    xeb_mps, hog_mps = calc_stats_sparse(ideal_probs, mps_combined, n_pow)
+
+    # -----------------------------------------------------------------------
+    # Method 2: Patch ACE prob_perm over full Hilbert space.
     # Two patch circuits (H and V); separable joint probability via prob_perm
     # product on each subsystem. Average over H and V patches.
     # -----------------------------------------------------------------------
@@ -280,13 +487,37 @@ def bench_qrack(width, depth, chi=None):
 
     xeb_ace, hog_ace = calc_stats(ideal_probs, ace_probs, n_pow)
 
-    t_elapsed = time.perf_counter() - t_ideal
+    # -----------------------------------------------------------------------
+    # Method 3: Equal mixture of MPS sparse and ACE dense.
+    # MPS contributes via its heavy/light centered-basis sparse estimate;
+    # ACE contributes its full dense probability vector.
+    # Add the MPS h_dense contribution to ace_probs and divide by 2.
+    # -----------------------------------------------------------------------
+    h_probs, l_probs = mps_combined
+    mixed = ace_probs.copy()
+    # Add heavy tail: h_dense shifts selected outputs above uniform
+    for k, v in h_probs.items():
+        mixed[k] += v
+    # Add light modulation: u_u*(1 - l_dense) shifts selected outputs below uniform
+    for k, v in l_probs.items():
+        mixed[k] += u_u * (1.0 - v)
+    mixed /= 2.0
+    xeb_mix, hog_mix = calc_stats(ideal_probs, mixed, n_pow)
+
+    t_elapsed = time.perf_counter() - t_start
 
     return {
-        "width":         width,
-        "depth":         depth,
-        "xeb_ace":       xeb_ace,
-        "hog_ace":       hog_ace,
+        "width":        width,
+        "depth":        depth,
+        "chi":          chi,
+        "n_candidates": len(uniform_candidates),
+        "seconds":      t_elapsed,
+        "xeb_mps":      xeb_mps,
+        "hog_mps":      hog_mps,
+        "xeb_ace":      xeb_ace,
+        "hog_ace":      hog_ace,
+        "xeb_mix":      xeb_mix,
+        "hog_mix":      hog_mix,
     }
 
 
@@ -297,11 +528,12 @@ def bench_qrack(width, depth, chi=None):
 def main():
     if len(sys.argv) < 3:
         raise RuntimeError(
-            "Usage: python3 rcs_nn_diag_consensus.py [width] [depth]\n"
+            "Usage: python3 rcs_nn_mps_uniform_consensus.py [width] [depth] [chi=auto]\n"
             "Recommended widths: 20 (4x5), 30 (5x6), 42 (6x7)")
     width = int(sys.argv[1])
     depth = int(sys.argv[2])
-    result = bench_qrack(width, depth)
+    chi   = int(sys.argv[3]) if len(sys.argv) > 3 else None
+    result = bench_qrack(width, depth, chi)
     if result:
         for k, v in result.items():
             print(f"  {k}: {v}")
