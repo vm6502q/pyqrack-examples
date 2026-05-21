@@ -140,13 +140,13 @@ def bench_qrack(width, depth, sdrp=0.0):
         total_shots   = 0
         for inst, ace in enumerate(aces):
             for q in lcv_range:
-                p = ace.prob(q)
-                if p > 0.5:
-                    if marginals[inst, q] < 0.5:
-                        ace.x(q)
-                elif p < 0.5:
-                    if marginals[inst, q] > 0.5:
-                        ace.x(q)
+                # Compare this instance's marginal against consensus.
+                # If they disagree on which side of 0.5 the qubit is on,
+                # apply X to flip the instance into agreement with the majority.
+                if avg_marginals[q] > 0.5 and marginals[inst, q] < 0.5:
+                    ace.x(q)
+                elif avg_marginals[q] < 0.5 and marginals[inst, q] > 0.5:
+                    ace.x(q)
 
             shots = ace.measure_shots(all_bits, n_shots)
             pooled_counts.update(shots)
