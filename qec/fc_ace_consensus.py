@@ -128,25 +128,25 @@ def bench_qrack(width, depth, sdrp=0.0):
         # report p~0.9 while the others report p~0.1; the majority (2 vs 1)
         # correctly votes for the ~0.1 outcome.
         # -------------------------------------------------------------------
-        marginals = np.zeros((n_inst, width), dtype=np.float64)
-        for inst, ace in enumerate(aces):
-            for q in lcv_range:
-                marginals[inst, q] = ace.prob(q)
+        # marginals = np.zeros((n_inst, width), dtype=np.float64)
+        # for inst, ace in enumerate(aces):
+        #     for q in lcv_range:
+        #         marginals[inst, q] = ace.prob(q)
 
         # Majority vote: average then threshold
-        avg_marginals = marginals.mean(axis=0)   # shape (width,)
+        # avg_marginals = marginals.mean(axis=0)   # shape (width,)
 
         pooled_counts = Counter()
         total_shots   = 0
         for inst, ace in enumerate(aces):
-            for q in lcv_range:
-                # Compare this instance's marginal against consensus.
-                # If they disagree on which side of 0.5 the qubit is on,
-                # apply X to flip the instance into agreement with the majority.
-                if avg_marginals[q] > 0.5 and marginals[inst, q] < 0.5:
-                    ace.x(q)
-                elif avg_marginals[q] < 0.5 and marginals[inst, q] > 0.5:
-                    ace.x(q)
+            # for q in lcv_range:
+            #     # Compare this instance's marginal against consensus.
+            #     # If they disagree on which side of 0.5 the qubit is on,
+            #     # apply X to flip the instance into agreement with the majority.
+            #     if avg_marginals[q] > 0.5 and marginals[inst, q] < 0.5:
+            #         ace.x(q)
+            #     elif avg_marginals[q] < 0.5 and marginals[inst, q] > 0.5:
+            #         ace.x(q)
 
             shots = ace.measure_shots(all_bits, n_shots)
             pooled_counts.update(shots)
