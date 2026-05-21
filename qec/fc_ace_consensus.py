@@ -29,22 +29,23 @@ from pyqrack import QrackSimulator, QrackAceBackend
 # Coupler ordering
 # ---------------------------------------------------------------------------
 
-def _order_pairs(pairs, inst):
-    k = len(pairs)
-    if inst == 0 or k == 0:
-        return pairs
-    if inst == 1:
-        # stride-1: odds first, then evens
-        return [pairs[i] for i in range(1, k, 2)] + \
-               [pairs[i] for i in range(0, k, 2)]
-    # inst == 2: stride-2: pairs at offsets 2,3,0,1 (rotate by k//2)
-    mid = k >> 1
-    return pairs[mid:] + pairs[:mid]
-
-
-# ---------------------------------------------------------------------------
-# Statistics
-# ---------------------------------------------------------------------------
+def _make_qubit_maps(width, n_inst):
+    # Generate n_inst bijective qubit permutations by cyclic rotation.
+    # Instance k maps RCS logical qubit q -> ACE logical qubit (q + k*width//n_inst) % width.
+    # This shifts which qubits land on patch boundaries in each instance,
+    # distributing boundary effects across the ensemble without reordering
+    # gates or applying explicit corrections.
+    maps     = []   # maps[inst][rcs_q] -> ace_q
+    inv_maps = []   # inv_maps[inst][ace_q] -> rcs_q
+    for inst in range(n_inst):
+        shift = inst * width // n_inst
+        fwd = [(q + shift) % width for q in range(width)]
+        inv = [0] * width
+        for rcs_q, ace_q in enumerate(fwd):
+            inv[ace_q] = rcs_q
+        maps.append(fwd)
+        inv_maps.append(inv)
+    return maps, inv_maps
 
 def calc_stats(ideal_probs, counts, n_pow, shots):
     u_u       = 1.0 / n_pow
@@ -77,6 +78,9 @@ def bench_qrack(width, depth, sdrp=0.0):
     # All four start from |0> and receive gates layer by layer.
     # -----------------------------------------------------------------------
     aces = [QrackAceBackend(width, long_range_columns=2) for _ in range(n_inst)]
+
+    # maps[inst][rcs_q] = ace_q,  inv_maps[inst][ace_q] = rcs_q
+    maps, inv_maps = _make_qubit_maps(width, n_inst)
     if "QRACK_QUNIT_SEPARABILITY_THRESHOLD" not in os.environ:
         for ace in aces:
             for sim in ace.sim:
@@ -101,17 +105,16 @@ def bench_qrack(width, depth, sdrp=0.0):
             c, t = shuffled.pop(), shuffled.pop()
             pairs.append((c, t))
 
-        # Apply single-qubit gates to all instances + ideal
+        # Apply gates via per-instance qubit permutation so patch
+        # boundaries fall on different RCS qubits in each instance.
         for i, th, ph, lm in layer_u:
-            for ace in aces:
-                ace.u(i, th, ph, lm)
+            for inst, ace in enumerate(aces):
+                ace.u(maps[inst][i], th, ph, lm)
             sim_ideal.u(i, th, ph, lm)
 
-        # Apply couplers with per-instance ordering to ACE;
-        # natural order to ideal
         for inst, ace in enumerate(aces):
-            for c, t in _order_pairs(pairs, inst):
-                ace.cx(c, t)
+            for c, t in pairs:
+                ace.cx(maps[inst][c], maps[inst][t])
         for c, t in pairs:
             sim_ideal.mcx([c], t)
 
@@ -152,11 +155,18 @@ def bench_qrack(width, depth, sdrp=0.0):
         #         elif avg_marginals[q] < (0.5 - epsilon) and marginals[inst, q] > (0.5 + epsilon):
         #             ace.x(q)
 
+        # Invert the qubit permutation on readout so all shots are in
+        # canonical RCS qubit ordering before pooling.
         pooled_counts = Counter()
         total_shots   = 0
         for inst, ace in enumerate(aces):
-            shots = ace.measure_shots(all_bits, n_shots)
-            pooled_counts.update(shots)
+            raw_shots = ace.measure_shots(all_bits, n_shots)
+            for raw in raw_shots:
+                canonical = 0
+                for ace_q in range(width):
+                    if (raw >> ace_q) & 1:
+                        canonical |= 1 << inv_maps[inst][ace_q]
+                pooled_counts[canonical] += 1
             total_shots += n_shots
 
         xeb_ace, hog_ace = calc_stats(ideal_probs, pooled_counts, n_pow, total_shots)
