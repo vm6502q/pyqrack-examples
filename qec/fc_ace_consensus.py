@@ -92,7 +92,7 @@ def bench_qrack(width, depth, trials=1):
     all_bits  = list(lcv_range)
 
     control      = AerSimulator(method="statevector")
-    noise_dummy  = AceQasmSimulator(n_qubits=width, long_range_columns=2)
+    noise_dummy  = AceQasmSimulator(n_qubits=width, long_range_columns=2, long_range_rows=2)
     col_len, row_len = factor_width(width)
     maps, inv_maps = _make_qubit_maps(width, row_len, n_inst)
 
@@ -100,13 +100,6 @@ def bench_qrack(width, depth, trials=1):
 
     for trial in range(trials):
         t_trial = time.perf_counter()
-
-        # Fresh ACE instances each trial
-        aces = [QrackAceBackend(width, long_range_columns=2) for _ in range(n_inst)]
-        if "QRACK_QUNIT_SEPARABILITY_THRESHOLD" not in os.environ:
-            for ace in aces:
-                for sim in ace.sim:
-                    sim.set_sdrp(0.03)
 
         # Build full circuit incrementally, one layer at a time
         full_circ = QuantumCircuit(width)
@@ -147,7 +140,7 @@ def bench_qrack(width, depth, trials=1):
             pooled = Counter()
             total_shots = 0
 
-            for inst, ace in enumerate(aces):
+            for inst in range(n_inst):
                 # Build permuted circuit directly — no pre-transpile needed
                 # since run_qiskit_circuit handles u and cx natively.
                 pcirc = QuantumCircuit(width)
@@ -163,7 +156,7 @@ def bench_qrack(width, depth, trials=1):
                                      basis_gates=list(noise_dummy.DEFAULT_CONFIGURATION['basis_gates']))
 
                 # Fresh instance for each depth (top-to-bottom replay)
-                ace_inst = QrackAceBackend(width)
+                ace_inst = QrackAceBackend(width, long_range_columns=2, long_range_rows=2)
                 if "QRACK_QUNIT_SEPARABILITY_THRESHOLD" not in os.environ:
                     for sim in ace_inst.sim:
                         sim.set_sdrp(0.03)
