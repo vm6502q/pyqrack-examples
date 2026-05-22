@@ -112,9 +112,10 @@ def bench_qrack(width, depth, sdrp=0.0):
         t = k & 1
         k = ((k >> 1) | tm) if t else (k >> 1)
         ace_counts[0][k] = ace_counts[0].get(k, 0) + v
+    tm = width - 2
     for k, v in ace_counts[2].items():
         t = k & 3
-        k = ((k >> 2) | (t << (width - 2))) if t else (k >> 2)
+        k = (k >> 2) | (t << tm)
         ace_counts[0][k] = ace_counts[0].get(k, 0) + v
 
     xeb_ace, hog_ace = calc_stats(ideal_probs, ace_counts[0], shots * n_inst)
