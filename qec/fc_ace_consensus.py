@@ -102,7 +102,7 @@ def bench_qrack(width, depth, trials=1):
         t_trial = time.perf_counter()
 
         # Fresh ACE instances each trial
-        aces = [QrackAceBackend(width) for _ in range(n_inst)]
+        aces = [QrackAceBackend(width, long_range_columns=2) for _ in range(n_inst)]
         if "QRACK_QUNIT_SEPARABILITY_THRESHOLD" not in os.environ:
             for ace in aces:
                 for sim in ace.sim:
