@@ -42,6 +42,7 @@ def factor_width(width, is_transpose=False):
 
     return (row_len, col_len) if is_transpose else (col_len, row_len)
 
+
 def _make_qubit_maps(width, row_len, n_inst):
     maps     = []
     inv_maps = []
@@ -160,7 +161,6 @@ def bench_qrack(width, depth, trials=1):
                         pcirc.cx(qidxs[0], qidxs[1])
                 circ_ace = transpile(pcirc, optimization_level=3,
                                      basis_gates=list(noise_dummy.DEFAULT_CONFIGURATION['basis_gates']))
-                circ_ace.measure_all()
 
                 # Fresh instance for each depth (top-to-bottom replay)
                 ace_inst = QrackAceBackend(width)
@@ -208,7 +208,7 @@ def bench_qrack(width, depth, trials=1):
 def main():
     if len(sys.argv) < 3:
         raise RuntimeError(
-            "Usage: python3 fc_ace_consensus_qiskit.py [width] [depth] [trials=1]")
+            "Usage: python3 fc_ace_consensus.py [width] [depth] [trials=1]")
     width  = int(sys.argv[1])
     depth  = int(sys.argv[2])
     trials = int(sys.argv[3]) if len(sys.argv) > 3 else 1
