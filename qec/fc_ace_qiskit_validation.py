@@ -55,7 +55,6 @@ def bench_qrack(width, depth, trials):
                 circ.cx(c, t)
 
             circ_qrack = transpile(circ, optimization_level=3, backend=noise_dummy)
-            circ_qrack.measure_all()
             experiment.run_qiskit_circuit(circ_qrack)
             experiment_counts = dict(Counter(experiment.measure_shots(all_bits, shots)))
 
