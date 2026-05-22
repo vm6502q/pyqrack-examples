@@ -77,7 +77,7 @@ def calc_stats(ideal_probs, counts, depth, shots):
     xeb      = numer / denom if denom else 0.0
     p_val    = (1 - binom.cdf(sum_hog - 1, shots, 0.5)) if sum_hog > 0 else 1.0
     return {"qubits": n, "depth": depth,
-            "xeb": xeb, "hog_prob": hog_prob, "p-value": p_val}
+            "xeb": float(xeb), "hog_prob": hog_prob, "p-value": float(p_val)}
 
 
 # ---------------------------------------------------------------------------
