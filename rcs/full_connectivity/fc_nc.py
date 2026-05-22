@@ -17,7 +17,7 @@ def bench_qrack(width, depth):
     start = time.perf_counter()
 
     experiment = QrackSimulator(
-        width, isSchmidtDecompose=False, isStabilizerHybrid=True
+        width, is_near_clifford_tableau_writer=True
     )
 
     for _ in range(depth):

@@ -40,7 +40,7 @@ def bench_qrack(width, depth, sdrp=0.0):
     u_u          = 1.0 / n_pow
 
     # -----------------------------------------------------------------------
-    # Build circuit once in Qiskit + quimb MPS from same RNG
+    # Build circuit once in Qiskit
     # -----------------------------------------------------------------------
     t_circ = time.perf_counter()
     qc      = [QuantumCircuit(width) for _ in range(n_inst)]
