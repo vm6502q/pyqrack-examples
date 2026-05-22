@@ -34,11 +34,19 @@ from qiskit.quantum_info import Statevector
 # Qubit permutation maps
 # ---------------------------------------------------------------------------
 
-def _make_qubit_maps(width, n_inst):
+def factor_width(width, is_transpose=False):
+    col_len = math.floor(math.sqrt(width))
+    while ((width // col_len) * col_len) != width:
+        col_len -= 1
+    row_len = width // col_len
+
+    return (row_len, col_len) if is_transpose else (col_len, row_len)
+
+def _make_qubit_maps(width, row_len, n_inst):
     maps     = []
     inv_maps = []
     for inst in range(n_inst):
-        shift = inst * width // n_inst
+        shift = inst + inst * row_len
         fwd = [(q + shift) % width for q in range(width)]
         inv = [0] * width
         for rcs_q, ace_q in enumerate(fwd):
@@ -84,7 +92,8 @@ def bench_qrack(width, depth, trials=1):
 
     control      = AerSimulator(method="statevector")
     noise_dummy  = AceQasmSimulator(n_qubits=width, long_range_columns=2)
-    maps, inv_maps = _make_qubit_maps(width, n_inst)
+    col_len, row_len = factor_width(width)
+    maps, inv_maps = _make_qubit_maps(width, row_len, n_inst)
 
     results = []
 
