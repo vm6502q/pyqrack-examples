@@ -43,31 +43,34 @@ def bench_qrack(width, depth, sdrp=0.0):
     # Build circuit once in Qiskit + quimb MPS from same RNG
     # -----------------------------------------------------------------------
     t_circ = time.perf_counter()
-    qc      = QuantumCircuit(width)
+    qc      = [QuantumCircuit(width) for _ in range(n_inst)]
 
-    rng_state = random.getstate()
     for _ in range(depth):
         for i in lcv_range:
             th, ph, lm = (random.uniform(0, 2*math.pi) for _ in range(3))
-            qc.u(th, ph, lm, i)
+            for c in qc:
+                c.u(th, ph, lm, i)
         shuffled = all_bits[:]
         random.shuffle(shuffled)
+        cl = []
         while len(shuffled) > 1:
-            c, t = shuffled.pop(), shuffled.pop()
-            qc.cx(c, t)
+            cl.append((shuffled.pop(), shuffled.pop()))
+        for c in qc:
+            random.shuffle(cl)
+            for g in cl:
+                c.cx(g[0], g[1])
 
     # -----------------------------------------------------------------------
     # Ideal ground truth
     # -----------------------------------------------------------------------
     sim_ideal = QrackSimulator(width)
-    random.setstate(rng_state)
-    sim_ideal.run_qiskit_circuit(qc, shots=0)
+    sim_ideal.run_qiskit_circuit(qc[0], shots=0)
     ideal_probs = np.asarray(sim_ideal.out_probs(), dtype=np.float64)
     del sim_ideal
 
     t_ideal = time.perf_counter()
 
-    print(f"mps_circuit_seconds: {t_ideal - t_circ}")
+    print(f"qrack_circuit_seconds: {t_ideal - t_circ}")
 
     # -----------------------------------------------------------------------
     # Method: ACE prob_perm over full Hilbert space.
@@ -78,12 +81,11 @@ def bench_qrack(width, depth, sdrp=0.0):
     # -----------------------------------------------------------------------
     ace_sims = []
     for inst in range(n_inst):
-        random.setstate(rng_state)
         sim = QrackSimulator(width)
         if sdrp > 0.0:
             sim.set_sdrp(sdrp)
         sim.set_ace_max_qb((width + 1) >> 1)
-        sim.run_qiskit_circuit(qc, shots=0)
+        sim.run_qiskit_circuit(qc[inst], shots=0)
         ace_sims.append(sim)
 
     q_bits = list(range(width))

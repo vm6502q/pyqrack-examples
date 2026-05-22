@@ -54,11 +54,10 @@ def bench_qrack(width, depth, trials):
                 t = unused_bits.pop()
                 circ.cx(c, t)
 
-            circ_qrack = transpile(circ, optimization_level=3, backend=noise_dummy)
-            experiment.run_qiskit_circuit(circ_qrack)
+            experiment.run_qiskit_circuit(circ)
             experiment_counts = dict(Counter(experiment.measure_shots(all_bits, shots)))
 
-            circ_aer = transpile(circ, optimization_level=3, backend=control)
+            circ_aer = circ.copy()
             circ_aer.save_statevector()
             job = control.run(circ_aer)
             control_probs = Statevector(job.result().get_statevector()).probabilities()
