@@ -124,52 +124,72 @@ def bench_qrack(width, depth, sdrp=0.0, chi=None):
     # Build circuit once in Qiskit + quimb MPS from same RNG
     # -----------------------------------------------------------------------
     t_circ = time.perf_counter()
-    qc      = QuantumCircuit(width)
+    qc      = [QuantumCircuit(width) for _ in range(n_inst)]
     mps_sim = tn.CircuitMPS(width, max_bond=chi, to_backend=jnp.array)
+
+    for _ in range(depth):
+        for i in lcv_range:
+            th, ph, lm = (random.uniform(0, 2*math.pi) for _ in range(3))
+            for c in qc:
+                c.u(th, ph, lm, i)
+        shuffled = all_bits[:]
+        random.shuffle(shuffled)
+        cl = []
+        while len(shuffled) > 1:
+            cl.append((shuffled.pop(), shuffled.pop()))
+        for c in qc:
+            random.shuffle(cl)
+            for g in cl:
+                c.cx(g[0], g[1])
 
     rng_state = random.getstate()
     for _ in range(depth):
         for i in lcv_range:
             th, ph, lm = (random.uniform(0, 2*math.pi) for _ in range(3))
-            qc.u(th, ph, lm, i)
             mps_sim.apply_gate('U3', th, ph, lm, i)
+            for c in qc:
+                c.u(th, ph, lm, i)
         shuffled = all_bits[:]
         random.shuffle(shuffled)
+        cl = []
         while len(shuffled) > 1:
             c, t = shuffled.pop(), shuffled.pop()
-            qc.cx(c, t)
+            cl.append((c, t))
             mps_sim.apply_gate('CX', c, t)
+        for c in qc:
+            random.shuffle(cl)
+            for g in cl:
+                c.cx(g[0], g[1])
 
     t_ideal = time.perf_counter()
     print(f"mps_circuit_seconds: {t_ideal - t_circ}")
-
-    # -----------------------------------------------------------------------
-    # ACE consensus instances (two orthogonal coupler orderings)
-    # -----------------------------------------------------------------------
-    def _order_pairs(pairs, inst):
-        k = len(pairs)
-        if k == 0 or inst == 0: return pairs
-        return [pairs[i] for i in range(1, k, 2)] +                [pairs[i] for i in range(0, k, 2)]
-
-    ace_sims = []
-    for inst in range(n_inst):
-        random.setstate(rng_state)
-        sim = QrackSimulator(width)
-        sim.set_ace_max_qb((width + 1) >> 1)
-        sim.run_qiskit_circuit(qc, shots=0)
-        ace_sims.append(sim)
 
     # -----------------------------------------------------------------------
     # Ideal ground truth
     # -----------------------------------------------------------------------
     sim_ideal = QrackSimulator(width)
     random.setstate(rng_state)
-    sim_ideal.run_qiskit_circuit(qc, shots=0)
+    sim_ideal.run_qiskit_circuit(qc[0], shots=0)
     ideal_probs = np.asarray(sim_ideal.out_probs(), dtype=np.float64)
     del sim_ideal
 
+    t_ace = time.perf_counter()
+    print(f"ideal_seconds: {t_ace - t_ideal}")
+
+    # -----------------------------------------------------------------------
+    # ACE consensus instances (two orthogonal coupler orderings)
+    # -----------------------------------------------------------------------
+    ace_sims = []
+    for inst in range(n_inst):
+        sim = QrackSimulator(width)
+        if sdrp > 0.0:
+            sim.set_sdrp(sdrp)
+        sim.set_ace_max_qb((width + 1) >> 1)
+        sim.run_qiskit_circuit(qc[inst], shots=0)
+        ace_sims.append(sim)
+
     t_start = time.perf_counter()
-    print(f"ideal_seconds: {t_start - t_ideal}")
+    print(f"ace_seconds: {t_start - t_ace}")
 
     # -----------------------------------------------------------------------
     # Prefix-maximizing MPS sieve via trie.
