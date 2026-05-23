@@ -152,6 +152,9 @@ def bench_qrack(width, depth, sdrp=0.0):
 
     row_len, col_len = factor_width(width)
 
+    offset_1 = (row_len + n_inst - 1) // n_inst
+    offset_2 = (row_len + (row_len + n_inst - 1) // n_inst)
+
     results = []
 
     for _ in range(depth):
@@ -161,8 +164,8 @@ def bench_qrack(width, depth, sdrp=0.0):
             ph = random.uniform(0, 2 * math.pi)
             lm = random.uniform(0, 2 * math.pi)
             qc[0].u(th, ph, lm, i)
-            qc[1].u(th, ph, lm, (i + 1) % width)
-            qc[2].u(th, ph, lm, (i + 2) % width)
+            qc[1].u(th, ph, lm, (i + offset_1) % width)
+            qc[2].u(th, ph, lm, (i + offset_2) % width)
 
         # Nearest-neighbor couplers:
         ############################
@@ -192,8 +195,8 @@ def bench_qrack(width, depth, sdrp=0.0):
 
                 g = random.choice(two_bit_gates)
                 g(qc[0], b1, b2)
-                g(qc[1], (b1 + 1) % width, (b2 + 1) % width)
-                g(qc[2], (b1 + 2) % width, (b2 + 2) % width)
+                g(qc[1], (b1 + offset_1) % width, (b2 + offset_1) % width)
+                g(qc[2], (b1 + offset_2) % width, (b2 + offset_2) % width)
 
     # -----------------------------------------------------------------------
     # Ideal ground truth
