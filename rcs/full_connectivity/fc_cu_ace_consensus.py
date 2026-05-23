@@ -54,12 +54,14 @@ def bench_qrack(width, depth, sdrp=0.0):
         random.shuffle(shuffled)
         cl = []
         while len(shuffled) > 1:
-            cl.append(((shuffled.pop(), shuffled.pop()), [random.uniform(0, 2*math.pi) for _ in range(4)]))
+            # cl.append(((shuffled.pop(), shuffled.pop()), [random.uniform(0, 2*math.pi) for _ in range(4)]))
+            cl.append((random.uniform(0, 2*math.pi), shuffled.pop(), shuffled.pop()))
         for c in qc:
             random.shuffle(cl)
             for g in cl:
-                b, p = g
-                c.cu(p[0], p[1], p[2], p[3], b[0], b[1])
+                # b, p = g
+                # c.cu(p[0], p[1], p[2], p[3], b[0], b[1])
+                c.cu(g[0], 0, 0, 0, g[1], g[2])
 
     # -----------------------------------------------------------------------
     # Ideal ground truth
