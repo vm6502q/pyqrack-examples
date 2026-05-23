@@ -50,7 +50,7 @@ def calc_stats(ideal_probs, exp_probs, n_pow):
 def bench_qrack(width, depth, sdrp=0.0):
     lcv_range    = range(width)
     all_bits     = list(lcv_range)
-    n_inst       = 2
+    n_inst       = 4
     n_pow        = 1 << width
     u_u          = 1.0 / n_pow
 
