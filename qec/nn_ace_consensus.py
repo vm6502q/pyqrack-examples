@@ -153,7 +153,7 @@ def bench_qrack(width, depth, sdrp=0.0):
     row_len, col_len = factor_width(width)
 
     offset_1 = (row_len + n_inst - 1) // n_inst
-    offset_2 = (row_len + (row_len + n_inst - 1) // n_inst)
+    offset_2 = row_len + (row_len + n_inst - 1) // n_inst
 
     results = []
 
