@@ -145,6 +145,7 @@ def bench_qrack(width, depth, sdrp=0.0):
     return {
         "width":         width,
         "depth":         depth,
+        "sdrp":          sdrp,
         "xeb_ace":       xeb_ace,
         "hog_ace":       hog_ace,
     }
@@ -157,10 +158,10 @@ def bench_qrack(width, depth, sdrp=0.0):
 def main():
     if len(sys.argv) < 3:
         raise RuntimeError(
-            "Usage: python3 fc_ace.py [width] [depth] [sdrp=0]")
+            "Usage: python3 fc_ace.py [width] [depth] [sdrp=0.1464466]")
     width = int(sys.argv[1])
     depth = int(sys.argv[2])
-    sdrp  = float(sys.argv[3]) if len(sys.argv) > 3 else 0.0
+    sdrp  = float(sys.argv[3]) if len(sys.argv) > 3 else ((1 - 1 / math.sqrt(2)) / 2)
     result = bench_qrack(width, depth, sdrp)
     for k, v in result.items():
         print(f"  {k}: {v}")
