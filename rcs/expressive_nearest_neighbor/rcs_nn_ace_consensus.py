@@ -101,13 +101,11 @@ def nswap(sim, q1, q2):
 
 def calc_stats(ideal_probs, exp_probs, n_pow):
     u_u   = 1.0 / n_pow
-    model = 0.5
-    exp_mixed = (1.0 - model) * exp_probs + model * u_u
     p_c   = ideal_probs - u_u
     q_c   = exp_probs   - u_u
     denom = float(np.dot(p_c, p_c))
     xeb   = float(np.dot(p_c, q_c)) / denom if denom > 0 else 0.0
-    hog   = float(exp_mixed[ideal_probs > float(np.median(ideal_probs))].sum())
+    hog   = float(exp_probs[ideal_probs > float(np.median(ideal_probs))].sum())
     return xeb, hog
 
 
