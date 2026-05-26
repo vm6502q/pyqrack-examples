@@ -86,12 +86,15 @@ def bench_qrack(width, depth, sdrp=0.0):
         sim.run_qiskit_circuit(qc[inst], shots=0)
         ace_sims.append(sim)
 
-    q_bits = list(range(width))
     ace_probs = np.empty(n_pow, dtype=np.float64)
-    for outcome in range(n_pow):
-        bits  = [(outcome >> b) & 1 for b in range(width)]
-        ace_probs[outcome] = sum(s.prob_perm(q_bits, bits) for s in ace_sims) / n_inst
-    for s in ace_sims: del s
+    for inst in ace_sims:
+        ace_probs += np.array(inst.out_probs())
+
+    # q_bits = list(range(width))
+    # for outcome in range(n_pow):
+        # It's possible to access every amplitude without materializing the state vector:
+        # bits  = [(outcome >> b) & 1 for b in range(width)]
+        # ace_probs[outcome] = sum(s.prob_perm(q_bits, bits) for s in ace_sims) / n_inst
 
     xeb_ace, hog_ace = calc_stats(ideal_probs, ace_probs, n_pow)
 
