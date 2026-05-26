@@ -89,6 +89,7 @@ def bench_qrack(width, depth, sdrp=0.0):
     ace_probs = np.empty(n_pow, dtype=np.float64)
     for inst in ace_sims:
         ace_probs += np.array(inst.out_probs())
+    ace_probs /= n_inst
 
     # q_bits = list(range(width))
     # for outcome in range(n_pow):
