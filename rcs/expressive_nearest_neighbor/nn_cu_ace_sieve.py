@@ -162,7 +162,7 @@ def bench_qrack(width, depth, sdrp=0.0, trials=1):
                     if random.randint(0, 1):
                         b1, b2 = b2, b1
 
-                    cl.append(((b1, b2), [random.uniform(0, 2*math.pi) for _ in range(4)]))
+                    cl.append(((b1, b2), [random.uniform(0, 2 * math.pi) for _ in range(4)]))
 
             for c in qc:
                 random.shuffle(cl)
@@ -256,6 +256,9 @@ def bench_qrack(width, depth, sdrp=0.0, trials=1):
             results["hog_ace"]      += hog
         else:
             trials -= 1
+
+    if trials == 0:
+        raise ZeroDivisionError("ERROR: No trials produced finite XEB and HOG!")
 
     results["n_candidates"]  /= trials
     results["xeb_ace"]       /= trials

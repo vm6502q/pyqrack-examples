@@ -125,6 +125,9 @@ def bench_qrack(width, depth, sdrp=0.0, trials=1):
         else:
             trials -= 1
 
+    if trials == 0:
+        raise ZeroDivisionError("ERROR: No trials produced finite XEB and HOG!")
+
     results["xeb_ace"] /= trials
     results["hog_ace"] /= trials
 
