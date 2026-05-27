@@ -93,6 +93,9 @@ def bench_qrack(width, depth, sdrp=0.0):
                 if (b1 >= width) or (b2 >= width):
                     continue
 
+                if random.randint(0, 1):
+                    b1, b2 = b2, b1
+
                 cl.append(((b1, b2), [random.uniform(0, 2*math.pi) for _ in range(4)]))
 
         for c in qc:

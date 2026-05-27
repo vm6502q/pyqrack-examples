@@ -19,6 +19,21 @@ from pyqrack import QrackSimulator
 
 
 # ---------------------------------------------------------------------------
+# Geometry helper
+# ---------------------------------------------------------------------------
+
+def factor_width(width):
+    col_len = math.floor(math.sqrt(width))
+    while ((width // col_len) * col_len) != width:
+        col_len -= 1
+    row_len = width // col_len
+    if col_len == 1:
+        raise Exception("ERROR: Can't simulate prime number width!")
+
+    return (row_len, col_len)
+
+
+# ---------------------------------------------------------------------------
 # Statistics (sparse heavy/light representation)
 # ---------------------------------------------------------------------------
 
@@ -99,17 +114,46 @@ def bench_qrack(width, depth, sdrp=0.0):
     t_circ = time.perf_counter()
     qc = [QuantumCircuit(width) for _ in range(n_inst)]
 
+    # Nearest-neighbor couplers:
+    gateSequence = [0, 3, 2, 1, 2, 1, 0, 3]
+    row_len, col_len = factor_width(width)
+
     for _ in range(depth):
         for i in lcv_range:
-            th, ph, lm = (random.uniform(0, 2 * math.pi) for _ in range(3))
+            th, ph, lm = (random.uniform(0, 2*math.pi) for _ in range(3))
             for c in qc:
                 c.u(th, ph, lm, i)
-        shuffled = all_bits[:]
-        random.shuffle(shuffled)
+
+        gate = gateSequence.pop(0)
+        gateSequence.append(gate)
         cl = []
-        while len(shuffled) > 1:
-            cl.append(((shuffled.pop(), shuffled.pop()),
-                       [random.uniform(0, 2 * math.pi) for _ in range(4)]))
+        for row in range(1, row_len, 2):
+            for col in range(col_len):
+                temp_row = row
+                temp_col = col
+                temp_row = temp_row + (1 if (gate & 2) else -1)
+                temp_col = temp_col + (1 if (gate & 1) else 0)
+
+                if temp_row < 0:
+                    temp_row = temp_row + row_len
+                if temp_col < 0:
+                    temp_col = temp_col + col_len
+                if temp_row >= row_len:
+                    temp_row = temp_row - row_len
+                if temp_col >= col_len:
+                    temp_col = temp_col - col_len
+
+                b1 = row * row_len + col
+                b2 = temp_row * row_len + temp_col
+
+                if (b1 >= width) or (b2 >= width):
+                    continue
+
+                if random.randint(0, 1):
+                    b1, b2 = b2, b1
+
+                cl.append(((b1, b2), [random.uniform(0, 2*math.pi) for _ in range(4)]))
+
         for c in qc:
             random.shuffle(cl)
             for g in cl:
