@@ -271,11 +271,11 @@ def bench_qrack(width, depth, sdrp=0.0, trials=1):
 def main():
     if len(sys.argv) < 3:
         raise RuntimeError(
-            "Usage: python3 nn_cu_ace_sieve.py [width] [depth] [sdrp=0] [trials=1]")
+            "Usage: python3 nn_cu_ace_sieve.py [width] [depth] [trials=1] [sdrp=0.146466]")
     width = int(sys.argv[1])
     depth = int(sys.argv[2])
-    sdrp  = float(sys.argv[3]) if len(sys.argv) > 3 else 0.0  # ((1 - 1 / math.sqrt(2)) / 2)
-    trials = int(sys.argv[4]) if len(sys.argv) > 4 else 1
+    trials = int(sys.argv[3]) if len(sys.argv) > 3 else 1
+    sdrp  = float(sys.argv[4]) if len(sys.argv) > 4 else ((1 - 1 / math.sqrt(2)) / 2)
     result = bench_qrack(width, depth, sdrp, trials)
     for k, v in result.items():
         print(f"  {k}: {v}")
