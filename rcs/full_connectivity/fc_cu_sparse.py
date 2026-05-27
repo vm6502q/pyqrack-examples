@@ -46,11 +46,6 @@ def bench_qrack(width, depth, sdrp=0.0, trials=1):
         "hog_ace":       0.0,
     }
 
-    # Number of candidate outcomes to probe via the sieve.
-    # width**2 keeps cost polynomial; sqrt(n_pow) is the natural "heavy
-    # output" count for a Porter-Thomas distributed circuit.
-    n_candidates = max(width ** 2, int(math.sqrt(n_pow) + 0.5))
-
     for _ in range(trials):
         # -----------------------------------------------------------------------
         # Build n_inst independent random circuits (same single-qubit angles,

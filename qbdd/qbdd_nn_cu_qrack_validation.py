@@ -13,6 +13,21 @@ from pyqrack import QrackSimulator
 
 
 # ---------------------------------------------------------------------------
+# Geometry helper
+# ---------------------------------------------------------------------------
+
+def factor_width(width):
+    col_len = math.floor(math.sqrt(width))
+    while ((width // col_len) * col_len) != width:
+        col_len -= 1
+    row_len = width // col_len
+    if col_len == 1:
+        raise Exception("ERROR: Can't simulate prime number width!")
+
+    return (row_len, col_len)
+
+
+# ---------------------------------------------------------------------------
 # Statistics
 # ---------------------------------------------------------------------------
 
@@ -33,7 +48,7 @@ def calc_stats(ideal_probs, exp_probs, n_pow):
 def bench_qrack(width, depth, sdrp=0.0, trials=1):
     lcv_range    = range(width)
     all_bits     = list(lcv_range)
-    n_inst       = 4
+    n_inst       = 1
     n_pow        = 1 << width
     u_u          = 1.0 / n_pow
 
@@ -46,6 +61,15 @@ def bench_qrack(width, depth, sdrp=0.0, trials=1):
         "hog_ace":       0.0,
     }
 
+    # Number of candidate outcomes to probe via the sieve.
+    # width**2 keeps cost polynomial; sqrt(n_pow) is the natural "heavy
+    # output" count for a Porter-Thomas distributed circuit.
+    n_candidates = max(width ** 2, int(math.sqrt(n_pow) + 0.5))
+
+    # Nearest-neighbor couplers:
+    gateSequence = [0, 3, 2, 1, 2, 1, 0, 3]
+    row_len, col_len = factor_width(width)
+
     for _ in range(trials):
         # -----------------------------------------------------------------------
         # Build n_inst independent random circuits (same single-qubit angles,
@@ -56,15 +80,40 @@ def bench_qrack(width, depth, sdrp=0.0, trials=1):
 
         for _ in range(depth):
             for i in lcv_range:
-                th, ph, lm = (random.uniform(0, 2 * math.pi) for _ in range(3))
+                th, ph, lm = (random.uniform(0, 2*math.pi) for _ in range(3))
                 for c in qc:
                     c.u(th, ph, lm, i)
-            shuffled = all_bits[:]
-            random.shuffle(shuffled)
+
+            gate = gateSequence.pop(0)
+            gateSequence.append(gate)
             cl = []
-            while len(shuffled) > 1:
-                cl.append(((shuffled.pop(), shuffled.pop()),
-                           [random.uniform(0, 2 * math.pi) for _ in range(4)]))
+            for row in range(1, row_len, 2):
+                for col in range(col_len):
+                    temp_row = row
+                    temp_col = col
+                    temp_row = temp_row + (1 if (gate & 2) else -1)
+                    temp_col = temp_col + (1 if (gate & 1) else 0)
+
+                    if temp_row < 0:
+                        temp_row = temp_row + row_len
+                    if temp_col < 0:
+                        temp_col = temp_col + col_len
+                    if temp_row >= row_len:
+                        temp_row = temp_row - row_len
+                    if temp_col >= col_len:
+                        temp_col = temp_col - col_len
+
+                    b1 = row * row_len + col
+                    b2 = temp_row * row_len + temp_col
+
+                    if (b1 >= width) or (b2 >= width):
+                        continue
+
+                    if random.randint(0, 1):
+                        b1, b2 = b2, b1
+
+                    cl.append(((b1, b2), [random.uniform(0, 2*math.pi) for _ in range(4)]))
+
             for c in qc:
                 random.shuffle(cl)
                 for g in cl:
@@ -93,10 +142,9 @@ def bench_qrack(width, depth, sdrp=0.0, trials=1):
         # -----------------------------------------------------------------------
         ace_sims = []
         for inst in range(n_inst):
-            sim = QrackSimulator(width)
+            sim = QrackSimulator(width, is_binary_decision_tree=True)
             if sdrp > 0.0:
                 sim.set_sdrp(sdrp)
-            sim.set_ace_max_qb((width + 1) >> 1)
             sim.run_qiskit_circuit(qc[inst], shots=0)
             ace_sims.append(sim)
 
@@ -139,11 +187,11 @@ def bench_qrack(width, depth, sdrp=0.0, trials=1):
 def main():
     if len(sys.argv) < 3:
         raise RuntimeError(
-            "Usage: python3 fc_ace_consensus.py [width] [depth] [trials=1] [sdrp=0.146466]")
+            "Usage: python3 fc_ace_consensus.py [width] [depth] [trials=1] [sdrp=0.0]")
     width = int(sys.argv[1])
     depth = int(sys.argv[2])
     trials = int(sys.argv[3]) if len(sys.argv) > 3 else 1
-    sdrp  = float(sys.argv[4]) if len(sys.argv) > 4 else ((1 - 1 / math.sqrt(2)) / 2)
+    sdrp  = float(sys.argv[4]) if len(sys.argv) > 4 else 0.0
     result = bench_qrack(width, depth, sdrp, trials)
     for k, v in result.items():
         print(f"  {k}: {v}")
