@@ -94,7 +94,6 @@ def bench_qrack(width, depth, sdrp=0.0, trials=1):
         "n_candidates":  0.0,
         "xeb_ace":       0.0,
         "hog_ace":       0.0,
-        "xeb_ace_floor": 0.0,
     }
 
     # Number of candidate outcomes to probe via the sieve.
@@ -211,15 +210,12 @@ def bench_qrack(width, depth, sdrp=0.0, trials=1):
             results["n_candidates"] += len(candidates)
             results["xeb_ace"]      += xeb
             results["hog_ace"]      += hog
-            if xeb > 0.0:
-                results["xeb_ace_floor"] += xeb
         else:
             trials -= 1
 
     results["n_candidates"]  /= trials
     results["xeb_ace"]       /= trials
     results["hog_ace"]       /= trials
-    results["xeb_ace_floor"] /= trials
 
     return results
 
