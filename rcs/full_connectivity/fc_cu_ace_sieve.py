@@ -1,4 +1,4 @@
-# Nearest-neighbor RCS: ACE consensus sieve for heavy outputs.
+# Fully-connected RCS: ACE consensus sieve for heavy outputs.
 #
 # Candidate outcomes are drawn by sampling. Each candidate's
 # probability is estimated solely as the average prob_perm across n_inst
@@ -16,21 +16,6 @@ import time
 import numpy as np
 from qiskit import QuantumCircuit
 from pyqrack import QrackSimulator
-
-
-# ---------------------------------------------------------------------------
-# Geometry helper
-# ---------------------------------------------------------------------------
-
-def factor_width(width):
-    col_len = math.floor(math.sqrt(width))
-    while ((width // col_len) * col_len) != width:
-        col_len -= 1
-    row_len = width // col_len
-    if col_len == 1:
-        raise Exception("ERROR: Can't simulate prime number width!")
-
-    return (row_len, col_len)
 
 
 # ---------------------------------------------------------------------------
@@ -115,10 +100,6 @@ def bench_qrack(width, depth, sdrp=0.0, trials=1):
     # output" count for a Porter-Thomas distributed circuit.
     n_candidates = max(width ** 2, int(math.sqrt(n_pow) + 0.5))
 
-    # Nearest-neighbor couplers:
-    gateSequence = [0, 3, 2, 1, 2, 1, 0, 3]
-    row_len, col_len = factor_width(width)
-
     for _ in range(trials):
         # -----------------------------------------------------------------------
         # Build n_inst independent random circuits (same single-qubit angles,
@@ -129,40 +110,15 @@ def bench_qrack(width, depth, sdrp=0.0, trials=1):
 
         for _ in range(depth):
             for i in lcv_range:
-                th, ph, lm = (random.uniform(0, 2*math.pi) for _ in range(3))
+                th, ph, lm = (random.uniform(0, 2 * math.pi) for _ in range(3))
                 for c in qc:
                     c.u(th, ph, lm, i)
-
-            gate = gateSequence.pop(0)
-            gateSequence.append(gate)
+            shuffled = all_bits[:]
+            random.shuffle(shuffled)
             cl = []
-            for row in range(1, row_len, 2):
-                for col in range(col_len):
-                    temp_row = row
-                    temp_col = col
-                    temp_row = temp_row + (1 if (gate & 2) else -1)
-                    temp_col = temp_col + (1 if (gate & 1) else 0)
-
-                    if temp_row < 0:
-                        temp_row = temp_row + row_len
-                    if temp_col < 0:
-                        temp_col = temp_col + col_len
-                    if temp_row >= row_len:
-                        temp_row = temp_row - row_len
-                    if temp_col >= col_len:
-                        temp_col = temp_col - col_len
-
-                    b1 = row * row_len + col
-                    b2 = temp_row * row_len + temp_col
-
-                    if (b1 >= width) or (b2 >= width):
-                        continue
-
-                    if random.randint(0, 1):
-                        b1, b2 = b2, b1
-
-                    cl.append(((b1, b2), [random.uniform(0, 2*math.pi) for _ in range(4)]))
-
+            while len(shuffled) > 1:
+                cl.append(((shuffled.pop(), shuffled.pop()),
+                           [random.uniform(0, 2 * math.pi) for _ in range(4)]))
             for c in qc:
                 random.shuffle(cl)
                 for g in cl:
@@ -270,7 +226,7 @@ def bench_qrack(width, depth, sdrp=0.0, trials=1):
 def main():
     if len(sys.argv) < 3:
         raise RuntimeError(
-            "Usage: python3 nn_cu_ace_sieve.py [width] [depth] [sdrp=0] [trials=1]")
+            "Usage: python3 fc_ace_sieve.py [width] [depth] [sdrp=0] [trials=1]")
     width = int(sys.argv[1])
     depth = int(sys.argv[2])
     sdrp  = float(sys.argv[3]) if len(sys.argv) > 3 else 0.0  # ((1 - 1 / math.sqrt(2)) / 2)
