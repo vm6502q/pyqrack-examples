@@ -134,6 +134,7 @@ def bench_qrack(width, depth, sdrp=0.0):
     # ACE consensus instances
     # -----------------------------------------------------------------------
     ace_sims = []
+    hp = set()
     for inst in range(n_inst):
         sim = QrackSimulator(width)
         if sdrp > 0.0:
@@ -141,6 +142,7 @@ def bench_qrack(width, depth, sdrp=0.0):
         sim.set_ace_max_qb((width + 1) >> 1)
         sim.run_qiskit_circuit(qc[inst], shots=0)
         ace_sims.append(sim)
+        hp.add(sim.highest_prob_perm())
 
     t_ace = time.perf_counter()
     print(f"ace_seconds: {t_ace - t_ideal}")
@@ -152,7 +154,7 @@ def bench_qrack(width, depth, sdrp=0.0):
     # Hilbert space with no prefix bias.  Each run explores a different
     # random subset, giving unbiased variance data across repeated calls.
     # -----------------------------------------------------------------------
-    candidates = random.sample(range(n_pow), min(n_candidates, n_pow))
+    candidates = list(hp) + random.sample(range(n_pow), min(max(0, n_candidates - len(hp)), n_pow))
 
     q_bits = list(range(width))
     ace_probs = {}
@@ -194,7 +196,7 @@ def main():
             "Usage: python3 fc_ace_sieve.py [width] [depth] [sdrp=0]")
     width = int(sys.argv[1])
     depth = int(sys.argv[2])
-    sdrp  = float(sys.argv[3]) if len(sys.argv) > 3 else 0.0  #((1 - 1 / math.sqrt(2)) / 2)
+    sdrp  = float(sys.argv[3]) if len(sys.argv) > 3 else 0.0  # ((1 - 1 / math.sqrt(2)) / 2)
     result = bench_qrack(width, depth, sdrp)
     for k, v in result.items():
         print(f"  {k}: {v}")
