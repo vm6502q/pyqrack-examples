@@ -1,10 +1,10 @@
 # Fully-connected RCS: ACE consensus sieve for heavy outputs.
 #
-# Candidate outcomes are drawn by uniform random selection. Each candidate's
+# Candidate outcomes are drawn by sampling. Each candidate's
 # probability is estimated solely as the average prob_perm across n_inst
 # ACE instances. Candidates are routed into heavy/light buckets relative
-# to the uniform distribution, and XEB / HOG are computed against a full
-# ideal Qrack simulation.
+# to the uniform distribution, mixed equally with raw ACE, and XEB / HOG
+# are computed against a full ideal Qrack simulation.
 #
 # By Dan Strano and (Anthropic) Claude.
 
@@ -44,7 +44,7 @@ def route_heavy_light(prob_dict, u_u):
     return heavy, light
 
 
-def calc_stats_sparse(ideal_probs, exp_probs_sparse, n_pow):
+def calc_stats_sparse(ideal_probs, exp_probs_sparse, exp_probs, n_pow):
     """
     Reconstruct a dense approximate distribution from the heavy/light split
     and compute XEB and HOG against ideal_probs.
@@ -65,8 +65,7 @@ def calc_stats_sparse(ideal_probs, exp_probs_sparse, n_pow):
     l_dense = np.zeros(n_pow, dtype=np.float64)
     for k, v in light.items():
         l_dense[k] = v
-
-    exp_mixed = 0.5 * h_dense + 0.5 * u_u * (1.0 - l_dense)
+    exp_mixed = 0.5 * (0.5 * (h_dense + u_u * (1.0 - l_dense)) + exp_probs)
 
     p_c   = ideal_probs - u_u
     q_c   = exp_mixed   - u_u
@@ -148,11 +147,10 @@ def bench_qrack(width, depth, sdrp=0.0):
     print(f"ace_seconds: {t_ace - t_ideal}")
 
     # -----------------------------------------------------------------------
-    # Uniform random sieve.
+    # Sampling sieve.
     #
-    # Draw n_candidates outcomes uniformly at random from the full 2^n
-    # Hilbert space with no prefix bias.  Each run explores a different
-    # random subset, giving unbiased variance data across repeated calls.
+    # Sample n_candidates outcomes from the full 2^n Hilbert space. Each run
+    # uses a different ACE cut, reducing biased variance across instances.
     # -----------------------------------------------------------------------
     shots = n_candidates - len(candidates)
     remainder = shots % n_inst
@@ -174,9 +172,6 @@ def bench_qrack(width, depth, sdrp=0.0):
         if p_ace > 0:
             ace_probs[idx] = p_ace
 
-    for s in ace_sims:
-        del s
-
     t_sieve = time.perf_counter()
     print(f"sieve_seconds: {t_sieve - t_ace}")
 
@@ -184,7 +179,16 @@ def bench_qrack(width, depth, sdrp=0.0):
     # Route into heavy / light and compute statistics
     # -----------------------------------------------------------------------
     sparse = route_heavy_light(ace_probs, u_u)
-    xeb, hog = calc_stats_sparse(ideal_probs, sparse, n_pow)
+
+    ace_probs = np.empty(n_pow, dtype=np.float64)
+    for inst in ace_sims:
+        ace_probs += np.array(inst.out_probs())
+    ace_probs /= n_inst
+
+    for s in ace_sims:
+        del s
+
+    xeb, hog = calc_stats_sparse(ideal_probs, sparse, ace_probs, n_pow)
 
     return {
         "width":        width,
