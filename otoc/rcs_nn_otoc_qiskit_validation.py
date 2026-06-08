@@ -131,7 +131,7 @@ def bench_qrack(width, depth, cycles, is_sparse):
         otoc &= rcs.inverse()
 
 
-    experiment = QrackSimulator(width, isSparse=is_sparse, isOpenCL=not is_sparse)
+    experiment = QrackSimulator(width, is_sparse=is_sparse)
     experiment.set_ace_max_qb(ace_qb)
     experiment.run_qiskit_circuit(otoc)
 
