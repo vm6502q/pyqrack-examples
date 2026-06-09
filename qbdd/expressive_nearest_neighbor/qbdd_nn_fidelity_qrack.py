@@ -9,8 +9,6 @@ import numpy as np
 from pyqrack import QrackSimulator
 
 from qiskit import QuantumCircuit
-from qiskit.compiler import transpile
-from qiskit_aer.backends import AerSimulator
 
 
 def rand_u3(sim, q):
@@ -86,8 +84,6 @@ def nswap(sim, q1, q2):
 def bench_qrack(width, depth):
     # This is a "nearest-neighbor" coupler random circuit.
     circ = QuantumCircuit(width)
-    experiment = QrackSimulator(width, is_binary_decision_tree=True)
-    control = AerSimulator(method="statevector")
 
     lcv_range = range(width)
 
@@ -104,7 +100,6 @@ def bench_qrack(width, depth):
         return
 
     for d in range(depth):
-        experiment.reset_all()
         # Single-qubit gates
         for i in lcv_range:
             rand_u3(circ, i)
@@ -139,17 +134,15 @@ def bench_qrack(width, depth):
 
         gate_count = sum(dict(circ.count_ops()).values())
 
-        experiment.run_qiskit_circuit(circ)
-
-        circ_aer = transpile(circ, backend=control)
-        circ_aer.save_statevector()
-        job = control.run(circ_aer)
-
-        experiment_sv = experiment.out_ket()
-        control_sv = np.asarray(job.result().get_statevector())
+        experiment = QrackSimulator(width, is_binary_decision_tree=True)
+        experiment.run_qiskit_circuit(circ, shots=0)
+        experiment = experiment.out_ket()
+        control = QrackSimulator(width, is_binary_decision_tree=False)
+        control.run_qiskit_circuit(circ, shots=0)
+        control = control.out_ket()
 
         overall_fidelity = np.abs(
-            sum([np.conj(x) * y for x, y in zip(experiment_sv, control_sv)])
+            sum([np.conj(x) * y for x, y in zip(experiment, control)])
         )
         per_gate_fidelity = overall_fidelity ** (1 / gate_count)
 
