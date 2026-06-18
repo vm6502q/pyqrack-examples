@@ -46,7 +46,7 @@ def make_tuples(l, N):
 
         # Else, the striking rule did not act.
         i += 1
-        yield tuple(reversed([j for j in t]))
+        yield tuple([j for j in t])
 
 
 def main():
