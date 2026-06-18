@@ -10,10 +10,12 @@ def make_tuples(l, N):
     t = [1] * l
 
     if l == 1:
+        i = 1
         yield tuple([j for j in t])
+    else:
+        i = 0
 
     high_bit = 0
-    i = 1
     while i < N:
         broke = False
         for j in range(l - 1):
@@ -32,12 +34,16 @@ def make_tuples(l, N):
                 t[k] = 1
 
         # Striking rule (for exact power set):
+        highest = t[0]
         test = set()
         dupe = False
         for j in t:
-            if j in test:
-                dupe = True
-                break
+            if j > highest:
+                highest = j
+            else:
+                if j in test:
+                    dupe = True
+                    break
             test.add(j)
         if dupe:
             continue
