@@ -34,19 +34,19 @@ def make_tuples(l, N):
                 t[k] = 1
 
         # Striking rule (for exact power set):
-        highest = 0
+        lowest = t[0]
         dupe = False
-        for j in t:
-            if j <= highest:
+        for j in range(1, len(t)):
+            if t[j] >= lowest:
                 dupe = True
                 break
-            highest = j
+            lowest = t[j]
         if dupe:
             continue
 
         # Else, the striking rule did not act.
         i += 1
-        yield tuple([j for j in t])
+        yield tuple(reversed([j for j in t]))
 
 
 def main():
