@@ -31,10 +31,10 @@ def make_tuples(l, N):
                 t[k] = 1
 
         # Striking rule (for exact power set):
-        # highest = t[0]
+        # highest = 0
         # dupe = False
         # for j in t:
-        #     if j < highest:
+        #     if j <= highest:
         #         dupe = True
         #         break
         #     highest = j
