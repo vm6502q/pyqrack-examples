@@ -70,8 +70,7 @@ def main():
     # Just Cantor's pairing function:
     output_set = []
     t = 0
-    i = 0
-    j = 0
+    i, j = 0, 0
     while t < n:
         # print((i, j))
         output_set.append(finite_set[j][i])
@@ -83,7 +82,16 @@ def main():
             j += 1
         t += 1
 
-    print(output_set)
+    print("---------")
+    print("N, N×N, V")
+    print("---------")
+
+    ls = {}
+    for k, v in enumerate(output_set):
+        l = len(v)
+        ls[l] = ls.get(l, 0) + 1
+        c = ls[l] + 1j * l
+        print(f"{k + 1}, {c}: {v}")
 
     return 0
 
