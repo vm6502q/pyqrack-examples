@@ -9,9 +9,11 @@ def make_tuples(l, N):
     # where "left-most," "lowest index" is "least-significant"
     t = [1] * l
 
+    result = []
+
     if l == 1:
         i = 1
-        yield tuple([j for j in t])
+        result.append(tuple(t))
     else:
         i = 0
 
@@ -34,19 +36,17 @@ def make_tuples(l, N):
                 t[k] = 1
 
         # Striking rule (for exact power set):
-        lowest = t[0]
-        dupe = False
-        for j in range(1, len(t)):
-            if t[j] >= lowest:
-                dupe = True
-                break
-            lowest = t[j]
-        if dupe:
+        if len(t) != len(set(t)):
+            continue
+        s = tuple(sorted(t))
+        if s in result:
             continue
 
         # Else, the striking rule did not act.
         i += 1
-        yield tuple([j for j in t])
+        result.append(s)
+
+    return result
 
 
 def main():
@@ -65,8 +65,7 @@ def main():
     for _i in range(side_len):
         # Iterate forward / backward
         i = side_len - (_i + 1)
-        subset = [j for j in make_tuples(_i + 1, i + 1)]
-        finite_set.append(subset)
+        finite_set.append(make_tuples(_i + 1, i + 1))
 
     # Just Cantor's pairing function:
     output_set = []
