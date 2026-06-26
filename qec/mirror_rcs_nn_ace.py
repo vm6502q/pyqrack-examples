@@ -113,8 +113,8 @@ def bench_qrack(width, depth):
 
 def bench_qrack(depth):
     # This is a "nearest-neighbor" coupler random circuit.
-    width = 64
-    shots = 1000
+    width = 50
+    shots = 100
     lcv_range = range(width)
     all_bits = list(lcv_range)
 
@@ -125,7 +125,7 @@ def bench_qrack(depth):
     row_len, col_len = factor_width(width)
 
     results = {
-        "qubits": 64,
+        "qubits": width,
         "depth": depth
     }
 
@@ -209,7 +209,6 @@ def main():
             "Usage: python3 rcs_nn_ace_time.py [depth]"
         )
 
-    width = 64
     depth = int(sys.argv[1])
 
     # Run the benchmarks
