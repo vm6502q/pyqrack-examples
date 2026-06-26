@@ -180,8 +180,11 @@ def bench_qrack(depth):
     circ = circ.inverse()
     start = time.perf_counter()
     experiment.run_qiskit_circuit(circ)
-    terminal = experiment.measure_shots(all_bits, shots)
     backward_seconds = time.perf_counter() - start
+
+    start = time.perf_counter()
+    terminal = experiment.measure_shots(all_bits, shots)
+    sampling_seconds = time.perf_counter() - start
 
     # Experiment results
     hamming_weight = sum(count_set_bits(r) for r in midpoint) / shots
@@ -191,6 +194,7 @@ def bench_qrack(depth):
     results["transpile_seconds"] = transpile_seconds
     results["forward_seconds"] = forward_seconds
     results["backward_seconds"] = backward_seconds
+    results["sampling_seconds"] = sampling_seconds
     results["fidelity"] = terminal.count(0) / shots
     results["midpoint_weight"] = hamming_weight
     results["terminal_distance"] = hamming_distance
