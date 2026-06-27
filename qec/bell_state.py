@@ -8,7 +8,7 @@ from pyqrack import QrackAceBackend
 
 
 def main():
-    experiment = QrackAceBackend(16, long_range_columns=1)
+    experiment = QrackAceBackend(3, long_range_columns=1)
 
     # Experiment has a cleaved-QEC code ACE boundary.
     experiment.h(0)
