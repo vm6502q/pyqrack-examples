@@ -19,7 +19,7 @@ def measure_expectation(sim, shots):
     return total / shots
 
 def run_chsh_test(shots):
-    sim = QrackAceBackend(16, long_range_columns=1)
+    sim = QrackAceBackend(6, long_range_columns=1)
     sim.h(0)
     sim.mcx([0], 1)
 
