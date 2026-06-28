@@ -167,11 +167,10 @@ def bench_qrack(depth):
                 g = random.choice(two_bit_gates)
                 g(circ, b1, b2)
 
-    noise_dummy=AceQasmSimulator(n_qubits=width, long_range_rows=3, long_range_columns=3)
     experiment = QrackAceBackend(width, long_range_rows=3, long_range_columns=3)
 
     start = time.perf_counter()
-    circ = transpile(circ, optimization_level=3, backend=noise_dummy)
+    circ = transpile(circ, optimization_level=3, basis_gates=QrackAceBackend.get_qiskit_basis_gates())
     transpile_seconds = time.perf_counter() - start
 
     start = time.perf_counter()
