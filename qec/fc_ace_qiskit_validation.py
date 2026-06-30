@@ -23,7 +23,7 @@ from qiskit.transpiler import CouplingMap
 
 def bench_qrack(width, depth, trials):
     # This is a "nearest-neighbor" coupler random circuit.
-    shots = 1 << (width + 2)
+    shots = 1 << min(8, width + 2)
     control = AerSimulator(method="statevector")
     experiment = QrackAceBackend(width)
     # if "QRACK_QUNIT_SEPARABILITY_THRESHOLD" not in os.environ:

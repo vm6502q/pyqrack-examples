@@ -62,7 +62,7 @@ def bench_qrack(width, depth, sdrp=0.0):
     all_bits     = list(lcv_range)
     n_pow        = 1 << width
     u_u          = 1.0 / n_pow
-    shots        = 1 << min(20, width + 2)
+    shots        = 1 << min(8, width + 2)
 
     # -----------------------------------------------------------------------
     # Build circuit once in Qiskit
