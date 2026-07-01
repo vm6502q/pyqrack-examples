@@ -128,7 +128,7 @@ def bench_qrack(width, depth, cycles):
     experiment = QrackAceBackend(width)
     experiment.run_qiskit_circuit(otoc)
 
-    shots = 1 << (width + 2)
+    shots = 1 << min(9, width + 2)
     experiment_probs = dict(Counter(experiment.measure_shots(all_bits, shots)))
     experiment_probs = { k: v / shots for k, v in experiment_probs.items() }
 

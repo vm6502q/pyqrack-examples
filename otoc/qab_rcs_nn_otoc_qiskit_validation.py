@@ -136,7 +136,7 @@ def bench_qrack(width, depth, cycles):
     control = AerSimulator(method="statevector")
     job = control.run(otoc_aer)
 
-    shots = 1 << min(8, width + 2)
+    shots = 1 << min(9, width + 2)
     experiment_counts = dict(Counter(experiment.measure_shots(all_bits, shots)))
     control_probs = Statevector(job.result().get_statevector()).probabilities()
 
