@@ -83,6 +83,7 @@ def bench_qrack(width, depth, lrc=4, lrr=4, sdrp=0.0):
     # Terminal measurement
     sample = experiment.m_all()
     seconds = time.perf_counter() - start
+    print(f"Seconds: {seconds}. (Fidelity unknown.)"
 
     return seconds, sample
 
