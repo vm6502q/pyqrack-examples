@@ -70,8 +70,8 @@ def bench_qrack(width, depth, reverse):
                 if temp_col >= col_len:
                     continue
 
-                b1 = row * row_len + col
-                b2 = temp_row * row_len + temp_col
+                b1 = col * row_len + row
+                b2 = temp_col * row_len + temp_row
 
                 if (b1 >= width) or (b2 >= width):
                     continue
