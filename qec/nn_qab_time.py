@@ -11,7 +11,7 @@ import time
 from pyqrack import QrackAceBackend
 
 
-def factor_width(width, reverse=False):
+def factor_width(width):
     col_len = math.floor(math.sqrt(width))
     while ((width // col_len) * col_len) != width:
         col_len -= 1
@@ -19,13 +19,14 @@ def factor_width(width, reverse=False):
         raise Exception("ERROR: Can't simulate prime number width!")
     row_len = width // col_len
 
-    return (col_len, row_len) if reverse else (row_len, col_len)
+    return (row_len, col_len)
 
 
-def bench_qrack(width, depth, reverse):
+def bench_qrack(width, depth, lrc=4, lrr=4, sdrp=0.0):
     # This is a "nearest-neighbor" coupler random circuit.
     start = time.perf_counter()
-    experiment = QrackAceBackend(width)
+    experiment = QrackAceBackend(width, long_range_columns=lrc, long_range_rows=lrr)
+    experiment.set_sdrp(sdrp)
 
     lcv_range = range(width)
 
@@ -40,7 +41,7 @@ def bench_qrack(width, depth, reverse):
         experiment.acz,
     )
 
-    row_len, col_len = factor_width(width, reverse)
+    row_len, col_len = factor_width(width)
 
     for _ in range(depth):
         # Single-qubit gates
@@ -89,20 +90,13 @@ def bench_qrack(width, depth, reverse):
 def main():
     if len(sys.argv) < 3:
         raise RuntimeError(
-            "Usage: python3 nn_ace_time.py [width] [depth] [reverse row/column]"
-        )
-
+            "Usage: python3 nn_ace_time.py [width] [depth] [long_range_columns=4] [long_range_rows=4] [sdrp=0.1464466]")
     width = int(sys.argv[1])
     depth = int(sys.argv[2])
-    reverse = False
-    if len(sys.argv) > 3:
-        reverse = sys.argv[3] not in ["0", "False"]
-
-    # Run the benchmarks
-    seconds, sample = bench_qrack(width, depth, reverse)
-
-    # Print the results
-    print({"width": width, "depth": depth, "seconds": seconds, "sample": sample})
+    lrc = int(sys.argv[3]) if len(sys.argv) > 3 else 4
+    lrr = int(sys.argv[4]) if len(sys.argv) > 4 else 4
+    sdrp  = float(sys.argv[5]) if len(sys.argv) > 5 else ((1 - 1 / math.sqrt(2)) / 2)
+    result = bench_qrack(width, depth, lrc, lrr, sdrp)
 
     return 0
 
