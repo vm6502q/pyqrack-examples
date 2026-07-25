@@ -136,9 +136,9 @@ def bench_qrack(width, depth, lrc=4, lrr=4, sdrp=0.0):
     for _ in range(depth):
         # Single-qubit gates
         for i in lcv_range:
-            th = random.uniform(0, 2 * math.pi)
-            ph = random.uniform(0, 2 * math.pi)
-            lm = random.uniform(0, 2 * math.pi)
+            th, ph, lm = (random.uniform(-math.pi, math.pi) for _ in range(3))
+            # Keep it Haar-random towards the poles:
+            th = math.asin(th / math.pi)
             qc.u(th, ph, lm, i)
 
         # Nearest-neighbor couplers:
@@ -257,12 +257,12 @@ def bench_qrack(width, depth, lrc=4, lrr=4, sdrp=0.0):
 
 def main():
     if len(sys.argv) < 3:
-        raise RuntimeError("Usage: python3 nn_qab_half_torus.py [width] [depth] [long_range_columns=4] [long_range_rows=4] [sdrp=2**-24]")
+        raise RuntimeError("Usage: python3 nn_qab_half_torus.py [width] [depth] [long_range_columns=4] [long_range_rows=4] [sdrp=0.1464466]")
     width = int(sys.argv[1])
     depth = int(sys.argv[2])
     lrc = int(sys.argv[3]) if len(sys.argv) > 3 else 4
     lrr = int(sys.argv[4]) if len(sys.argv) > 4 else 4
-    sdrp  = float(sys.argv[5]) if len(sys.argv) > 5 else (2 ** -24)
+    sdrp  = float(sys.argv[5]) if len(sys.argv) > 5 else ((1 - 1 / math.sqrt(2)) / 2)
     result = bench_qrack(width, depth, lrc, lrr, sdrp)
     for k, v in result.items():
         print(f"  {k}: {v}")

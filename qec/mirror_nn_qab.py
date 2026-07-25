@@ -109,9 +109,9 @@ def bench_qrack(width, depth, lrc=4, lrr=4, sdrp=0.0):
     for _ in range(depth):
         # Single-qubit gates
         for i in lcv_range:
-            th = random.uniform(0, 2 * math.pi)
-            ph = random.uniform(0, 2 * math.pi)
-            lm = random.uniform(0, 2 * math.pi)
+            th, ph, lm = (random.uniform(-math.pi, math.pi) for _ in range(3))
+            # Keep it Haar-random towards the poles:
+            th = math.asin(th / math.pi)
             qc.u(th, ph, lm, i)
 
         # Nearest-neighbor couplers:

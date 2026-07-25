@@ -176,7 +176,7 @@ def calc_stats(ideal_probs, counts, shots):
 def bench_qrack(width, depth, lrc=4, lrr=4, sdrp=0.0):
     lcv_range    = range(width)
     all_bits     = list(lcv_range)
-    n_inst       = 4
+    n_inst       = 3
     n_pow        = 1 << width
     u_u          = 1.0 / n_pow
     shots        = 1 << min(10, width + 2)

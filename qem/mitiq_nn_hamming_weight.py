@@ -14,28 +14,13 @@ import numpy as np
 
 from collections import Counter
 
-from pyqrack import QrackSimulator
-
 from qiskit import QuantumCircuit
 from qiskit.compiler import transpile
-from qiskit_aer.backends import AerSimulator
-from qiskit.quantum_info import Statevector
+from qiskit.providers.qrack import AceQasmSimulator
 
 from mitiq import zne
 from mitiq.zne.scaling.folding import fold_global
 from mitiq.zne.inference import LinearFactory
-
-
-# By Gemini (Google Search AI)
-def int_to_bitstring(integer, length):
-    return bin(integer)[2:].zfill(length)
-
-
-# By Elara (OpenAI custom GPT)
-def hamming_distance(s1, s2, n):
-    return sum(
-        ch1 != ch2 for ch1, ch2 in zip(int_to_bitstring(s1, n), int_to_bitstring(s2, n))
-    )
 
 
 def factor_width(width):
@@ -43,8 +28,6 @@ def factor_width(width):
     while ((width // col_len) * col_len) != width:
         col_len -= 1
     row_len = width // col_len
-    if col_len == 1:
-        raise Exception("ERROR: Can't simulate prime number width!")
 
     return (row_len, col_len)
 
@@ -109,7 +92,7 @@ def nswap(sim, q1, q2):
     sim.cz(q1, q2)
 
 
-def random_circuit(width, depth):
+def random_circuit(width, depth, lrc, lrr, sdrp):
     # This is a "nearest-neighbor" coupler random circuit.
     lcv_range = range(width)
     all_bits = list(lcv_range)
@@ -122,13 +105,14 @@ def random_circuit(width, depth):
 
     results = []
 
-    circ = QuantumCircuit(width)
-    for d in range(depth):
+    qc = QuantumCircuit(width)
+    for _ in range(depth):
         # Single-qubit gates
         for i in lcv_range:
-            for _ in range(2):
-                circ.h(i)
-                circ.rz(random.uniform(0, 2 * math.pi), i)
+            th = random.uniform(0, 2 * math.pi)
+            ph = random.uniform(0, 2 * math.pi)
+            lm = random.uniform(0, 2 * math.pi)
+            qc.u(th, ph, lm, i)
 
         # Nearest-neighbor couplers:
         ############################
@@ -150,16 +134,19 @@ def random_circuit(width, depth):
                 if temp_col >= col_len:
                     temp_col = temp_col - col_len
 
-                b1 = row * row_len + col
-                b2 = temp_row * row_len + temp_col
+                b1 = col * row_len + row
+                b2 = temp_col * row_len + temp_row
 
                 if (b1 >= width) or (b2 >= width):
                     continue
 
                 g = random.choice(two_bit_gates)
-                g(circ, b1, b2)
+                g(qc, b1, b2)
 
-    return circ
+    sim = AceQasmSimulator(n_qubits=width, long_range_columns=lrc, long_range_rows=lrr, sdrp=sdrp)
+    qc = transpile(qc, backend=sim, optimization_level=3)
+
+    return qc
 
 
 def logit(x):
@@ -186,19 +173,15 @@ def expit(x):
     return 1 / (1 + np.exp(-x))
 
 
-def execute(circ):
-    shot_count = 1024
+def execute(circ, shot_count, lrc, lrr, sdrp):
+    sim = AceQasmSimulator(n_qubits=circ.width(), long_range_columns=lrc, long_range_rows=lrr, sdrp=sdrp)
+    circ_m = circ.copy()
+    circ_m.measure_all()
+    shots = dict(sim.run(circ_m, shots=shot_count).result().get_counts())
 
-    all_bits = list(range(circ.width()))
-
-    experiment = QrackSimulator(circ.width())
-    experiment.run_qiskit_circuit(circ)
-    shots = experiment.measure_shots(all_bits, shot_count)
-
-    # We might be surprised if Haar-random magnetization is nontrivial.
     hamming_weight = 0
-    for shot in shots:
-        hamming_weight += hamming_distance(0, shot, circ.width())
+    for k, v in shots.items():
+        hamming_weight += k.count("1") * v
     hamming_weight /= shot_count
 
     return logit(hamming_weight / circ.width())
@@ -206,26 +189,32 @@ def execute(circ):
 
 def main():
     if len(sys.argv) < 3:
-        raise RuntimeError("Usage: python3 fc.py [width] [depth]")
+        raise RuntimeError("Usage: python3 mitiq_nn_hamming_weight.py [width] [depth] [long_range_columns=4] [long_range_rows=4] [sdrp=0.1464466] [shots=1024]")
 
     width = int(sys.argv[1])
     depth = int(sys.argv[2])
+    lrc = int(sys.argv[3]) if len(sys.argv) > 3 else 4
+    lrr = int(sys.argv[4]) if len(sys.argv) > 4 else 4
+    sdrp  = float(sys.argv[5]) if len(sys.argv) > 5 else ((1 - 1 / math.sqrt(2)) / 2)
+    shots = int(sys.argv[6]) if len(sys.argv) > 6 else 1024
 
-    circ = random_circuit(width, depth)
+    circ = random_circuit(width, depth, lrc, lrr, sdrp)
 
-    scale_count = 9
-    max_scale = 5
+    scale_count = 5
+    max_scale = 2
     factory = LinearFactory(
         scale_factors=[
             (1 + (max_scale - 1) * x / scale_count) for x in range(0, scale_count)
         ]
     )
 
+    ex = lambda circ: execute(circ, shots, lrc, lrr, sdrp)
+
     hamming_weight = width * expit(
-        zne.execute_with_zne(circ, execute, scale_noise=fold_global, factory=factory)
+        zne.execute_with_zne(circ, ex, scale_noise=fold_global, factory=factory)
     )
 
-    print({"width": width, "depth": depth, "hamming_weight": hamming_weight})
+    print({"width": width, "depth": depth, "hamming_weight": float(hamming_weight)})
 
     return 0
 
