@@ -12,7 +12,6 @@ from collections import Counter
 
 import numpy as np
 from pyqrack import QrackSimulator, QrackAceBackend
-from qiskit import QuantumCircuit
 
 
 def factor_width(width):
