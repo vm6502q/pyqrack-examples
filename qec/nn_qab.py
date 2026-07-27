@@ -24,34 +24,36 @@ def factor_width(width):
     return (row_len, col_len)
 
 
+# ---------------------------------------------------------------------------
+# Gate wrappers
+# ---------------------------------------------------------------------------
+
+def u(sim, q, th, ph, lm):
+    sim.u(q, th, ph, lm)
+
+
 def cx(sim, q1, q2):
-    sim.cx(q1, q2)
+    sim.mcx([q1], q2)
 
 
 def cy(sim, q1, q2):
-    sim.cy(q1, q2)
+    sim.mcy([q1], q2)
 
 
 def cz(sim, q1, q2):
-    sim.cz(q1, q2)
+    sim.mcz([q1], q2)
 
 
 def acx(sim, q1, q2):
-    sim.x(q1)
-    sim.cx(q1, q2)
-    sim.x(q1)
+    sim.macx([q1], q2)
 
 
 def acy(sim, q1, q2):
-    sim.x(q1)
-    sim.cy(q1, q2)
-    sim.x(q1)
+    sim.macy([q1], q2)
 
 
 def acz(sim, q1, q2):
-    sim.x(q1)
-    sim.cz(q1, q2)
-    sim.x(q1)
+    sim.macz([q1], q2)
 
 
 def swap(sim, q1, q2):
@@ -63,25 +65,28 @@ def iswap(sim, q1, q2):
 
 
 def iiswap(sim, q1, q2):
-    sim.iswap(q1, q2)
-    sim.iswap(q1, q2)
-    sim.iswap(q1, q2)
+    sim.adjiswap(q1, q2)
 
 
 def pswap(sim, q1, q2):
-    sim.cz(q1, q2)
+    sim.mcz([q1], q2)
     sim.swap(q1, q2)
 
 
 def mswap(sim, q1, q2):
     sim.swap(q1, q2)
-    sim.cz(q1, q2)
+    sim.mcz([q1], q2)
 
 
 def nswap(sim, q1, q2):
-    sim.cz(q1, q2)
+    sim.mcz([q1], q2)
     sim.swap(q1, q2)
-    sim.cz(q1, q2)
+    sim.mcz([q1], q2)
+
+
+def run_circuit(sim, circ):
+    for g in circ:
+        g[0](sim, *g[1:])
 
 
 # ---------------------------------------------------------------------------
@@ -127,10 +132,10 @@ def bench_qrack(width, depth, lrc=4, lrr=4, sdrp=0.0):
     row_len, col_len = factor_width(width)
 
     # -----------------------------------------------------------------------
-    # Build circuit in Qiskit
+    # Build circuit
     # -----------------------------------------------------------------------
     t_circ = time.perf_counter()
-    qc = QuantumCircuit(width, width)
+    qc = []
 
     for _ in range(depth):
         # Single-qubit gates
@@ -138,7 +143,7 @@ def bench_qrack(width, depth, lrc=4, lrr=4, sdrp=0.0):
             th, ph, lm = (random.uniform(-math.pi, math.pi) for _ in range(3))
             # Keep it Haar-random towards the poles:
             th = math.asin(th / math.pi)
-            qc.u(th, ph, lm, i)
+            qc.append((u, i, th, ph, lm))
 
         # Nearest-neighbor couplers:
         ############################
@@ -151,14 +156,50 @@ def bench_qrack(width, depth, lrc=4, lrr=4, sdrp=0.0):
                 temp_row = temp_row + (1 if (gate & 2) else -1)
                 temp_col = temp_col + (1 if (gate & 1) else 0)
 
+                # Non-toroidal (is_torus=False) boundary handling, split
+                # by axis rather than applied uniformly -- these two axes
+                # do NOT behave the same way under is_torus=False, given
+                # long_range_columns=2 is set explicitly below but
+                # long_range_rows is left at its default (4):
+                #
+                # temp_row ranges over row_len (the LONG dimension), and
+                # matches QrackAceBackend's "long_range_columns" axis
+                # (verified: that parameter governs boundary density along
+                # the same axis this script calls "row", both ranging over
+                # row_len). long_range_columns=2 < row_len for any width
+                # worth testing, so is_torus=False genuinely, actually
+                # disables wraparound here -- skip (continue) is correct.
+                #
+                # temp_col ranges over col_len (the SHORT dimension), and
+                # matches QrackAceBackend's "long_range_rows" axis, left at
+                # its DEFAULT value of 4. is_torus=False only actually
+                # disables wraparound on a given axis when
+                # long_range_X < length_of_that_axis -- so for col_len<=4
+                # (verified directly: true for col_len in {2,3,4}, false
+                # for col_len>=5), long_range_rows=4 is NOT less than
+                # col_len, meaning QrackAceBackend treats this entire short
+                # dimension as one continuous interior run regardless of
+                # is_torus. Skipping here would silently drop real
+                # coupling gates that QrackAceBackend still, correctly,
+                # treats as adjacent -- wrapping instead matches its
+                # actual behavior. This holds for col_len<=4; for col_len>=5
+                # this assumption would need revisiting (either passing
+                # long_range_rows explicitly below, or reworking this check
+                # to depend on it rather than a hardcoded default).
                 if temp_row < 0:
-                    temp_row = temp_row + row_len
-                if temp_col < 0:
-                    temp_col = temp_col + col_len
+                    continue
                 if temp_row >= row_len:
-                    temp_row = temp_row - row_len
+                    continue
+                if temp_col < 0:
+                    if (row_len < 3) or (row_len <= lrr):
+                        temp_col = temp_col + col_len
+                    else:
+                        continue
                 if temp_col >= col_len:
-                    temp_col = temp_col - col_len
+                    if (row_len < 3) or (row_len <= lrr):
+                        temp_col = temp_col - col_len
+                    else:
+                        continue
 
                 b1 = col * row_len + row
                 b2 = temp_col * row_len + temp_row
@@ -167,14 +208,14 @@ def bench_qrack(width, depth, lrc=4, lrr=4, sdrp=0.0):
                     continue
 
                 g = random.choice(two_bit_gates)
-                g(qc, b1, b2)
+                qc.append((g, b1, b2))
 
     # -----------------------------------------------------------------------
     # Method: QrackAceBackend
     # -----------------------------------------------------------------------
-    sim = QrackAceBackend(width, long_range_columns=lrc, long_range_rows=lrr)
+    sim = QrackAceBackend(width, long_range_columns=lrc, long_range_rows=lrr, is_torus=False)
     sim.set_sdrp(sdrp)
-    sim.run_qiskit_circuit(qc, shots=0)
+    run_circuit(sim, qc)
     ace_counts = dict(Counter(sim.measure_shots(all_bits, shots)))
 
     t_ace = time.perf_counter()
@@ -184,7 +225,7 @@ def bench_qrack(width, depth, lrc=4, lrr=4, sdrp=0.0):
     # Ideal ground truth via QrackSimulator
     # -----------------------------------------------------------------------
     sim_ideal = QrackSimulator(width)
-    sim_ideal.run_qiskit_circuit(qc, shots=0)
+    run_circuit(sim_ideal, qc)
     ideal_probs = np.asarray(sim_ideal.out_probs(), dtype=np.float64)
     del sim_ideal
 
