@@ -408,7 +408,7 @@ def bench_qrack(width, depth, lrc=4, lrr=4, sdrp=0.0, swap_mode="auto"):
 def main():
     if len(sys.argv) < 3:
         raise RuntimeError(
-            "Usage: python3 nn_qab_half_torus.py [width] [depth] "
+            "Usage: python3 nn_qab_consensus.py [width] [depth] "
             "[long_range_columns=4] [long_range_rows=4] "
             "[sdrp=0.1464466] [swap_mode=auto|swap|cnot]"
         )

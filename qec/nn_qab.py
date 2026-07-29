@@ -24,6 +24,19 @@ def factor_width(width):
     return (row_len, col_len)
 
 
+def bulk_to_boundary_ratio(sim):
+    """Empirically measured bulk-to-boundary ratio for an already-
+    constructed QrackAceBackend, via its own _unpack() (same source of
+    truth used internally, rather than re-deriving the geometry rules by
+    hand). Returns float('inf') if there are zero boundary qubits (a
+    valid, if edge-case, config), rather than raising on the divide.
+    """
+    n = sim.num_qubits()
+    boundary = sum(1 for lq in range(n) if len(sim._unpack(lq)) > 1)
+    bulk = n - boundary
+    return bulk / boundary if boundary else float("inf")
+
+
 # ---------------------------------------------------------------------------
 # Gate wrappers
 # ---------------------------------------------------------------------------
@@ -56,31 +69,79 @@ def acz(sim, q1, q2):
     sim.macz([q1], q2)
 
 
-def swap(sim, q1, q2):
+# --- swap-family gates: native (QrackAceBackend.swap(), the _correct()-
+# wrapped fast/sandwiched-shadow implementation) vs. cnot (manual 3-CNOT
+# decomposition, going through the ordinary _cpauli-wrapped cx() path
+# instead) -- two full sets of wrappers, selected between in bench_qrack()
+# based on the swap_mode argument. Each _cnot variant mirrors the actual
+# QrackAceBackend.swap()/iswap()/adjiswap() class-method gate sequences
+# exactly, just using 3 explicit cx() calls in place of a single swap()
+# call, so the two modes differ ONLY in how the swap itself is realized,
+# not in the surrounding cz/s/adjs structure of the compound gates.
+
+def swap_native(sim, q1, q2):
     sim.swap(q1, q2)
 
 
-def iswap(sim, q1, q2):
+def swap_cnot(sim, q1, q2):
+    if random.getrandbits(1):
+        q1, q2 = q2, q1
+    sim.mcx([q1], q2)
+    sim.mcx([q2], q1)
+    sim.mcx([q1], q2)
+
+
+def iswap_native(sim, q1, q2):
     sim.iswap(q1, q2)
 
 
-def iiswap(sim, q1, q2):
+def iswap_cnot(sim, q1, q2):
+    swap_cnot(sim, q1, q2)
+    sim.mcz([q1], q2)
+    sim.s(q1)
+    sim.s(q2)
+
+
+def iiswap_native(sim, q1, q2):
     sim.adjiswap(q1, q2)
 
 
-def pswap(sim, q1, q2):
+def iiswap_cnot(sim, q1, q2):
+    sim.adjs(q2)
+    sim.adjs(q1)
+    sim.mcz([q1], q2)
+    swap_cnot(sim, q1, q2)
+
+
+def pswap_native(sim, q1, q2):
     sim.mcz([q1], q2)
     sim.swap(q1, q2)
 
 
-def mswap(sim, q1, q2):
+def pswap_cnot(sim, q1, q2):
+    sim.mcz([q1], q2)
+    swap_cnot(sim, q1, q2)
+
+
+def mswap_native(sim, q1, q2):
     sim.swap(q1, q2)
     sim.mcz([q1], q2)
 
 
-def nswap(sim, q1, q2):
+def mswap_cnot(sim, q1, q2):
+    swap_cnot(sim, q1, q2)
+    sim.mcz([q1], q2)
+
+
+def nswap_native(sim, q1, q2):
     sim.mcz([q1], q2)
     sim.swap(q1, q2)
+    sim.mcz([q1], q2)
+
+
+def nswap_cnot(sim, q1, q2):
+    sim.mcz([q1], q2)
+    swap_cnot(sim, q1, q2)
     sim.mcz([q1], q2)
 
 
@@ -119,7 +180,11 @@ def calc_stats(ideal_probs, counts, shots):
 # Benchmark
 # ---------------------------------------------------------------------------
 
-def bench_qrack(width, depth, lrc=4, lrr=4, sdrp=0.0):
+SWAP_RATIO_THRESHOLD = 3.0
+
+def bench_qrack(width, depth, lrc=4, lrr=4, sdrp=0.0, swap_mode="auto"):
+    if swap_mode not in ("auto", "swap", "cnot"):
+        raise ValueError('swap_mode must be one of "auto", "swap", "cnot"')
     lcv_range = range(width)
     all_bits  = list(lcv_range)
     n_pow     = 1 << width
@@ -127,9 +192,28 @@ def bench_qrack(width, depth, lrc=4, lrr=4, sdrp=0.0):
 
     # Nearest-neighbor couplers:
     gateSequence = [0, 3, 2, 1, 2, 1, 0, 3]
-    two_bit_gates = swap, pswap, mswap, nswap, iswap, iiswap, cx, cy, cz, acx, acy, acz
 
     row_len, col_len = factor_width(width)
+
+    sim = QrackAceBackend(width, long_range_columns=lrc, long_range_rows=lrr, is_torus=False)
+    sim.set_sdrp(sdrp)
+
+    ratio = bulk_to_boundary_ratio(sim)
+    if swap_mode == "auto":
+        resolved_swap_mode = "cnot" if ratio >= SWAP_RATIO_THRESHOLD else "swap"
+    else:
+        resolved_swap_mode = swap_mode
+
+    if resolved_swap_mode == "swap":
+        two_bit_gates = (
+            swap_native, pswap_native, mswap_native, nswap_native,
+            iswap_native, iiswap_native, cx, cy, cz, acx, acy, acz,
+        )
+    else:
+        two_bit_gates = (
+            swap_cnot, pswap_cnot, mswap_cnot, nswap_cnot,
+            iswap_cnot, iiswap_cnot, cx, cy, cz, acx, acy, acz,
+        )
 
     # -----------------------------------------------------------------------
     # Build circuit
@@ -240,7 +324,9 @@ def bench_qrack(width, depth, lrc=4, lrr=4, sdrp=0.0):
         "long_range_columns": lrc,
         "long_range_rows":    lrr,
         "sdrp":               sdrp,
-        "depth":              depth,
+        "bulk_to_boundary":   ratio,
+        "swap_mode":          swap_mode,
+        "resolved_swap_mode": resolved_swap_mode,
         "xeb_ace":            xeb_ace,
         "hog_ace":            hog_ace,
     }
@@ -252,13 +338,18 @@ def bench_qrack(width, depth, lrc=4, lrr=4, sdrp=0.0):
 
 def main():
     if len(sys.argv) < 3:
-        raise RuntimeError("Usage: python3 nn_qab.py [width] [depth] [long_range_columns=4] [long_range_rows=4] [sdrp=0.1464466]")
+        raise RuntimeError(
+            "Usage: python3 nn_qab.py [width] [depth] "
+            "[long_range_columns=4] [long_range_rows=4] "
+            "[sdrp=0.1464466] [swap_mode=auto|swap|cnot]"
+        )
     width = int(sys.argv[1])
     depth = int(sys.argv[2])
     lrc = int(sys.argv[3]) if len(sys.argv) > 3 else 4
     lrr = int(sys.argv[4]) if len(sys.argv) > 4 else 4
     sdrp  = float(sys.argv[5]) if len(sys.argv) > 5 else ((1 - 1 / math.sqrt(2)) / 2)
-    result = bench_qrack(width, depth, lrc, lrr, sdrp)
+    swap_mode = sys.argv[6] if len(sys.argv) > 6 else "auto"
+    result = bench_qrack(width, depth, lrc, lrr, sdrp, swap_mode)
     for k, v in result.items():
         print(f"  {k}: {v}")
     return 0
