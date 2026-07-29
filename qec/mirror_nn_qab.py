@@ -154,7 +154,7 @@ def run_circuit(sim, circ):
 # Benchmark
 # ---------------------------------------------------------------------------
 
-SWAP_RATIO_THRESHOLD = 3.0
+SWAP_RATIO_THRESHOLD = 7.0
 
 def bench_qrack(width, depth, lrc=4, lrr=4, sdrp=0.0, swap_mode="auto"):
     if swap_mode not in ("auto", "swap", "cnot"):
