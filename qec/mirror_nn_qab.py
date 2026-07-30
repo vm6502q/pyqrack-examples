@@ -170,7 +170,7 @@ def bench_qrack(width, depth, lrc=4, lrr=4, sdrp=0.0, swap_mode="auto"):
 
     row_len, col_len = factor_width(width)
 
-    sim = QrackAceBackend(width, long_range_columns=lrc, long_range_rows=lrr, is_torus=False)
+    sim = QrackAceBackend(width, long_range_columns=lrc, long_range_rows=lrr, is_torus=True)
     sim.set_sdrp(sdrp)
 
     ratio = bulk_to_boundary_ratio(sim)
