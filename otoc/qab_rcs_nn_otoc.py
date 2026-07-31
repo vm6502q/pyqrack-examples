@@ -62,7 +62,7 @@ def z(sim, q):
     sim.z(q)
 
 
-def bench_qrack(width, depth, cycles):
+def bench_qrack(width, depth, cycles, lrc, lrr):
     # This is a "nearest-neighbor" coupler random circuit.
 
     lcv_range = range(width)
@@ -137,7 +137,7 @@ def bench_qrack(width, depth, cycles):
         act_string(otoc, string)
         otoc = otoc + ircs
 
-    experiment = QrackAceBackend(width)
+    experiment = QrackAceBackend(width, long_range_columns=lrc, long_range_rows=lrr)
     for tup in otoc:
         tup[0](experiment, *tup[1:])
 
@@ -170,15 +170,16 @@ def act_string(otoc, string):
 def main():
     if len(sys.argv) < 4:
         raise RuntimeError(
-            "Usage: python3 qab_rcs_nn_otoc.py [width] [depth] [cycles]"
+            "Usage: python3 qab_rcs_nn_otoc.py [width] [depth] [cycles] [long_range_columns=4] [long_range_rows=4]"
         )
 
     width = int(sys.argv[1])
     depth = int(sys.argv[2])
     cycles = int(sys.argv[3])
-
+    lrc = int(sys.argv[4]) if len(sys.argv) > 4 else 4
+    lrr = int(sys.argv[5]) if len(sys.argv) > 5 else 4
     # Run the benchmarks
-    print(bench_qrack(width, depth, cycles))
+    print(bench_qrack(width, depth, cycles, lrc, lrr))
 
     return 0
 
