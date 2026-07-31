@@ -115,7 +115,7 @@ def calc_stats(ideal_probs, counts, shots):
 # Benchmark
 # ---------------------------------------------------------------------------
 
-def bench_qrack(width, depth, lrc=4, lrr=4, sdrp=0.0):
+def bench_qrack(width, depth, lrc=4, lrr=4):
     lcv_range = range(width)
     all_bits  = list(lcv_range)
     n_pow     = 1 << width
@@ -209,7 +209,7 @@ def bench_qrack(width, depth, lrc=4, lrr=4, sdrp=0.0):
     # -----------------------------------------------------------------------
     # Method: QrackAceBackend
     # -----------------------------------------------------------------------
-    sim = AceQasmSimulator(n_qubits=width, long_range_columns=lrc, long_range_rows=lrr, sdrp=sdrp, is_torus=False)
+    sim = AceQasmSimulator(n_qubits=width, long_range_columns=lrc, long_range_rows=lrr, is_torus=False)
     qc = transpile(qc, backend=sim, optimization_level=3)
 
     t_trans = time.perf_counter()
@@ -244,7 +244,6 @@ def bench_qrack(width, depth, lrc=4, lrr=4, sdrp=0.0):
         "depth":              depth,
         "long_range_columns": lrc,
         "long_range_rows":    lrr,
-        "sdrp":               sdrp,
         "depth":              depth,
         "xeb_ace":            xeb_ace,
         "hog_ace":            hog_ace,
@@ -257,13 +256,12 @@ def bench_qrack(width, depth, lrc=4, lrr=4, sdrp=0.0):
 
 def main():
     if len(sys.argv) < 3:
-        raise RuntimeError("Usage: python3 nn_qab_half_torus.py [width] [depth] [long_range_columns=4] [long_range_rows=4] [sdrp=0.1464466]")
+        raise RuntimeError("Usage: python3 nn_qab_half_torus.py [width] [depth] [long_range_columns=4] [long_range_rows=4]")
     width = int(sys.argv[1])
     depth = int(sys.argv[2])
     lrc = int(sys.argv[3]) if len(sys.argv) > 3 else 4
     lrr = int(sys.argv[4]) if len(sys.argv) > 4 else 4
-    sdrp  = float(sys.argv[5]) if len(sys.argv) > 5 else ((1 - 1 / math.sqrt(2)) / 2)
-    result = bench_qrack(width, depth, lrc, lrr, sdrp)
+    result = bench_qrack(width, depth, lrc, lrr)
     for k, v in result.items():
         print(f"  {k}: {v}")
     return 0

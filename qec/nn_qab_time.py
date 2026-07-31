@@ -148,7 +148,7 @@ def run_circuit(sim, circ):
 
 SWAP_RATIO_THRESHOLD = 7.0
 
-def bench_qrack(width, depth, lrc=4, lrr=4, sdrp=0.0, swap_mode="auto"):
+def bench_qrack(width, depth, lrc=4, lrr=4, swap_mode="auto"):
     if swap_mode not in ("auto", "swap", "cnot"):
         raise ValueError('swap_mode must be one of "auto", "swap", "cnot"')
 
@@ -160,7 +160,6 @@ def bench_qrack(width, depth, lrc=4, lrr=4, sdrp=0.0, swap_mode="auto"):
     row_len, col_len = factor_width(width)
 
     sim = QrackAceBackend(width, long_range_columns=lrc, long_range_rows=lrr, is_torus=True)
-    sim.set_sdrp(sdrp)
 
     ratio = bulk_to_boundary_ratio(sim)
     if swap_mode == "auto":
@@ -231,15 +230,14 @@ def main():
         raise RuntimeError(
             "Usage: python3 nn_qab_time.py [width] [depth] "
             "[long_range_columns=4] [long_range_rows=4] "
-            "[sdrp=0.1464466] [swap_mode=auto|swap|cnot]"
+            "[swap_mode=auto|swap|cnot]"
         )
     width = int(sys.argv[1])
     depth = int(sys.argv[2])
     lrc = int(sys.argv[3]) if len(sys.argv) > 3 else 4
     lrr = int(sys.argv[4]) if len(sys.argv) > 4 else 4
-    sdrp  = float(sys.argv[5]) if len(sys.argv) > 5 else ((1 - 1 / math.sqrt(2)) / 2)
-    swap_mode = sys.argv[6] if len(sys.argv) > 6 else "auto"
-    result = bench_qrack(width, depth, lrc, lrr, sdrp, swap_mode)
+    swap_mode = sys.argv[5] if len(sys.argv) > 5 else "auto"
+    result = bench_qrack(width, depth, lrc, lrr, swap_mode)
     for k, v in result.items():
         print(f"  {k}: {v}")
     return 0
