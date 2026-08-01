@@ -209,7 +209,7 @@ def bench_qrack(width, depth, lrc=4, lrr=4):
     # -----------------------------------------------------------------------
     # Method: QrackAceBackend
     # -----------------------------------------------------------------------
-    sim = AceQasmSimulator(n_qubits=width, long_range_columns=lrc, long_range_rows=lrr, is_torus=False)
+    sim = AceQasmSimulator(n_qubits=width, long_range_columns=lrc, long_range_rows=lrr, is_torus=False, is_1d_chain=True)
     qc = transpile(qc, backend=sim, optimization_level=3)
 
     t_trans = time.perf_counter()
