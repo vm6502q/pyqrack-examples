@@ -217,8 +217,13 @@ def bench_qrack(width, depth, lrc=4, lrr=4, swap_mode="auto"):
                 g = random.choice(two_bit_gates)
                 g(sim, b1, b2)
 
-    # Terminal measurement
-    sample = experiment.m_all()
+    # (I might have a problem.)
+    # for i in range(len(sim.sim)):
+    #     s = sim.sim[i]
+    #     s.lossy_out_to_file(f"s{i}.tqs")
+
+    # Terminal measurement    
+    sample = sim.m_all()
     seconds = time.perf_counter() - start
     print(f"Seconds: {seconds}. (Fidelity unknown.)")
 
@@ -237,9 +242,7 @@ def main():
     lrc = int(sys.argv[3]) if len(sys.argv) > 3 else 4
     lrr = int(sys.argv[4]) if len(sys.argv) > 4 else 4
     swap_mode = sys.argv[5] if len(sys.argv) > 5 else "auto"
-    result = bench_qrack(width, depth, lrc, lrr, swap_mode)
-    for k, v in result.items():
-        print(f"  {k}: {v}")
+    bench_qrack(width, depth, lrc, lrr, swap_mode)
     return 0
 
 if __name__ == "__main__":
