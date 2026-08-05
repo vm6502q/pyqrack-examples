@@ -10,10 +10,11 @@ import sys
 
 from collections import Counter
 
+from pyqrack import QrackSimulator
+
 from qiskit import QuantumCircuit
 from qiskit.circuit.library import RZZGate, RXGate
 from qiskit.compiler import transpile
-from qiskit_aer.backends import AerSimulator
 from qiskit.quantum_info import Statevector
 from qiskit.transpiler import CouplingMap
 
@@ -210,18 +211,17 @@ def main():
             act_string(otoc, string)
 
     # Compile OTOC for Qiskit Aer
-    control = AerSimulator(method="statevector")
     otoc = transpile(
         otoc,
         optimization_level=3,
-        backend=control
+        basis_gates=QrackSimulator.get_qiskit_basis_gates()
     )
 
-    otoc.save_statevector()
-    job = control.run(otoc)
-    control_probs = Statevector(job.result().get_statevector()).probabilities()
+    sim = QrackSimulator(n_qubits)
+    sim.run_qiskit_circuit(otoc, shots=0)
+    control_probs = sim.out_probs()
 
-    shots = 1<<(n_qubits + 2)
+    shots = 1 << min(10, n_qubits + 2)
     experiment_probs = dict(Counter(generate_otoc_samples(n_qubits=n_qubits, J=J, h=h, z=z, theta=0, t=dt*depth, shots=shots, pauli_strings=pauli_strings)))
     experiment_probs = { k: v / shots for k, v in experiment_probs.items() }
 
