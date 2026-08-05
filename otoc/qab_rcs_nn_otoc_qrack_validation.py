@@ -143,7 +143,7 @@ def bench_qrack(width, depth, cycles, lrc, lrr):
         tup[0](control, *tup[1:])
         tup[0](experiment, *tup[1:])
 
-    shots = 1 << min(9, width + 2)
+    shots = 1 << min(10, width + 2)
     experiment_counts = dict(Counter(experiment.measure_shots(all_bits, shots)))
     control_probs = control.out_probs()
 
