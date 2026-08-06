@@ -240,6 +240,27 @@ def bench_qrack(n_qubits, magic, shots):
         print(calc_stats(control_probs, experiment_probs, shots, d + 1, magic_count))
 
 
+def route_heavy_light(prob_dict, u_u):
+    """
+    Split a {outcome: p} dict into (heavy, light) dicts centered on u_u.
+    heavy: outcomes where p > u_u, values normalised to sum 1.
+    light: outcomes where p < u_u, values (stored positive) normalised to sum 1.
+    """
+    heavy_raw = {}
+    light_raw = {}
+    for outcome, p in prob_dict.items():
+        c = p - u_u
+        if c > 0:
+            heavy_raw[outcome] = c
+        elif c < 0:
+            light_raw[outcome] = -c          # store as positive
+
+    s_h = sum(heavy_raw.values())
+    s_l = sum(light_raw.values())
+    heavy = {k: v / s_h for k, v in heavy_raw.items()} if s_h > 0 else {}
+    light = {k: v / s_l for k, v in light_raw.items()} if s_l > 0 else {}
+    return heavy, light
+
 
 def calc_stats(ideal_probs, probs, shots, depth, magic):
     # For QV, we compare probabilities of (ideal) "heavy outputs."
