@@ -71,8 +71,10 @@ def bench_qrack(n_qubits, magic, shots):
             aux.mcx([c], t)
         
         exp_shots = []
-        exp_probs = {}
-        sum_probs = 0.0
+        h_probs = {}
+        h_prob_sum = 0.0
+        l_probs = {}
+        l_prob_sum = 0.0
         i = 0
         while i < shots:
             experiment = QrackStabilizer(n_qubits)
@@ -80,14 +82,18 @@ def bench_qrack(n_qubits, magic, shots):
             s = experiment.m_all()
             if s in exp_shots:
                 continue
+            i += 1
             exp_shots.append(s)
             p = aux.prob_perm(all_bits, [(s >> i) & 1 for i in range(n_qubits)])
-            if magic_count and (p <= mean):
-                continue
-            i += 1
-            exp_probs[s] = p
-            sum_probs += p
-        experiment_probs = { k: v / sum_probs for k, v in exp_probs.items() }
+            if p > mean:
+                h_probs[s] = p
+                h_prob_sum += p
+            else:
+                l_probs[s] = p
+                l_prob_sum += p
+        experiment_h_probs = { k: v / h_prob_sum for k, v in h_probs.items() }
+        experiment_l_probs = { k: v / l_prob_sum for k, v in l_probs.items() }
+        experiment_probs = (experiment_h_probs, experiment_l_probs)
 
         control_probs = control.out_probs()
 
@@ -105,8 +111,9 @@ def calc_stats(ideal_probs, probs, shots, depth, magic):
     denom = 0
     sum_hog_counts = 0
     experiment = [0] * n_pow
+    probs_heavy, probs_light = probs
     for i in range(n_pow):
-        exp = probs.get(i, 0)
+        exp = 0.5 * probs_heavy.get(i, 0)  +  0.5 * u_u * (1 - probs_light.get(i, 0))
         ideal = ideal_probs[i]
         count = exp * shots
 
