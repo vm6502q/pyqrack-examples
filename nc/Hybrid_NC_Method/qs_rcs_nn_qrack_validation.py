@@ -231,10 +231,7 @@ def bench_qrack(n_qubits, magic, shots):
             if s in exp_shots:
                 continue
             exp_shots.append(s)
-            p = aux.prob_perm(all_bits, [(s >> j) & 1 for j in range(n_qubits)])
-            if magic_count and (p == mean):
-                continue
-            probs[s] = p
+            probs[s] = aux.prob_perm(all_bits, [(s >> j) & 1 for j in range(n_qubits)])
             i += 1
         experiment_probs = route_heavy_light(probs, mean)
 
