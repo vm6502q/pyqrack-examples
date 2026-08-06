@@ -64,6 +64,8 @@ def bench_qrack(n_qubits, magic, shots):
             qc.cx(c, t)
             control.mcx([c], t)
 
+        aux = QrackSimulator(n_qubits, is_near_clifford_tableau_writer=True)
+        aux.run_qiskit_circuit(qc, shots=0)
         exp_shots = []
         exp_probs = {}
         sum_probs = 0.0
@@ -75,9 +77,7 @@ def bench_qrack(n_qubits, magic, shots):
             if s in exp_shots:
                 continue
             exp_shots.append(s)
-            experiment = QrackSimulator(n_qubits, is_near_clifford_tableau_writer=True)
-            experiment.run_qiskit_circuit(qc, shots=0)
-            p = experiment.prob_perm(all_bits, [(s >> i) & 1 for i in range(n_qubits)])
+            p = aux.prob_perm(all_bits, [(s >> i) & 1 for i in range(n_qubits)])
             if magic_count and (p <= mean):
                 continue
             i += 1
