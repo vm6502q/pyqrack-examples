@@ -15,33 +15,13 @@ from pyqrack import QrackSimulator, QrackStabilizer, Pauli
 from qiskit import QuantumCircuit
 
 
-# By Gemini (Google Search AI)
-def int_to_bitstring(integer, length):
-    return bin(integer)[2:].zfill(length)
-
-
-# By Elara (OpenAI custom GPT)
-def hamming_distance(s1, s2, n):
-    return sum(
-        ch1 != ch2 for ch1, ch2 in zip(int_to_bitstring(s1, n), int_to_bitstring(s2, n))
-    )
-
-
-# From https://stackoverflow.com/questions/13070461/get-indices-of-the-top-n-values-of-a-list#answer-38835860
-def top_n(n, a):
-    median_index = len(a) >> 1
-    if n > median_index:
-        n = median_index
-    return np.argsort(a)[-n:]
-
-
-def bench_qrack(n_qubits, hamming_n):
+def bench_qrack(n_qubits, magic, shots):
     # This is a "fully-connected" coupler random circuit.
-    shots = hamming_n << 2
     lcv_range = range(n_qubits)
     all_bits = list(lcv_range)
+    mean = 1.0 / (1 << n_qubits)
 
-    rz_count = int(round(math.sqrt(n_qubits)))
+    rz_count = magic
     rz_opportunities = n_qubits * n_qubits * 2
     rz_positions = []
     while len(rz_positions) < rz_count:
@@ -53,6 +33,7 @@ def bench_qrack(n_qubits, hamming_n):
     qc = QuantumCircuit(n_qubits)
     control = QrackSimulator(n_qubits)
     gate_count = 0
+    magic_count = 0
     for d in range(n_qubits):
         # Single-qubit gates
         for i in lcv_range:
@@ -71,6 +52,7 @@ def bench_qrack(n_qubits, hamming_n):
                     angle = random.uniform(0, math.pi / 2)
                     qc.rz(angle, i)
                     control.r(Pauli.PauliZ, angle, i)
+                    magic_count += 1
                 gate_count = gate_count + 1
 
         # 2-qubit couplers
@@ -82,40 +64,49 @@ def bench_qrack(n_qubits, hamming_n):
             qc.cx(c, t)
             control.mcx([c], t)
 
-        # Round to nearest Clifford circuit
         exp_shots = []
-        for i in range(shots):
+        exp_probs = {}
+        sum_probs = 0.0
+        i = 0
+        while i < shots:
             experiment = QrackStabilizer(n_qubits)
             experiment.run_qiskit_circuit(qc, shots=0)
-            exp_shots.append(experiment.m_all());
-        experiment_counts = dict(Counter(exp_shots))
+            s = experiment.m_all()
+            if s in exp_shots:
+                continue
+            exp_shots.append(s)
+            experiment = QrackSimulator(n_qubits, is_near_clifford_tableau_writer=True)
+            experiment.run_qiskit_circuit(qc, shots=0)
+            p = experiment.prob_perm(all_bits, [(s >> i) & 1 for i in range(n_qubits)])
+            if p <= mean:
+                continue
+            i += 1
+            exp_probs[s] = p
+            sum_probs += p
+        experiment_probs = { k: v / sum_probs for k, v in exp_probs.items() }
 
         control_probs = control.out_probs()
 
-        print(calc_stats(control_probs, experiment_counts, shots, d + 1, hamming_n, rz_count))
+        print(calc_stats(control_probs, experiment_probs, shots, d + 1, magic_count))
 
 
-def calc_stats(ideal_probs, counts, shots, depth, hamming_n, rz_count):
+def calc_stats(ideal_probs, probs, shots, depth, magic):
     # For QV, we compare probabilities of (ideal) "heavy outputs."
     # If the probability is above 2/3, the protocol certifies/passes the qubit width.
     n_pow = len(ideal_probs)
     n = int(round(math.log2(n_pow)))
     threshold = statistics.median(ideal_probs)
-    u_u = statistics.mean(ideal_probs)
-    diff_sqr = 0
+    u_u = 1 / n_pow
     numer = 0
     denom = 0
     sum_hog_counts = 0
     experiment = [0] * n_pow
     for i in range(n_pow):
-        count = counts[i] if i in counts else 0
+        exp = probs.get(i, 0)
         ideal = ideal_probs[i]
-        exp = count / shots
+        count = exp * shots
 
         experiment[i] = count
-
-        # L2 distance
-        diff_sqr += (ideal - exp) ** 2
 
         # XEB / EPLG
         denom += (ideal - u_u) ** 2
@@ -125,42 +116,35 @@ def calc_stats(ideal_probs, counts, shots, depth, hamming_n, rz_count):
         if ideal > threshold:
             sum_hog_counts += count
 
-    l2_difference = diff_sqr ** (1 / 2)
     hog_prob = sum_hog_counts / shots
     xeb = numer / denom
-
-    exp_top_n = top_n(hamming_n, experiment)
-    con_top_n = top_n(hamming_n, ideal_probs)
-
-    # By Elara (OpenAI custom GPT)
-    # Compute Hamming distances between each ACE bitstring and its closest in control case
-    min_distances = [
-        min(hamming_distance(a, r, n) for r in con_top_n) for a in exp_top_n
-    ]
-    avg_hamming_distance = np.mean(min_distances)
 
     return {
         "qubits": n,
         "depth": depth,
-        "magic": rz_count,
-        "l2_difference": float(l2_difference),
+        "magic": magic,
         "xeb": float(xeb),
-        "hog_prob": float(hog_prob),
-        "hamming_distance_n": min(hamming_n, n_pow >> 1),
-        "hamming_distance_set_avg": float(avg_hamming_distance),
+        "hog_prob": float(hog_prob)
     }
 
 
 def main():
     n_qubits = 16
-    hamming_n = 2048
+    magic = 17
+    shots = 256
     if len(sys.argv) > 1:
         n_qubits = int(sys.argv[1])
     if len(sys.argv) > 2:
-        hamming_n = int(sys.argv[2])
+        magic = int(sys.argv[2])
+    else:
+        magic = n_qubits + 1
+    if len(sys.argv) > 3:
+        shots = int(sys.argv[3])
+    else:
+        shots = n_qubits * n_qubits
 
     # Run the benchmarks
-    bench_qrack(n_qubits, hamming_n)
+    bench_qrack(n_qubits, magic, shots)
 
     return 0
 
