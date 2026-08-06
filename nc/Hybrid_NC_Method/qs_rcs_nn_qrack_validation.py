@@ -162,6 +162,7 @@ def bench_qrack(n_qubits, magic, shots):
 
     qc = QuantumCircuit(n_qubits)
     control = QrackSimulator(n_qubits)
+    aux = QrackSimulator(n_qubits, is_near_clifford_tableau_writer=True)
     gate_count = 0
     magic_count = 0
     for d in range(n_qubits):
@@ -171,17 +172,21 @@ def bench_qrack(n_qubits, magic, shots):
             for _ in range(2):
                 qc.h(i)
                 control.h(i)
+                aux.h(i)
                 s_count = random.randint(0, 3)
                 if s_count & 1:
                     qc.z(i)
                     control.z(i)
+                    aux.z(i)
                 if s_count & 2:
                     qc.s(i)
                     control.s(i)
+                    aux.s(i)
                 if gate_count in rz_positions:
                     angle = random.uniform(0, math.pi / 2)
                     qc.rz(angle, i)
                     control.r(Pauli.PauliZ, angle, i)
+                    aux.r(Pauli.PauliZ, angle, i)
                     magic_count += 1
                 gate_count = gate_count + 1
 
@@ -214,9 +219,8 @@ def bench_qrack(n_qubits, magic, shots):
                 g = random.choice(two_bit_gates)
                 g[0](qc, b1, b2)
                 g[1](control, b1, b2)
+                g[1](aux, b1, b2)
 
-        aux = QrackSimulator(n_qubits, is_near_clifford_tableau_writer=True)
-        aux.run_qiskit_circuit(qc, shots=0)
         exp_shots = []
         exp_probs = {}
         sum_probs = 0.0
