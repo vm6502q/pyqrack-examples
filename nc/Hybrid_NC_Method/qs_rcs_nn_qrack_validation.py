@@ -232,7 +232,7 @@ def bench_qrack(n_qubits, magic, shots):
                 continue
             exp_shots.append(s)
             p = aux.prob_perm(all_bits, [(s >> j) & 1 for j in range(n_qubits)])
-            if p == mean:
+            if magic_count and (p == mean):
                 continue
             probs[s] = p
             i += 1
