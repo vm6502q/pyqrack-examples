@@ -229,7 +229,7 @@ def bench_qrack(n_qubits, magic, shots):
             experiment = QrackSimulator(n_qubits, is_near_clifford_tableau_writer=True)
             experiment.run_qiskit_circuit(qc, shots=0)
             p = experiment.prob_perm(all_bits, [(s >> i) & 1 for i in range(n_qubits)])
-            if magic_count && (p <= mean):
+            if magic_count and (p <= mean):
                 continue
             i += 1
             exp_probs[s] = p
