@@ -71,10 +71,7 @@ def bench_qrack(n_qubits, magic, shots):
             aux.mcx([c], t)
         
         exp_shots = []
-        h_probs = {}
-        h_prob_sum = 0.0
-        l_probs = {}
-        l_prob_sum = 0.0
+        probs = {}
         i = 0
         while i < shots:
             experiment = QrackStabilizer(n_qubits)
@@ -82,22 +79,39 @@ def bench_qrack(n_qubits, magic, shots):
             s = experiment.m_all()
             if s in exp_shots:
                 continue
-            i += 1
             exp_shots.append(s)
-            p = aux.prob_perm(all_bits, [(s >> i) & 1 for i in range(n_qubits)])
-            if p > mean:
-                h_probs[s] = p
-                h_prob_sum += p
-            else:
-                l_probs[s] = p
-                l_prob_sum += p
-        experiment_h_probs = { k: v / h_prob_sum for k, v in h_probs.items() }
-        experiment_l_probs = { k: v / l_prob_sum for k, v in l_probs.items() }
-        experiment_probs = (experiment_h_probs, experiment_l_probs)
+            p = aux.prob_perm(all_bits, [(s >> j) & 1 for j in range(n_qubits)])
+            if p == mean:
+                continue
+            probs[s] = p
+            i += 1
+        experiment_probs = route_heavy_light(probs, mean)
 
         control_probs = control.out_probs()
 
         print(calc_stats(control_probs, experiment_probs, shots, d + 1, magic_count))
+
+
+def route_heavy_light(prob_dict, u_u):
+    """
+    Split a {outcome: p} dict into (heavy, light) dicts centered on u_u.
+    heavy: outcomes where p > u_u, values normalised to sum 1.
+    light: outcomes where p < u_u, values (stored positive) normalised to sum 1.
+    """
+    heavy_raw = {}
+    light_raw = {}
+    for outcome, p in prob_dict.items():
+        c = p - u_u
+        if c > 0:
+            heavy_raw[outcome] = c
+        elif c < 0:
+            light_raw[outcome] = -c          # store as positive
+
+    s_h = sum(heavy_raw.values())
+    s_l = sum(light_raw.values())
+    heavy = {k: v / s_h for k, v in heavy_raw.items()} if s_h > 0 else {}
+    light = {k: v / s_l for k, v in light_raw.items()} if s_l > 0 else {}
+    return heavy, light
 
 
 def calc_stats(ideal_probs, probs, shots, depth, magic):
