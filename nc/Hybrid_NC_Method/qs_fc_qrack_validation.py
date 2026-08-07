@@ -74,11 +74,16 @@ def bench_qrack(n_qubits, magic, shots):
         probs = {}
         if magic_count:
             i = 0
+            skip = 0
             while i < shots:
                 experiment = QrackStabilizer(n_qubits)
                 experiment.run_qiskit_circuit(qc, shots=0)
                 s = experiment.m_all()
                 if magic_count and (s in exp_shots):
+                    if skip < n_qubits:
+                        skip += 1
+                    else:
+                        i += 1
                     continue
                 exp_shots.append(s)
                 probs[s] = aux.prob_perm(all_bits, [(s >> j) & 1 for j in range(n_qubits)])
