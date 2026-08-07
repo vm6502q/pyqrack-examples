@@ -72,16 +72,17 @@ def bench_qrack(n_qubits, magic, shots):
         
         exp_shots = []
         probs = {}
-        i = 0
-        while i < shots:
-            experiment = QrackStabilizer(n_qubits)
-            experiment.run_qiskit_circuit(qc, shots=0)
-            s = experiment.m_all()
-            if s in exp_shots:
-                continue
-            exp_shots.append(s)
-            probs[s] = aux.prob_perm(all_bits, [(s >> j) & 1 for j in range(n_qubits)])
-            i += 1
+        if magic_count:
+            i = 0
+            while i < shots:
+                experiment = QrackStabilizer(n_qubits)
+                experiment.run_qiskit_circuit(qc, shots=0)
+                s = experiment.m_all()
+                if magic_count and (s in exp_shots):
+                    continue
+                exp_shots.append(s)
+                probs[s] = aux.prob_perm(all_bits, [(s >> j) & 1 for j in range(n_qubits)])
+                i += 1
         experiment_probs = route_heavy_light(probs, mean)
 
         control_probs = control.out_probs()
