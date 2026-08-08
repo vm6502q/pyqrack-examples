@@ -9,7 +9,7 @@ from collections import Counter
 from pyqrack import QrackSimulator
 
 
-def calc_stats(ideal_probs, exp_probs, sdrp):
+def calc_stats(ideal_probs, exp_probs, sdrp, fidelity):
     # For QV, we compare probabilities of (ideal) "heavy outputs."
     # If the probability is above 2/3, the protocol certifies/passes the qubit width.
     n_pow = len(ideal_probs)
@@ -48,9 +48,14 @@ def calc_stats(ideal_probs, exp_probs, sdrp):
         "sdrp": sdrp,
         "xeb": float(xeb),
         "hog_prob": float(hog_prob),
+        "inner_product_lower_bound": fidelity,
         "l2_diff": float(rss),
         "mf_l2_diff": float(mf_rss)
     }
+
+
+def u(sim, q, th, ph, lm):
+    sim.u(q, th, ph, lm)
 
 
 def h(sim, n):
@@ -106,6 +111,13 @@ def bench_qrack(n, sdrp):
     for i in range(1, n):
         circ.append((cx, i - 1, i))
 
+    # Random U3 initialization
+    # for i in range(0, n):
+    #     th, ph, lm = (random.uniform(-math.pi, math.pi) for _ in range(3))
+    #     # Keep it Haar-random towards the poles:
+    #     th = math.asin(th / math.pi)
+    #     circ.append((u, i, th, ph, lm))
+
     qft(n, circ)
     reverse(n, circ)
 
@@ -117,9 +129,10 @@ def bench_qrack(n, sdrp):
     if sdrp > 0:
         experiment.set_sdrp(sdrp)
     run_circuit(experiment, circ)
+    fidelity = experiment.get_unitary_fidelity()
     experiment = experiment.out_probs()
 
-    return calc_stats(control, experiment, sdrp)
+    return calc_stats(control, experiment, sdrp, fidelity)
 
 
 def main():
