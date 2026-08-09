@@ -281,7 +281,6 @@ def calc_stats(ideal_probs, probs, shots, depth, magic):
     sum_hog_counts = 0
     experiment = [0] * n_pow
     probs_heavy, probs_light = probs
-    probs_light = {k: (1.0 - v) for k, v in probs_light.items()} if len(probs_light) else {}
     n_light = 1.0 / (u_u * (n_pow - len(probs_light)) + sum(u_u * (1.0 - v) for v in probs_light.values()))
     for i in range(n_pow):
         exp = 0.5 * probs_heavy.get(i, 0)  +  0.5 * n_light * u_u * (1.0 - probs_light.get(i, 0))
