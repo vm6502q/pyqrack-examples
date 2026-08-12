@@ -52,7 +52,7 @@ def bench_qrack(n_qubits, shots):
             control.mcx([c], t)
         
         experiment = QStabilizerQasmSimulator(n_qubits=n_qubits)
-        aer_qc = transpile(qc, backend=experiment, optimization_level=1)
+        aer_qc = qc.copy()
         aer_qc.measure_all()
         raw_counts = experiment.run(aer_qc, shots=shots).result().get_counts()
         counts = {int(k, 2): v for k, v in raw_counts.items()}
