@@ -59,3 +59,10 @@ would need either a real noise model on the CZ/H/S gates (giving
 post-selection something to actually filter) or continued use of the
 ACE cross-validation as an independent check, since no ground-truth
 reference is feasible to compute directly at this qubit count.
+
+It's important to note that a basic "sanity test" tells us what we'd
+expect when applying this heuristic to a similar circuit for Shor's
+algorithm with error-detection ancillae post-selected on the T-gate
+error the heuristic actually has, analytically: we can effectively
+"steer" to nominally error-free syndrome and effectively the "closest
+Clifford circuit" while losing virtually or entirely all coherence.
