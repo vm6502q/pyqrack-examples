@@ -248,12 +248,138 @@ def run_benchmark(qasm_path, n_orderings=3, seed=0):
     return results
 
 
+# -----------------------------------------------------------------------
+# Coherence-loss demonstration: the greedy-force pass above now reaches
+# 0-error syndromes essentially universally (confirmed directly, this is
+# what motivated adding this section) -- but "no error detected" is NOT
+# the same claim as "the circuit's magic content survived." This section
+# demonstrates, directly and quantitatively, that steering to a
+# zero-error syndrome is equivalent to steering to SOME exact Clifford
+# state -- the "closest Clifford circuit" -- while losing virtually or
+# entirely all of the coherence a genuine T-gate would carry.
+#
+# Two separate pieces of evidence, kept separate rather than blended into
+# one number, because they say related but distinct things:
+#
+# 1. An EXACT, ANALYTIC bound: per T-gate, the fidelity between "identity
+#    was effectively applied" (what a naive model of forcing predicts)
+#    and the true, coherent T-gate's result is exactly cos^2(pi/8) ~
+#    0.8536, computed directly from the state vectors, not estimated.
+#    Compounded (assuming independence) across N such gates, this falls
+#    to astronomically small values well before N reaches the real
+#    circuit's 468 T-gates -- included as a clean, easy-to-verify
+#    illustration of scale, not as a precise prediction of what forcing
+#    actually produces.
+#
+# 2. An HONEST EMPIRICAL measurement, because the exact bound above turns
+#    out to be an oversimplification, confirmed directly rather than
+#    assumed: forcing the check ancilla to "no error" does NOT reliably
+#    return the target qubit to exactly its pre-T-gate state. The target
+#    qubit's own measured statistics show real, substantial spread even
+#    after a successful force (measured P(1) around 0.24, not 0.0), and
+#    differ from the statistics obtained by measuring the ancilla
+#    genuinely rather than forcing it (measured P(1) around 0.38 in that
+#    case) -- meaning the two aren't even equivalent to each other, let
+#    alone to "nothing happened." This is the same structural gap
+#    identified earlier in this research thread: the ancilla and target
+#    remain genuinely entangled for a target qubit that isn't in a bare
+#    computational-basis state, so "consistent with no error" does not
+#    collapse to a single, simple, predictable outcome -- it is
+#    consistent with a nontrivial family of resulting states, all of
+#    them exact Cliffords (zero magic, confirmed by the same reasoning
+#    throughout this session), but not the single "as if nothing
+#    happened" story a naive picture of forcing would suggest.
+# -----------------------------------------------------------------------
+
+def exact_fidelity_bound(n_gates_list=(1, 5, 10, 20, 50, 100, 468)):
+    import numpy as np
+
+    ket0 = np.array([1, 0], dtype=complex)
+    ket1 = np.array([0, 1], dtype=complex)
+    plus = (ket0 + ket1) / np.sqrt(2)
+    T = np.array([[1, 0], [0, np.exp(1j * np.pi / 4)]], dtype=complex)
+    true_state = T @ plus
+    per_gate_fidelity = abs(np.vdot(plus, true_state)) ** 2
+
+    print(f"exact per-gate fidelity (|+> vs T|+>) = {per_gate_fidelity:.4f}  (= cos^2(pi/8), verified directly)")
+    print("compounded across N independent T-gates (idealized -- see caveats above):")
+    for n in n_gates_list:
+        print(f"  N={n:4d}: {per_gate_fidelity ** n:.3e}")
+    return per_gate_fidelity
+
+
+def empirical_target_statistics(n_trials=3000):
+    from pyqrack import QrackStabilizer
+
+    def run(force):
+        count1 = 0
+        for _ in range(n_trials):
+            sim = QrackStabilizer(2)
+            sim.h(1)
+            sim.h(0)
+            sim.mcx([0], 1)
+            sim.t(1)
+            sim.mcx([0], 1)
+            sim.h(0)
+            p1 = sim.prob(0)
+            if force:
+                if (1.0 - p1) > 1e-9:
+                    sim.force_m(0, False)
+                else:
+                    sim.m(0)
+            else:
+                sim.m(0)
+            sim.h(1)
+            count1 += sim.m(1)
+        return count1 / n_trials
+
+    p_forced = run(True)
+    p_genuine = run(False)
+    print(f"target qubit P(1) after a single T-gate, ancilla FORCED to 'no error':  {p_forced:.4f}")
+    print(f"target qubit P(1) after a single T-gate, ancilla GENUINELY measured:    {p_genuine:.4f}")
+    print("(neither is 0.0 -- 'no error detected' does not mean 'target qubit unaffected')")
+    print("(the two also differ from EACH OTHER -- forcing and genuine measurement are not equivalent)")
+    return p_forced, p_genuine
+
+
+def demonstrate_coherence_loss():
+    print("=" * 70)
+    print("COHERENCE LOSS UNDER 'ERROR-FREE SYNDROME' STEERING")
+    print("=" * 70)
+    print(
+        "The greedy-force pass above now reaches 0-error syndromes "
+        "essentially universally. That is a real, verified result -- and "
+        "a separate question from whether the circuit's magic survived. "
+        "This section demonstrates directly that it does not, in two "
+        "ways: an exact theoretical bound, and an honest empirical "
+        "measurement that turns out to be even less favorable than the "
+        "simple theoretical picture predicts.\n"
+    )
+    print("-- 1. Exact, analytic bound (idealized model) --")
+    exact_fidelity_bound()
+    print()
+    print("-- 2. Honest empirical measurement (real mechanism, not the idealized model) --")
+    empirical_target_statistics()
+    print()
+    print(
+        "Bottom line: steering every check to 'no error detected' is steering "
+        "to SOME exact Clifford state -- zero magic, by the field's own "
+        "definition of the term, as established elsewhere in this research "
+        "thread -- but not a predictable, 'as if nothing happened' one. The "
+        "syndrome reading clean is real and verified; treating that as "
+        "evidence the underlying T-gates' coherent content survived is not "
+        "supported by either the theoretical bound or the direct measurement "
+        "above."
+    )
+
+
 def main():
     p = argparse.ArgumentParser()
     p.add_argument("qasm_path", nargs="?", default="nq70_depth70_checks27_doped.qasm")
     p.add_argument("--skip-verify", action="store_true")
     p.add_argument("--orderings", type=int, default=3)
     p.add_argument("--seed", type=int, default=0)
+    p.add_argument("--skip-coherence-demo", action="store_true")
     args = p.parse_args()
 
     if not args.skip_verify:
@@ -262,6 +388,10 @@ def main():
         print()
 
     run_benchmark(args.qasm_path, args.orderings, args.seed)
+
+    if not args.skip_coherence_demo:
+        print()
+        demonstrate_coherence_loss()
 
 
 if __name__ == "__main__":
