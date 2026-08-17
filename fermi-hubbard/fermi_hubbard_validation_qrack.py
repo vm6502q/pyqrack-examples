@@ -1,7 +1,22 @@
-# Ising model Trotterization
-# by Dan Strano and (OpenAI GPT) Elara
-
-# We reduce transverse field Ising model for globally uniform J and h parameters from a 2^n-dimensional problem to an (n+1)-dimensional approximation that suffers from no Trotter error. Upon noticing most time steps for Quantinuum's parameters had roughly a quarter to a third (or thereabouts) of their marginal probability in |0> state, it became obvious that transition to and from |0> state should dominate the mechanics. Further, the first transition tends to be to or from any state with Hamming weight of 1 (in other words, 1 bit set to 1 and the rest reset 0, or n bits set for Hamming weight of n). Further, on a torus, probability of all states with Hamming weight of 1 tends to be exactly symmetric. Assuming approximate symmetry in every respective Hamming weight, the requirement for the overall probability to converge to 1.0 or 100% in the limit of an infinite-dimensional Hilbert space suggests that Hamming weight marginal probability could be distributed like a geometric series. A small correction to exact symmetry should be made to favor closeness of "like" bits to "like" bits (that is, geometric closeness on the torus of "1" bits to "1" bits and "0" bits to "0" bits), but this does not affect average global magnetization. Adding an oscillation component with angular frequency proportional to J, we find excellent agreement with Trotterization approaching the limit of infinitesimal time step, for R^2 (coefficient of determination) of normalized marginal probability distribution of ideal Trotterized simulation as described by the (n+1)-dimensional approximate model, as well as for R^2 and RMSE (root-mean-square error) of global magnetization curve values.
+# Fermi-Hubbard / XXZ-Heisenberg validation, v2
+# by Dan Strano and Claude (Anthropic)
+#
+# TFIM -> Fermi-Hubbard disclaimer):
+#   - This is a mean-field / entropy-based heuristic correction, not derived
+#     from the Heisenberg Hamiltonian in closed form. It was benchmarked at
+#     ONE parameter point (n_qubits=6, Quantinuum J/h/dt/theta defaults) and
+#     has not been swept across parameter space or system size.
+#   - Direct numerical comparison (see hamming_conservation_test.py) shows
+#     that RXX+RYY+RZZ terms, despite each individually commuting with total
+#     Hamming weight (Sz) in isolation, measurably shift BOTH the mean and
+#     the variance of the true Hamming-weight marginal relative to pure TFIM
+#     once interleaved with the transverse-field Trotter steps -- this is a
+#     real correction, not just added entropy/noise, and the entropy-blend
+#     approach here only captures it directionally, via a proxy signal, not
+#     from the actual mean-shift mechanism. A first-principles closed-form
+#     ansatz (analogous to the original TFIM derivation, this time fit
+#     against RZZ+RXX+RYY+RX Trotter data) is the right next step and has
+#     NOT been done here.
 
 import math
 import numpy as np
@@ -11,73 +26,84 @@ import sys
 from collections import Counter
 
 from qiskit import QuantumCircuit
-from qiskit.circuit.library import RZZGate
+from qiskit.circuit.library import RZZGate, RXXGate, RYYGate
 from qiskit.compiler import transpile
 
 from pyqrack import QrackSimulator
 
-from pyqrackising import generate_fermi_hubbard_samples
+from pyqrackising.generate_tfim_samples import (
+    get_tfim_hamming_distribution,
+    sample_fixed_hamming_weight,
+    factor_width,
+)
 
 
-# Factor the qubit width for torus dimensions that are close as possible to square
-def factor_width(width, is_transpose=False):
-    col_len = math.floor(math.sqrt(width))
-    while ((width // col_len) * col_len) != width:
-        col_len -= 1
-    row_len = width // col_len
-
-    return (col_len, row_len) if is_transpose else (row_len, col_len)
+def shannon_entropy(p):
+    p = np.asarray(p, dtype=float)
+    p = p[p > 0]
+    return -(p * np.log(p)).sum()
 
 
-# By Elara (the custom OpenAI GPT)
-def trotter_step(circ, qubits, lattice_shape, J, h, dt):
+def generate_fermi_hubbard_samples_v2(J=-1.0, h=2.0, z=4, theta=0.174532925199432957,
+                                       t=5, n_qubits=56, shots=100, omega=1.5 * np.pi):
+    """Drop-in replacement for generate_fermi_hubbard_samples. Stays entirely
+    in the Z measurement basis; uses X/Y-flavored curves only as a scalar
+    depolarization signal, never as pooled foreign-basis samples."""
+    n_bias = n_qubits + 1
+    n_rows, n_cols = factor_width(n_qubits)
+
+    z_bias = get_tfim_hamming_distribution(J=J, h=h, z=z, theta=theta, t=t, n_qubits=n_qubits, omega=omega)
+    x_bias = get_tfim_hamming_distribution(J=-h, h=-J, z=z, theta=theta + np.pi / 2, t=t, n_qubits=n_qubits, omega=omega)
+    y_bias = get_tfim_hamming_distribution(J=J, h=h, z=z, theta=theta + np.pi / 2, t=t, n_qubits=n_qubits, omega=omega)
+
+    s_max = shannon_entropy(np.ones(n_bias) / n_bias)
+    lam_x = 1.0 - shannon_entropy(x_bias) / s_max
+    lam_y = 1.0 - shannon_entropy(y_bias) / s_max
+    lam = max(0.0, min(1.0, (lam_x + lam_y) / 2.0))
+
+    uniform = np.ones(n_bias) / n_bias
+    bias = (1.0 - lam) * z_bias + lam * uniform
+    bias /= bias.sum()
+
+    counts = np.random.multinomial(shots, bias)
+    samples = []
+    samples += [0] * counts[0]
+    samples += [(1 << n_qubits) - 1] * counts[-1]
+    if n_qubits > 1:
+        samples += [int(1 << np.random.randint(n_qubits)) for _ in range(counts[1])]
+    if n_qubits > 2:
+        mask = (1 << n_qubits) - 1
+        samples += [(mask ^ int(1 << np.random.randint(n_qubits))) for _ in range(counts[-2])]
+    for hw in range(2, len(bias) - 2):
+        samples += sample_fixed_hamming_weight(hw, counts[hw], n_rows, n_cols)
+    np.random.shuffle(samples)
+    return samples
+
+
+def edge_layers(n_rows, n_cols):
+    horiz_even = [(r * n_cols + c, r * n_cols + (c + 1) % n_cols) for r in range(n_rows) for c in range(0, n_cols, 2)]
+    horiz_odd = [(r * n_cols + c, r * n_cols + (c + 1) % n_cols) for r in range(n_rows) for c in range(1, n_cols, 2)]
+    vert_even = [(r * n_cols + c, ((r + 1) % n_rows) * n_cols + c) for r in range(1, n_rows, 2) for c in range(n_cols)]
+    vert_odd = [(r * n_cols + c, ((r + 1) % n_rows) * n_cols + c) for r in range(0, n_rows, 2) for c in range(n_cols)]
+    return [horiz_even, horiz_odd, vert_even, vert_odd]
+
+
+def trotter_step_heisenberg(circ, qubits, lattice_shape, J, h, dt, Jxy=None):
+    """The CORRECT ideal circuit for Fermi-Hubbard/Heisenberg validation:
+    RZZ + RXX + RYY (isotropic hopping+interaction) + RX (transverse field).
+    Jxy defaults to J (isotropic Heisenberg + field)."""
+    if Jxy is None:
+        Jxy = J
     n_rows, n_cols = lattice_shape
-
-    # First half of transverse field term
     for q in qubits:
         circ.rx(h * dt, q)
-
-    # Layered RZZ interactions (simulate 2D nearest-neighbor coupling)
-    def add_rzz_pairs(pairs):
-        for q1, q2 in pairs:
+    for layer in edge_layers(n_rows, n_cols):
+        for q1, q2 in layer:
             circ.append(RZZGate(2 * J * dt), [q1, q2])
-
-    # Layer 1: horizontal pairs (even rows)
-    horiz_pairs = [
-        (r * n_cols + c, r * n_cols + (c + 1) % n_cols)
-        for r in range(n_rows)
-        for c in range(0, n_cols, 2)
-    ]
-    add_rzz_pairs(horiz_pairs)
-
-    # Layer 2: horizontal pairs (odd rows)
-    horiz_pairs = [
-        (r * n_cols + c, r * n_cols + (c + 1) % n_cols)
-        for r in range(n_rows)
-        for c in range(1, n_cols, 2)
-    ]
-    add_rzz_pairs(horiz_pairs)
-
-    # Layer 3: vertical pairs (even columns)
-    vert_pairs = [
-        (r * n_cols + c, ((r + 1) % n_rows) * n_cols + c)
-        for r in range(1, n_rows, 2)
-        for c in range(n_cols)
-    ]
-    add_rzz_pairs(vert_pairs)
-
-    # Layer 4: vertical pairs (odd columns)
-    vert_pairs = [
-        (r * n_cols + c, ((r + 1) % n_rows) * n_cols + c)
-        for r in range(0, n_rows, 2)
-        for c in range(n_cols)
-    ]
-    add_rzz_pairs(vert_pairs)
-
-    # Second half of transverse field term
+            circ.append(RXXGate(2 * Jxy * dt), [q1, q2])
+            circ.append(RYYGate(2 * Jxy * dt), [q1, q2])
     for q in qubits:
         circ.rx(h * dt, q)
-
     return circ
 
 
@@ -85,10 +111,7 @@ def normalize_counts(counts, shots):
     return {k: v / shots for k, v in counts.items()}
 
 
-# Calculate various statistics based on comparison between ideal (Trotterized) and approximate (continuum) measurement distributions.
 def calc_stats(ideal_probs, pqi_probs, shots):
-    # For QV, we compare probabilities of (ideal) "heavy outputs."
-    # If the probability is above 2/3, the protocol certifies/passes the qubit width.
     n_pow = len(ideal_probs)
     n = int(round(math.log2(n_pow)))
     threshold = statistics.median(ideal_probs)
@@ -103,30 +126,23 @@ def calc_stats(ideal_probs, pqi_probs, shots):
     for i in range(n_pow):
         exp = pqi_probs.get(i, 0)
         ideal = ideal_probs[i]
-
-        # L2 distance
         diff_sqr += (ideal - exp) ** 2
         noise += exp * (1 - exp) / shots
-
-        # XEB / EPLG
         denom += (ideal - u_u) ** 2
         numer += (ideal - u_u) * (exp - u_u)
-
-        # QV / HOG
         if ideal > threshold:
             sum_hog_prob += exp
-
         perm = i
         m = 0
         for _ in range(n):
             m += -1 if (perm & 1) else 1
             perm >>= 1
         m /= n
-        m *= m 
+        m *= m
         ideal_sqr_mag += ideal * m
         exp_sqr_mag += exp * m
 
-    l2_diff = diff_sqr ** (1 / 2)
+    l2_diff = diff_sqr ** 0.5
     l2_diff_debiased = math.sqrt(max(diff_sqr - noise, 0.0))
     xeb = numer / denom
     if xeb > 1.0:
@@ -149,22 +165,8 @@ def main():
     n_qubits = 6
     depth = 40
     z = 4
-
-    # Quantinuum settings
     J, h, dt = -1.0, 2.0, 0.125
     theta = math.pi / 18
-
-    # Pure ferromagnetic
-    # J, h, dt = -1.0, 0.0, 0.25
-    # theta = 0
-
-    # Pure transverse field
-    # J, h, dt = 0.0, 2.0, 0.25
-    # theta = -math.pi / 2
-
-    # Critical point (symmetry breaking)
-    # J, h, dt = -1.0, 1.0, 0.25
-    # theta = -math.pi / 4
 
     if len(sys.argv) > 1:
         n_qubits = int(sys.argv[1])
@@ -177,60 +179,43 @@ def main():
     else:
         shots = 1 << (n_qubits + 2)
 
-    print(f"Qubits: {n_qubits}")
+    print(f"Qubits: {n_qubits}  (ideal = RZZ+RXX+RYY+RX Heisenberg+field circuit)")
 
-    n_rows, n_cols = factor_width(n_qubits, False)
+    n_rows, n_cols = factor_width(n_qubits)
     qubits = list(range(n_qubits))
 
-    # Set the initial temperature by theta.
-    qc_aer = QuantumCircuit(n_qubits)
+    qc = QuantumCircuit(n_qubits)
     for q in range(n_qubits):
-        qc_aer.ry(theta, q)
-
+        qc.ry(theta, q)
     control = QrackSimulator(n_qubits)
     basis_gates = QrackSimulator.get_qiskit_basis_gates()
-    qc_aer = transpile(
-        qc_aer,
-        basis_gates=basis_gates
-    )
+    qc = transpile(qc, basis_gates=basis_gates)
+    control.run_qiskit_circuit(qc)
 
-    # Add up the square residuals:
-    r_squared = 0.0
-    r_squared_db = 0.0
-    r_squared_xeb = 0.0
-    
-    ss = 0.0
-    ssr = 0.0
-
+    r_squared = r_squared_db = r_squared_xeb = ss = ssr = 0.0
     for d in range(1, depth + 1):
         t = d * dt
-
-        # Run the Trotterized simulation with Aer and get the marginal probabilities.
-        control.run_qiskit_circuit(qc_aer)
+        step_circ = QuantumCircuit(n_qubits)
+        trotter_step_heisenberg(step_circ, qubits, (n_rows, n_cols), J, h, dt)
+        step_circ = transpile(step_circ, basis_gates=basis_gates)
+        control.run_qiskit_circuit(step_circ)
         control_probs = control.out_probs()
 
-        # The magnetization components are weighted by (n+1) symmetric "bias" terms over possible Hamming weights.
         pqi_probs = normalize_counts(dict(Counter(
-            generate_fermi_hubbard_samples(J=J, h=h, z=z, theta=theta, t=t, n_qubits=n_qubits, shots=shots)
+            generate_fermi_hubbard_samples_v2(J=J, h=h, z=z, theta=theta, t=t, n_qubits=n_qubits, shots=shots)
         )), shots)
 
         result = calc_stats(control_probs, pqi_probs, shots)
-
-        # Add up the square residuals:
         r_squared += result["l2_difference"] ** 2
         r_squared_db += result["l2_difference_debiased"] ** 2
         r_squared_xeb += (1.0 - result["xeb_rectified"]) ** 2
-
-        # Save the sum of squares and sum of square residuals on the magnetization curve values.
         ss += result["ideal_sqr_mag"] ** 2
         ssr += result["sqr_mag_diff"] ** 2
 
-    # R^2 and RMSE are elementary and standard measures of goodness-of-fit with simple definitions.
-    # Ideal marginal probability would be 1.0, each depth step. Squared and summed, that's depth.
     r_squared = 1.0 - r_squared / depth
     r_squared_db = 1.0 - r_squared_db / depth
     r_squared_xeb = 1.0 - r_squared_xeb / depth
-    rmse = (ssr / depth) ** (1 / 2)
+    rmse = (ssr / depth) ** 0.5
     sm_r_squared = 1.0 - (ssr / ss)
 
     print("L2 norm similarity R^2: " + str(r_squared))
@@ -238,7 +223,6 @@ def main():
     print("XEB (rectified) R^2: " + str(r_squared_xeb))
     print("Square magnetization RMSE: " + str(rmse))
     print("Square magnetization R^2: " + str(sm_r_squared))
-
     return 0
 
 
