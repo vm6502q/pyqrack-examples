@@ -31,53 +31,16 @@ from qiskit.compiler import transpile
 
 from pyqrack import QrackSimulator
 
-from pyqrackising.generate_tfim_samples import (
-    get_tfim_hamming_distribution,
-    sample_fixed_hamming_weight,
-    factor_width,
-)
+from pyqrackising.generate_tfim_samples import generate_fermi_hubbard_samples
 
 
-def shannon_entropy(p):
-    p = np.asarray(p, dtype=float)
-    p = p[p > 0]
-    return -(p * np.log(p)).sum()
+def factor_width(width, is_transpose=False):
+    col_len = math.floor(math.sqrt(width))
+    while ((width // col_len) * col_len) != width:
+        col_len -= 1
+    row_len = width // col_len
 
-
-def generate_fermi_hubbard_samples_v2(J=-1.0, h=2.0, z=4, theta=0.174532925199432957,
-                                       t=5, n_qubits=56, shots=100, omega=1.5 * np.pi):
-    """Drop-in replacement for generate_fermi_hubbard_samples. Stays entirely
-    in the Z measurement basis; uses X/Y-flavored curves only as a scalar
-    depolarization signal, never as pooled foreign-basis samples."""
-    n_bias = n_qubits + 1
-    n_rows, n_cols = factor_width(n_qubits)
-
-    z_bias = get_tfim_hamming_distribution(J=J, h=h, z=z, theta=theta, t=t, n_qubits=n_qubits, omega=omega)
-    x_bias = get_tfim_hamming_distribution(J=-h, h=-J, z=z, theta=theta + np.pi / 2, t=t, n_qubits=n_qubits, omega=omega)
-    y_bias = get_tfim_hamming_distribution(J=J, h=h, z=z, theta=theta + np.pi / 2, t=t, n_qubits=n_qubits, omega=omega)
-
-    s_max = shannon_entropy(np.ones(n_bias) / n_bias)
-    lam_x = 1.0 - shannon_entropy(x_bias) / s_max
-    lam_y = 1.0 - shannon_entropy(y_bias) / s_max
-    lam = max(0.0, min(1.0, (lam_x + lam_y) / 2.0))
-
-    uniform = np.ones(n_bias) / n_bias
-    bias = (1.0 - lam) * z_bias + lam * uniform
-    bias /= bias.sum()
-
-    counts = np.random.multinomial(shots, bias)
-    samples = []
-    samples += [0] * counts[0]
-    samples += [(1 << n_qubits) - 1] * counts[-1]
-    if n_qubits > 1:
-        samples += [int(1 << np.random.randint(n_qubits)) for _ in range(counts[1])]
-    if n_qubits > 2:
-        mask = (1 << n_qubits) - 1
-        samples += [(mask ^ int(1 << np.random.randint(n_qubits))) for _ in range(counts[-2])]
-    for hw in range(2, len(bias) - 2):
-        samples += sample_fixed_hamming_weight(hw, counts[hw], n_rows, n_cols)
-    np.random.shuffle(samples)
-    return samples
+    return (col_len, row_len) if is_transpose else (row_len, col_len)
 
 
 def edge_layers(n_rows, n_cols):
@@ -165,8 +128,22 @@ def main():
     n_qubits = 6
     depth = 40
     z = 4
+
+    # Quantinuum settings
     J, h, dt = -1.0, 2.0, 0.125
     theta = math.pi / 18
+
+    # Pure ferromagnetic
+    # J, h, dt = -1.0, 0.0, 0.25
+    # theta = 0
+
+    # Pure transverse field
+    # J, h, dt = 0.0, 2.0, 0.25
+    # theta = -math.pi / 2
+
+    # Critical point (symmetry breaking)
+    # J, h, dt = -1.0, 1.0, 0.25
+    # theta = -math.pi / 4
 
     if len(sys.argv) > 1:
         n_qubits = int(sys.argv[1])
@@ -202,7 +179,7 @@ def main():
         control_probs = control.out_probs()
 
         pqi_probs = normalize_counts(dict(Counter(
-            generate_fermi_hubbard_samples_v2(J=J, h=h, z=z, theta=theta, t=t, n_qubits=n_qubits, shots=shots)
+            generate_fermi_hubbard_samples(J=J, h=h, z=z, theta=theta, t=t, n_qubits=n_qubits, shots=shots)
         )), shots)
 
         result = calc_stats(control_probs, pqi_probs, shots)
