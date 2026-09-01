@@ -233,10 +233,10 @@ def bench_qrack(width, depth, lrc=4, lrr=4, swap_mode="auto", boundary_dev=-1):
 
 
 def main():
-    width = int(sys.argv[1]) if len(sys.argv) > 1 else 84
+    width = int(sys.argv[1]) if len(sys.argv) > 1 else 64
     depth = int(sys.argv[2]) if len(sys.argv) > 2 else 12
     lrc = int(sys.argv[3]) if len(sys.argv) > 3 else 3
-    lrr = int(sys.argv[4]) if len(sys.argv) > 4 else 7
+    lrr = int(sys.argv[4]) if len(sys.argv) > 4 else 3
     swap_mode = sys.argv[5] if len(sys.argv) > 5 else "auto"
     boundary_dev = int(sys.argv[6]) if len(sys.argv) > 6 else -1
     bench_qrack(width, depth, lrc, lrr, swap_mode, boundary_dev)
