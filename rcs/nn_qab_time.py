@@ -148,7 +148,7 @@ def run_circuit(sim, circ):
 
 SWAP_RATIO_THRESHOLD = 7.0
 
-def bench_qrack(width, depth, lrc=4, lrr=4, swap_mode="auto"):
+def bench_qrack(width, depth, lrc=4, lrr=4, swap_mode="auto", boundary_dev=-1):
     if swap_mode not in ("auto", "swap", "cnot"):
         raise ValueError('swap_mode must be one of "auto", "swap", "cnot"')
 
@@ -160,6 +160,8 @@ def bench_qrack(width, depth, lrc=4, lrr=4, swap_mode="auto"):
     row_len, col_len = factor_width(width)
 
     sim = QrackAceBackend(width, long_range_columns=lrc, long_range_rows=lrr, is_torus=True)
+    if boundary_dev > -1:
+        sim.sim[sim._boundary_sim_id].set_device(boundary_dev)
 
     ratio = bulk_to_boundary_ratio(sim)
     if swap_mode == "auto":
@@ -225,24 +227,19 @@ def bench_qrack(width, depth, lrc=4, lrr=4, swap_mode="auto"):
     # Terminal measurement    
     sample = sim.m_all()
     seconds = time.perf_counter() - start
-    print(f"Seconds: {seconds}. (Fidelity unknown.)")
+    print(f"{width} qb, {depth} circuit layers, {seconds} seconds. (Fidelity unknown.)")
 
     return seconds, sample
 
 
 def main():
-    if len(sys.argv) < 3:
-        raise RuntimeError(
-            "Usage: python3 nn_qab_time.py [width] [depth] "
-            "[long_range_columns=4] [long_range_rows=4] "
-            "[swap_mode=auto|swap|cnot]"
-        )
-    width = int(sys.argv[1])
-    depth = int(sys.argv[2])
-    lrc = int(sys.argv[3]) if len(sys.argv) > 3 else 4
-    lrr = int(sys.argv[4]) if len(sys.argv) > 4 else 4
+    width = int(sys.argv[1]) if len(sys.argv) > 1 else 84
+    depth = int(sys.argv[2]) if len(sys.argv) > 2 else 12
+    lrc = int(sys.argv[3]) if len(sys.argv) > 3 else 3
+    lrr = int(sys.argv[4]) if len(sys.argv) > 4 else 7
     swap_mode = sys.argv[5] if len(sys.argv) > 5 else "auto"
-    bench_qrack(width, depth, lrc, lrr, swap_mode)
+    boundary_dev = int(sys.argv[6]) if len(sys.argv) > 6 else -1
+    bench_qrack(width, depth, lrc, lrr, swap_mode, boundary_dev)
     return 0
 
 if __name__ == "__main__":
