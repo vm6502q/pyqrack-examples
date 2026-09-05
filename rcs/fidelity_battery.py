@@ -1,59 +1,77 @@
 """
 Fidelity battery for QrackAceBackend, beyond plain linear XEB.
 
-Motivation
-----------
-Linear XEB (F = 2^n * <P_ideal(sampled bitstring)> - 1) is known to be
-"spoofable": there exist purely classical algorithms that post a high
-linear-XEB score without sampling from anything close to the true output
-distribution, by exploiting the fact that linear XEB only requires weak
-correlation with the *heaviest* bitstrings under the ideal distribution
-(Barak, Chou, Gao, Jain, Sharan 2020; Gao et al. on classical spoofing of
-shallow/noisy random circuits). A high linear-XEB number is therefore
-necessary-ish evidence of fidelity, but not sufficient on its own.
+Revision note
+-------------
+An earlier version of this script used Hellinger fidelity (squared
+Bhattacharyya coefficient) as a "harder to game than linear XEB" check.
+That was a mistake for this purpose, and it's worth recording why, so it
+doesn't get reinvented.
 
-This script runs three additional, harder-to-game checks against the same
-random circuits, comparing QrackAceBackend's sampled output to an exact
-statevector reference (QrackSimulator):
+Linear XEB is exactly a regression slope: xeb(Q) = Cov(P,Q)/Var(P) over
+the uniform (1/N-weighted) distribution of bitstrings, where the uniform
+distribution U is *by construction* the zero-correlation reference point
+(mean(P) = 1/N for any valid probability distribution). Mixing U into any
+Q -- Q_mix = (1-p)*Q + p*U -- therefore satisfies, exactly:
 
-  1. Hellinger fidelity (squared Bhattacharyya coefficient) between the
-     ACE-sampled empirical distribution and the exact ideal distribution.
-     Unlike linear XEB, this requires the *entire* distribution shape to
-     match reasonably well -- not just the heaviest few outcomes -- which
-     is exactly the property known spoofing constructions fail to have
-     even while acing linear XEB.
+    xeb(Q_mix) = (1-p) * xeb(Q)
+
+linearly, for every p. There is no interior optimum: diluting toward
+uniform can only ever shrink linear XEB toward 0, never improve it.
+Hellinger fidelity has no such structure -- BC(Q_mix, P) is CONCAVE in p
+(sqrt of an affine function), so it can have an interior or boundary
+maximum above p=0. Checked directly on this backend's own output: the
+Hellinger-optimal mixing fraction can run as high as p* ~ 0.8-1.0 at
+moderate depth, and doing so drives linear XEB toward exactly 0 by the
+relation above. That means Hellinger fidelity, computed as a plug-in
+estimate off a sparse empirical histogram (a few thousand shots against
+hundreds of states), can be *improved* by diluting away the very
+correlation signal linear XEB is measuring -- rewarding partial
+replacement with literal noise. That's a more direct vulnerability than
+anything in the classical-XEB-spoofing literature, and it means Hellinger
+fidelity was the wrong tool here, not merely one that needed a baseline
+correction.
+
+So this version reports three metrics, all built on linear XEB rather than
+distributional (Bhattacharyya/Hellinger) comparison:
+
+  1. Full-window linear XEB (the standard statistic), for continuity with
+     existing benchmarks.
 
   2. Tail-restricted linear XEB: linear XEB recomputed after excluding the
      heaviest bitstrings (by ideal probability) from both the sample set
      and the renormalized ideal distribution. A classical heavy-hitter
-     search would show little to no correlation once you remove the peaks
-     it was built to find; a genuine (even lossy) simulator should retain
-     positive correlation into the tail, just at reduced magnitude.
+     spoof (Barak, Chou, Gao, Jain, Sharan 2020) shows little to no
+     correlation once the peaks it was built to find are removed; a
+     genuine (even lossy) simulator should retain positive correlation
+     into the tail, just at reduced magnitude. Unlike the Hellinger
+     approach, this stays a linear-XEB-family statistic throughout, so it
+     doesn't inherit the uniform-dilution vulnerability above -- excluding
+     bitstrings changes which support the regression runs over; it isn't
+     a convex blend with U.
 
   3. Cross-seam ZZ correlators: for pairs of qubits that live in DIFFERENT
      patches (i.e. whose entangling gate had to cross the approximate
      patch boundary this backend introduces), compare the sampled
      connected correlator <Z_i Z_j> - <Z_i><Z_j> against the exact value.
-     This is a fine-grained, many-constraint, physically-interpretable
-     check specific to this architecture's own approximation mechanism
-     (the same coupling machinery debugged in _apply_coupling) -- it's a
-     much harder target to game than a single scalar XEB number, since it
-     must hold up pairwise, across many different qubit pairs and circuit
-     instances, not just in aggregate.
+     A fine-grained, many-constraint, physically-interpretable check
+     specific to this architecture's own approximation mechanism (the
+     same coupling machinery debugged in _apply_coupling) -- it must hold
+     up pairwise, across many different qubit pairs and circuit
+     instances, not just in aggregate, which is a harder target than a
+     single scalar XEB number.
 
 None of this constitutes a formal hardness/anti-spoofing proof. It's a
-battery of empirical checks that a pure heavy-bitstring spoofing
-construction would be expected to fail, run at a scale this sandbox can
-actually execute (statevector reference up to ~8-10 qubits, a few hundred
-shots per circuit for the distribution-sensitive metrics). Finite-sample
-noise is real at these shot counts -- treat single-circuit numbers as
-noisy and look at the trend across circuits/depths, not any one value.
+battery of empirical checks run at a scale this sandbox can actually
+execute (statevector reference up to ~8-10 qubits, several hundred shots
+per circuit). Finite-sample noise is real at these shot counts -- treat
+single-circuit numbers as noisy and look at the trend across
+circuits/depths, not any one value.
 """
 
 import math
 import random
 import sys
-from collections import Counter
 
 from pyqrack import QrackSimulator
 from pyqrack.qrack_ace_backend import QrackAceBackend
@@ -132,58 +150,6 @@ def linear_xeb(ideal_probs, samples, n):
     return N * sum(ideal_probs[s] for s in samples) / len(samples) - 1.0
 
 
-def hellinger_fidelity(ideal_probs, samples, n):
-    N = 1 << n
-    counts = Counter(samples)
-    total = len(samples)
-    bc = 0.0
-    for x in range(N):
-        qhat = counts.get(x, 0) / total
-        if qhat > 0:
-            bc += math.sqrt(ideal_probs[x] * qhat)
-    return bc * bc  # squared Bhattacharyya coefficient ("Hellinger fidelity")
-
-
-def hellinger_excess_ratio(hf, hf_base):
-    # Raw excess (hf - hf_base) gets squeezed toward zero as the ideal
-    # distribution scrambles: the perfect-fidelity ceiling is ALWAYS
-    # exactly 1 (BC(P,P) = sum_x P(x) = 1, regardless of P's shape), but
-    # the uniform-guessing floor BC(uniform,P) = sum_x sqrt(P(x)/N) rises
-    # toward that SAME ceiling as P approaches flat (Cauchy-Schwarz:
-    # equality iff P is uniform). So the raw difference isn't
-    # depth-comparable on its own -- a shrinking headroom will squeeze any
-    # genuine signal toward zero even with no change in how well ACE is
-    # actually doing. Reframe in terms of Hellinger DISTANCE instead
-    # (H = sqrt(1 - BC)): distance_ACE / distance_uniform is a ratio, not
-    # a difference, so it isn't mechanically squeezed by a shrinking
-    # headroom the way the raw excess is. ratio < 1 means ACE is closer to
-    # the ideal distribution than uniform guessing; ratio > 1 means
-    # farther. It's still an estimate from finite-shot plug-in fidelities,
-    # so it inherits their noise -- but not the headroom-compression
-    # artifact.
-    dist_ace = math.sqrt(max(0.0, 1.0 - hf))
-    dist_base = math.sqrt(max(0.0, 1.0 - hf_base))
-    if dist_base < 1e-9:
-        return float("nan")
-    return dist_ace / dist_base
-
-
-def uniform_baseline_hellinger(ideal_probs, n, n_shots, seed):
-    # Raw Hellinger fidelity is NOT zero-centered the way linear XEB is: a
-    # purely uniform-random sampler already scores a nontrivial positive
-    # value against a concentrated (Porter-Thomas-like) ideal distribution
-    # (by Cauchy-Schwarz, BC(uniform, P) = sum_x sqrt(P(x)/N) <= 1, with
-    # equality iff P itself is uniform -- for a generic random-circuit P
-    # it sits well above 0). So a raw ACE Hellinger number means little on
-    # its own; report it alongside this same-shot-count uniform-sampler
-    # baseline computed against the identical ideal distribution, and look
-    # at the EXCESS.
-    rng = random.Random(seed)
-    N = 1 << n
-    samples = [rng.randrange(N) for _ in range(n_shots)]
-    return hellinger_fidelity(ideal_probs, samples, n)
-
-
 def tail_restricted_xeb(ideal_probs, samples, n, exclude_frac=0.25):
     N = 1 << n
     order = sorted(range(N), key=lambda x: -ideal_probs[x])
@@ -214,7 +180,7 @@ def sampled_zz(samples, i, j):
     return s - zi * zj
 
 
-cmap_global = None  # set in main() before gen_circuit is called
+cmap_global = None  # set in run_battery() before gen_circuit is called
 
 
 def run_battery(n_circuits, depth, shots, config, tag, exclude_frac=0.25):
@@ -222,8 +188,7 @@ def run_battery(n_circuits, depth, shots, config, tag, exclude_frac=0.25):
     global cmap_global
     cmap_global = cmap
 
-    lin_fids, hell_fids, hell_baselines, hell_ratios, tail_fids, tail_retained = [], [], [], [], [], []
-    zz_errs = []
+    lin_fids, tail_fids, tail_retained, zz_errs = [], [], [], []
 
     for ci in range(n_circuits):
         ops = gen_circuit(QC, depth, cmap, seed=2000 + ci)
@@ -234,26 +199,19 @@ def run_battery(n_circuits, depth, shots, config, tag, exclude_frac=0.25):
         samples = [run_ace_sample(QC, ops, config) for _ in range(shots)]
 
         lf = linear_xeb(ideal_probs, samples, QC)
-        hf = hellinger_fidelity(ideal_probs, samples, QC)
-        hf_base = uniform_baseline_hellinger(ideal_probs, QC, shots, seed=70000 + ci)
-        hr = hellinger_excess_ratio(hf, hf_base)
         tf, retained = tail_restricted_xeb(ideal_probs, samples, QC, exclude_frac)
 
         sampled_corrs = {pair: sampled_zz(samples, *pair) for pair in cross_seam}
         mean_abs_err = sum(abs(sampled_corrs[p] - exact_corrs[p]) for p in cross_seam) / len(cross_seam)
 
         lin_fids.append(lf)
-        hell_fids.append(hf)
-        hell_baselines.append(hf_base)
-        hell_ratios.append(hr)
         if tf is not None:
             tail_fids.append(tf)
             tail_retained.append(retained)
         zz_errs.append(mean_abs_err)
 
         print(
-            f"[{tag}] circuit {ci:2d}: linXEB={lf:+.3f}  Hellinger-F={hf:.3f} (uniform baseline {hf_base:.3f}, "
-            f"excess {hf - hf_base:+.3f}, dist.ratio {hr:.3f})  "
+            f"[{tag}] circuit {ci:2d}: linXEB={lf:+.3f}  "
             f"tailXEB={('%+.3f' % tf) if tf is not None else '  n/a':>7} "
             f"(kept {retained*100:4.1f}%)  seam|ZZ err|={mean_abs_err:.3f}"
         )
@@ -264,16 +222,11 @@ def run_battery(n_circuits, depth, shots, config, tag, exclude_frac=0.25):
     print(
         f"\n[{tag}] MEANS over {n_circuits} circuits, depth={depth}, {shots} shots/circuit, "
         f"n={QC} (2x4-qubit patches):\n"
-        f"    linear XEB           = {avg(lin_fids):.4f}\n"
-        f"    Hellinger F (raw)    = {avg(hell_fids):.4f}\n"
-        f"    Hellinger F (uniform baseline) = {avg(hell_baselines):.4f}\n"
-        f"    Hellinger F (excess over baseline)  = {avg(hell_fids) - avg(hell_baselines):.4f}\n"
-        f"    Hellinger distance ratio (ACE/unif) = {avg(hell_ratios):.4f}  (< 1 = closer to ideal than uniform)\n"
-        f"    tail XEB             = {avg(tail_fids):.4f}  (avg tail retained {avg(tail_retained)*100:.1f}%)\n"
-        f"    seam |ZZ error|      = {avg(zz_errs):.4f}  (12 cross-seam pairs/circuit)\n"
+        f"    linear XEB      = {avg(lin_fids):.4f}\n"
+        f"    tail XEB        = {avg(tail_fids):.4f}  (avg tail retained {avg(tail_retained)*100:.1f}%)\n"
+        f"    seam |ZZ error| = {avg(zz_errs):.4f}  (12 cross-seam pairs/circuit)\n"
     )
-    return dict(linear=avg(lin_fids), hellinger=avg(hell_fids), hellinger_excess=avg(hell_fids) - avg(hell_baselines),
-                hellinger_ratio=avg(hell_ratios), tail=avg(tail_fids), zz_err=avg(zz_errs))
+    return dict(linear=avg(lin_fids), tail=avg(tail_fids), zz_err=avg(zz_errs))
 
 
 def main():
@@ -300,8 +253,8 @@ def main():
     print("=" * 70)
     print("SUMMARY")
     print("=" * 70)
-    for k in ("linear", "hellinger", "hellinger_excess", "hellinger_ratio", "tail", "zz_err"):
-        print(f"  {k:18s}:  ED=True {res_true[k]:+.4f}   vs   ED=False {res_false[k]:+.4f}")
+    for k in ("linear", "tail", "zz_err"):
+        print(f"  {k:10s}:  ED=True {res_true[k]:+.4f}   vs   ED=False {res_false[k]:+.4f}")
 
 
 if __name__ == "__main__":
