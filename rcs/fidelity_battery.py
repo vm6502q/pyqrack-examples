@@ -1,8 +1,6 @@
 """
 Fidelity battery for QrackAceBackend, beyond plain linear XEB.
 
-By (Anthropic) Claude (Sonnet 5)
-
 Motivation
 ----------
 Linear XEB (F = 2^n * <P_ideal(sampled bitstring)> - 1) is known to be
@@ -146,6 +144,30 @@ def hellinger_fidelity(ideal_probs, samples, n):
     return bc * bc  # squared Bhattacharyya coefficient ("Hellinger fidelity")
 
 
+def hellinger_excess_ratio(hf, hf_base):
+    # Raw excess (hf - hf_base) gets squeezed toward zero as the ideal
+    # distribution scrambles: the perfect-fidelity ceiling is ALWAYS
+    # exactly 1 (BC(P,P) = sum_x P(x) = 1, regardless of P's shape), but
+    # the uniform-guessing floor BC(uniform,P) = sum_x sqrt(P(x)/N) rises
+    # toward that SAME ceiling as P approaches flat (Cauchy-Schwarz:
+    # equality iff P is uniform). So the raw difference isn't
+    # depth-comparable on its own -- a shrinking headroom will squeeze any
+    # genuine signal toward zero even with no change in how well ACE is
+    # actually doing. Reframe in terms of Hellinger DISTANCE instead
+    # (H = sqrt(1 - BC)): distance_ACE / distance_uniform is a ratio, not
+    # a difference, so it isn't mechanically squeezed by a shrinking
+    # headroom the way the raw excess is. ratio < 1 means ACE is closer to
+    # the ideal distribution than uniform guessing; ratio > 1 means
+    # farther. It's still an estimate from finite-shot plug-in fidelities,
+    # so it inherits their noise -- but not the headroom-compression
+    # artifact.
+    dist_ace = math.sqrt(max(0.0, 1.0 - hf))
+    dist_base = math.sqrt(max(0.0, 1.0 - hf_base))
+    if dist_base < 1e-9:
+        return float("nan")
+    return dist_ace / dist_base
+
+
 def uniform_baseline_hellinger(ideal_probs, n, n_shots, seed):
     # Raw Hellinger fidelity is NOT zero-centered the way linear XEB is: a
     # purely uniform-random sampler already scores a nontrivial positive
@@ -200,7 +222,7 @@ def run_battery(n_circuits, depth, shots, config, tag, exclude_frac=0.25):
     global cmap_global
     cmap_global = cmap
 
-    lin_fids, hell_fids, hell_baselines, tail_fids, tail_retained = [], [], [], [], []
+    lin_fids, hell_fids, hell_baselines, hell_ratios, tail_fids, tail_retained = [], [], [], [], [], []
     zz_errs = []
 
     for ci in range(n_circuits):
@@ -214,6 +236,7 @@ def run_battery(n_circuits, depth, shots, config, tag, exclude_frac=0.25):
         lf = linear_xeb(ideal_probs, samples, QC)
         hf = hellinger_fidelity(ideal_probs, samples, QC)
         hf_base = uniform_baseline_hellinger(ideal_probs, QC, shots, seed=70000 + ci)
+        hr = hellinger_excess_ratio(hf, hf_base)
         tf, retained = tail_restricted_xeb(ideal_probs, samples, QC, exclude_frac)
 
         sampled_corrs = {pair: sampled_zz(samples, *pair) for pair in cross_seam}
@@ -222,6 +245,7 @@ def run_battery(n_circuits, depth, shots, config, tag, exclude_frac=0.25):
         lin_fids.append(lf)
         hell_fids.append(hf)
         hell_baselines.append(hf_base)
+        hell_ratios.append(hr)
         if tf is not None:
             tail_fids.append(tf)
             tail_retained.append(retained)
@@ -229,7 +253,7 @@ def run_battery(n_circuits, depth, shots, config, tag, exclude_frac=0.25):
 
         print(
             f"[{tag}] circuit {ci:2d}: linXEB={lf:+.3f}  Hellinger-F={hf:.3f} (uniform baseline {hf_base:.3f}, "
-            f"excess {hf - hf_base:+.3f})  "
+            f"excess {hf - hf_base:+.3f}, dist.ratio {hr:.3f})  "
             f"tailXEB={('%+.3f' % tf) if tf is not None else '  n/a':>7} "
             f"(kept {retained*100:4.1f}%)  seam|ZZ err|={mean_abs_err:.3f}"
         )
@@ -243,12 +267,13 @@ def run_battery(n_circuits, depth, shots, config, tag, exclude_frac=0.25):
         f"    linear XEB           = {avg(lin_fids):.4f}\n"
         f"    Hellinger F (raw)    = {avg(hell_fids):.4f}\n"
         f"    Hellinger F (uniform baseline) = {avg(hell_baselines):.4f}\n"
-        f"    Hellinger F (excess over baseline) = {avg(hell_fids) - avg(hell_baselines):.4f}\n"
+        f"    Hellinger F (excess over baseline)  = {avg(hell_fids) - avg(hell_baselines):.4f}\n"
+        f"    Hellinger distance ratio (ACE/unif) = {avg(hell_ratios):.4f}  (< 1 = closer to ideal than uniform)\n"
         f"    tail XEB             = {avg(tail_fids):.4f}  (avg tail retained {avg(tail_retained)*100:.1f}%)\n"
         f"    seam |ZZ error|      = {avg(zz_errs):.4f}  (12 cross-seam pairs/circuit)\n"
     )
     return dict(linear=avg(lin_fids), hellinger=avg(hell_fids), hellinger_excess=avg(hell_fids) - avg(hell_baselines),
-                tail=avg(tail_fids), zz_err=avg(zz_errs))
+                hellinger_ratio=avg(hell_ratios), tail=avg(tail_fids), zz_err=avg(zz_errs))
 
 
 def main():
@@ -275,7 +300,7 @@ def main():
     print("=" * 70)
     print("SUMMARY")
     print("=" * 70)
-    for k in ("linear", "hellinger", "hellinger_excess", "tail", "zz_err"):
+    for k in ("linear", "hellinger", "hellinger_excess", "hellinger_ratio", "tail", "zz_err"):
         print(f"  {k:18s}:  ED=True {res_true[k]:+.4f}   vs   ED=False {res_false[k]:+.4f}")
 
 
