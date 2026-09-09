@@ -164,7 +164,7 @@ def main():
     omega = 1.5
 
     J, h, dt, z = -1.0, 2.0, 0.125, 4
-    theta = math.pi / 18
+    theta = 0.0
     cycles = 3
 
     if len(sys.argv) > 1:
