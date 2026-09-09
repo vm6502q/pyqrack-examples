@@ -32,8 +32,10 @@ def factor_width(width, is_transpose=False):
 
 
 # By Elara (the custom OpenAI GPT)
-def trotter_step(circ, qubits, lattice_shape, J, h, dt):
+def trotter_step(n_qubits, lattice_shape, J, h, dt):
+    circ = QuantumCircuit(n_qubits)
     n_rows, n_cols = lattice_shape
+    qubits = list(range(n_qubits))
 
     # First half of transverse field term
     for q in qubits:
@@ -162,6 +164,7 @@ def main():
     omega = 1.5
 
     J, h, dt, z = -1.0, 2.0, 0.125, 4
+    theta = math.pi / 18
     cycles = 3
 
     if len(sys.argv) > 1:
@@ -184,17 +187,19 @@ def main():
     qubits = list(range(n_qubits))
 
     # Set the initial temperature by theta.
-    ising = QuantumCircuit(n_qubits)
+    otoc = QuantumCircuit(n_qubits)
+    for q in range(n_qubits):
+        otoc.ry(theta, q)
     # Add the forward-in-time Trotter steps
+    ising = QuantumCircuit(n_qubits)
     for d in range(depth):
-        trotter_step(ising, qubits, (n_rows, n_cols), J, h, dt)
+        ising &= trotter_step(n_qubits, (n_rows, n_cols), J, h, dt)
     ising_dag = ising.inverse()
 
     # 1/8 butterfly qubits
     ops = ['X', 'Y', 'Z']
     pauli_strings = []
 
-    otoc = QuantumCircuit(n_qubits)
     for cycle in range(cycles):
         otoc &= ising
         # Add the out-of-time-order perturbation
@@ -213,7 +218,7 @@ def main():
     # Compile OTOC for Qiskit Aer
     otoc = transpile(
         otoc,
-        optimization_level=3,
+        optimization_level=2,
         basis_gates=QrackSimulator.get_qiskit_basis_gates()
     )
 
@@ -222,7 +227,7 @@ def main():
     control_probs = sim.out_probs()
 
     shots = 1 << min(10, n_qubits + 2)
-    experiment_probs = dict(Counter(generate_otoc_samples(n_qubits=n_qubits, J=J, h=h, z=z, theta=0, t=dt*depth, shots=shots, pauli_strings=pauli_strings)))
+    experiment_probs = dict(Counter(generate_otoc_samples(n_qubits=n_qubits, J=J, h=h, z=z, theta=theta, t=dt*depth, shots=shots, pauli_strings=pauli_strings)))
     experiment_probs = { k: v / shots for k, v in experiment_probs.items() }
 
     print(calc_stats(
