@@ -42,7 +42,7 @@ def output(experiment):
 
 
 def main():
-    experiment = QrackAceBackend(15, long_range_columns=2)
+    experiment = QrackAceBackend(20, long_range_columns=2)
 
     # Experiment has a cleaved-QEC code ACE boundary.
     experiment.h(0)
@@ -54,35 +54,35 @@ def main():
     output(experiment)
     print()
 
-    experiment = QrackAceBackend(15, long_range_columns=2)
+    experiment = QrackAceBackend(20, long_range_columns=2)
 
     # Experiment has a cleaved-QEC code ACE boundary.
     experiment.h(0)
     experiment.h(1)
 
     # Error-detection
-    experiment.cx(0, 6)
-    experiment.cx(1, 6)
+    experiment.cx(0, 7)
     experiment.cx(1, 7)
-    experiment.cx(2, 11)
+    experiment.cx(1, 11)
+    experiment.cx(2, 16)
 
     ccnot(experiment)
 
     # Syndrome
-    experiment.cx(2, 11)
-    experiment.acx(6, 7)
-    experiment.acx(7, 11)
+    experiment.cx(2, 16)
+    experiment.acx(6, 11)
+    experiment.acx(7, 16)
 
     # Uncompute
-    experiment.acx(6, 7)
+    experiment.acx(6, 11)
+    experiment.cx(1, 11)
     experiment.cx(1, 7)
-    experiment.cx(1, 6)
-    experiment.cx(0, 6)
+    experiment.cx(0, 7)
 
     # Post-selection
-    experiment.force_m(11, False)
-    experiment.force_m(6, False)
+    experiment.force_m(16, False)
     experiment.force_m(7, False)
+    experiment.force_m(11, False)
 
     print("Corrected:")
     output(experiment)
