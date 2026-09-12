@@ -8,11 +8,16 @@ from pyqrack import QrackAceBackend
 
 
 def main():
-    experiment = QrackAceBackend(5, long_range_columns=2)
+    experiment = QrackAceBackend(15, long_range_columns=2)
 
     # Experiment has a cleaved-QEC code ACE boundary.
     experiment.h(0)
     experiment.h(1)
+
+    # Error-detection
+    experiment.cx(0, 6)
+    experiment.cx(1, 6)
+    experiment.cx(1, 7)
 
     experiment.h(2)
     experiment.cx(1, 2)
@@ -30,22 +35,25 @@ def main():
     experiment.adjt(1)
     experiment.cx(0, 1)
 
+    # Post-selection
+    experiment.cx(2, 11)
+    experiment.acx(6, 7)
+    experiment.acx(7, 11)
+    experiment.force_m(11, False)
+
     # Any correlation above 0.5 is entanglement non-locality.
     shots = 1024
     counts = experiment.measure_shots([0, 1, 2], shots)
 
     one = 0
-    correlated = 0
+    uncorrelated = 0
     for count in counts:
-        if count == 0:
-            correlated += 1
-        elif count == 1:
-            correlated += 1
-        elif count == 2:
-            correlated += 1
+        count &= 7
+        if count == 3:
+            uncorrelated += 1
         elif count == 7:
-            correlated += 1
             one += 1
+    correlated = shots - uncorrelated
 
     print("Correlation: " + str(correlated / shots))
     print("[1, 1, 1] count: " + (str(one / correlated) if correlated else "N/A"))
