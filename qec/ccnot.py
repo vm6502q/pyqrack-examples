@@ -41,6 +41,7 @@ def main():
     experiment.acx(6, 7)
     experiment.acx(7, 11)
     experiment.acx(6, 7)
+    experiment.cx(1, 7)
     experiment.cx(1, 6)
     experiment.cx(0, 6)
     experiment.force_m(11, False)
