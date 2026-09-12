@@ -12,13 +12,13 @@ def output(experiment):
     counts = experiment.measure_shots([0, 1, 2], shots)
 
     one = 0
-    uncorrelated = 0
+    correlated = 0
     for count in counts:
-        if (count == 1) or (count == 3) or (count == 4):
-            uncorrelated += 1
-        elif count == 7:
+        if count == 7:
+            correlated += 1
             one += 1
-    correlated = shots - uncorrelated
+        elif count == 0:
+            correlated += 1
 
     print("Correlation: " + str(correlated / shots))
     print("[1, 1, 1] frequency: " + (str(one / correlated) if correlated else "N/A"))
