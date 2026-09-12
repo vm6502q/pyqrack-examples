@@ -6,22 +6,22 @@ import sys
 
 from pyqrack import QrackAceBackend
 
-def ccnot(experiment):
-    experiment.h(2)
-    experiment.cx(1, 2)
-    experiment.adjt(2)
-    experiment.cx(0, 2)
-    experiment.t(2)
-    experiment.cx(1, 2)
-    experiment.adjt(2)
-    experiment.cx(0, 2)
-    experiment.t(2)
-    experiment.h(2)
-    experiment.t(1)
-    experiment.cx(0, 1)
-    experiment.t(0)
-    experiment.adjt(1)
-    experiment.cx(0, 1)
+def ccnot(experiment, c1, c2, t):
+    experiment.h(t)
+    experiment.cx(c2, t)
+    experiment.adjt(t)
+    experiment.cx(c1, t)
+    experiment.t(t)
+    experiment.cx(c2, t)
+    experiment.adjt(t)
+    experiment.cx(c1, t)
+    experiment.t(t)
+    experiment.h(t)
+    experiment.t(c2)
+    experiment.cx(c1, c2)
+    experiment.t(c1)
+    experiment.adjt(c2)
+    experiment.cx(c1, c2)
 
 
 def output(experiment):
@@ -42,47 +42,46 @@ def output(experiment):
 
 
 def main():
-    experiment = QrackAceBackend(20, long_range_columns=2, is_torus=False)
+    experiment = QrackAceBackend(15, long_range_columns=2, is_torus=False)
 
     # Experiment has a cleaved-QEC code ACE boundary.
-    experiment.h(0)
+    experiment.h(2)
     experiment.h(1)
 
-    ccnot(experiment)
+    ccnot(experiment, 2, 1, 0)
 
     print("Uncorrected:")
     output(experiment)
     print()
 
-    experiment = QrackAceBackend(20, long_range_columns=2)
+    experiment = QrackAceBackend(15, long_range_columns=2)
 
     # Experiment has a cleaved-QEC code ACE boundary.
-    experiment.h(0)
+    experiment.h(2)
     experiment.h(1)
 
     # Error-detection
-    experiment.cx(0, 7)
-    experiment.cx(1, 7)
-    experiment.cx(1, 11)
-    experiment.cx(2, 16)
+    experiment.cx(2, 5)
+    experiment.cx(1, 5)
+    experiment.cx(1, 6)
+    experiment.cx(0, 10)
 
-    ccnot(experiment)
+    ccnot(experiment, 2, 1, 0)
 
     # Syndrome
-    experiment.cx(2, 16)
-    experiment.acx(6, 11)
-    experiment.acx(7, 16)
+    experiment.cx(0, 10)
+    experiment.acx(5, 10)
+    experiment.acx(6, 10)
 
     # Uncompute
-    experiment.acx(6, 11)
-    experiment.cx(1, 11)
-    experiment.cx(1, 7)
-    experiment.cx(0, 7)
+    experiment.cx(1, 6)
+    experiment.cx(1, 5)
+    experiment.cx(2, 5)
 
     # Post-selection
-    experiment.force_m(16, False)
-    experiment.force_m(7, False)
-    experiment.force_m(11, False)
+    experiment.force_m(10, False)
+    experiment.force_m(6, False)
+    experiment.force_m(5, False)
 
     print("Corrected:")
     output(experiment)
