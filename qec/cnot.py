@@ -43,12 +43,12 @@ def main():
     experiment.h(2)
 
     # With error-detection
-    experiment.cx(0, 6)
-    experiment.cx(2, 6)
+    experiment.cx(0, 7)
+    experiment.cx(2, 7)
     experiment.cx(2, 1)
     experiment.cx(1, 0)
-    experiment.cx(0, 6)
-    experiment.force_m(6, False)
+    experiment.cx(0, 7)
+    experiment.force_m(7, False)
 
     print("Corrected:")
     output(experiment)
