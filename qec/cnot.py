@@ -14,7 +14,7 @@ def output(experiment):
     one = 0
     uncorrelated = 0
     for count in counts:
-        if (count == 3) or (count == 4):
+        if (count == 1) or (count == 3) or (count == 4):
             uncorrelated += 1
         elif count == 7:
             one += 1
@@ -25,7 +25,7 @@ def output(experiment):
 
 
 def main():
-    experiment = QrackAceBackend(10, long_range_columns=2)
+    experiment = QrackAceBackend(10, long_range_columns=2, is_torus=False)
 
     # Experiment has a cleaved-QEC code ACE boundary.
     experiment.h(2)
@@ -37,7 +37,7 @@ def main():
     output(experiment)
     print()
 
-    experiment = QrackAceBackend(15, long_range_columns=2)
+    experiment = QrackAceBackend(10, long_range_columns=2, is_torus=False)
 
     # Experiment has a cleaved-QEC code ACE boundary.
     experiment.h(2)
