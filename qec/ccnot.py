@@ -36,14 +36,18 @@ def main():
     experiment.adjt(1)
     experiment.cx(0, 1)
 
-    # Post-selection
+    # Syndrome
     experiment.cx(2, 11)
     experiment.acx(6, 7)
     experiment.acx(7, 11)
+
+    # Uncompute
     experiment.acx(6, 7)
     experiment.cx(1, 7)
     experiment.cx(1, 6)
     experiment.cx(0, 6)
+
+    # Post-selection
     experiment.force_m(11, False)
 
     # Any correlation above 0.5 is entanglement non-locality.
