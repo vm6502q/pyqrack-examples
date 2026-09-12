@@ -18,6 +18,7 @@ def main():
     experiment.cx(0, 6)
     experiment.cx(1, 6)
     experiment.cx(1, 7)
+    experiment.cx(2, 11)
 
     experiment.h(2)
     experiment.cx(1, 2)
