@@ -49,6 +49,8 @@ def main():
 
     # Post-selection
     experiment.force_m(11, False)
+    experiment.force_m(6, False)
+    experiment.force_m(7, False)
 
     # Any correlation above 0.5 is entanglement non-locality.
     shots = 1024
@@ -57,7 +59,6 @@ def main():
     one = 0
     uncorrelated = 0
     for count in counts:
-        count &= 7
         if count == 3:
             uncorrelated += 1
         elif count == 7:
