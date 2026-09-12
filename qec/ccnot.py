@@ -31,7 +31,7 @@ def output(experiment):
     one = 0
     uncorrelated = 0
     for count in counts:
-        if (count == 3) or (count == 4):
+        if (count == 3) or (count == 1):
             uncorrelated += 1
         elif count == 7:
             one += 1
