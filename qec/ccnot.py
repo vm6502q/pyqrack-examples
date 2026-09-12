@@ -39,6 +39,8 @@ def main():
     # Post-selection
     experiment.cx(2, 11)
     experiment.acx(6, 7)
+    experiment.cx(1, 6)
+    experiment.cx(0, 6)
     experiment.acx(7, 11)
     experiment.force_m(11, False)
 
