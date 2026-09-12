@@ -42,7 +42,7 @@ def output(experiment):
 
 
 def main():
-    experiment = QrackAceBackend(20, long_range_columns=2)
+    experiment = QrackAceBackend(20, long_range_columns=2, is_torus=False)
 
     # Experiment has a cleaved-QEC code ACE boundary.
     experiment.h(0)
