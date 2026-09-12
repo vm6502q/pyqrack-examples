@@ -48,7 +48,7 @@ def main():
             one += 1
 
     print("Correlation: " + str(correlated / shots))
-    print("1-1-1 count: " + (str(one / correlated) if correlated else "N/A"))
+    print("[1, 1, 1] count: " + (str(one / correlated) if correlated else "N/A"))
 
 
 if __name__ == "__main__":
