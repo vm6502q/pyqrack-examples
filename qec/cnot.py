@@ -45,6 +45,7 @@ def main():
     # With error-detection
     experiment.cx(0, 7)
     experiment.cx(2, 7)
+    experiment.cx(1, 7)
     experiment.cx(2, 1)
     experiment.cx(1, 0)
     experiment.cx(0, 7)
