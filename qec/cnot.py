@@ -21,7 +21,7 @@ def output(experiment):
     correlated = shots - uncorrelated
 
     print("Correlation: " + str(correlated / shots))
-    print("[1, 1, 1] count: " + (str(one / correlated) if correlated else "N/A"))
+    print("[1, 1, 1] frequency: " + (str(one / correlated) if correlated else "N/A"))
 
 
 def main():
