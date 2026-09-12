@@ -9,7 +9,7 @@ from pyqrack import QrackAceBackend
 
 def output(experiment):
     shots = 1024
-    counts = experiment.measure_shots([0, 1, 2], shots)
+    counts = experiment.measure_shots([0, 1, 5], shots)
 
     one = 0
     uncorrelated = 0
@@ -31,7 +31,7 @@ def main():
     experiment.h(0)
 
     experiment.cx(0, 1)
-    experiment.cx(1, 2)
+    experiment.cx(1, 5)
 
     print("Uncorrected:")
     output(experiment)
@@ -43,11 +43,11 @@ def main():
     experiment.h(0)
 
     # With error-detection
-    experiment.cx(2, 6)
+    experiment.cx(5, 6)
     experiment.cx(0, 6)
     experiment.cx(0, 1)
-    experiment.cx(1, 2)
-    experiment.cx(2, 6)
+    experiment.cx(1, 5)
+    experiment.cx(5, 6)
     experiment.force_m(6, False)
 
     print("Corrected:")
