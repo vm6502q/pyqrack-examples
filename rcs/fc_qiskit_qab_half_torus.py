@@ -120,7 +120,6 @@ def bench_qrack(width, depth, lrc=4, lrr=4):
     all_bits  = list(lcv_range)
     n_pow     = 1 << width
     shots     = 1 << min(10, width + 2)
-    all_bits  = list(lcv_range)
 
     # Nearest-neighbor couplers:
     gateSequence = [0, 3, 2, 1, 2, 1, 0, 3]
