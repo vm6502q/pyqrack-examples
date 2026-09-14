@@ -24,9 +24,9 @@ def ccnot(experiment, c1, c2, t):
     experiment.cx(c1, c2)
 
 
-def output(experiment):
+def output(experiment, c1, c2, t):
     shots = 1024
-    counts = experiment.measure_shots([2, 1, 0], shots)
+    counts = experiment.measure_shots([c1, c2, t], shots)
 
     uncorrelated = 0
     three = 0
@@ -52,46 +52,48 @@ def output(experiment):
 
 
 def main():
+    c1, c2, t = 2, 1, 0
+
     experiment = QrackAceBackend(10, long_range_columns=2)
 
     # Experiment has a cleaved-QEC code ACE boundary.
-    experiment.h(2)
-    experiment.h(1)
+    experiment.h(c1)
+    experiment.h(c2)
 
-    ccnot(experiment, 2, 1, 0)
+    ccnot(experiment, c1, c2, t)
 
     print("Uncorrected:")
-    output(experiment)
+    output(experiment, c1, c2, t)
     print()
 
     experiment = QrackAceBackend(10, long_range_columns=2)
 
     # Experiment has a cleaved-QEC code ACE boundary.
-    experiment.h(2)
-    experiment.h(1)
+    experiment.h(c1)
+    experiment.h(c2)
 
     # Error-detection
-    experiment.cx(0, 5)
-    experiment.cx(2, 5)
-    experiment.cx(1, 5)
-    experiment.cx(0, 6)
-    experiment.cx(1, 6)
-    experiment.cx(2, 6)
+    experiment.cx(t, 5)
+    experiment.cx(c1, 5)
+    experiment.cx(c2, 5)
+    experiment.cx(t, 6)
+    experiment.cx(c2, 6)
+    experiment.cx(c1, 6)
 
-    ccnot(experiment, 2, 1, 0)
+    ccnot(experiment, c1, c2, t)
 
     # Syndrome
-    experiment.cx(0, 5)
-    experiment.cx(1, 5)
-    experiment.cx(0, 6)
-    experiment.cx(2, 6)
+    experiment.cx(t, 5)
+    experiment.cx(c2, 5)
+    experiment.cx(t, 6)
+    experiment.cx(c1, 6)
 
     # Post-selection
     experiment.force_m(5, False)
     experiment.force_m(6, False)
 
     print("Corrected:")
-    output(experiment)
+    output(experiment, c1, c2, t)
 
 
 if __name__ == "__main__":
