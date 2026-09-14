@@ -112,7 +112,6 @@ def bench_qrack(width, depth, lrc=4, lrr=4):
         "depth":              depth,
         "long_range_columns": lrc,
         "long_range_rows":    lrr,
-        "depth":              depth,
         "xeb_ace":            xeb_ace,
         "hog_ace":            hog_ace,
     }
@@ -124,7 +123,7 @@ def bench_qrack(width, depth, lrc=4, lrr=4):
 
 def main():
     if len(sys.argv) < 3:
-        raise RuntimeError("Usage: python3 nn_qab_half_torus.py [width] [depth] [long_range_columns=4] [long_range_rows=4]")
+        raise RuntimeError("Usage: python3 fc_qiskit_qab.py [width] [depth] [long_range_columns=4] [long_range_rows=4]")
     width = int(sys.argv[1])
     depth = int(sys.argv[2])
     lrc = int(sys.argv[3]) if len(sys.argv) > 3 else 4

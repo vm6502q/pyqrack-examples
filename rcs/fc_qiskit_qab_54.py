@@ -16,75 +16,6 @@ from qiskit.providers.qrack.backends import AceQasmSimulator
 from qiskit import QuantumCircuit, transpile
 
 
-def factor_width(width):
-    col_len = math.floor(math.sqrt(width))
-    while ((width // col_len) * col_len) != width:
-        col_len -= 1
-    row_len = width // col_len
-
-    return (row_len, col_len)
-
-
-def cx(sim, q1, q2):
-    sim.cx(q1, q2)
-
-
-def cy(sim, q1, q2):
-    sim.cy(q1, q2)
-
-
-def cz(sim, q1, q2):
-    sim.cz(q1, q2)
-
-
-def acx(sim, q1, q2):
-    sim.x(q1)
-    sim.cx(q1, q2)
-    sim.x(q1)
-
-
-def acy(sim, q1, q2):
-    sim.x(q1)
-    sim.cy(q1, q2)
-    sim.x(q1)
-
-
-def acz(sim, q1, q2):
-    sim.x(q1)
-    sim.cz(q1, q2)
-    sim.x(q1)
-
-
-def swap(sim, q1, q2):
-    sim.swap(q1, q2)
-
-
-def iswap(sim, q1, q2):
-    sim.iswap(q1, q2)
-
-
-def iiswap(sim, q1, q2):
-    sim.iswap(q1, q2)
-    sim.iswap(q1, q2)
-    sim.iswap(q1, q2)
-
-
-def pswap(sim, q1, q2):
-    sim.cz(q1, q2)
-    sim.swap(q1, q2)
-
-
-def mswap(sim, q1, q2):
-    sim.swap(q1, q2)
-    sim.cz(q1, q2)
-
-
-def nswap(sim, q1, q2):
-    sim.cz(q1, q2)
-    sim.swap(q1, q2)
-    sim.cz(q1, q2)
-
-
 # ---------------------------------------------------------------------------
 # Statistics
 # ---------------------------------------------------------------------------
@@ -115,17 +46,11 @@ def calc_stats(ideal_probs, counts, shots):
 # Benchmark
 # ---------------------------------------------------------------------------
 
-def bench_qrack(width, depth, lrc=4, lrr=4):
+def bench_qrack(width, depth):
     lcv_range = range(width)
     all_bits  = list(lcv_range)
     n_pow     = 1 << width
     shots     = 1 << min(10, width + 2)
-
-    # Nearest-neighbor couplers:
-    gateSequence = [0, 3, 2, 1, 2, 1, 0, 3]
-    two_bit_gates = swap, pswap, mswap, nswap, iswap, iiswap, cx, cy, cz, acx, acy, acz
-
-    row_len, col_len = factor_width(width)
 
     # -----------------------------------------------------------------------
     # Build circuit in Qiskit
@@ -152,13 +77,12 @@ def bench_qrack(width, depth, lrc=4, lrr=4):
     # -----------------------------------------------------------------------
     # Method: QrackAceBackend
     # -----------------------------------------------------------------------
-    sim = AceQasmSimulator(n_qubits=width, long_range_columns=lrc, long_range_rows=lrr, is_torus=False, is_schmidt_decompose_multi=False)
-    qc = transpile(qc, backend=sim, optimization_level=3)
+    sim = AceQasmSimulator()
+    qcm = transpile(qc, backend=sim, optimization_level=3)
 
     t_trans = time.perf_counter()
     print(f"transpile_seconds: {t_trans - t_circ:.4f}")
 
-    qcm = qc.copy()
     qcm.measure_all()
     ace_str_counts = dict(sim.run(qcm, shots=shots).result().get_counts())
     ace_counts = {}
@@ -185,8 +109,6 @@ def bench_qrack(width, depth, lrc=4, lrr=4):
     return {
         "width":              width,
         "depth":              depth,
-        "long_range_columns": lrc,
-        "long_range_rows":    lrr,
         "xeb_ace":            xeb_ace,
         "hog_ace":            hog_ace,
     }
@@ -198,12 +120,10 @@ def bench_qrack(width, depth, lrc=4, lrr=4):
 
 def main():
     if len(sys.argv) < 3:
-        raise RuntimeError("Usage: python3 fc_qiskit_qab_half_torus.py [width] [depth] [long_range_columns=4] [long_range_rows=4]")
+        raise RuntimeError("Usage: python3 fc_qiskit_qab_54.py [width] [depth]")
     width = int(sys.argv[1])
     depth = int(sys.argv[2])
-    lrc = int(sys.argv[3]) if len(sys.argv) > 3 else 4
-    lrr = int(sys.argv[4]) if len(sys.argv) > 4 else 4
-    result = bench_qrack(width, depth, lrc, lrr)
+    result = bench_qrack(width, depth)
     for k, v in result.items():
         print(f"  {k}: {v}")
     return 0
