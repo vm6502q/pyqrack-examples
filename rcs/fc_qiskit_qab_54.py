@@ -77,6 +77,7 @@ def bench_qrack(width, depth):
     # -----------------------------------------------------------------------
     # Method: QrackAceBackend
     # -----------------------------------------------------------------------
+    qc = transpile(qc, basis_gates=QrackSimulator.get_qiskit_basis_gates(), optimization_level=2)
     sim = AceQasmSimulator()
     qcm = transpile(qc, backend=sim, optimization_level=3)
 

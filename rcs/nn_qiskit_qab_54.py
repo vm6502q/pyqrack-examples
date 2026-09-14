@@ -153,13 +153,13 @@ def bench_qrack(width, depth):
                 temp_col = temp_col + (1 if (gate & 1) else 0)
 
                 if temp_row < 0:
-                    temp_row = temp_row + row_len
+                    continue
                 if temp_col < 0:
-                    temp_col = temp_col + col_len
+                    continue
                 if temp_row >= row_len:
-                    temp_row = temp_row - row_len
+                    continue
                 if temp_col >= col_len:
-                    temp_col = temp_col - col_len
+                    continue
 
                 b1 = col * row_len + row
                 b2 = temp_col * row_len + temp_row
@@ -173,6 +173,7 @@ def bench_qrack(width, depth):
     # -----------------------------------------------------------------------
     # Method: QrackAceBackend
     # -----------------------------------------------------------------------
+    qc = transpile(qc, basis_gates=QrackSimulator.get_qiskit_basis_gates(), optimization_level=2)
     sim = AceQasmSimulator()
     qcm = transpile(qc, backend=sim, optimization_level=3)
 
