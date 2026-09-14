@@ -56,7 +56,7 @@ def bench_qrack(width, depth):
     # Build circuit in Qiskit
     # -----------------------------------------------------------------------
     t_circ = time.perf_counter()
-    qc = QuantumCircuit(width)
+    qc = QuantumCircuit(width, width)
 
     for _ in range(depth):
         # Single-qubit gates
@@ -83,7 +83,13 @@ def bench_qrack(width, depth):
     t_trans = time.perf_counter()
     print(f"transpile_seconds: {t_trans - t_circ:.4f}")
 
-    qcm.measure_all()
+    logical_to_physical = qcm.layout.final_index_layout()
+
+    for logical_idx in range(qc.num_qubits):
+        physical_qubit = logical_to_physical[logical_idx]
+        # Measure the exact physical wire into its designated classical bit
+        qcm.measure(physical_qubit, logical_idx)
+
     ace_str_counts = dict(sim.run(qcm, shots=shots).result().get_counts())
     ace_counts = {}
     for s, count in ace_str_counts.items():
