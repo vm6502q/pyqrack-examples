@@ -79,7 +79,13 @@ def output(experiment, c1, c2, t):
 
 
 def main():
-    c1, c2, t = 2, 7, 0
+    c1 = 2
+    c2 = 4 if random.random() < 0.5 else 1
+    t = 0
+
+    print(f"Qubit indices:[[Boundary], {'[Boundary]' if c2 == 4 else '[Bulk]'}, [Bulk]]")
+    print("(Boundary target qubit is handled same for corrected as uncorrected.)")
+    print()
 
     experiment = QrackAceBackend(10, long_range_columns=2)
 
