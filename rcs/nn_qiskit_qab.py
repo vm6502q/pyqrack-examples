@@ -186,7 +186,6 @@ def bench_qrack(width, depth, lr=4):
     for s, count in ace_str_counts.items():
         ace_counts[int(s, 2)] = count
     
-
     t_ace = time.perf_counter()
     print(f"ace_seconds: {t_ace - t_trans:.4f}")
 

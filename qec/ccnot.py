@@ -79,7 +79,7 @@ def output(experiment, c1, c2, t):
 
 
 def main():
-    c1, c2, t = 2, 1 if random.random() < 0.5 else 7, 0
+    c1, c2, t = 2, 7, 0
 
     experiment = QrackAceBackend(10, long_range_columns=2)
 
@@ -92,6 +92,17 @@ def main():
     print("Uncorrected:")
     output(experiment, c1, c2, t)
     print()
+
+    experiment = QrackAceBackend(10, long_range_columns=2)
+
+    # Experiment has a cleaved-QEC code ACE boundary.
+    experiment.h(c1)
+    experiment.h(c2)
+
+    experiment.ccx(c1, c2, t)
+
+    print("Corrected:")
+    output(experiment, c1, c2, t)
 
 
 if __name__ == "__main__":
