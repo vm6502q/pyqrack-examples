@@ -80,7 +80,7 @@ def output(experiment, c1, c2, t):
 
 def main():
     c1 = 2
-    c2 = 4 if random.random() < 0.5 else 1
+    c2 = 7 if random.random() < 0.5 else 1
     t = 0
 
     print(f"Qubit indices:[[Boundary], {'[Boundary]' if c2 == 4 else '[Bulk]'}, [Bulk]]")
