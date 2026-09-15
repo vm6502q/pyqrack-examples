@@ -83,7 +83,7 @@ def main():
     c2 = 7 if random.random() < 0.5 else 1
     t = 0
 
-    print(f"Qubit indices:[[Boundary], {'[Boundary]' if c2 == 4 else '[Bulk]'}, [Bulk]]")
+    print(f"Qubit indices:[[Boundary], {'[Boundary]' if c2 == 7 else '[Bulk]'}, [Bulk]]")
     print("(Boundary target qubit is handled same for corrected as uncorrected.)")
     print()
 
