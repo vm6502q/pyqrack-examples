@@ -92,7 +92,7 @@ def nswap(sim, q1, q2):
     sim.cz(q1, q2)
 
 
-def random_circuit(width, depth, lrc, lrr, sdrp):
+def random_circuit(width, depth):
     # This is a "nearest-neighbor" coupler random circuit.
     lcv_range = range(width)
     all_bits = list(lcv_range)
@@ -109,9 +109,9 @@ def random_circuit(width, depth, lrc, lrr, sdrp):
     for _ in range(depth):
         # Single-qubit gates
         for i in lcv_range:
-            th = random.uniform(0, 2 * math.pi)
-            ph = random.uniform(0, 2 * math.pi)
-            lm = random.uniform(0, 2 * math.pi)
+            th, ph, lm = (random.uniform(-math.pi, math.pi) for _ in range(3))
+            # Keep it Haar-random towards the poles:
+            th = math.asin(th / math.pi)
             qc.u(th, ph, lm, i)
 
         # Nearest-neighbor couplers:
@@ -126,13 +126,13 @@ def random_circuit(width, depth, lrc, lrr, sdrp):
                 temp_col = temp_col + (1 if (gate & 1) else 0)
 
                 if temp_row < 0:
-                    temp_row = temp_row + row_len
+                    continue
                 if temp_col < 0:
-                    temp_col = temp_col + col_len
+                    continue
                 if temp_row >= row_len:
-                    temp_row = temp_row - row_len
+                    continue
                 if temp_col >= col_len:
-                    temp_col = temp_col - col_len
+                    continue
 
                 b1 = col * row_len + row
                 b2 = temp_col * row_len + temp_row
@@ -173,32 +173,37 @@ def expit(x):
     return 1 / (1 + np.exp(-x))
 
 
-def execute(circ, shot_count, lrc, lrr, sdrp):
-    sim = AceQasmSimulator(n_qubits=circ.width(), long_range_columns=lrc, long_range_rows=lrr, sdrp=sdrp)
-    circ_m = circ.copy()
-    circ_m.measure_all()
-    shots = dict(sim.run(circ_m, shots=shot_count).result().get_counts())
+def execute(qc, n_qubits, shot_count):
+    qcm = qc.copy()
+    logical_to_physical = qc.layout.final_index_layout()
+    for logical_idx in range(n_qubits):
+        physical_qubit = logical_to_physical[logical_idx]
+        # Measure the exact physical wire into its designated classical bit
+        qcm.measure(physical_qubit, logical_idx)
+
+    sim = AceQasmSimulator()
+    shots = dict(sim.run(qc, shots=shot_count).result().get_counts())
 
     hamming_weight = 0
     for k, v in shots.items():
         hamming_weight += k.count("1") * v
     hamming_weight /= shot_count
 
-    return logit(hamming_weight / circ.width())
+    return logit(hamming_weight / n_qubits)
 
 
 def main():
     if len(sys.argv) < 3:
-        raise RuntimeError("Usage: python3 mitiq_nn_hamming_weight.py [width] [depth] [long_range_columns=4] [long_range_rows=4] [sdrp=0.1464466] [shots=1024]")
+        raise RuntimeError("Usage: python3 mitiq_nn_hamming_weight.py [width] [depth] [shots=1024]")
 
     width = int(sys.argv[1])
     depth = int(sys.argv[2])
-    lrc = int(sys.argv[3]) if len(sys.argv) > 3 else 4
-    lrr = int(sys.argv[4]) if len(sys.argv) > 4 else 4
-    sdrp  = float(sys.argv[5]) if len(sys.argv) > 5 else ((1 - 1 / math.sqrt(2)) / 2)
-    shots = int(sys.argv[6]) if len(sys.argv) > 6 else 1024
+    shots = int(sys.argv[3]) if len(sys.argv) > 3 else 1024
 
-    circ = random_circuit(width, depth, lrc, lrr, sdrp)
+    qc = random_circuit(width, depth)
+    qc = qc & qc.inverse()
+    target = AceQasmSimulator()
+    qc = transpile(qc, backend=target, optimization_level=3)
 
     scale_count = 5
     max_scale = 2
@@ -208,10 +213,10 @@ def main():
         ]
     )
 
-    ex = lambda circ: execute(circ, shots, lrc, lrr, sdrp)
+    ex = lambda circ: execute(qc, width, shots)
 
     hamming_weight = width * expit(
-        zne.execute_with_zne(circ, ex, scale_noise=fold_global, factory=factory)
+        zne.execute_with_zne(qc, ex, scale_noise=fold_global, factory=factory)
     )
 
     print({"width": width, "depth": depth, "hamming_weight": float(hamming_weight)})

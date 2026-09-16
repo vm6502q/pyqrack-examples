@@ -30,13 +30,14 @@ def random_circuit(width, depth):
     lcv_range = range(width)
     all_bits = list(lcv_range)
 
-    circ = QuantumCircuit(width)
+    qc = QuantumCircuit(width, width)
     for d in range(depth):
         # Single-qubit gates
         for i in lcv_range:
-            for _ in range(2):
-                circ.h(i)
-                circ.rz(random.uniform(0, 2 * math.pi), i)
+            th, ph, lm = (random.uniform(-math.pi, math.pi) for _ in range(3))
+            # Keep it Haar-random towards the poles:
+            th = math.asin(th / math.pi)
+            qc.u(th, ph, lm, i)
 
         # 2-qubit couplers
         unused_bits = all_bits.copy()
@@ -44,9 +45,9 @@ def random_circuit(width, depth):
         while len(unused_bits) > 1:
             c = unused_bits.pop()
             t = unused_bits.pop()
-            circ.cx(c, t)
+            qc.cx(c, t)
 
-    return circ
+    return qc
 
 
 def logit(x):
@@ -73,32 +74,37 @@ def expit(x):
     return 1 / (1 + np.exp(-x))
 
 
-def execute(circ, shot_count, lrc, lrr, sdrp):
-    sim = AceQasmSimulator(n_qubits=circ.width(), long_range_columns=lrc, long_range_rows=lrr, sdrp=sdrp)
-    circ_m = circ.copy()
-    circ_m.measure_all()
-    shots = dict(sim.run(circ_m, shots=shot_count).result().get_counts())
+def execute(qc, n_qubits, shot_count):
+    qcm = qc.copy()
+    logical_to_physical = qc.layout.final_index_layout()
+    for logical_idx in range(n_qubits):
+        physical_qubit = logical_to_physical[logical_idx]
+        # Measure the exact physical wire into its designated classical bit
+        qcm.measure(physical_qubit, logical_idx)
+
+    sim = AceQasmSimulator()
+    shots = dict(sim.run(qc, shots=shot_count).result().get_counts())
 
     hamming_weight = 0
     for k, v in shots.items():
         hamming_weight += k.count("1") * v
     hamming_weight /= shot_count
 
-    return logit(hamming_weight / circ.width())
+    return logit(hamming_weight / n_qubits)
 
 
 def main():
     if len(sys.argv) < 3:
-        raise RuntimeError("Usage: python3 mitiq_qv_hamming_weight.py [width] [depth] [long_range_columns=4] [long_range_rows=4] [sdrp=0.1464466] [shots=1024]")
+        raise RuntimeError("Usage: python3 mitiq_qv_hamming_weight.py [width] [depth] [shots=1024]")
 
     width = int(sys.argv[1])
     depth = int(sys.argv[2])
-    lrc = int(sys.argv[3]) if len(sys.argv) > 3 else 4
-    lrr = int(sys.argv[4]) if len(sys.argv) > 4 else 4
-    sdrp  = float(sys.argv[5]) if len(sys.argv) > 5 else ((1 - 1 / math.sqrt(2)) / 2)
-    shots = int(sys.argv[6]) if len(sys.argv) > 6 else 1024
+    shots = int(sys.argv[3]) if len(sys.argv) > 3 else 1024
 
-    circ = random_circuit(width, depth, lrc, lrr, sdrp)
+    qc = random_circuit(width, depth)
+    qc = qc & qc.inverse()
+    target = AceQasmSimulator()
+    qc = transpile(qc, backend=target, optimization_level=3)
 
     scale_count = 5
     max_scale = 2
@@ -108,10 +114,10 @@ def main():
         ]
     )
 
-    ex = lambda circ: execute(circ, shots, lrc, lrr, sdrp)
+    ex = lambda circ: execute(qc, width, shots)
 
     hamming_weight = width * expit(
-        zne.execute_with_zne(circ, ex, scale_noise=fold_global, factory=factory)
+        zne.execute_with_zne(qc, ex, scale_noise=fold_global, factory=factory)
     )
 
     print({"width": width, "depth": depth, "hamming_weight": float(hamming_weight)})
