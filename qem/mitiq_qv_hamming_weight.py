@@ -121,6 +121,7 @@ def main():
     )
 
     print({"width": width, "depth": depth, "hamming_weight": float(hamming_weight)})
+    print ("(Ideal hamming_weight is 0.)")
 
     return 0
 
