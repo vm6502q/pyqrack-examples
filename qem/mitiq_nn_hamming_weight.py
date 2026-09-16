@@ -11,7 +11,6 @@ import sys
 import time
 
 import numpy as np
-from scipy.special import expit
 
 from collections import Counter
 
@@ -160,6 +159,18 @@ def logit(x):
     elif x < 1e-17:
         return -38
     return max(-38, min(37, np.log(x / (1 - x))))
+
+
+def expit(x):
+    # Theoretically, these limit points are "infinite,"
+    # but precision caps out between 36 and 37:
+    if x >= 37:
+        return 1.0
+    # For the negative limit, the precision caps out
+    # between -37 and -38
+    elif x <= -38:
+        return 0.0
+    return 1 / (1 + np.exp(-x))
 
 
 def execute(qc, n_qubits, shot_count):
