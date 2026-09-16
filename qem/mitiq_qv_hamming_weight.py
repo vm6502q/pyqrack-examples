@@ -11,6 +11,7 @@ import sys
 import time
 
 import numpy as np
+from scipy.special import expit
 
 from collections import Counter
 
@@ -62,18 +63,6 @@ def logit(x):
     return max(-38, min(37, np.log(x / (1 - x))))
 
 
-def expit(x):
-    # Theoretically, these limit points are "infinite,"
-    # but precision caps out between 36 and 37:
-    if x >= 37:
-        return 1.0
-    # For the negative limit, the precision caps out
-    # between -37 and -38
-    elif x <= -38:
-        return 0.0
-    return 1 / (1 + np.exp(-x))
-
-
 def execute(qc, n_qubits, shot_count):
     qcm = qc.copy()
     logical_to_physical = qc.layout.final_index_layout()
@@ -83,7 +72,7 @@ def execute(qc, n_qubits, shot_count):
         qcm.measure(physical_qubit, logical_idx)
 
     sim = AceQasmSimulator()
-    shots = dict(sim.run(qc, shots=shot_count).result().get_counts())
+    shots = dict(sim.run(qcm, shots=shot_count).result().get_counts())
 
     hamming_weight = 0
     for k, v in shots.items():
@@ -106,6 +95,8 @@ def main():
     target = AceQasmSimulator()
     qc = transpile(qc, backend=target, optimization_level=3)
 
+    raw = width * expit(execute(qc, width, shots))
+
     scale_count = 5
     max_scale = 2
     factory = LinearFactory(
@@ -120,7 +111,7 @@ def main():
         zne.execute_with_zne(qc, ex, scale_noise=fold_global, factory=factory)
     )
 
-    print({"width": width, "depth": depth, "hamming_weight": float(hamming_weight)})
+    print({"width": width, "depth": depth, "hamming_weight": float(raw), "mitigated_hamming_weight": float(hamming_weight)})
     print ("(Ideal hamming_weight is 0.)")
 
     return 0
