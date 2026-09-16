@@ -4,42 +4,14 @@
 
 import math
 import random
-import statistics
 import sys
 import time
 
 from collections import Counter
 
-import numpy as np
 from pyqrack import QrackSimulator
 from qiskit.providers.qrack.backends import AceQasmSimulator
 from qiskit import QuantumCircuit, transpile
-
-
-# ---------------------------------------------------------------------------
-# Statistics
-# ---------------------------------------------------------------------------
-
-def calc_stats(ideal_probs, counts, shots):
-    n_pow = len(ideal_probs)
-    threshold = statistics.median(ideal_probs)
-    u_u = statistics.mean(ideal_probs)
-    numer = 0
-    denom = 0
-    hog_prob = 0
-    for b in range(n_pow):
-        ideal = ideal_probs[b]
-        patch = (counts.get(b, 0) / shots)
-
-        ideal_centered = ideal - u_u
-        denom += ideal_centered * ideal_centered
-        numer += ideal_centered * (patch - u_u)
-
-        if ideal > threshold:
-            hog_prob += patch
-
-    xeb = numer / denom
-    return xeb, hog_prob
 
 
 # ---------------------------------------------------------------------------
@@ -77,47 +49,39 @@ def bench_qrack(width, depth):
     # -----------------------------------------------------------------------
     # Method: QrackAceBackend
     # -----------------------------------------------------------------------
-    qc = transpile(qc, basis_gates=QrackSimulator.get_qiskit_basis_gates(), optimization_level=2)
     sim = AceQasmSimulator()
-    qcm = transpile(qc, backend=sim, optimization_level=3)
+    qc = transpile(qc, backend=sim, optimization_level=3)
+    qc = qc & qc.inverse()
+    
 
     t_trans = time.perf_counter()
     print(f"transpile_seconds: {t_trans - t_circ:.4f}")
 
-    logical_to_physical = qcm.layout.final_index_layout()
+    logical_to_physical = qc.layout.final_index_layout()
 
     for logical_idx in range(width):
         physical_qubit = logical_to_physical[logical_idx]
         # Measure the exact physical wire into its designated classical bit
-        qcm.measure(physical_qubit, logical_idx)
+        qc.measure(physical_qubit, logical_idx)
 
-    ace_str_counts = dict(sim.run(qcm, shots=shots).result().get_counts())
-    ace_counts = {}
-    for s, count in ace_str_counts.items():
-        ace_counts[int(s, 2)] = count
-    
+    ace_str_counts = dict(sim.run(qc, shots=shots).result().get_counts())
 
     t_ace = time.perf_counter()
     print(f"ace_seconds: {t_ace - t_trans:.4f}")
 
-    # -----------------------------------------------------------------------
-    # Ideal ground truth via QrackSimulator
-    # -----------------------------------------------------------------------
-    sim_ideal = QrackSimulator(width)
-    sim_ideal.run_qiskit_circuit(qc, shots=0)
-    ideal_probs = np.asarray(sim_ideal.out_probs(), dtype=np.float64)
-    del sim_ideal
-
-    t_ideal = time.perf_counter()
-    print(f"ideal_seconds: {t_ideal - t_ace:.4f}")
-
-    xeb_ace, hog_ace = calc_stats(ideal_probs, ace_counts, shots)
+    ace_counts = {}
+    for s, count in ace_str_counts.items():
+        ace_counts[int(s, 2)] = count
+    hamming = 0
+    for s, count in ace_counts.items():
+        hamming += s.bit_count() * count
+    hamming /= shots
 
     return {
         "width":              width,
         "depth":              depth,
-        "xeb_ace":            xeb_ace,
-        "hog_ace":            hog_ace,
+        "fidelity":           ace_counts.get(0, 0) / shots,
+        "hamming_weight":     hamming,
     }
 
 

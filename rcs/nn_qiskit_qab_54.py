@@ -182,7 +182,7 @@ def bench_qrack(width, depth):
 
     logical_to_physical = qcm.layout.final_index_layout()
 
-    for logical_idx in range(qc.num_qubits):
+    for logical_idx in range(width):
         physical_qubit = logical_to_physical[logical_idx]
         # Measure the exact physical wire into its designated classical bit
         qcm.measure(physical_qubit, logical_idx)
