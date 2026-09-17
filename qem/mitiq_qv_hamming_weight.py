@@ -20,7 +20,7 @@ from qiskit.providers.qrack import AceQasmSimulator
 
 from mitiq import zne
 from mitiq.zne.scaling.folding import fold_global
-from mitiq.zne.inference import LinearFactory
+from mitiq.zne.inference import RichardsonFactory
 
 
 def random_circuit(width, depth):
@@ -110,7 +110,7 @@ def main():
 
     scale_count = 10
     max_scale = 2
-    factory = LinearFactory(
+    factory = RichardsonFactory(
         scale_factors=[
             (1 + (max_scale - 1) * x / scale_count) for x in range(0, scale_count)
         ]
