@@ -99,7 +99,7 @@ def main():
 
     width = int(sys.argv[1])
     depth = int(sys.argv[2])
-    shots = int(sys.argv[3]) if len(sys.argv) > 3 else 1024
+    shots = int(sys.argv[3]) if len(sys.argv) > 3 else 2048
 
     qc = random_circuit(width, depth)
     qc = qc & qc.inverse()
