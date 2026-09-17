@@ -108,7 +108,7 @@ def main():
 
     raw = width * expit(execute(qc, width, shots))
 
-    scale_count = 10
+    scale_count = 9
     max_scale = 2
     factory = RichardsonFactory(
         scale_factors=[
