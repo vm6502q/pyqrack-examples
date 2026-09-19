@@ -87,7 +87,7 @@ def main():
     print("(Boundary target qubit is handled same for corrected as uncorrected.)")
     print()
 
-    experiment = QrackAceBackend(10, long_range_columns=2)
+    experiment = QrackAceBackend(10, long_range_columns=2, is_torus=False)
 
     # Experiment has a cleaved-QEC code ACE boundary.
     experiment.h(c1)
@@ -99,7 +99,7 @@ def main():
     output(experiment, c1, c2, t)
     print()
 
-    experiment = QrackAceBackend(10, long_range_columns=2)
+    experiment = QrackAceBackend(10, long_range_columns=2, is_torus=False)
 
     # Experiment has a cleaved-QEC code ACE boundary.
     experiment.h(c1)
