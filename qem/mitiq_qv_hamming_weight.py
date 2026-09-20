@@ -25,8 +25,6 @@ from mitiq.zne.inference import RichardsonFactory
 
 def random_circuit(width, depth):
     # This is a "fully-connected" coupler random circuit.
-    shots = 1 << (width + 2)
-
     lcv_range = range(width)
     all_bits = list(lcv_range)
 
