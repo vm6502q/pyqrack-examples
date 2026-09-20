@@ -49,29 +49,29 @@ def random_circuit(width, depth):
 
     return qc
 
+# To take a [0.0, 1.0] bounded interval to an unbounded one for OLS or Richarson extrapolation:
+# Precise symmetric logit/expit limits provided by (Anthropic) Claude
+# Based on a less precise version by Dan Strano
+
+_LOGIT_CEIL = 36.7368005696771       # logit(nextafter(1.0, 0.0)), exact
+_LOGIT_FLOOR = -_LOGIT_CEIL           # symmetric by choice, not the true underflow point (~-744.44)
+_EXPIT_AT_FLOOR = 1.1102230246251573e-16   # = expit(_LOGIT_FLOOR), precomputed
+
 
 def logit(x):
-    # Theoretically, these limit points are "infinite,"
-    # but precision caps out between 36 and 37:
-    if 5e-17 > (1 - x):
-        return 37
-    # For the negative limit, the precision caps out
-    # between -37 and -38
-    elif x < 1e-17:
-        return -38
-    return max(-38, min(37, np.log(x / (1 - x))))
+    if x >= 1.0:
+        return _LOGIT_CEIL
+    if x <= 0.0:
+        return _LOGIT_FLOOR
+    return max(_LOGIT_FLOOR, min(_LOGIT_CEIL, math.log(x / (1 - x))))
 
 
 def expit(x):
-    # Theoretically, these limit points are "infinite,"
-    # but precision caps out between 36 and 37:
-    if x >= 37:
+    if x >= _LOGIT_CEIL:
         return 1.0
-    # For the negative limit, the precision caps out
-    # between -37 and -38
-    elif x <= -38:
-        return 0.0
-    return 1 / (1 + np.exp(-x))
+    if x <= _LOGIT_FLOOR:
+        return _EXPIT_AT_FLOOR
+    return 1.0 / (1.0 + math.exp(-x))
 
 
 def execute(qc, n_qubits, shot_count):
