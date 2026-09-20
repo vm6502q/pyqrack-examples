@@ -63,7 +63,7 @@ def logit(x):
         return _LOGIT_CEIL
     if x <= 0.0:
         return _LOGIT_FLOOR
-    return max(_LOGIT_FLOOR, min(_LOGIT_CEIL, math.log(x / (1 - x))))
+    return max(_LOGIT_FLOOR, min(_LOGIT_CEIL, math.log(x / (1.0 - x))))
 
 
 def expit(x):
