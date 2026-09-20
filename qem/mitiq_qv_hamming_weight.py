@@ -49,6 +49,7 @@ def random_circuit(width, depth):
 
     return qc
 
+
 # To take a [0.0, 1.0] bounded interval to an unbounded one for OLS or Richardson extrapolation:
 # Precise symmetric logit/expit limits provided by (Anthropic) Claude
 # Based on a less precise version by Dan Strano
