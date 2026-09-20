@@ -190,7 +190,7 @@ def execute(qc, n_qubits, shot_count):
         hamming_weight += k.count("1") * v
     hamming_weight /= shot_count
 
-    return logit(hamming_weight / n_qubits)
+    return logit(2 * hamming_weight / n_qubits)
 
 
 def main():
@@ -218,7 +218,7 @@ def main():
 
     ex = lambda circ: execute(qc, width, shots)
 
-    hamming_weight = width * expit(
+    hamming_weight = 0.5 * width * expit(
         zne.execute_with_zne(qc, ex, scale_noise=fold_global, factory=factory)
     )
 
