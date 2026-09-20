@@ -54,8 +54,8 @@ def random_circuit(width, depth):
 # Precise symmetric logit/expit limits provided by (Anthropic) Claude
 # Based on a less precise version by Dan Strano
 
-_LOGIT_CEIL = 36.7368005696771       # logit(nextafter(1.0, 0.0)), exact
-_LOGIT_FLOOR = -_LOGIT_CEIL           # symmetric by choice, not the true underflow point (~-744.44)
+_LOGIT_CEIL = 36.7368005696771             # logit(nextafter(1.0, 0.0)), exact
+_LOGIT_FLOOR = -_LOGIT_CEIL                # symmetric by choice, not the true underflow point (~-744.44)
 _EXPIT_AT_FLOOR = 1.1102230246251573e-16   # = expit(_LOGIT_FLOOR), precomputed
 
 
