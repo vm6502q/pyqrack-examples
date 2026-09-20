@@ -89,9 +89,8 @@ def execute(qc, n_qubits, shot_count):
     hamming_weight = 0
     for k, v in shots.items():
         hamming_weight += k.count("1") * v
-    hamming_weight /= shot_count
 
-    return logit(2 * hamming_weight / n_qubits)
+    return logit(2 * hamming_weight / (shot_count * n_qubits))
 
 
 def main():
