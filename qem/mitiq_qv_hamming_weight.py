@@ -95,7 +95,7 @@ def execute(qc, n_qubits, shot_count):
 
 def main():
     if len(sys.argv) < 3:
-        raise RuntimeError("Usage: python3 mitiq_qv_hamming_weight.py [width] [depth] [shots=1024]")
+        raise RuntimeError("Usage: python3 mitiq_qv_hamming_weight.py [width] [depth] [shots=2048]")
 
     width = int(sys.argv[1])
     depth = int(sys.argv[2])
