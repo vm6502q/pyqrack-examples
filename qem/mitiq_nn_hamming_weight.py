@@ -105,7 +105,7 @@ def random_circuit(width, depth):
 
     results = []
 
-    qc = QuantumCircuit(width)
+    qc = QuantumCircuit(width, width)
     for _ in range(depth):
         # Single-qubit gates
         for i in lcv_range:
@@ -194,7 +194,7 @@ def execute(qc, n_qubits, shot_count):
 
 def main():
     if len(sys.argv) < 3:
-        raise RuntimeError("Usage: python3 mitiq_qv_hamming_weight.py [width] [depth] [shots=2048]")
+        raise RuntimeError("Usage: python3 mitiq_nn_hamming_weight.py [width] [depth] [shots=2048]")
 
     width = int(sys.argv[1])
     depth = int(sys.argv[2])
