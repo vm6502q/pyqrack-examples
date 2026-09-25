@@ -207,11 +207,11 @@ def main():
 
     raw = width * expit(execute(qc, width, shots))
 
-    scale_count = 8
-    max_scale = 2.0
+    scale_count = 3
+    max_scale = 5
     factory = RichardsonFactory(
         scale_factors=[
-            (1 + (max_scale - 1) * x / scale_count) for x in range(0, scale_count)
+            (1 + (max_scale - 1) * x / (scale_count - 1)) for x in range(0, scale_count)
         ]
     )
 
