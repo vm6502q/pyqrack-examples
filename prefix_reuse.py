@@ -57,7 +57,7 @@ def main():
     qsim.m_all()
     prefix.m_all()
     end = time.perf_counter()
-    print(f"(Took {end - start} seconds.")
+    print(f"(Took {end - start} seconds.)")
 
     return 0
 
