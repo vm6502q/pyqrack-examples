@@ -143,7 +143,7 @@ def random_circuit(width, depth):
                 g = random.choice(two_bit_gates)
                 g(qc, b1, b2)
 
-    sim = AceQasmSimulator(n_qubits=width, long_range_columns=lrc, long_range_rows=lrr, sdrp=sdrp)
+    sim = AceQasmSimulator()
     qc = transpile(qc, backend=sim, optimization_level=3)
 
     return qc
