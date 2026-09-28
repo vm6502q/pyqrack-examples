@@ -216,14 +216,7 @@ def main():
 
     print(f"Unmitigated Hamming weight: {raw} ({end - start} seconds)")
 
-    scale_count = 3
-    max_scale = 5
-    factory = RichardsonFactory(
-        scale_factors=[
-            (1 + (max_scale - 1) * x / (scale_count - 1)) for x in range(0, scale_count)
-        ]
-    )
-
+    factory = RichardsonFactory(scale_factors=[1, 3, 5])
     ex = lambda circ: execute(qc, width, shots)
 
     start = time.perf_counter()
