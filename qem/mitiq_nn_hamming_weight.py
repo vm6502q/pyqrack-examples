@@ -205,7 +205,7 @@ def main():
     target = AceQasmSimulator()
     qc = transpile(qc, backend=target, optimization_level=3)
 
-    raw = width * expit(execute(qc, width, shots))
+    raw = 0.5 * width * expit(execute(qc, width, shots))
 
     scale_count = 3
     max_scale = 5
