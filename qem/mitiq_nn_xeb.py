@@ -227,13 +227,13 @@ def execute(qc, n_qubits, shot_count, lrc, lrr):
 
 def main():
     if len(sys.argv) < 3:
-        raise RuntimeError("Usage: python3 mitiq_nn_hamming_weight.py [width] [depth] [long_range_columns=4] [long_range_rows=4] [shots=2048]")
+        raise RuntimeError("Usage: python3 mitiq_nn_hamming_weight.py [width] [depth] [long_range_columns=4] [long_range_rows=4] [shots=4096]")
 
     width = int(sys.argv[1])
     depth = int(sys.argv[2])
     lrc = int(sys.argv[3]) if len(sys.argv) > 3 else 4
     lrr = int(sys.argv[4]) if len(sys.argv) > 4 else 4
-    shots = int(sys.argv[5]) if len(sys.argv) > 5 else 2048
+    shots = int(sys.argv[5]) if len(sys.argv) > 5 else 4096
 
     qc = random_circuit(width, depth, lrc, lrr)
 
