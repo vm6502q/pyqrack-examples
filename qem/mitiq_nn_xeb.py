@@ -21,7 +21,7 @@ from qiskit.compiler import transpile
 from qiskit.providers.qrack import AceQasmSimulator
 
 from mitiq import zne
-from mitiq.zne.scaling.folding import fold_global
+from mitiq.zne.scaling.folding import fold_all
 from mitiq.zne.inference import RichardsonFactory
 
 
@@ -243,7 +243,7 @@ def main():
     start = time.perf_counter()
 
     xeb = tanh(
-        zne.execute_with_zne(qc, ex, scale_noise=fold_global, factory=factory)
+        zne.execute_with_zne(qc, ex, scale_noise=fold_all, factory=factory, fidelities={"single": 1.0, "double": 0.975})
     )
 
     end = time.perf_counter()

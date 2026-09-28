@@ -19,7 +19,7 @@ from qiskit.compiler import transpile
 from qiskit.providers.qrack import AceQasmSimulator
 
 from mitiq import zne
-from mitiq.zne.scaling.folding import fold_global
+from mitiq.zne.scaling.folding import fold_all
 from mitiq.zne.inference import RichardsonFactory
 
 
@@ -100,7 +100,6 @@ def main():
     shots = int(sys.argv[3]) if len(sys.argv) > 3 else 4096
 
     qc = random_circuit(width, depth)
-    qc = qc & qc.inverse()
     target = AceQasmSimulator()
 
     start = time.perf_counter()
@@ -109,18 +108,20 @@ def main():
 
     print(f"Transpilation time: {end - start} seconds")
 
+    qc = qc & qc.inverse()
+
     start = time.perf_counter()
     raw = 0.5 * width * expit(execute(qc, width, shots))
     end = time.perf_counter()
 
     print(f"Unmitigated Hamming weight: {raw} ({end - start} seconds)")
 
-    factory = RichardsonFactory(scale_factors=[1, 3, 5])
+    factory = RichardsonFactory(scale_factors=[1, 3, 5], fidelities={"single": 1.0, "double": 0.975})
     ex = lambda circ: execute(qc, width, shots)
 
     start = time.perf_counter()
     hamming_weight = 0.5 * width * expit(
-        zne.execute_with_zne(qc, ex, scale_noise=fold_global, factory=factory)
+        zne.execute_with_zne(qc, ex, scale_noise=fold_all, factory=factory)
     )
     end = time.perf_counter()
 
