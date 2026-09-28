@@ -21,7 +21,7 @@ from qiskit.compiler import transpile
 from qiskit.providers.qrack import AceQasmSimulator
 
 from mitiq import zne
-from mitiq.zne.scaling.folding import fold_all
+from mitiq.zne.scaling.folding import fold_gates_at_random
 from mitiq.zne.inference import RichardsonFactory
 
 
@@ -238,14 +238,14 @@ def main():
     qc = random_circuit(width, depth, lrc, lrr)
 
     factory = RichardsonFactory(scale_factors=[1, 3, 5])
-    ex = lambda circ: execute(qc, width, shots, lrc, lrr)
+    ex = lambda circ: execute(qc, width, shots)
+    def scale(circ, scale_factor):
+        return fold_gates_at_random(circ, scale_factor=scale_factor, fidelities={"single": 1.0, "double": 0.975})
 
     start = time.perf_counter()
-
     xeb = tanh(
-        zne.execute_with_zne(qc, ex, scale_noise=fold_all, factory=factory, fidelities={"single": 1.0, "double": 0.975})
+        zne.execute_with_zne(qc, ex, scale_noise=fold_all, factory=factory)
     )
-
     end = time.perf_counter()
 
     print({"width": width, "depth": depth, "seconds": (end - start), "mitigated_xeb": float(xeb)})
