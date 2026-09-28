@@ -203,9 +203,18 @@ def main():
     qc = random_circuit(width, depth)
     qc = qc & qc.inverse()
     target = AceQasmSimulator()
-    qc = transpile(qc, backend=target, optimization_level=3)
 
+    start = time.perf_counter()
+    qc = transpile(qc, backend=target, optimization_level=3)
+    end = time.perf_counter()
+
+    print(f"Transpilation time: {end - start} seconds")
+
+    start = time.perf_counter()
     raw = 0.5 * width * expit(execute(qc, width, shots))
+    end = time.perf_counter()
+
+    print(f"Unmitigated Hamming weight: {raw} ({end - start} seconds)")
 
     scale_count = 3
     max_scale = 5
@@ -218,11 +227,9 @@ def main():
     ex = lambda circ: execute(qc, width, shots)
 
     start = time.perf_counter()
-
     hamming_weight = 0.5 * width * expit(
         zne.execute_with_zne(qc, ex, scale_noise=fold_global, factory=factory)
     )
-
     end = time.perf_counter()
 
     print({"width": width, "depth": depth, "seconds": (end - start), "hamming_weight": float(raw), "mitigated_hamming_weight": float(hamming_weight)})
