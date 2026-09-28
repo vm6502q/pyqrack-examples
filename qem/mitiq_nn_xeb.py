@@ -247,11 +247,15 @@ def main():
 
     ex = lambda circ: execute(qc, width, shots, lrc, lrr)
 
+    start = time.perf_counter()
+
     xeb = tanh(
         zne.execute_with_zne(qc, ex, scale_noise=fold_global, factory=factory)
     )
 
-    print({"width": width, "depth": depth, "mitigated_xeb": float(xeb)})
+    end = time.perf_counter()
+
+    print({"width": width, "depth": depth, "seconds": (end - start), "mitigated_xeb": float(xeb)})
 
     return 0
 

@@ -217,11 +217,15 @@ def main():
 
     ex = lambda circ: execute(qc, width, shots)
 
+    start = time.perf_counter()
+
     hamming_weight = 0.5 * width * expit(
         zne.execute_with_zne(qc, ex, scale_noise=fold_global, factory=factory)
     )
 
-    print({"width": width, "depth": depth, "hamming_weight": float(raw), "mitigated_hamming_weight": float(hamming_weight)})
+    end = time.perf_counter()
+
+    print({"width": width, "depth": depth, "seconds": (end - start), "hamming_weight": float(raw), "mitigated_hamming_weight": float(hamming_weight)})
     print ("(Ideal hamming_weight is 0.)")
 
     return 0
