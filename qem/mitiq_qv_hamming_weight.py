@@ -108,10 +108,8 @@ def main():
 
     print(f"Transpilation time: {end - start} seconds")
 
-    qcm = qc & qc.inverse()
-
     start = time.perf_counter()
-    raw = 0.5 * width * expit(execute(qcm, width, shots))
+    raw = 0.5 * width * expit(execute(qc, width, shots))
     end = time.perf_counter()
 
     print(f"Unmitigated Hamming weight: {raw} ({end - start} seconds)")
