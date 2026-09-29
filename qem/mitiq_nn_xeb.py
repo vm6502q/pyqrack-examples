@@ -196,7 +196,7 @@ def tanh(x):
     return math.tanh(x)
 
 
-def execute(qc, n_qubits, shot_count, lrc, lrr):
+def execute(qc, n_qubits, shot_count, lrc, lrr, ideal_probs):
     qcm = qc.copy()
     qcm.measure_all()
 
@@ -211,14 +211,6 @@ def execute(qc, n_qubits, shot_count, lrc, lrr):
     ace_counts = {}
     for s, count in ace_str_counts.items():
         ace_counts[int(s, 2)] = count
-
-    # -----------------------------------------------------------------------
-    # Ideal ground truth via QrackSimulator
-    # -----------------------------------------------------------------------
-    sim_ideal = QrackSimulator(n_qubits)
-    sim_ideal.run_qiskit_circuit(qc, shots=0)
-    ideal_probs = np.asarray(sim_ideal.out_probs(), dtype=np.float64)
-    del sim_ideal
 
     xeb_ace, hog_ace = calc_stats(ideal_probs, ace_counts, shot_count)
 
@@ -237,14 +229,22 @@ def main():
 
     qc = random_circuit(width, depth, lrc, lrr)
 
+    # -----------------------------------------------------------------------
+    # Ideal ground truth via QrackSimulator
+    # -----------------------------------------------------------------------
+    sim_ideal = QrackSimulator(width)
+    sim_ideal.run_qiskit_circuit(qc, shots=0)
+    ideal_probs = np.asarray(sim_ideal.out_probs(), dtype=np.float64)
+    del sim_ideal
+
     factory = RichardsonFactory(scale_factors=[1, 3, 5])
-    ex = lambda circ: execute(qc, width, shots)
+    ex = lambda circ: execute(qc, width, shots, lrc, lrr, ideal_probs)
     def scale(circ, scale_factor):
         return fold_gates_at_random(circ, scale_factor=scale_factor, fidelities={"single": 1.0, "double": 0.975})
 
     start = time.perf_counter()
     xeb = tanh(
-        zne.execute_with_zne(qc, ex, scale_noise=fold_all, factory=factory)
+        zne.execute_with_zne(qc, ex, scale_noise=scale, factory=factory)
     )
     end = time.perf_counter()
 
