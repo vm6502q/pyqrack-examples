@@ -214,8 +214,6 @@ def execute(qc, n_qubits, shot_count, lrc, lrr, ideal_probs):
 
     xeb_ace, hog_ace = calc_stats(ideal_probs, ace_counts, shot_count)
 
-    print(xeb_ace)
-
     return atanh(xeb_ace)
 
 
