@@ -214,18 +214,20 @@ def execute(qc, n_qubits, shot_count, lrc, lrr, ideal_probs):
 
     xeb_ace, hog_ace = calc_stats(ideal_probs, ace_counts, shot_count)
 
+    print(xeb_ace)
+
     return atanh(xeb_ace)
 
 
 def main():
     if len(sys.argv) < 3:
-        raise RuntimeError("Usage: python3 mitiq_nn_hamming_weight.py [width] [depth] [long_range_columns=4] [long_range_rows=4] [shots=4096]")
+        raise RuntimeError("Usage: python3 mitiq_nn_hamming_weight.py [width] [depth] [long_range_columns=4] [long_range_rows=4] [shots=8192]")
 
     width = int(sys.argv[1])
     depth = int(sys.argv[2])
     lrc = int(sys.argv[3]) if len(sys.argv) > 3 else 4
     lrr = int(sys.argv[4]) if len(sys.argv) > 4 else 4
-    shots = int(sys.argv[5]) if len(sys.argv) > 5 else 4096
+    shots = int(sys.argv[5]) if len(sys.argv) > 5 else 8192
 
     qc = random_circuit(width, depth, lrc, lrr)
 
@@ -237,7 +239,7 @@ def main():
     ideal_probs = np.asarray(sim_ideal.out_probs(), dtype=np.float64)
     del sim_ideal
 
-    factory = RichardsonFactory(scale_factors=[1, 3, 5])
+    factory = RichardsonFactory(scale_factors=[1, 3, 5, 7])
     ex = lambda circ: execute(qc, width, shots, lrc, lrr, ideal_probs)
     def scale(circ, scale_factor):
         return fold_gates_at_random(circ, scale_factor=scale_factor, fidelities={"single": 1.0, "double": 0.975})

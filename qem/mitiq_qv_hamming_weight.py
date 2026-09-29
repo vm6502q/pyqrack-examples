@@ -93,11 +93,11 @@ def execute(qc, n_qubits, shot_count):
 
 def main():
     if len(sys.argv) < 3:
-        raise RuntimeError("Usage: python3 mitiq_qv_hamming_weight.py [width] [depth] [shots=4096]")
+        raise RuntimeError("Usage: python3 mitiq_qv_hamming_weight.py [width] [depth] [shots=8192]")
 
     width = int(sys.argv[1])
     depth = int(sys.argv[2])
-    shots = int(sys.argv[3]) if len(sys.argv) > 3 else 4096
+    shots = int(sys.argv[3]) if len(sys.argv) > 3 else 8192
 
     qc = random_circuit(width, depth)
     target = AceQasmSimulator()
@@ -114,7 +114,7 @@ def main():
 
     print(f"Unmitigated Hamming weight: {raw} ({end - start} seconds)")
 
-    factory = RichardsonFactory(scale_factors=[1, 3, 5])
+    factory = RichardsonFactory(scale_factors=[1, 3, 5, 7])
     ex = lambda circ: execute(qc, width, shots)
     def scale(circ, scale_factor):
         return fold_gates_at_random(circ, scale_factor=scale_factor, fidelities={"single": 1.0, "double": 0.975})
