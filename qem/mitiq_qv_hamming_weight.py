@@ -74,8 +74,8 @@ def expit(x):
 
 
 def execute(qc, n_qubits, shot_count):
-    qcm = qc.copy()
-    logical_to_physical = qc.layout.final_index_layout()
+    qcm = qc & qc.inverse()
+    logical_to_physical = qcm.layout.final_index_layout()
     for logical_idx in range(n_qubits):
         physical_qubit = logical_to_physical[logical_idx]
         # Measure the exact physical wire into its designated classical bit
@@ -108,10 +108,10 @@ def main():
 
     print(f"Transpilation time: {end - start} seconds")
 
-    qc = qc & qc.inverse()
+    qcm = qc & qc.inverse()
 
     start = time.perf_counter()
-    raw = 0.5 * width * expit(execute(qc, width, shots))
+    raw = 0.5 * width * expit(execute(qcm, width, shots))
     end = time.perf_counter()
 
     print(f"Unmitigated Hamming weight: {raw} ({end - start} seconds)")
