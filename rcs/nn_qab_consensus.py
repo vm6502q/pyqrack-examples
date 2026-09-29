@@ -240,7 +240,7 @@ def bench_qrack(width, depth, lrc=4, lrr=4, swap_mode="auto"):
     n_inst       = 3
     n_pow        = 1 << width
     u_u          = 1.0 / n_pow
-    shots        = 1 << min(10, width + 2)
+    shots        = 1 << min(13, width + 2)
     shots_per    = shots // n_inst
     shots        = shots_per * n_inst
 
