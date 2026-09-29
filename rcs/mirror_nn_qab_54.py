@@ -133,6 +133,11 @@ def bench_qrack(width, depth):
     t_circ = time.perf_counter()
     qc = QuantumCircuit(width, width)
 
+    # Randomize initial permutation
+    for i in lcv_range:
+        if random.random() < 0.5:
+            qc.x(i)
+
     for _ in range(depth):
         # Single-qubit gates
         for i in lcv_range:
