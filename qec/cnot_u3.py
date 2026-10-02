@@ -53,12 +53,10 @@ def main():
     experiment.h(2)
 
     # With error-detection
-    experiment.cx(0, 5)
     experiment.cx(2, 5)
-    experiment.cx(1, 5)
     experiment.cx(2, 1)
     experiment.u(1, th, ph, lm)
-    experiment.u(5, th, ph, lm)
+    experiment.cx(1, 5)
     experiment.cx(1, 0)
     experiment.cx(0, 5)
     experiment.force_m(5, False)
