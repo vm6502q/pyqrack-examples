@@ -96,11 +96,11 @@ def nswap(sim, q1, q2):
 
 def calc_stats(ideal_probs, counts, shots):
     n_pow = len(ideal_probs)
-    threshold = statistics.median(ideal_probs)
+    # threshold = statistics.median(ideal_probs)
     u_u = statistics.mean(ideal_probs)
     numer = 0
     denom = 0
-    hog_prob = 0
+    # hog_prob = 0
     for b in range(n_pow):
         ideal = ideal_probs[b]
         patch = (counts.get(b, 0) / shots)
@@ -109,11 +109,11 @@ def calc_stats(ideal_probs, counts, shots):
         denom += ideal_centered * ideal_centered
         numer += ideal_centered * (patch - u_u)
 
-        if ideal > threshold:
-            hog_prob += patch
+        # if ideal > threshold:
+        #     hog_prob += patch
 
     xeb = numer / denom
-    return xeb, hog_prob
+    return xeb #, hog_prob
 
 
 def random_circuit(width, depth, lrc, lrr):
@@ -212,7 +212,7 @@ def execute(qc, n_qubits, shot_count, lrc, lrr, ideal_probs):
     for s, count in ace_str_counts.items():
         ace_counts[int(s, 2)] = count
 
-    xeb_ace, hog_ace = calc_stats(ideal_probs, ace_counts, shot_count)
+    xeb_ace = calc_stats(ideal_probs, ace_counts, shot_count)
 
     return atanh(xeb_ace)
 
