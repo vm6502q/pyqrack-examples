@@ -235,7 +235,7 @@ def bench_qrack(width, depth, lrc=4, lrr=4):
         "bulk_to_boundary":         ratio,
         "fidelity_ace":             ace_counts.get(0, 0) / shots,
         "hamming_weight_ace":       hamming,
-        "est_hamming_fidelity_ace": 1.0 - (hamming / (width << 1))
+        "est_hamming_fidelity_ace": 1.0 - (2 * hamming / width)
     }
 
 
