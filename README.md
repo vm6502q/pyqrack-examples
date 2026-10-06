@@ -6,7 +6,7 @@ Useful and "cool" example scripts for PyQrack
 
 Notably, this repository manages to collect together a number of challenges against _"quantum supremacy"_ and _"quantum advantage"_ with heuristics from the Qrack framework that seem to match or exceed common _"noisy-intermediate scale quantum" ("NISQ")_ fidelity circa 2026. (We also include other instructive usage examples for PyQrack and PyQrackIsing.)
 
-Most people with interest in quantum computing would probably be happy to consume PyQrack via Jupyter Notebook and Jupyter Lab. However, while Qrack recognizes and supports that popular ("data science") workflow, relying on so many development environment and runtime dependencies is, basically, antithetical to the original point and design of the Qrack project. Qrack has _no_ required dependencies whatsoever, except for the C ABI, `libc6`, as a dependency of any C or C++ "pure-language" code project. Qrack optionally provides GPU acceleration via choice of OpenCL or CUDA, but even this is an _optional_ dependency that can be omitted. 128-bit floating point math can optionally be supplied by the [Boost libraries](https://www.boost.org/), but even Qrack's ("big integers") "arbitrary precision integers," when demanded according to user build settings, is _"pure language standard."_
+Most people with interest in quantum computing would probably be happy to consume PyQrack via Jupyter Notebook and Jupyter Lab. However, while Qrack recognizes and supports that popular ("data science") workflow, relying on so many development environment and runtime dependencies is, basically, antithetical to the original point and design of the Qrack project. Qrack has _no_ required dependencies whatsoever, except for the C ABI, `libc6`, as a dependency of any C or C++ "pure-language" code project. Qrack optionally provides GPU acceleration via choice of OpenCL or CUDA, but even this is an _optional_ dependency that can be omitted. 128-bit floating point math can optionally be supplied by the [Boost libraries](https://www.boost.org/), but even Qrack's ("big integers") "arbitrary precision integers," when demanded according to user build settings, are _"pure language standard."_
 
 You can understand, Qrack prides itself on a comparatively tiny, secure, self-sufficient "supply chain." While we certainly don't _object_ to "more typical" workflow "supply chains," with large, cascading dependency trees across the Python ecosystem, we _should_ supply examples and applications that work in a minimalist development environment. Hence, besides C++ Qrack examples in the library repository itself, we provide these Python script examples as well, with minimal dependencies.
 
@@ -28,5 +28,5 @@ or, depending on your environment, this is the basic idea:
 
 That's it! To run any of the scripts in this repository, just invoke the Python interpreter! For example, this script times a random circuit sampling benchmark:
 ```sh
- $ python3 rcs/expressive_nearest_neighbor/rcs.py
+ $ python3 rcs/nn_qab.py 14 12 3 2
 ```
