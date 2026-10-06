@@ -207,10 +207,11 @@ def bench_qrack(width, depth):
     hamming /= shots
 
     return {
-        "width":              width,
-        "depth":              depth,
-        "fidelity":           ace_counts.get(0, 0) / shots,
-        "hamming_weight":     hamming,
+        "width":                width,
+        "depth":                depth,
+        "fidelity":             ace_counts.get(0, 0) / shots,
+        "hamming_weight":       hamming,
+        "est_hamming_fidelity": 1.0 - (hamming / (width << 1))
     }
 
 

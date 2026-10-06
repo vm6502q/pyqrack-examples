@@ -228,13 +228,14 @@ def bench_qrack(width, depth, lrc=4, lrr=4):
     print(f"ace_seconds: {t_ace - t_circ:.4f}")
 
     return {
-        "width":              width,
-        "depth":              depth,
-        "long_range_columns": lrc,
-        "long_range_rows":    lrr,
-        "bulk_to_boundary":   ratio,
-        "fidelity_ace":       ace_counts.get(0, 0) / shots,
-        "hamming_weight_ace": hamming,
+        "width":                    width,
+        "depth":                    depth,
+        "long_range_columns":       lrc,
+        "long_range_rows":          lrr,
+        "bulk_to_boundary":         ratio,
+        "fidelity_ace":             ace_counts.get(0, 0) / shots,
+        "hamming_weight_ace":       hamming,
+        "est_hamming_fidelity_ace": 1.0 - (hamming / (width << 1))
     }
 
 
