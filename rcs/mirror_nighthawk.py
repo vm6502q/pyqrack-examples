@@ -117,7 +117,7 @@ def calc_stats(ideal_probs, counts, shots):
 
 def bench_qrack(depth):
     width = 64
-    dead_qubits = [5, 27, 32]
+    dead_qubits = (5, 27, 32)
     lcv_range = range(width)
     all_bits  = list(lcv_range)
     n_pow     = 1 << width
@@ -137,7 +137,7 @@ def bench_qrack(depth):
 
     # Randomize initial permutation
     for i in lcv_range:
-        if random.random() < 0.5:
+        if (i not in dead_qubits) and (random.random() < 0.5):
             qc.x(i)
 
     for _ in range(depth):
