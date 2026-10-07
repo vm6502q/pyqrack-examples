@@ -115,7 +115,9 @@ def calc_stats(ideal_probs, counts, shots):
 # Benchmark
 # ---------------------------------------------------------------------------
 
-def bench_qrack(width, depth):
+def bench_qrack(depth):
+    width = 64
+    dead_qubits = [5, 27, 32]
     lcv_range = range(width)
     all_bits  = list(lcv_range)
     n_pow     = 1 << width
@@ -141,6 +143,8 @@ def bench_qrack(width, depth):
     for _ in range(depth):
         # Single-qubit gates
         for i in lcv_range:
+            if i in dead_qubits:
+                continue
             th, ph, lm = (random.uniform(-math.pi, math.pi) for _ in range(3))
             # Keep it Haar-random towards the poles:
             th = math.asin(th / math.pi)
@@ -170,6 +174,9 @@ def bench_qrack(width, depth):
                 b2 = temp_col * row_len + temp_row
 
                 if (b1 >= width) or (b2 >= width):
+                    continue
+
+                if (b1 in dead_qubits) or (b2 in dead_qubits):
                     continue
 
                 g = random.choice(two_bit_gates)
@@ -222,10 +229,9 @@ def bench_qrack(width, depth):
 
 def main():
     if len(sys.argv) < 3:
-        raise RuntimeError("Usage: python3 nn_qiskit_qab_54.py [width] [depth]")
-    width = int(sys.argv[1])
+        raise RuntimeError("Usage: python3 mirror_nighthawk.py [depth]")
     depth = int(sys.argv[2])
-    result = bench_qrack(width, depth)
+    result = bench_qrack(depth)
     for k, v in result.items():
         print(f"  {k}: {v}")
     return 0
