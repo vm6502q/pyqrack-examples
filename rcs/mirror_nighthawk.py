@@ -124,9 +124,9 @@ def bench_qrack(depth):
         107, 95, 83, 71, 59, 47, 35, # first boundary
         # first patch (is exact)
         103, 91, 79, 67, 55, 43, # second boundary
-        102, # second patch
+        # second patch (allow excess)
         99, 87, 75, 63, 51, # third boundary
-        98, # third patch
+        # third patch (allow excess)
     }
     lcv_range = range(width)
     all_bits  = list(lcv_range)
