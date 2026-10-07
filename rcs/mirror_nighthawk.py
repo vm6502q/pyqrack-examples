@@ -118,6 +118,7 @@ def calc_stats(ideal_probs, counts, shots):
 
 def bench_qrack(depth):
     width = 64
+    virtual_width = 75
     dead_qubits = (5, 27, 32)
     coupler_exclusions = {
         74, 59, 44, # first boundary
@@ -196,9 +197,10 @@ def bench_qrack(depth):
     # Method: QrackAceBackend
     # -----------------------------------------------------------------------
     # 3 patches, 25 state-vector qubits apiece1
-    dummy = QrackAceBackend(75, long_range_columns=4, long_range_rows=5)
+    dummy = QrackAceBackend(virtual_width, long_range_columns=4, long_range_rows=5)
     coupling_map = dummy.get_logical_coupling_map()
-    sim = AceQasmSimulator(n_qubits=75, long_range_columns=4, long_range_rows=5, coupling_map=coupling_map)
+    coupling_map = [tup for tup in coupling_map if (len(coupler_exclusions & set(tup)) == 0)]
+    sim = AceQasmSimulator(n_qubits=virtual_width, long_range_columns=4, long_range_rows=5, coupling_map=coupling_map)
     qc = transpile(qc, backend=sim, optimization_level=3)
     qc = qc & qc.inverse()
     
