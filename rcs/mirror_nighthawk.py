@@ -123,9 +123,9 @@ def bench_qrack(depth):
         74, 59, 44, # first boundary
         73, 72, # first patch
         69, 54, # second boundary
-        68, 67, 66, 65, # second patch
+        68, 67, 66, # second patch
         64, # third boundary
-        63, 62, # third patch
+        63, 62, 61, # third patch
     }
         
     lcv_range = range(width)
