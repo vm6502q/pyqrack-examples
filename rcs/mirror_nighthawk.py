@@ -11,9 +11,10 @@ import time
 from collections import Counter
 
 import numpy as np
-from pyqrack import QrackSimulator
+from pyqrack import QrackSimulator, QrackAceBackend
 from qiskit.providers.qrack.backends import AceQasmSimulator
 from qiskit import QuantumCircuit, transpile
+from qiskit.transpiler import CouplingMap
 
 
 def factor_width(width):
@@ -118,6 +119,14 @@ def calc_stats(ideal_probs, counts, shots):
 def bench_qrack(depth):
     width = 64
     dead_qubits = (5, 27, 32)
+    coupler_exclusions = {
+        44, 61, 74, # first boundary
+        73, 72, 71, # first patch
+        56, 69, # second boundary
+        68, 67, 66, 65, # second patch
+        64, 63 # third boundary
+    }
+        
     lcv_range = range(width)
     all_bits  = list(lcv_range)
     n_pow     = 1 << width
@@ -185,8 +194,10 @@ def bench_qrack(depth):
     # -----------------------------------------------------------------------
     # Method: QrackAceBackend
     # -----------------------------------------------------------------------
-    # 3 patches, 25 state-vector qubits apiece
-    sim = AceQasmSimulator(n_qubits=75, long_range_columns=4, long_range_rows=5)
+    # 3 patches, 25 state-vector qubits apiece1
+    dummy = QrackAceBackend(75, long_range_columns=4, long_range_rows=5)
+    coupling_map = dummy.get_logical_coupling_map()
+    sim = AceQasmSimulator(n_qubits=75, long_range_columns=4, long_range_rows=5, coupling_map=coupling_map)
     qc = transpile(qc, backend=sim, optimization_level=3)
     qc = qc & qc.inverse()
     
