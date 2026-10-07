@@ -124,7 +124,7 @@ def bench_qrack(depth):
         73, 72, # first patch
         69, 54, # second boundary
         68, 67, 66, 65, # second patch
-        64, 49, # third boundary
+        64, # third boundary
         63, 62, # third patch
     }
         
