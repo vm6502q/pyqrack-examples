@@ -122,7 +122,7 @@ def bench_qrack(depth):
     coupler_exclusions = {
         74, 61, 44, # first boundary
         73, 72, # first patch
-        69, 56 # second boundary
+        69, 56, # second boundary
         68, 67, 66, 65, # second patch
         64, 51, # third boundary
         63, 62, # third patch
