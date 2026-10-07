@@ -124,11 +124,11 @@ def bench_qrack(depth):
     dead_qubits = (5, 27, 32)
     coupler_exclusions = {
         74, 59, 44, # first boundary
-        # first patch
+        73, # first patch
         69, 54, # second boundary
-        68, # second patch
+        68, 67, # second patch
         64, # third boundary
-        # third patch
+        63, 62# third patch
     }
         
     lcv_range = range(width)
