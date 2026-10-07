@@ -228,9 +228,9 @@ def bench_qrack(depth):
 # ---------------------------------------------------------------------------
 
 def main():
-    if len(sys.argv) < 3:
+    if len(sys.argv) < 2:
         raise RuntimeError("Usage: python3 mirror_nighthawk.py [depth]")
-    depth = int(sys.argv[2])
+    depth = int(sys.argv[1])
     result = bench_qrack(depth)
     for k, v in result.items():
         print(f"  {k}: {v}")
