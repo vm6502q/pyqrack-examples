@@ -21,25 +21,22 @@ from qiskit import QuantumCircuit, transpile
 # ---------------------------------------------------------------------------
 
 def calc_stats(ideal_probs, counts, shots):
-    n_pow = len(ideal_probs)
-    threshold = statistics.median(ideal_probs)
-    u_u = statistics.mean(ideal_probs)
-    numer = 0
-    denom = 0
-    hog_prob = 0
-    for b in range(n_pow):
-        ideal = ideal_probs[b]
-        patch = (counts.get(b, 0) / shots)
+    ideal = np.asarray(ideal_probs, dtype=np.float64)
+    threshold = np.median(ideal)
+    u_u = ideal.mean()
+    ideal_centered = ideal - u_u
+    denom = np.dot(ideal_centered, ideal_centered)
 
-        ideal_centered = ideal - u_u
-        denom += ideal_centered * ideal_centered
-        numer += ideal_centered * (patch - u_u)
+    # Only sampled bitstrings have nonzero empirical probability, so work on
+    # those indices alone instead of a dense 2^n array of counts.
+    keys = np.fromiter(counts.keys(), dtype=np.int64, count=len(counts))
+    patch = np.fromiter(counts.values(), dtype=np.float64, count=len(counts)) / shots
 
-        if ideal > threshold:
-            hog_prob += patch
+    # numer = sum_b ic[b] * (patch[b] - u_u); split so the patch term is sparse.
+    numer = np.dot(ideal_centered[keys], patch) - u_u * ideal_centered.sum()
+    hog_prob = patch[ideal[keys] > threshold].sum()
 
-    xeb = numer / denom
-    return xeb, hog_prob
+    return numer / denom, hog_prob
 
 
 # ---------------------------------------------------------------------------
