@@ -120,25 +120,23 @@ def pswap_cnot(sim, q1, q2):
 
 
 def mswap_native(sim, q1, q2):
-    sim.swap(q1, q2)
     sim.mcz([q1], q2)
+    sim.iswap(q1, q2)
 
 
 def mswap_cnot(sim, q1, q2):
-    swap_cnot(sim, q1, q2)
     sim.mcz([q1], q2)
+    iswap_cnot(sim, q1, q2)
 
 
 def nswap_native(sim, q1, q2):
     sim.mcz([q1], q2)
-    sim.swap(q1, q2)
-    sim.mcz([q1], q2)
+    sim.adjiswap(q1, q2)
 
 
 def nswap_cnot(sim, q1, q2):
     sim.mcz([q1], q2)
-    swap_cnot(sim, q1, q2)
-    sim.mcz([q1], q2)
+    iiswap_cnot(sim, q1, q2)
 
 
 def run_circuit(sim, circ):

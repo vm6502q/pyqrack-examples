@@ -75,14 +75,15 @@ def pswap(sim, q1, q2):
 
 
 def mswap(sim, q1, q2):
-    sim.swap(q1, q2)
     sim.cz(q1, q2)
+    sim.iswap(q1, q2)
 
 
 def nswap(sim, q1, q2):
     sim.cz(q1, q2)
-    sim.swap(q1, q2)
-    sim.cz(q1, q2)
+    sim.iswap(q1, q2)
+    sim.iswap(q1, q2)
+    sim.iswap(q1, q2)
 
 
 # ---------------------------------------------------------------------------
