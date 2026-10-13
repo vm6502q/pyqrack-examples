@@ -1,3 +1,5 @@
 # Random Circuit Sampling (RCS)
 
 _Random circuit sampling (RCS)_ is studied primarily for its assumed inherent difficulty for a classical computer to execute and sample, as the basis of a number of "quantum supremacy" experiments. Recently, it has been argued that RCS can be used to [certify random number generation](https://www.quantinuum.com/press-releases/quantinuums-quantum-origin-becomes-first-software-quantum-random-number-generator-to-achieve-nist-validation). The very "patching" and "elision" concepts that Google Quantum AI used to _validate_ their RCS results in the first place, since 2019, provides a limited heuristic for unstructured ("fully-connected") or structured (like 2D chip surface layouts) generalized as an automatic feature in Qrack as _"automatic circuit elision" (ACE)._
+
+See our [laptop-scale XEB model study](https://docs.google.com/spreadsheets/d/1_GjRjTyq5XMwyWgbyEg02-NrBNev578jvWF2G-7hwVg/edit?usp=sharing) for results. (All raw data are included.)
