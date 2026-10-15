@@ -1,15 +1,6 @@
-for i in {1..200}; do 
-    python3 nn_qab.py 10 12 2
+for i in {1..61}; do 
+    python3 nn_qab.py 26 22 6
 done
-for i in {1..200}; do 
-    python3 nn_qab.py 14 12 3
-done
-for i in {1..200}; do 
-    python3 nn_qab.py 22 12 5
-done
-for i in {1..200}; do 
-    python3 nn_qab.py 26 12 6
-done
-for i in {1..200}; do 
-    python3 nn_qab.py 27 12 4
+for i in {1..111}; do 
+    python3 nn_qab.py 27 22 2
 done

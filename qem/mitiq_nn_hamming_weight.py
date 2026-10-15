@@ -216,7 +216,7 @@ def main():
     print(f"Unmitigated Hamming weight: {raw} ({end - start} seconds)")
 
     factory = RichardsonFactory(scale_factors=[1, 3, 5, 7])
-    ex = lambda circ: execute(qc, width, shots)
+    ex = lambda circ: execute(circ, width, shots)
     def scale(circ, scale_factor):
         return fold_gates_at_random(circ, scale_factor=scale_factor, fidelities={"single": 1.0, "double": 0.975})
 
