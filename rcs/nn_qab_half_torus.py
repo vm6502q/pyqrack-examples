@@ -110,7 +110,7 @@ def calc_stats(ideal_probs, counts, shots):
 # Benchmark
 # ---------------------------------------------------------------------------
 
-def bench_qrack(width, depth, lrc=4, lrr=4):
+def bench_qrack(width, depth, lrc=4, lrr=4, ace_qb=28):
     lcv_range = range(width)
     all_bits  = list(lcv_range)
     n_pow     = 1 << width
@@ -163,7 +163,11 @@ def bench_qrack(width, depth, lrc=4, lrr=4):
                     continue
 
                 g = random.choice(two_bit_gates)
-                qc.append((g, b1, b2))
+                layer.append((g, b1, b2))
+
+        # If the circuit exceeds "vanilla" ACE limits, we'll patch at random.
+        random.shuffle(layer)
+        qc += layer
 
     # -----------------------------------------------------------------------
     # Method: QrackAceBackend
@@ -182,6 +186,8 @@ def bench_qrack(width, depth, lrc=4, lrr=4):
     # Ideal ground truth via QrackSimulator
     # -----------------------------------------------------------------------
     sim_ideal = QrackSimulator(width)
+    # "Greedy" patching happens automatically.
+    sim_ideal.set_ace_max_qb(ace_qb)
     run_circuit(sim_ideal, qc)
     ideal_probs = np.asarray(sim_ideal.out_probs(), dtype=np.float64)
     del sim_ideal
@@ -215,7 +221,8 @@ def main():
     depth = int(sys.argv[2])
     lrc = int(sys.argv[3]) if len(sys.argv) > 3 else 4
     lrr = int(sys.argv[4]) if len(sys.argv) > 4 else 4
-    result = bench_qrack(width, depth, lrc, lrr)
+    ace_qb = int(sys.argv[5]) if len(sys.argv) > 5 else 28
+    result = bench_qrack(width, depth, lrc, lrr, ace_qb)
     for k, v in result.items():
         print(f"  {k}: {v}")
     return 0
