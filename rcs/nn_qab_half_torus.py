@@ -222,6 +222,8 @@ def main():
     lrc = int(sys.argv[3]) if len(sys.argv) > 3 else 4
     lrr = int(sys.argv[4]) if len(sys.argv) > 4 else 4
     ace_qb = int(sys.argv[5]) if len(sys.argv) > 5 else 28
+    if width > ace_qb:
+        print(f"Width ({width}) > ACE qb ({ace_qb}): Circuit will automatically 'greedily' patch.")
     result = bench_qrack(width, depth, lrc, lrr, ace_qb)
     for k, v in result.items():
         print(f"  {k}: {v}")
