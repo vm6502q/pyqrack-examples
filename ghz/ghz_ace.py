@@ -77,7 +77,7 @@ def bench_qrack(n, lrc, lrr):
     freq_heavy /= shots
     heavy_i /= n * shots
     light_i /= n * shots
-    if np.is_close(freq_light, 0) or np.is_close(freq_heavy, 0):
+    if np.isclose(freq_light, 0) or np.isclose(freq_heavy, 0):
         fidelity = 0
     else:
         fidelity = 1.0 - 0.5 * (heavy_i / freq_heavy + light_i / freq_light)
