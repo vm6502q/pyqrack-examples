@@ -19,7 +19,7 @@ def factor_width(width):
 
 
 def bench_qrack(n, lrc, lrr):
-    shots = 8192
+    shots = 16384
     row_len, col_len = factor_width(n)
 
     start = time.perf_counter()
@@ -48,7 +48,8 @@ def bench_qrack(n, lrc, lrr):
     freq_max = ace_counts.get(m, 0)
     freq_light = freq_0
     freq_heavy = freq_max
-    infidelity = 0
+    light_i = 0
+    heavy_i = 0
     for k, v in ace_counts.items():
         bc = k.bit_count()
         if bc == 0 or bc == n:
@@ -57,16 +58,27 @@ def bench_qrack(n, lrc, lrr):
         if bc > n:
             bc = (n << 1) - bc
             freq_heavy += v
+            heavy_i = v * bc
         elif bc < n:
             freq_light += v
+            light_i = v * bc
         else:
             # Balanced error
-            freq_heavy += v / 2
-            freq_light += v / 2
-        infidelity = v * bc
-    infidelity /= n * shots
+            v /= 2
+            freq_heavy += v
+            freq_light += v
+            v *= bc
+            heavy_i += v
+            light_i += v
+
+    fidelity = (1.0 - (heavy_i / freq_heavy + light_i / freq_light) / (n << 1))
     freq_light /= shots
     freq_heavy /= shots
+    if freq_heavy > freq_light:
+        balance = freq_light / freq_heavy
+    else:
+        balance = freq_heavy / freq_light
+    fidelity *= balance
     
     return {
         "n": n,
@@ -76,7 +88,7 @@ def bench_qrack(n, lrc, lrr):
         "freq_max": freq_max,
         "freq_light": freq_light,
         "freq_heavy": freq_heavy,
-        "hamming_infidelity": infidelity,
+        "hamming_infidelity": 1 - fidelity,
         "counts": ace_counts
     }
 
