@@ -61,7 +61,7 @@ def qpe_ising_z_qasm(num_counting_qubits: int,
         'OPENQASM 2.0;',
         'include "qelib1.inc";',
         f'qreg q[{n_qubits}];',
-        f'creg c[{t}];',
+        f'creg c[{n_qubits}];',
         '',
         '// Prepare system register in |1...1> eigenstate of H_Z',
     ]
