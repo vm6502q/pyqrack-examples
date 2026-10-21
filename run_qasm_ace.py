@@ -11,13 +11,10 @@ from qiskit.providers.qrack.backends import AceQasmSimulator
 from qiskit import QuantumCircuit
 from qiskit.compiler import transpile
 
-def int_to_bitstring(integer, length, reverse):
-    return (bin(integer)[2:].zfill(length))[::-1] if reverse else (bin(integer)[2:].zfill(length))
-
 
 def run_qasm(shots, file_in, file_out):
     sim = AceQasmSimulator()
-    qc = QuantumCircuit.from_qasm_file(file_in
+    qc = QuantumCircuit.from_qasm_file(file_in)
     t_start = time.perf_counter()
     qc = transpile(qc, backend=sim, optimization_level=3)
     logical_to_physical = qc.layout.final_index_layout()
@@ -32,8 +29,12 @@ def run_qasm(shots, file_in, file_out):
     t_exec = time.perf_counter()
     print(f"execute_seconds: {t_exec - t_trans:.4f}")
 
+    ace_counts = {}
+    for s, count in ace_str_counts.items():
+        ace_counts[int(s, 2)] = count
+
     with open(file_out, "w", encoding="utf-8") as file:
-        json.dump(data, file)
+        json.dump(ace_counts, file)
 
 
 def main():
