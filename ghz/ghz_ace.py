@@ -60,10 +60,10 @@ def bench_qrack(n, lrc, lrr):
         if bc > n:
             bc = (n << 1) - bc
             freq_heavy += v
-            heavy_i = v * bc
+            heavy_i += v * bc
         elif bc < n:
             freq_light += v
-            light_i = v * bc
+            light_i += v * bc
         else:
             # Balanced error
             v /= 2
