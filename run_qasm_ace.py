@@ -38,10 +38,10 @@ def main():
     file_out = "out.json"
     if len(sys.argv) > 1:
         shots = int(sys.argv[1])
-    if len(sys.argv) > 1:
-        file_in = str(sys.argv[1])
     if len(sys.argv) > 2:
-        file_out = str(sys.argv[2])
+        file_in = str(sys.argv[2])
+    if len(sys.argv) > 3:
+        file_out = str(sys.argv[3])
 
     run_qasm(shots, file_in, file_out)
 
