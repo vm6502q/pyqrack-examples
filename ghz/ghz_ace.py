@@ -32,6 +32,8 @@
 import sys
 import time
 
+import numpy as np
+
 from collections import Counter, deque
 
 from pyqrack import QrackAceBackend
@@ -141,7 +143,7 @@ def size_sweep(n, lrc, lrr, schedule, shots, sizes):
     return rows
 
 
-def bench_qrack(n, lrc, lrr, shots=16384, sweep_step=0):
+def bench_qrack(n, lrc, lrr, shots=8192, sweep_step=0):
     start = time.perf_counter()
 
     # Run 1: computational basis populations.
@@ -149,6 +151,49 @@ def bench_qrack(n, lrc, lrr, shots=16384, sweep_step=0):
     seams = sum(1 for q in range(n) if is_seam(sim, q))
     seam_seam = sum(1 for c, t in schedule if is_seam(sim, c) and is_seam(sim, t))
     z_counts = Counter(sim.measure_shots(list(range(n)), shots))
+
+    z_dict = dict(z_counts)
+    m = (1 << n) - 1
+    freq_0 = z_dict.get(0, 0)
+    freq_max = z_dict.get(m, 0)
+    freq_light = freq_0
+    freq_heavy = freq_max
+    light_i = 0
+    heavy_i = 0
+    for k, v in z_dict.items():
+        bc = k.bit_count()
+        if bc == 0 or bc == n:
+            continue
+        bc <<= 1
+        if bc > n:
+            bc = (n << 1) - bc
+            freq_heavy += v
+            heavy_i += v * bc
+        elif bc < n:
+            freq_light += v
+            light_i += v * bc
+        else:
+            # Balanced error
+            v /= 2
+            freq_heavy += v
+            freq_light += v
+            v *= bc
+            heavy_i += v
+            light_i += v
+
+    freq_light /= shots
+    freq_heavy /= shots
+    heavy_i /= n * shots
+    light_i /= n * shots
+    if np.isclose(freq_light, 0) or np.isclose(freq_heavy, 0):
+        balanced_z = 0
+    else:
+        balanced_z = 1.0 - 0.5 * (heavy_i / freq_heavy + light_i / freq_light)
+        if freq_heavy > freq_light:
+            balance = freq_light / freq_heavy
+        else:
+            balance = freq_heavy / freq_light
+        balanced_z *= balance
 
     # Run 2: same preparation, then H on every qubit (transversal in ACE), then parity.
     for q in range(n):
@@ -205,6 +250,7 @@ def bench_qrack(n, lrc, lrr, shots=16384, sweep_step=0):
         "ghz_fidelity_lower_bound_se": se,
         "ghz_fidelity_phase_corrected_estimate": fidelity_phase_corrected,
         "mean_pole_distance": dist,
+        "balanced_z": balanced_z,
         "size_sweep": sweep,
     }
 
@@ -212,7 +258,7 @@ def bench_qrack(n, lrc, lrr, shots=16384, sweep_step=0):
 def main():
     if len(sys.argv) < 2:
         raise RuntimeError(
-            "Usage: python3 ghz_ace.py [width] [long_range_columns=4] [long_range_rows=4] [shots=16384] [--sweep[=step]]"
+            "Usage: python3 ghz_ace.py [width] [long_range_columns=4] [long_range_rows=4] [shots=8192] [--sweep[=step]]"
         )
 
     sweep_step = 0
@@ -225,7 +271,7 @@ def main():
     width = int(args[0])
     lrc = int(args[1]) if len(args) > 1 else 4
     lrr = int(args[2]) if len(args) > 2 else 4
-    shots = int(args[3]) if len(args) > 3 else 16384
+    shots = int(args[3]) if len(args) > 3 else 8192
     result = bench_qrack(width, lrc, lrr, shots, sweep_step)
     sweep = result.pop("size_sweep")
     for k, v in result.items():
