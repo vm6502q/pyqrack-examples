@@ -4,6 +4,8 @@ import math
 import sys
 import time
 
+import numpy as np
+
 from collections import Counter
 
 from pyqrack import QrackAceBackend
@@ -75,12 +77,15 @@ def bench_qrack(n, lrc, lrr):
     freq_heavy /= shots
     heavy_i /= n * shots
     light_i /= n * shots
-    fidelity = (1.0 - 0.5 * (heavy_i / freq_heavy + light_i / freq_light))
-    if freq_heavy > freq_light:
-        balance = freq_light / freq_heavy
+    if np.is_close(freq_light, 0) or np.is_close(freq_heavy, 0):
+        fidelity = 0
     else:
-        balance = freq_heavy / freq_light
-    fidelity *= balance
+        fidelity = 1.0 - 0.5 * (heavy_i / freq_heavy + light_i / freq_light)
+        if freq_heavy > freq_light:
+            balance = freq_light / freq_heavy
+        else:
+            balance = freq_heavy / freq_light
+        fidelity *= balance
     
     return {
         "n": n,
