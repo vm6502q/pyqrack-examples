@@ -71,11 +71,11 @@ def bench_qrack(n, lrc, lrr):
             heavy_i += v
             light_i += v
 
-    heavy_i /= n
-    light_i /= n
-    fidelity = (1.0 - 0.5 * (heavy_i / freq_heavy + light_i / freq_light))
     freq_light /= shots
     freq_heavy /= shots
+    heavy_i /= n * shots
+    light_i /= n * shots
+    fidelity = (1.0 - 0.5 * (heavy_i / freq_heavy + light_i / freq_light))
     if freq_heavy > freq_light:
         balance = freq_light / freq_heavy
     else:
