@@ -17,15 +17,14 @@ def int_to_bitstring(integer, length, reverse):
 
 def run_qasm(shots, file_in, file_out):
     sim = AceQasmSimulator()
-    qc = QuantumCircuit.from_qasm_file(file_in)
+    qc = QuantumCircuit.from_qasm_file(file_in
+    t_start = time.perf_counter()
+    qc = transpile(qc, backend=sim, optimization_level=3)
     logical_to_physical = qc.layout.final_index_layout()
     for logical_idx in range(width):
         physical_qubit = logical_to_physical[logical_idx]
         # Measure the exact physical wire into its designated classical bit
         qc.measure(physical_qubit, logical_idx)
-
-    t_start = time.perf_counter()
-    qc = transpile(qc, backend=sim, optimization_level=3)
     t_trans = time.perf_counter()
     print(f"transpile_seconds: {t_trans - t_start:.4f}")
 
