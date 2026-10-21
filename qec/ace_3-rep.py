@@ -23,49 +23,28 @@ def bench_qrack():
     sim.mcx([1], 0)
     sim.mcx([1], 2)
 
-    ace_counts = dict(Counter(sim.measure_shots(list(range(3)), shots)))
+    z_counts = Counter(sim.measure_shots(list(range(3)), shots))
+    freq_0_z = z_counts.get(0, 0) / shots
+    freq_max_z = z_counts.get(7, 0) / shots
+    freq_viable_z = freq_0_z + freq_max_z
 
-    freq_0 = ace_counts.get(0, 0)
-    freq_max = ace_counts.get(7, 0)
-    freq_light = freq_0
-    freq_heavy = freq_max
-    light_i = 0
-    heavy_i = 0
-    for k, v in ace_counts.items():
-        bc = k.bit_count()
-        if bc == 0 or bc == n:
-            continue
-        bc <<= 1
-        if bc > n:
-            bc = (n << 1) - bc
-            freq_heavy += v
-            heavy_i += v * bc
-        else:
-            freq_light += v
-            light_i += v * bc
+    for q in range(3):
+       sim.h(q)
 
-    freq_light /= shots
-    freq_heavy /= shots
-    heavy_i /= n * shots
-    light_i /= n * shots
-    if np.isclose(freq_light, 0) or np.isclose(freq_heavy, 0):
-        fidelity = 0
-    else:
-        fidelity = 1.0 - 0.5 * (heavy_i / freq_heavy + light_i / freq_light)
-        if freq_heavy > freq_light:
-            balance = freq_light / freq_heavy
-        else:
-            balance = freq_heavy / freq_light
-        fidelity *= balance
+    x_counts = Counter(sim.measure_shots(list(range(3)), shots))
+    freq_0_x = z_counts.get(0, 0) / shots
+    freq_max_x = z_counts.get(7, 0) / shots
+    freq_viable_x = freq_0_z + freq_max_z
     
     return {
         "seconds": time.perf_counter() - start,
         "shots": shots,
-        "freq_0": freq_0,
-        "freq_max": freq_max,
-        "freq_light": freq_light,
-        "freq_heavy": freq_heavy,
-        "balanced_z": fidelity,
+        "freq_0_z": freq_0_z,
+        "freq_max_z": freq_max_z,
+        "freq_viable_z": freq_viable_z,
+        "freq_0_x": freq_0_x,
+        "freq_max_x": freq_max_x,
+        "freq_viable_x": freq_viable_x,
     }
 
 
