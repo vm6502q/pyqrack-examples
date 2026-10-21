@@ -32,7 +32,7 @@ def qpe_qasm(num_counting_qubits: int, k: int = 1) -> str:
         'OPENQASM 2.0;',
         'include "qelib1.inc";',
         f'qreg q[{n_qubits}];',
-        f'creg c[{n_qubits}];',
+        f'creg c[{t}];',
         '',
         '// Prepare system qubit in |1> (eigenstate of Rz)',
         f'x q[{t}];',

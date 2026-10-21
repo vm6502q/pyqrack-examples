@@ -1,7 +1,7 @@
 OPENQASM 2.0;
 include "qelib1.inc";
 qreg q[36];
-creg c[35];
+creg c[36];
 
 // Prepare system qubit in |1> (eigenstate of Rz)
 x q[35];
