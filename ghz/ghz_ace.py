@@ -26,20 +26,20 @@ def bench_qrack(n, lrc, lrr):
 
     sim = QrackAceBackend(n, long_range_columns=lrc, long_range_rows=lrr)
 
-    sim.h(0)
+    sim.h(n - 1)
     for r in range(col_len):
         rin = r * row_len
         if r > 0:
-            sim.mcx([rin - row_len], rin)
+            sim.mcx([(n - 1) - (rin - row_len)], (n - 1) - rin)
         fwd = row_len >> 1
         bwd = row_len - fwd
         for c in range(fwd):
             t = rin + c + 1
-            sim.mcx([t - 1], t)
-        sim.mcx([rin], row_len + rin - 1)
+            sim.mcx([(n - 1) - (t - 1)], (n - 1) - t)
+        sim.mcx([(n - 1) - rin], (n - 1)- (row_len + rin - 1))
         for c in range(1, bwd - 1):
             t = row_len + rin - (c + 1)
-            sim.mcx([t + 1], t)
+            sim.mcx([(n - 1) - (t + 1)], (n - 1) - t)
 
     ace_counts = dict(Counter(sim.measure_shots(list(range(n)), shots)))
     
