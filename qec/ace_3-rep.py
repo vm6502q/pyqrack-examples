@@ -27,17 +27,17 @@ def bench_qrack():
     freq_0_z = z_counts.get(0, 0) / shots
     freq_max_z = z_counts.get(7, 0) / shots
     freq_viable_z = freq_0_z + freq_max_z
-    freq_light_z = sum(v * (1 - 2 * (k.bit_count() & 1)) / shots if k.bit_count() < 2 else 0 for k, v in z_counts.items())
+    freq_light_z = sum((v * (1 - 2 * (k.bit_count() & 1)) / shots) if k.bit_count() < 2 else 0 for k, v in z_counts.items())
     odds_z = freq_light_z / (1 - freq_light_z)
 
     for q in range(3):
        sim.h(q)
 
     x_counts = Counter(sim.measure_shots(list(range(3)), shots))
-    freq_0_x = z_counts.get(0, 0) / shots
-    freq_max_x = z_counts.get(7, 0) / shots
+    freq_0_x = x_counts.get(0, 0) / shots
+    freq_max_x = x_counts.get(7, 0) / shots
     freq_viable_x = freq_0_z + freq_max_z
-    freq_light_x = sum(v * (1 - 2 * (k.bit_count() & 1)) / shots if k.bit_count() < 2 else 0 for k, v in x_counts.items())
+    freq_light_x = sum((v * (1 - 2 * (k.bit_count() & 1)) / shots) if k.bit_count() < 2 else 0 for k, v in x_counts.items())
     odds_x = freq_light_x / (1 - freq_light_x)
     
     return {
