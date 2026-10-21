@@ -12,9 +12,22 @@
 #
 # Fidelity is reported as the standard GHZ lower bound used for hardware GHZ benchmarks:
 #     F >= (P(0...0) + P(1...1) + <X^n>) / 2
-# where <X^n> comes from a second run of the same preparation followed by H on every qubit.
+# where <X^n> comes from the same prepared state, sampled again after H on every qubit.
 # Computational-basis populations alone cannot distinguish GHZ from the classical mixture
 # of |0...0> and |1...1>; the parity term is what certifies the coherence between them.
+#
+# Checks for where coherence goes when <X^n> is low:
+#   * Quadrature check: <Y X^(n-1)> (Y on one qubit) measures the imaginary part of the
+#     coherence. |C| = sqrt(<X^n>^2 + <Y X^(n-1)>^2) / 2 is the coherence magnitude, so a
+#     low <X^n> with a high |C| means a relative phase (drift), not lost coherence. The
+#     phase-corrected fidelity estimate (P(0...0) + P(1...1)) / 2 + |C| is reported too;
+#     it is NOT a rigorous lower bound (|C| from two noisy quadratures is biased upward by
+#     about 1/sqrt(shots)), unlike ghz_fidelity_lower_bound.
+#   * Size sweep (optional, --sweep): GHZ grown along the same schedule to k qubits, with
+#     population and parity of those k qubits at each size, plus how many patch simulators
+#     the k qubits span. Where parity collapses shows whether coherence is lost at seams.
+#     (Per-patch parity of one GHZ state is not a usable check: the parity of any proper
+#     subset of a GHZ state is exactly 0 even ideally.)
 
 import sys
 import time
@@ -91,17 +104,44 @@ def ghz_schedule(sim):
     return order
 
 
-def prepare(n, lrc, lrr, schedule=None):
+def prepare(n, lrc, lrr, schedule=None, k=None):
+    """Prepare GHZ on the root plus the first k - 1 schedule targets (all n qubits if k is None)."""
     sim = QrackAceBackend(n, long_range_columns=lrc, long_range_rows=lrr)
     if schedule is None:
         schedule = ghz_schedule(sim)
     sim.h(n - 1)
-    for c, t in schedule:
+    for c, t in schedule[: (len(schedule) if k is None else k - 1)]:
         sim.mcx([c], t)
     return sim, schedule
 
 
-def bench_qrack(n, lrc, lrr, shots=16384):
+def _parity(counts, mask, shots):
+    return sum(v * (1 - 2 * ((k & mask).bit_count() & 1)) for k, v in counts.items()) / shots
+
+
+def size_sweep(n, lrc, lrr, schedule, shots, sizes):
+    """Population and X-parity of GHZ grown to k qubits along the schedule, for each k in sizes."""
+    members = [n - 1] + [t for _, t in schedule]
+    rows = []
+    for k in sizes:
+        sim, _ = prepare(n, lrc, lrr, schedule, k)
+        qs = members[:k]
+        mask = sum(1 << q for q in qs)
+        patches = len({r[0] for q in qs for r in _replicas(sim, q) if r[0] >= 0})
+        seams = sum(1 for q in qs if is_seam(sim, q))
+        z = Counter(sim.measure_shots(list(range(n)), shots))
+        for q in qs:
+            sim.h(q)
+        x = Counter(sim.measure_shots(list(range(n)), shots))
+        del sim
+        pop = sum(v for key, v in z.items() if (key & mask) in (0, mask)) / shots
+        par = _parity(x, mask, shots)
+        rows.append({"k": k, "simulators_spanned": patches, "seam_qubits": seams,
+                     "population": pop, "x_parity": par, "fidelity_lower_bound": 0.5 * (pop + par)})
+    return rows
+
+
+def bench_qrack(n, lrc, lrr, shots=16384, sweep_step=0):
     start = time.perf_counter()
 
     # Run 1: computational basis populations.
@@ -114,14 +154,25 @@ def bench_qrack(n, lrc, lrr, shots=16384):
     for q in range(n):
         sim.h(q)
     x_counts = Counter(sim.measure_shots(list(range(n)), shots))
+
+    # Quadrature check, same state again: turn qubit 0 from the X basis into the Y basis
+    # (undo its H, then S^dagger, then H), so the parity measures <Y_0 X^(n-1)>.
+    sim.h(0)
+    sim.adjs(0)
+    sim.h(0)
+    y_counts = Counter(sim.measure_shots(list(range(n)), shots))
     del sim
 
     m = (1 << n) - 1
     p_0 = z_counts.get(0, 0) / shots
     p_1 = z_counts.get(m, 0) / shots
     population = p_0 + p_1
-    parity = sum(v * (1 - 2 * (k.bit_count() & 1)) for k, v in x_counts.items()) / shots
+    all_mask = (1 << n) - 1
+    parity = _parity(x_counts, all_mask, shots)
+    y_parity = _parity(y_counts, all_mask, shots)
     fidelity_lb = 0.5 * (population + parity)
+    coherence = 0.5 * (parity * parity + y_parity * y_parity) ** 0.5
+    fidelity_phase_corrected = 0.5 * population + coherence
 
     # Statistical error of the bound (binomial population + parity shot noise).
     se = 0.5 * ((population * (1 - population) + (1 - parity * parity)) / shots) ** 0.5
@@ -129,6 +180,11 @@ def bench_qrack(n, lrc, lrr, shots=16384):
     # Diagnostic only: mean normalized Hamming distance to the nearer pole (0 = all shots
     # at a pole, 1 = all shots perfectly balanced). This is not a fidelity.
     dist = sum(v * 2 * min(k.bit_count(), n - k.bit_count()) / n for k, v in z_counts.items()) / shots
+
+    sweep = []
+    if sweep_step > 0:
+        sizes = sorted(set(list(range(2, n + 1, sweep_step)) + [n]))
+        sweep = size_sweep(n, lrc, lrr, schedule, shots, sizes)
 
     return {
         "n": n,
@@ -143,23 +199,43 @@ def bench_qrack(n, lrc, lrr, shots=16384):
         "p_all_1": p_1,
         "population": population,
         "x_parity": parity,
+        "y_quadrature_parity": y_parity,
+        "coherence_magnitude": coherence,
         "ghz_fidelity_lower_bound": fidelity_lb,
         "ghz_fidelity_lower_bound_se": se,
+        "ghz_fidelity_phase_corrected_estimate": fidelity_phase_corrected,
         "mean_pole_distance": dist,
+        "size_sweep": sweep,
     }
 
 
 def main():
     if len(sys.argv) < 2:
-        raise RuntimeError("Usage: python3 ghz_ace.py [width] [long_range_columns=4] [long_range_rows=4] [shots=16384]")
+        raise RuntimeError(
+            "Usage: python3 ghz_ace.py [width] [long_range_columns=4] [long_range_rows=4] [shots=16384] [--sweep[=step]]"
+        )
 
-    width = int(sys.argv[1])
-    lrc = int(sys.argv[2]) if len(sys.argv) > 2 else 4
-    lrr = int(sys.argv[3]) if len(sys.argv) > 3 else 4
-    shots = int(sys.argv[4]) if len(sys.argv) > 4 else 16384
-    result = bench_qrack(width, lrc, lrr, shots)
+    sweep_step = 0
+    args = []
+    for a in sys.argv[1:]:
+        if a.startswith("--sweep"):
+            sweep_step = int(a.split("=", 1)[1]) if "=" in a else 1
+        else:
+            args.append(a)
+    width = int(args[0])
+    lrc = int(args[1]) if len(args) > 1 else 4
+    lrr = int(args[2]) if len(args) > 2 else 4
+    shots = int(args[3]) if len(args) > 3 else 16384
+    result = bench_qrack(width, lrc, lrr, shots, sweep_step)
+    sweep = result.pop("size_sweep")
     for k, v in result.items():
         print(f"  {k}: {v}")
+    if sweep:
+        print("  size sweep (k qubits along the schedule):")
+        print("      k  sims  seams  population  x_parity  F_lower_bound")
+        for r in sweep:
+            print(f"    {r['k']:3d}  {r['simulators_spanned']:4d}  {r['seam_qubits']:5d}  "
+                  f"{r['population']:10.4f}  {r['x_parity']:8.4f}  {r['fidelity_lower_bound']:13.4f}")
 
     return 0
 
