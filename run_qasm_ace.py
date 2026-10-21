@@ -18,7 +18,7 @@ def run_qasm(shots, file_in, file_out):
     t_start = time.perf_counter()
     qc = transpile(qc, backend=sim, optimization_level=3)
     logical_to_physical = qc.layout.final_index_layout()
-    for logical_idx in range(width):
+    for logical_idx in range(qc.num_qubits):
         physical_qubit = logical_to_physical[logical_idx]
         # Measure the exact physical wire into its designated classical bit
         qc.measure(physical_qubit, logical_idx)
