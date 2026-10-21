@@ -88,7 +88,7 @@ def bench_qrack(n, lrc, lrr):
         "freq_max": freq_max,
         "freq_light": freq_light,
         "freq_heavy": freq_heavy,
-        "hamming_infidelity": 1 - fidelity,
+        "balanced_hamming_infidelity": 1 - fidelity,
         "counts": ace_counts
     }
 
