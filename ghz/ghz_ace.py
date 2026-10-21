@@ -151,12 +151,13 @@ def bench_qrack(n, lrc, lrr, shots=16384):
 
 def main():
     if len(sys.argv) < 2:
-        raise RuntimeError("Usage: python3 ghz_ace.py [width] [long_range_columns=4] [long_range_rows=4]")
+        raise RuntimeError("Usage: python3 ghz_ace.py [width] [long_range_columns=4] [long_range_rows=4] [shots=16384]")
 
     width = int(sys.argv[1])
     lrc = int(sys.argv[2]) if len(sys.argv) > 2 else 4
     lrr = int(sys.argv[3]) if len(sys.argv) > 3 else 4
-    result = bench_qrack(width, lrc, lrr)
+    shots = int(sys.argv[4]) if len(sys.argv) > 4 else 16384
+    result = bench_qrack(width, lrc, lrr, shots)
     for k, v in result.items():
         print(f"  {k}: {v}")
 
