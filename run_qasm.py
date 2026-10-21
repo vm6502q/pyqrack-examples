@@ -14,7 +14,7 @@ def int_to_bitstring(integer, length, reverse):
     return (bin(integer)[2:].zfill(length))[::-1] if reverse else (bin(integer)[2:].zfill(length))
 
 
-def run_qasm(file_in, file_out):
+def run_qasm(file_in):
     # shot_count = 1024
     # shot_count = 536870912
     qc = QuantumCircuit.from_qasm_file(file_in)
@@ -42,13 +42,10 @@ def run_qasm(file_in, file_out):
 
 def main():
     file_in = "qft.qasm"
-    file_out = "out.json"
     if len(sys.argv) > 1:
         file_in = str(sys.argv[1])
-    if len(sys.argv) > 2:
-        file_out = str(sys.argv[2])
 
-    run_qasm(file_in, file_out)
+    run_qasm(file_in)
 
     return 0
 

@@ -18,7 +18,11 @@ def int_to_bitstring(integer, length, reverse):
 def run_qasm(shots, file_in, file_out):
     sim = AceQasmSimulator()
     qc = QuantumCircuit.from_qasm_file(file_in)
-    qc.measure_all()
+    logical_to_physical = qc.layout.final_index_layout()
+    for logical_idx in range(width):
+        physical_qubit = logical_to_physical[logical_idx]
+        # Measure the exact physical wire into its designated classical bit
+        qc.measure(physical_qubit, logical_idx)
 
     t_start = time.perf_counter()
     qc = transpile(qc, backend=sim, optimization_level=3)
@@ -29,7 +33,8 @@ def run_qasm(shots, file_in, file_out):
     t_exec = time.perf_counter()
     print(f"execute_seconds: {t_exec - t_trans:.4f}")
 
-    print(ace_str_counts)
+    with open(file_out, "w", encoding="utf-8") as file:
+        json.dump(data, file)
 
 
 def main():
