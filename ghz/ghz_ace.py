@@ -53,7 +53,7 @@ def bench_qrack(n, lrc, lrr):
             continue
         bc <<= 1
         if bc > n:
-            bc -= n
+            bc = (n << 1) - bc
         infidelity = v * bc
     infidelity /= n * shots
     
