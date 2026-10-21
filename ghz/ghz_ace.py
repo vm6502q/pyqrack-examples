@@ -42,11 +42,28 @@ def bench_qrack(n, lrc, lrr):
             sim.mcx([(n - 1) - (t + 1)], (n - 1) - t)
 
     ace_counts = dict(Counter(sim.measure_shots(list(range(n)), shots)))
+
+    m = (1 << n) - 1
+    freq_0 = ace_counts.get(0, 0)
+    freq_max = ace_counts.get(m, 0)
+    infidelity = 0
+    for k, v in ace_counts.items():
+        bc = k.bit_count()
+        if bc == 0 or bc == n:
+            continue
+        bc <<= 1
+        if bc > n:
+            bc -= n
+        infidelity = v * bc
+    infidelity /= n * shots
     
     return {
         "n": n,
         "seconds": time.perf_counter() - start,
         "shots": shots,
+        "freq_0": freq_0,
+        "freq_max": freq_max,
+        "hamming_infidelity": infidelity,
         "counts": ace_counts
     }
 
