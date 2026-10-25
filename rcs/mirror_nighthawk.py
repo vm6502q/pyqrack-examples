@@ -157,9 +157,9 @@ def bench_qrack(depth):
         for i in lcv_range:
             if i in dead_qubits:
                 continue
-            th, ph, lm = (random.uniform(-math.pi, math.pi) for _ in range(3))
+            ph, lm = (random.uniform(-math.pi, math.pi) for _ in range(2))
             # Keep it Haar-random towards the poles:
-            th = math.asin(th / math.pi)
+            th = math.acos(random.uniform(-1, 1))
             qc.u(th, ph, lm, i)
 
         # Nearest-neighbor couplers:
