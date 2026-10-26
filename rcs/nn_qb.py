@@ -110,7 +110,7 @@ def calc_stats(ideal_probs, counts, shots):
 # Benchmark
 # ---------------------------------------------------------------------------
 
-def bench_qrack(width, depth, max_bonds=1, ace_qb=28):
+def bench_qrack(width, depth, max_bonds=1, patches=2, ace_qb=28):
     lcv_range = range(width)
     all_bits  = list(lcv_range)
     n_pow     = 1 << width
@@ -121,10 +121,26 @@ def bench_qrack(width, depth, max_bonds=1, ace_qb=28):
     two_bit_gates = swap, pswap, mswap, nswap, iswap, iiswap, cx, cy, cz, acx, acy, acz
 
     # Reversed on purpose for mapper:
-    col_len, row_len = factor_width(width)
+    row_len, col_len = factor_width(width)
+    if row_len < 2:
+        # factor_width() gives col_len == 1 for prime widths, so (reversed) row_len == 1 and the
+        # coupler loop below would emit no two-qubit gates at all.
+        raise ValueError(f"Width {width} is prime: the nearest-neighbor grid has no couplers. Use a composite width.")
+
+    # QrackBridge patches are contiguous index blocks (the last width % patches get one extra qubit).
+    # Qubit index is col * row_len + row, so a boundary that isn't a multiple of row_len splits a
+    # column, and the in-column (row-direction) couplers there all cross the cut.
+    base, rem = divmod(width, patches)
+    bounds, start = [], 0
+    for p in range(patches - 1):
+        start += base + (1 if p >= patches - rem else 0)
+        bounds.append(start)
+    split = [b for b in bounds if b % row_len]
+    if split:
+        print(f"Warning: patch boundaries {split} split a column of {row_len} qubits ({col_len} columns, {patches} patches).")
 
     # -----------------------------------------------------------------------
-    # Build circuit in Qiskit
+    # Build circuit
     # -----------------------------------------------------------------------
     t_circ = time.perf_counter()
     qc = []
@@ -178,7 +194,7 @@ def bench_qrack(width, depth, max_bonds=1, ace_qb=28):
     t_circ_end = time.perf_counter()
     print(f"circuit_seconds: {t_circ_end - t_circ:.4f}")
 
-    sim = QrackBridge(width, max_bonds=max_bonds)
+    sim = QrackBridge(width, max_bonds=max_bonds, patches=patches, wrap=True)
     run_circuit(sim, qc)
     ace_counts = dict(Counter(sim.measure_shots(all_bits, shots)))
     
@@ -204,6 +220,7 @@ def bench_qrack(width, depth, max_bonds=1, ace_qb=28):
         "width":     width,
         "depth":     depth,
         "max_bonds": max_bonds,
+        "patches":   patches,
         "xeb_ace":   xeb_ace,
         "hog_ace":   hog_ace,
     }
@@ -215,14 +232,15 @@ def bench_qrack(width, depth, max_bonds=1, ace_qb=28):
 
 def main():
     if len(sys.argv) < 3:
-        raise RuntimeError("Usage: python3 nn_qab.py [width] [depth] [max_bonds=1] [ace_qb=28]")
+        raise RuntimeError("Usage: python3 nn_qb.py [width] [depth] [max_bonds=1] [patches=2] [ace_qb=28]")
     width = int(sys.argv[1])
     depth = int(sys.argv[2])
     max_bonds = int(sys.argv[3]) if len(sys.argv) > 3 else 1
-    ace_qb = int(sys.argv[4]) if len(sys.argv) > 4 else 28
+    patches = int(sys.argv[4]) if len(sys.argv) > 4 else 2
+    ace_qb = int(sys.argv[5]) if len(sys.argv) > 5 else 28
     if width > ace_qb:
         print(f"Width ({width}) > ACE qb ({ace_qb}): Circuit will automatically 'greedily' patch.")
-    result = bench_qrack(width, depth, max_bonds, ace_qb)
+    result = bench_qrack(width, depth, max_bonds, patches, ace_qb)
     for k, v in result.items():
         print(f"  {k}: {v}")
     return 0
