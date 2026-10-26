@@ -120,7 +120,8 @@ def bench_qrack(width, depth, max_bonds=1, ace_qb=28):
     gateSequence = [0, 3, 2, 1, 2, 1, 0, 3]
     two_bit_gates = swap, pswap, mswap, nswap, iswap, iiswap, cx, cy, cz, acx, acy, acz
 
-    row_len, col_len = factor_width(width)
+    # Reversed on purpose for mapper:
+    col_len, row_len = factor_width(width)
 
     # -----------------------------------------------------------------------
     # Build circuit in Qiskit
