@@ -232,11 +232,11 @@ def bench_qrack(width, depth, max_bonds=1, patches=2, ace_qb=28):
 
 def main():
     if len(sys.argv) < 3:
-        raise RuntimeError("Usage: python3 nn_qb.py [width] [depth] [max_bonds=1] [patches=2] [ace_qb=28]")
+        raise RuntimeError("Usage: python3 nn_qb.py [width] [depth] [patches=2] [max_bonds=3] [ace_qb=28]")
     width = int(sys.argv[1])
     depth = int(sys.argv[2])
-    max_bonds = int(sys.argv[3]) if len(sys.argv) > 3 else 1
-    patches = int(sys.argv[4]) if len(sys.argv) > 4 else 2
+    patches = int(sys.argv[3]) if len(sys.argv) > 3 else 2
+    max_bonds = int(sys.argv[4]) if len(sys.argv) > 4 else 3
     ace_qb = int(sys.argv[5]) if len(sys.argv) > 5 else 28
     if width > ace_qb:
         print(f"Width ({width}) > ACE qb ({ace_qb}): Circuit will automatically 'greedily' patch.")

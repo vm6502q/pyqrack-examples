@@ -214,11 +214,11 @@ def bench_qrack(width, depth, max_bonds=1, patches=2):
 
 def main():
     if len(sys.argv) < 3:
-        raise RuntimeError("Usage: python3 nn_qab.py [width] [depth] [max_bonds=1] [patches=2]")
+        raise RuntimeError("Usage: python3 nn_qab.py [width] [depth] [patches=2] [max_bonds=3]")
     width = int(sys.argv[1])
     depth = int(sys.argv[2])
-    max_bonds = int(sys.argv[3]) if len(sys.argv) > 3 else 1
-    patches = int(sys.argv[4]) if len(sys.argv) > 4 else 2
+    patches = int(sys.argv[3]) if len(sys.argv) > 3 else 2
+    max_bonds = int(sys.argv[4]) if len(sys.argv) > 4 else 3
     result = bench_qrack(width, depth, max_bonds, patches)
     for k, v in result.items():
         print(f"  {k}: {v}")
