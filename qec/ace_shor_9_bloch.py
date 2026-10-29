@@ -23,9 +23,8 @@
 #   one_side : 3x5, long_range_columns=2, is_torus=False; seam column + patch-0 bulk only
 #              (ace_shor_9_one_side.py "seam_block"), the control that should be ~1.0
 #
-# Needs the zero-ancilla authority decoder (is_boundary_repetition_code=True in the updated
-# qrack_ace_backend.py). Usage: python3 ace_shor_9_bloch.py [shots] [module]
-#   module: optional Python module to import QrackBridge from (default: pyqrack)
+# Usage: python3 ace_shor_9_bloch.py [shots] [module]
+# module: optional Python module to import QrackBridge from (default: pyqrack)
 
 import importlib
 import math
