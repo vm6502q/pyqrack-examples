@@ -35,8 +35,7 @@ from collections import Counter
 from pyqrack import QrackSimulator
 
 LAYOUTS = {
-    "straddle": (9, dict(wrap=False), [[4, 1, 7], [0, 5, 6], [2, 3, 8]]),
-    "one_side": (15, dict(wrap=False), [[7, 2, 12], [0, 1, 8], [9, 10, 11]]),
+    "straddle": (9, dict(wrap=False), [[0, 1, 2], [3, 4, 5], [6, 7, 8]]),
 }
 STATES = {
     "+z": (0, 0), "-z": (math.pi, 0), "+x": (math.pi / 2, 0), "-x": (math.pi / 2, math.pi),
