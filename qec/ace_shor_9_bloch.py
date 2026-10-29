@@ -18,10 +18,7 @@
 # bound -- rotating the input or the code only redistributes fidelity around the sphere.
 #
 # Layouts:
-#   straddle : 3x3, long_range_columns=1, is_torus=False; blocks [seam column], [patch-0 bulk],
-#              [patch-1 bulk] (ace_shor_9.py "patch_blocks")
-#   one_side : 3x5, long_range_columns=2, is_torus=False; seam column + patch-0 bulk only
-#              (ace_shor_9_one_side.py "seam_block"), the control that should be ~1.0
+#   straddle : 3x3, wrap=False; 2 patches of 4 and 5
 #
 # Usage: python3 ace_shor_9_bloch.py [shots] [module]
 # module: optional Python module to import QrackBridge from (default: pyqrack)
