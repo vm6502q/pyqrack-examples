@@ -1,4 +1,4 @@
-# Logical Bloch-sphere fidelity of Shor-9 on QrackAceBackend, including inputs rotated halfway
+# Logical Bloch-sphere fidelity of Shor-9 on QrackBridge, including inputs rotated halfway
 # between the Z and X axes -- does any input orientation get "partial coherence in both bases"?
 #
 # By (Anthropic) Claude and Dan Strano
@@ -25,7 +25,7 @@
 #
 # Needs the zero-ancilla authority decoder (is_boundary_repetition_code=True in the updated
 # qrack_ace_backend.py). Usage: python3 ace_shor_9_bloch.py [shots] [module]
-#   module: optional Python module to import QrackAceBackend from (default: pyqrack)
+#   module: optional Python module to import QrackBridge from (default: pyqrack)
 
 import importlib
 import math
@@ -35,8 +35,8 @@ from collections import Counter
 from pyqrack import QrackSimulator
 
 LAYOUTS = {
-    "straddle": (9, dict(long_range_columns=1, is_torus=False), [[4, 1, 7], [0, 5, 6], [2, 3, 8]]),
-    "one_side": (15, dict(long_range_columns=2, is_torus=False), [[7, 2, 12], [0, 1, 8], [9, 10, 11]]),
+    "straddle": (9, dict(wrap=False), [[4, 1, 7], [0, 5, 6], [2, 3, 8]]),
+    "one_side": (15, dict(wrap=False), [[7, 2, 12], [0, 1, 8], [9, 10, 11]]),
 }
 STATES = {
     "+z": (0, 0), "-z": (math.pi, 0), "+x": (math.pi / 2, 0), "-x": (math.pi / 2, math.pi),
@@ -100,7 +100,7 @@ def main():
     shots = int(sys.argv[1]) if len(sys.argv) > 1 else 2048
     mod = importlib.import_module(sys.argv[2] if len(sys.argv) > 2 else "pyqrack")
     for name, (n, kw, blocks) in LAYOUTS.items():
-        ace = lambda m, kw=kw: mod.QrackAceBackend(m, is_boundary_repetition_code=True, **kw)
+        ace = lambda m, kw=kw: mod.QrackBridge(m, max_bonds=3, **kw)
         exact = lambda m: QrackSimulator(m)
         print(f"{name}: {n} qubits {kw}, blocks {blocks}, {shots} shots per Pauli")
         print(f"   {'input':14s} {'<X_L>':>7s} {'<Y_L>':>7s} {'<Z_L>':>7s}   F")
