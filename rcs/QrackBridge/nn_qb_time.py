@@ -201,11 +201,11 @@ def bench_qrack(width, depth, max_bonds=1, patches=2):
     print(f"ace_seconds: {t_ace - t_circ_end:.4f}")
 
     return {
-        "width":             width,
-        "depth":             depth,
-        "max_bonds":         max_bonds,
-        "patches":           patches,
-        "fidelity_estimate": sim.fidelity_estimate,
+        "width":                width,
+        "depth":                depth,
+        "max_bonds":            max_bonds,
+        "patches":              patches,
+        "bond_weight_retained": sim.fidelity_estimate,
     }
 
 

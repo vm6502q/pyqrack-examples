@@ -217,13 +217,13 @@ def bench_qrack(width, depth, max_bonds=1, patches=2, ace_qb=28):
     xeb_ace, hog_ace = calc_stats(ideal_probs, ace_counts, shots)
 
     return {
-        "width":             width,
-        "depth":             depth,
-        "max_bonds":         max_bonds,
-        "patches":           patches,
-        "xeb_ace":           xeb_ace,
-        "hog_ace":           hog_ace,
-        "fidelity_estimate": sim.fidelity_estimate,
+        "width":                width,
+        "depth":                depth,
+        "max_bonds":            max_bonds,
+        "patches":              patches,
+        "xeb_ace":              xeb_ace,
+        "hog_ace":              hog_ace,
+        "bond_weight_retained": sim.fidelity_estimate,
     }
 
 
