@@ -204,6 +204,7 @@ def bench_qrack(width, depth, max_bonds=1, patches=2):
         "width":             width,
         "depth":             depth,
         "max_bonds":         max_bonds,
+        "patches":           patches,
         "fidelity_estimate": sim.fidelity_estimate,
     }
 
