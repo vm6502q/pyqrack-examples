@@ -1,0 +1,3200 @@
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.3181
+ideal_seconds: 0.0244
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.004021734640583608
+  hog_ace: 0.4931640625
+  bond_weight_retained: 0.00018009746110461718
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2493
+ideal_seconds: 0.0233
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.007371030953583321
+  hog_ace: 0.506103515625
+  bond_weight_retained: 5.918080000340915e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2538
+ideal_seconds: 0.0255
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.005943945649045827
+  hog_ace: 0.492919921875
+  bond_weight_retained: 2.9696952873942333e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2814
+ideal_seconds: 0.0258
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.008771318458309767
+  hog_ace: 0.5047607421875
+  bond_weight_retained: 0.00019817664704282903
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2825
+ideal_seconds: 0.0250
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: -5.93220753831631e-05
+  hog_ace: 0.50341796875
+  bond_weight_retained: 1.0361223815138631e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2650
+ideal_seconds: 0.0237
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: -0.00360862964620248
+  hog_ace: 0.506103515625
+  bond_weight_retained: 0.00018997535684061692
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2728
+ideal_seconds: 0.0235
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.029614939434592678
+  hog_ace: 0.5159912109375
+  bond_weight_retained: 6.546266201617172e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2391
+ideal_seconds: 0.0247
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.0954801948232233
+  hog_ace: 0.52734375
+  bond_weight_retained: 0.0006892789629962869
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2431
+ideal_seconds: 0.0249
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.016668550016926468
+  hog_ace: 0.505615234375
+  bond_weight_retained: 2.557498094730082e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2431
+ideal_seconds: 0.0255
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: -0.003529900434888626
+  hog_ace: 0.503662109375
+  bond_weight_retained: 0.00013647190136524507
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2470
+ideal_seconds: 0.0260
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.02228272586457054
+  hog_ace: 0.510009765625
+  bond_weight_retained: 2.2188277071791442e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2731
+ideal_seconds: 0.0251
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.0025252556755118055
+  hog_ace: 0.4979248046875
+  bond_weight_retained: 0.00022440244576785618
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2710
+ideal_seconds: 0.0250
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.03916795906796361
+  hog_ace: 0.5059814453125
+  bond_weight_retained: 0.0010276685837307443
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2758
+ideal_seconds: 0.0273
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.005729876826657237
+  hog_ace: 0.5067138671875
+  bond_weight_retained: 2.0844639610218223e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2902
+ideal_seconds: 0.0255
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.022118837438242802
+  hog_ace: 0.513427734375
+  bond_weight_retained: 9.969452415922317e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2258
+ideal_seconds: 0.0236
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.0009103972755255449
+  hog_ace: 0.5015869140625
+  bond_weight_retained: 4.286564707327258e-05
+circuit_seconds: 0.0003
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2464
+ideal_seconds: 0.0260
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.014628991881079837
+  hog_ace: 0.5072021484375
+  bond_weight_retained: 2.5192571600007925e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2412
+ideal_seconds: 0.0260
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.020307294217301864
+  hog_ace: 0.5029296875
+  bond_weight_retained: 0.0003304485140486389
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2785
+ideal_seconds: 0.0246
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.005858921656570021
+  hog_ace: 0.5006103515625
+  bond_weight_retained: 3.090714173151363e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2709
+ideal_seconds: 0.0252
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: -0.009736590183964224
+  hog_ace: 0.50927734375
+  bond_weight_retained: 0.00014640188972397524
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2618
+ideal_seconds: 0.0253
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.0010530121860873407
+  hog_ace: 0.493896484375
+  bond_weight_retained: 1.8802231206393492e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2503
+ideal_seconds: 0.0263
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: -0.00033956474417331546
+  hog_ace: 0.4913330078125
+  bond_weight_retained: 1.4386853209095864e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2452
+ideal_seconds: 0.0249
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.009382279758666491
+  hog_ace: 0.5147705078125
+  bond_weight_retained: 2.7634078731808318e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2500
+ideal_seconds: 0.0251
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: -0.03062305517020274
+  hog_ace: 0.4931640625
+  bond_weight_retained: 3.331070568347067e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2371
+ideal_seconds: 0.0244
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: -0.022449917959865857
+  hog_ace: 0.4892578125
+  bond_weight_retained: 8.376196900705193e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2731
+ideal_seconds: 0.0249
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.021733089051092645
+  hog_ace: 0.5107421875
+  bond_weight_retained: 1.8167078149389375e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2875
+ideal_seconds: 0.0261
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: -0.004622212914711168
+  hog_ace: 0.4921875
+  bond_weight_retained: 4.213836850005393e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2627
+ideal_seconds: 0.0251
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.015966272376716627
+  hog_ace: 0.5103759765625
+  bond_weight_retained: 8.772083984344318e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2360
+ideal_seconds: 0.0253
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: -0.007747752052669983
+  hog_ace: 0.497314453125
+  bond_weight_retained: 5.282251143651359e-06
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2341
+ideal_seconds: 0.0258
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: -0.004089442956596233
+  hog_ace: 0.492431640625
+  bond_weight_retained: 0.00015634669962872832
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2430
+ideal_seconds: 0.0249
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: -0.010058234294627062
+  hog_ace: 0.500732421875
+  bond_weight_retained: 5.188360461725313e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2271
+ideal_seconds: 0.0236
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.02351855250256317
+  hog_ace: 0.5032958984375
+  bond_weight_retained: 0.00013410644761186656
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2949
+ideal_seconds: 0.0251
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.02128937316006866
+  hog_ace: 0.5120849609375
+  bond_weight_retained: 0.00013502422085282615
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2846
+ideal_seconds: 0.0253
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: -0.01172498993635764
+  hog_ace: 0.504638671875
+  bond_weight_retained: 1.21909124331588e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2820
+ideal_seconds: 0.0257
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.019574285426790343
+  hog_ace: 0.5032958984375
+  bond_weight_retained: 8.911739905378923e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2387
+ideal_seconds: 0.0260
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: -0.0030705295446478444
+  hog_ace: 0.49951171875
+  bond_weight_retained: 8.272222209664174e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2407
+ideal_seconds: 0.0257
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: -0.010898035382760803
+  hog_ace: 0.498779296875
+  bond_weight_retained: 4.7672474775548886e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2301
+ideal_seconds: 0.0245
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: -0.014166838886895914
+  hog_ace: 0.4920654296875
+  bond_weight_retained: 0.00021869537365654156
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2352
+ideal_seconds: 0.0249
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: -0.021611756054681693
+  hog_ace: 0.497314453125
+  bond_weight_retained: 5.099020944206884e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2683
+ideal_seconds: 0.0256
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.010436403889132171
+  hog_ace: 0.5032958984375
+  bond_weight_retained: 9.621867318929467e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2876
+ideal_seconds: 0.0243
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.027196250921147847
+  hog_ace: 0.50537109375
+  bond_weight_retained: 1.3844250700413462e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2802
+ideal_seconds: 0.0243
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: -0.019089416592416083
+  hog_ace: 0.4964599609375
+  bond_weight_retained: 3.298563480135042e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2638
+ideal_seconds: 0.0259
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.010262292662977176
+  hog_ace: 0.5025634765625
+  bond_weight_retained: 3.318774727333166e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2431
+ideal_seconds: 0.0262
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.026341933531581877
+  hog_ace: 0.514892578125
+  bond_weight_retained: 7.341935157006012e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2281
+ideal_seconds: 0.0227
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.00826496624206126
+  hog_ace: 0.50390625
+  bond_weight_retained: 2.7852495512645276e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2580
+ideal_seconds: 0.0260
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.02121103086586433
+  hog_ace: 0.5
+  bond_weight_retained: 8.851552343401982e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2537
+ideal_seconds: 0.0243
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.0062904657725061834
+  hog_ace: 0.50146484375
+  bond_weight_retained: 3.4082031457022374e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2383
+ideal_seconds: 0.0237
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.026413565951433515
+  hog_ace: 0.5059814453125
+  bond_weight_retained: 0.0003200215286587107
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2919
+ideal_seconds: 0.0256
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.0032542342792509235
+  hog_ace: 0.4989013671875
+  bond_weight_retained: 0.0002938753357631806
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2831
+ideal_seconds: 0.0244
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.014526479462170627
+  hog_ace: 0.5101318359375
+  bond_weight_retained: 0.00012068075339541018
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2329
+ideal_seconds: 0.0248
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.006233599324435193
+  hog_ace: 0.4947509765625
+  bond_weight_retained: 0.00017670347567831318
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2358
+ideal_seconds: 0.0254
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.006640025066011083
+  hog_ace: 0.51220703125
+  bond_weight_retained: 3.0606629722379606e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2437
+ideal_seconds: 0.0262
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.0028299029795278868
+  hog_ace: 0.502197265625
+  bond_weight_retained: 9.529311497180741e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2525
+ideal_seconds: 0.0251
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: -0.0058974806206712515
+  hog_ace: 0.4952392578125
+  bond_weight_retained: 0.00012691029582086313
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2839
+ideal_seconds: 0.0246
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: -0.011953038618562364
+  hog_ace: 0.4984130859375
+  bond_weight_retained: 3.6528982869796876e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2752
+ideal_seconds: 0.0250
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.03364174372559181
+  hog_ace: 0.505615234375
+  bond_weight_retained: 7.643273687551879e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2827
+ideal_seconds: 0.0247
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.025633077288023342
+  hog_ace: 0.51318359375
+  bond_weight_retained: 0.0001312048453154177
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2645
+ideal_seconds: 0.0268
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: -0.007286931587008934
+  hog_ace: 0.4927978515625
+  bond_weight_retained: 1.9893394725482847e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2419
+ideal_seconds: 0.0237
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: -0.008654661116419504
+  hog_ace: 0.5040283203125
+  bond_weight_retained: 1.9656647033526424e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2435
+ideal_seconds: 0.0257
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: -0.016513241191934924
+  hog_ace: 0.4925537109375
+  bond_weight_retained: 0.00015893037952627743
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2435
+ideal_seconds: 0.0249
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: -0.004543851613223739
+  hog_ace: 0.494873046875
+  bond_weight_retained: 0.00014459272438223817
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2494
+ideal_seconds: 0.0245
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.006698736272238416
+  hog_ace: 0.5
+  bond_weight_retained: 0.00010782394262386347
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2687
+ideal_seconds: 0.0255
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.027683262254080725
+  hog_ace: 0.5113525390625
+  bond_weight_retained: 0.0001338465243738926
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2964
+ideal_seconds: 0.0247
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.05891462107452288
+  hog_ace: 0.515869140625
+  bond_weight_retained: 8.787961348564926e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2914
+ideal_seconds: 0.0244
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.0015444861396115136
+  hog_ace: 0.5052490234375
+  bond_weight_retained: 0.00011068477465454918
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2801
+ideal_seconds: 0.0242
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: -0.006811840813516466
+  hog_ace: 0.491943359375
+  bond_weight_retained: 5.571315853842062e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2829
+ideal_seconds: 0.0256
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.016117895382132142
+  hog_ace: 0.5062255859375
+  bond_weight_retained: 0.0002381086985346274
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2875
+ideal_seconds: 0.0247
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.006641271159766429
+  hog_ace: 0.4989013671875
+  bond_weight_retained: 0.000119925062818753
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2584
+ideal_seconds: 0.0256
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.008982207214466806
+  hog_ace: 0.502685546875
+  bond_weight_retained: 3.5420794943812785e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2836
+ideal_seconds: 0.0245
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.024491685676580277
+  hog_ace: 0.509033203125
+  bond_weight_retained: 1.6904856524908473e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2751
+ideal_seconds: 0.0246
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: -0.0016320534501337823
+  hog_ace: 0.501220703125
+  bond_weight_retained: 8.25248764624882e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2490
+ideal_seconds: 0.0269
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.011162586041141145
+  hog_ace: 0.4947509765625
+  bond_weight_retained: 0.00015577601483803314
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2297
+ideal_seconds: 0.0244
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.015879735746433435
+  hog_ace: 0.4990234375
+  bond_weight_retained: 0.00011233030078015612
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2380
+ideal_seconds: 0.0247
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: -0.005899995386013
+  hog_ace: 0.4918212890625
+  bond_weight_retained: 5.8147172147621086e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2433
+ideal_seconds: 0.0241
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: -0.0024593058211975064
+  hog_ace: 0.48486328125
+  bond_weight_retained: 0.0006524857828775475
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2779
+ideal_seconds: 0.0256
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.016339426117531045
+  hog_ace: 0.50439453125
+  bond_weight_retained: 8.395453481502346e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2912
+ideal_seconds: 0.0248
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.010319636681607956
+  hog_ace: 0.5106201171875
+  bond_weight_retained: 0.0002830767215037274
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2559
+ideal_seconds: 0.0264
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.02001457283716736
+  hog_ace: 0.506103515625
+  bond_weight_retained: 0.0002809161976220709
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2278
+ideal_seconds: 0.0245
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.02921906179354985
+  hog_ace: 0.510986328125
+  bond_weight_retained: 2.7170466492637178e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2554
+ideal_seconds: 0.0258
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: -0.0265535784947296
+  hog_ace: 0.4971923828125
+  bond_weight_retained: 4.733213918409959e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2397
+ideal_seconds: 0.0254
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: -0.013120880854267125
+  hog_ace: 0.5028076171875
+  bond_weight_retained: 5.31367967277039e-05
+circuit_seconds: 0.0003
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2808
+ideal_seconds: 0.0258
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.026965131302063385
+  hog_ace: 0.50732421875
+  bond_weight_retained: 0.00017993290478397175
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2802
+ideal_seconds: 0.0247
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.014155630554452498
+  hog_ace: 0.5040283203125
+  bond_weight_retained: 5.517436389363721e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2803
+ideal_seconds: 0.0237
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: -0.006980260846597251
+  hog_ace: 0.4979248046875
+  bond_weight_retained: 4.733748917220144e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2908
+ideal_seconds: 0.0246
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.003026623063840502
+  hog_ace: 0.5009765625
+  bond_weight_retained: 1.3176265369366166e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2919
+ideal_seconds: 0.0250
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: -0.0007971103511924474
+  hog_ace: 0.49658203125
+  bond_weight_retained: 5.35597483094952e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2770
+ideal_seconds: 0.0247
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.02403908159330366
+  hog_ace: 0.509765625
+  bond_weight_retained: 0.0001150902300432873
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2444
+ideal_seconds: 0.0259
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.0351563911255281
+  hog_ace: 0.5135498046875
+  bond_weight_retained: 0.0002575200876833384
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2339
+ideal_seconds: 0.0238
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.011014431623244739
+  hog_ace: 0.5057373046875
+  bond_weight_retained: 9.66645671487593e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2463
+ideal_seconds: 0.0252
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: -0.004709210186865404
+  hog_ace: 0.498291015625
+  bond_weight_retained: 5.1373761270669533e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2287
+ideal_seconds: 0.0240
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.010982249228897085
+  hog_ace: 0.509521484375
+  bond_weight_retained: 0.00012532985281005953
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.3012
+ideal_seconds: 0.0263
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: -0.025775211668374234
+  hog_ace: 0.5028076171875
+  bond_weight_retained: 0.00016641299645688272
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2861
+ideal_seconds: 0.0246
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.03151486550302043
+  hog_ace: 0.511474609375
+  bond_weight_retained: 0.00023394279120953322
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2465
+ideal_seconds: 0.0258
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: -0.016878249767912086
+  hog_ace: 0.4891357421875
+  bond_weight_retained: 7.671627157264083e-06
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2480
+ideal_seconds: 0.0243
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: -0.008609794543560203
+  hog_ace: 0.504638671875
+  bond_weight_retained: 2.402094711060758e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2588
+ideal_seconds: 0.0251
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: -0.026607983509695222
+  hog_ace: 0.498291015625
+  bond_weight_retained: 5.204093969959976e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2314
+ideal_seconds: 0.0242
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.007264916038962277
+  hog_ace: 0.4989013671875
+  bond_weight_retained: 9.92602352224285e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2950
+ideal_seconds: 0.0262
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.004647877334778593
+  hog_ace: 0.509521484375
+  bond_weight_retained: 1.4492958391608089e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2791
+ideal_seconds: 0.0249
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: -0.0206319897512442
+  hog_ace: 0.4940185546875
+  bond_weight_retained: 5.9789638661267195e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2449
+ideal_seconds: 0.0254
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: -0.012940627467683681
+  hog_ace: 0.494873046875
+  bond_weight_retained: 3.9875287052823826e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2259
+ideal_seconds: 0.0236
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.0029751883329428887
+  hog_ace: 0.497802734375
+  bond_weight_retained: 0.00023083390015288163
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2352
+ideal_seconds: 0.0240
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.027213460176741883
+  hog_ace: 0.4937744140625
+  bond_weight_retained: 5.410351070644443e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2366
+ideal_seconds: 0.0250
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.018544616771930315
+  hog_ace: 0.5179443359375
+  bond_weight_retained: 7.48997484520232e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2924
+ideal_seconds: 0.0250
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.011581176192810235
+  hog_ace: 0.4993896484375
+  bond_weight_retained: 2.468254705066813e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2422
+ideal_seconds: 0.0252
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.04135799093658793
+  hog_ace: 0.51953125
+  bond_weight_retained: 0.0002355235711176169
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2429
+ideal_seconds: 0.0259
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: -0.008117770508117217
+  hog_ace: 0.4920654296875
+  bond_weight_retained: 9.08705493312698e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2747
+ideal_seconds: 0.0242
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.0024492217209969532
+  hog_ace: 0.50146484375
+  bond_weight_retained: 4.1975558996857047e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2780
+ideal_seconds: 0.0250
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.006846532813493187
+  hog_ace: 0.5048828125
+  bond_weight_retained: 1.2709090447596153e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2679
+ideal_seconds: 0.0255
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.005990931810208206
+  hog_ace: 0.5108642578125
+  bond_weight_retained: 7.89720814411016e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2426
+ideal_seconds: 0.0255
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.013234591932036471
+  hog_ace: 0.4998779296875
+  bond_weight_retained: 0.00015278638059006982
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2302
+ideal_seconds: 0.0247
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.01303671620120247
+  hog_ace: 0.50537109375
+  bond_weight_retained: 9.84736367531087e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2405
+ideal_seconds: 0.0245
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.014288219427157089
+  hog_ace: 0.5123291015625
+  bond_weight_retained: 0.00012751100100820786
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2518
+ideal_seconds: 0.0252
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.003380047164452695
+  hog_ace: 0.501953125
+  bond_weight_retained: 5.2909274675101e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2771
+ideal_seconds: 0.0243
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.02242054225383695
+  hog_ace: 0.510498046875
+  bond_weight_retained: 4.786171644894873e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2305
+ideal_seconds: 0.0251
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: -0.010998885657013756
+  hog_ace: 0.4952392578125
+  bond_weight_retained: 3.6418005319931395e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2516
+ideal_seconds: 0.0246
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: -0.01582485859567204
+  hog_ace: 0.499755859375
+  bond_weight_retained: 1.779770382704805e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2398
+ideal_seconds: 0.0257
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.016173939744860644
+  hog_ace: 0.5126953125
+  bond_weight_retained: 0.0001631496956541307
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2398
+ideal_seconds: 0.0240
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: -0.01456460709319954
+  hog_ace: 0.4921875
+  bond_weight_retained: 8.795437215979054e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2800
+ideal_seconds: 0.0256
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: -0.012764987636085077
+  hog_ace: 0.492919921875
+  bond_weight_retained: 5.195374507183295e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2621
+ideal_seconds: 0.0261
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.034063648105476844
+  hog_ace: 0.5169677734375
+  bond_weight_retained: 0.00012084878216614275
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2188
+ideal_seconds: 0.0245
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.006674635503718531
+  hog_ace: 0.500244140625
+  bond_weight_retained: 0.0003022898311978949
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2318
+ideal_seconds: 0.0241
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: -0.00583400366003534
+  hog_ace: 0.4925537109375
+  bond_weight_retained: 5.701061445899639e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2286
+ideal_seconds: 0.0238
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.0032390836492548008
+  hog_ace: 0.4925537109375
+  bond_weight_retained: 7.373396237409266e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2705
+ideal_seconds: 0.0240
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.005413472396017635
+  hog_ace: 0.4984130859375
+  bond_weight_retained: 0.0002778867061383434
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2426
+ideal_seconds: 0.0258
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: -0.017892697995773248
+  hog_ace: 0.4927978515625
+  bond_weight_retained: 0.00013875230414368025
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2275
+ideal_seconds: 0.0248
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: -0.011559673288764253
+  hog_ace: 0.5023193359375
+  bond_weight_retained: 0.0003099208925974966
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2350
+ideal_seconds: 0.0250
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: -0.015203781671471628
+  hog_ace: 0.50146484375
+  bond_weight_retained: 1.9390348538551538e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2639
+ideal_seconds: 0.0253
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.0301365092856547
+  hog_ace: 0.51220703125
+  bond_weight_retained: 0.0002500965881895127
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2834
+ideal_seconds: 0.0251
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 2.8835957516599833e-05
+  hog_ace: 0.499755859375
+  bond_weight_retained: 5.673230908792478e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2912
+ideal_seconds: 0.0252
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.0076125549416992695
+  hog_ace: 0.5152587890625
+  bond_weight_retained: 9.766211099645991e-06
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2720
+ideal_seconds: 0.0258
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.003039454661024109
+  hog_ace: 0.5030517578125
+  bond_weight_retained: 0.00011598249830843713
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2552
+ideal_seconds: 0.0250
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.020237145722672975
+  hog_ace: 0.506591796875
+  bond_weight_retained: 7.994181462075064e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2502
+ideal_seconds: 0.0255
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: -0.014428227254312344
+  hog_ace: 0.4949951171875
+  bond_weight_retained: 3.678068019451302e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2398
+ideal_seconds: 0.0243
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: -0.011939401029265821
+  hog_ace: 0.4976806640625
+  bond_weight_retained: 0.00024179457912719976
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2530
+ideal_seconds: 0.0253
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.01800830051155242
+  hog_ace: 0.5087890625
+  bond_weight_retained: 3.342209625190401e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2917
+ideal_seconds: 0.0289
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.013030468217680339
+  hog_ace: 0.499755859375
+  bond_weight_retained: 6.0319598705707295e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2816
+ideal_seconds: 0.0236
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.01655882460871855
+  hog_ace: 0.5089111328125
+  bond_weight_retained: 9.411672752690048e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2604
+ideal_seconds: 0.0244
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: -0.006337992027182503
+  hog_ace: 0.50048828125
+  bond_weight_retained: 7.865845557496673e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2883
+ideal_seconds: 0.0263
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.03216319232373093
+  hog_ace: 0.508056640625
+  bond_weight_retained: 0.00018964278527481082
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2867
+ideal_seconds: 0.0246
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.0028332029452887357
+  hog_ace: 0.5009765625
+  bond_weight_retained: 0.00014315548701014337
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2536
+ideal_seconds: 0.0255
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: -0.011675338551659507
+  hog_ace: 0.4954833984375
+  bond_weight_retained: 7.546191413794718e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2828
+ideal_seconds: 0.0256
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.014000199976045857
+  hog_ace: 0.5013427734375
+  bond_weight_retained: 3.16517949983326e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2674
+ideal_seconds: 0.0249
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.0058111683396999585
+  hog_ace: 0.5010986328125
+  bond_weight_retained: 4.8300210374789544e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2484
+ideal_seconds: 0.0249
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: -0.022623820218616204
+  hog_ace: 0.49365234375
+  bond_weight_retained: 2.7904467292086064e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2367
+ideal_seconds: 0.0250
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: -0.00403027077436449
+  hog_ace: 0.4952392578125
+  bond_weight_retained: 3.762838144335667e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2469
+ideal_seconds: 0.0259
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.05547712475650755
+  hog_ace: 0.51708984375
+  bond_weight_retained: 4.988382444829621e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2428
+ideal_seconds: 0.0236
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.05002261376418396
+  hog_ace: 0.51220703125
+  bond_weight_retained: 2.7237798585577397e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2866
+ideal_seconds: 0.0249
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.007770148969584545
+  hog_ace: 0.5054931640625
+  bond_weight_retained: 4.1837641605828775e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2682
+ideal_seconds: 0.0252
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.005678552939848613
+  hog_ace: 0.502685546875
+  bond_weight_retained: 5.3886528596291174e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2432
+ideal_seconds: 0.0254
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.004075940907751011
+  hog_ace: 0.5050048828125
+  bond_weight_retained: 8.08218414954956e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2431
+ideal_seconds: 0.0247
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.02693753128380816
+  hog_ace: 0.5123291015625
+  bond_weight_retained: 0.0001500529316005259
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2592
+ideal_seconds: 0.0254
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.0015711045284138557
+  hog_ace: 0.5101318359375
+  bond_weight_retained: 7.474734876713915e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2412
+ideal_seconds: 0.0253
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: -0.0089134829643144
+  hog_ace: 0.4947509765625
+  bond_weight_retained: 7.230998272647705e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2481
+ideal_seconds: 0.0244
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.031662824425339436
+  hog_ace: 0.5086669921875
+  bond_weight_retained: 0.00032758238252776146
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2747
+ideal_seconds: 0.0249
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.009089584018635138
+  hog_ace: 0.50439453125
+  bond_weight_retained: 9.517520370276465e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2900
+ideal_seconds: 0.0246
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.06759473527985851
+  hog_ace: 0.5255126953125
+  bond_weight_retained: 0.00048041923932418536
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2408
+ideal_seconds: 0.0243
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.02265329814760454
+  hog_ace: 0.511474609375
+  bond_weight_retained: 0.00013300642440524824
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2530
+ideal_seconds: 0.0254
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.010724502899202048
+  hog_ace: 0.506591796875
+  bond_weight_retained: 0.0001801444596998728
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2311
+ideal_seconds: 0.0244
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.0193594966156766
+  hog_ace: 0.50830078125
+  bond_weight_retained: 8.182125525076593e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2452
+ideal_seconds: 0.0251
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: -0.01144574250564544
+  hog_ace: 0.502197265625
+  bond_weight_retained: 4.541589644448693e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2287
+ideal_seconds: 0.0239
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.036555676781691894
+  hog_ace: 0.51318359375
+  bond_weight_retained: 0.00018540303144859072
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2777
+ideal_seconds: 0.0251
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.02414815043397357
+  hog_ace: 0.511474609375
+  bond_weight_retained: 0.00010466767857942699
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2788
+ideal_seconds: 0.0251
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: -0.008672424351325883
+  hog_ace: 0.486572265625
+  bond_weight_retained: 0.00016143601709055948
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2645
+ideal_seconds: 0.0254
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.002857334351998222
+  hog_ace: 0.5048828125
+  bond_weight_retained: 1.603652289975155e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2461
+ideal_seconds: 0.0233
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: -0.006541713846744398
+  hog_ace: 0.501220703125
+  bond_weight_retained: 0.00017303581052149967
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2598
+ideal_seconds: 0.0262
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.05120597418909482
+  hog_ace: 0.522216796875
+  bond_weight_retained: 5.5651695657975126e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2607
+ideal_seconds: 0.0253
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.014930718370907401
+  hog_ace: 0.5003662109375
+  bond_weight_retained: 9.751520084859434e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2552
+ideal_seconds: 0.0259
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.022273644935533438
+  hog_ace: 0.505859375
+  bond_weight_retained: 0.00012612024247529252
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2973
+ideal_seconds: 0.0267
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.027912039839580773
+  hog_ace: 0.504150390625
+  bond_weight_retained: 0.0006195235904461761
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2969
+ideal_seconds: 0.0271
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.01019975278517923
+  hog_ace: 0.5001220703125
+  bond_weight_retained: 4.660582203364641e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2753
+ideal_seconds: 0.0247
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.0023346393468731243
+  hog_ace: 0.5048828125
+  bond_weight_retained: 2.3893717692830323e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2946
+ideal_seconds: 0.0249
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.01093142685673758
+  hog_ace: 0.4974365234375
+  bond_weight_retained: 3.735045376546327e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2760
+ideal_seconds: 0.0262
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: -0.018158636189635275
+  hog_ace: 0.4852294921875
+  bond_weight_retained: 0.0003069594035503314
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2347
+ideal_seconds: 0.0250
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.0036937340616826813
+  hog_ace: 0.5009765625
+  bond_weight_retained: 0.00036195624636876884
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2461
+ideal_seconds: 0.0254
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: -0.003631000239147303
+  hog_ace: 0.5087890625
+  bond_weight_retained: 6.428901768731776e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2474
+ideal_seconds: 0.0259
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: -0.0048322930815717
+  hog_ace: 0.494873046875
+  bond_weight_retained: 6.267200932357543e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2550
+ideal_seconds: 0.0251
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.004276361552640414
+  hog_ace: 0.517333984375
+  bond_weight_retained: 6.558401793867482e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2503
+ideal_seconds: 0.0245
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: -0.001086383674535608
+  hog_ace: 0.5028076171875
+  bond_weight_retained: 1.0371147802130804e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2999
+ideal_seconds: 0.0251
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.017686418381379923
+  hog_ace: 0.4981689453125
+  bond_weight_retained: 9.749476996583248e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2847
+ideal_seconds: 0.0247
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.0055020649621941526
+  hog_ace: 0.5042724609375
+  bond_weight_retained: 8.088549305371791e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2897
+ideal_seconds: 0.0235
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: -0.023649677540568362
+  hog_ace: 0.492431640625
+  bond_weight_retained: 0.0001251966754332278
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2429
+ideal_seconds: 0.0240
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: -0.004269049602809495
+  hog_ace: 0.488525390625
+  bond_weight_retained: 6.797728933235432e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2332
+ideal_seconds: 0.0264
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.024068552753205574
+  hog_ace: 0.514892578125
+  bond_weight_retained: 0.00041768518039256297
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2510
+ideal_seconds: 0.0247
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.004471244073900294
+  hog_ace: 0.4942626953125
+  bond_weight_retained: 4.810469842313167e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2432
+ideal_seconds: 0.0248
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.005465650224541495
+  hog_ace: 0.4957275390625
+  bond_weight_retained: 0.00011144997928467113
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2548
+ideal_seconds: 0.0253
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: -0.014943022086427355
+  hog_ace: 0.49462890625
+  bond_weight_retained: 1.4721968366989547e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2706
+ideal_seconds: 0.0246
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.0018585326326587318
+  hog_ace: 0.4931640625
+  bond_weight_retained: 4.7679494554502665e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2941
+ideal_seconds: 0.0251
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: -0.01845309205190653
+  hog_ace: 0.4989013671875
+  bond_weight_retained: 5.146208157810687e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2941
+ideal_seconds: 0.0257
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: -0.0076126908707710075
+  hog_ace: 0.504150390625
+  bond_weight_retained: 1.5022089992136484e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2593
+ideal_seconds: 0.0255
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.04877789662582857
+  hog_ace: 0.505615234375
+  bond_weight_retained: 6.627690830335538e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2479
+ideal_seconds: 0.0236
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: -0.0035186789885464573
+  hog_ace: 0.4952392578125
+  bond_weight_retained: 0.00012299825837329227
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2529
+ideal_seconds: 0.0258
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.0006826243913980333
+  hog_ace: 0.5035400390625
+  bond_weight_retained: 3.322508192449662e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2418
+ideal_seconds: 0.0252
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.00851788582303648
+  hog_ace: 0.5013427734375
+  bond_weight_retained: 0.00039260420237843645
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2401
+ideal_seconds: 0.0247
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: -0.024597139280178013
+  hog_ace: 0.488525390625
+  bond_weight_retained: 4.7978096584816046e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2572
+ideal_seconds: 0.0253
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: -0.004074251308434894
+  hog_ace: 0.49658203125
+  bond_weight_retained: 9.112340939539519e-05
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2797
+ideal_seconds: 0.0261
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.020931324838345904
+  hog_ace: 0.5030517578125
+  bond_weight_retained: 0.00029967152822416005
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2987
+ideal_seconds: 0.0258
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: -0.01617058067462795
+  hog_ace: 0.483154296875
+  bond_weight_retained: 0.00013521666926977395
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2703
+ideal_seconds: 0.0245
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.0019853957201430785
+  hog_ace: 0.5035400390625
+  bond_weight_retained: 0.00021712475826790129
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2398
+ideal_seconds: 0.0241
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.02490937087039762
+  hog_ace: 0.514404296875
+  bond_weight_retained: 0.00011420017372619796
+circuit_seconds: 0.0002
+Device #0, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_NVIDIA_GeForce_RTX_4090_Laptop_GPU.ir
+Device #1, Loaded binary from: /home/iamu/.qrack/qrack_ocl_dev_Intel(R)_UHD_Graphics.ir
+Default platform: NVIDIA CUDA
+Default device: #0, NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #0: NVIDIA GeForce RTX 4090 Laptop GPU
+OpenCL device #1: Intel(R) UHD Graphics
+ace_seconds: 0.2517
+ideal_seconds: 0.0277
+  width: 16
+  depth: 18
+  max_bonds: 4
+  patches: 2
+  xeb_ace: 0.022880660454580003
+  hog_ace: 0.5133056640625
+  bond_weight_retained: 0.00012927474035863139

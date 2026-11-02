@@ -1,3 +1,3 @@
 for i in {1..200}; do 
-    python3 nn_qb.py 10 14 2 4
+    python3 nn_qb.py 10 4 2 4
 done
