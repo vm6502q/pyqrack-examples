@@ -63,6 +63,8 @@ import statistics
 import sys
 import time
 
+import numpy as np
+
 import quimb.tensor as qtn
 from pyqrack import QrackSimulator, QrackStabilizer, Pauli
 from qiskit import QuantumCircuit
@@ -144,12 +146,13 @@ def calc_stats(ideal_probs, probs, shots, depth, magic):
     sum_hog_counts = 0
     probs_heavy, probs_light = probs
     n_light = n_pow / ((n_pow - len(probs_light)) + sum((1.0 - v) for v in probs_light.values()))
+    ideal_centered = np.asarray(ideal_probs, dtype=np.float64) - u_u
+    denom = np.dot(ideal_centered, ideal_centered)
     for i in range(n_pow):
         exp = 0.5 * probs_heavy.get(i, 0) + 0.5 * n_light * u_u * (1.0 - probs_light.get(i, 0))
-        ideal = ideal_probs[i]
+        ideal = ideal_centered[i]
         count = exp * shots
-        denom += (ideal - u_u) ** 2
-        numer += (ideal - u_u) * (exp - u_u)
+        numer += ideal * (exp - u_u)
         if ideal > threshold:
             sum_hog_counts += count
     hog_prob = sum_hog_counts / shots
