@@ -82,7 +82,7 @@ QC, LRC, LRR = 8, 1, 4
 
 def get_topology():
     ref = QrackAceBackend(QC, long_range_columns=LRC, long_range_rows=LRR, is_torus=True)
-    homes = [ref._qubits[q][0][0] for q in range(QC)]
+    homes = [ref.qubits[q][0][0] for q in range(QC)]
     cmap = ref.get_logical_coupling_map()
     cross_seam = sorted(set(tuple(sorted((a, c))) for (a, c) in cmap if homes[a] != homes[c]))
     intra = sorted(set(tuple(sorted((a, c))) for (a, c) in cmap if homes[a] == homes[c]))
