@@ -15,6 +15,10 @@
 #      LCDM + nuisance parameters. Delta chi^2(t_evap) = chi^2_PBH - chi^2_LCDM <= 0 by construction
 #      (f_pbh = 0 is LCDM). How negative it gets is "how much the law improves the residuals".
 #   3. Optionally (--free) one global fit with t_evap free too.
+#   4. Rest-mass excitation channel (no PBHs): the excitation above the Higgs vacuum is modeled as electron mass
+#      at recombination m_e(early)/m_e(today) = me_ratio (CLASS 'varying_me', switched off below z = 50). Since
+#      omega_b and omega_cdm are fitted anyway, this stands in for a near-uniform rest-mass shift (all masses
+#      relative to the Planck mass). Steps: 'me' (free me_ratio) and 'meprofile' (Delta chi^2 on a me_ratio grid).
 # The PBH mass that evaporates at t_evap is reported alongside: M0 = sqrt(t_evap c^5 l_P / (2 G^2)).
 #
 # Usage:
@@ -23,6 +27,7 @@
 #   python3 pbh_fit.py profile [--jobs 4]      # step 2 (default grid 11 .. 19.5 in log10 s; needs step 1)
 #   python3 pbh_fit.py free                    # step 3
 #   python3 pbh_fit.py report                  # table of Delta chi^2 and best-fit f_pbh per t_evap
+#   python3 pbh_fit.py me / meprofile          # step 4 (needs step 1); 'report' then prints it too
 # Options: --packages DIR (default ./packages)   --out DIR (default ./pbh_out)
 #          --data planck|planck+bao|all (default all: Planck TTTEEE lite + lowl + lowE + lensing + DESI + Pantheon+)
 #          --grid 11,12,...   --jobs N (parallel profile points; set OMP_NUM_THREADS = cores / N)
@@ -70,10 +75,13 @@ BASE = {
 EXTRA = {"N_ur": 2.0328, "N_ncdm": 1, "m_ncdm": 0.06, "non_linear": "halofit", "l_max_scalars": 2600}
 
 
-def info_for(model, args, log10_tev=None, ref=None):
+def info_for(model, args, log10_tev=None, ref=None, me=None):
     params = json.loads(json.dumps(BASE))
-    if model == "lcdm":
+    if model in ("lcdm", "me"):
         params["omega_cdm"] = {"value": "lambda omega_dm: omega_dm", "latex": r"\omega_c"}
+        if model == "me":
+            params["varying_me"] = ({"prior": {"min": 0.95, "max": 1.05}, "ref": 1.0, "proposal": 0.003,
+                                     "latex": r"m_e^{\rm rec}/m_e^{0}"} if me is None else {"value": float(me)})
     else:
         params["f_pbh"] = {"prior": {"min": 0.0, "max": 0.5}, "ref": 0.0, "proposal": 0.005, "drop": True,
                            "latex": "f_{\\rm PBH}"}
@@ -92,8 +100,11 @@ def info_for(model, args, log10_tev=None, ref=None):
             if k in params and isinstance(params[k], dict) and "prior" in params[k]:
                 params[k]["ref"] = v
     extra = dict(EXTRA)
-    if model != "lcdm":
+    if model == "pbh":
         extra["pbh_evaporation_law"] = "yes"
+    if model == "me":
+        extra.update({"varying_fundamental_constants": "instantaneous", "varying_transition_redshift": 50.,
+                      "varying_alpha": 1.0})
     theory = {"classy": {"extra_args": extra}}
     if args.class_path:
         theory["classy"]["path"] = os.path.abspath(args.class_path)
@@ -132,9 +143,15 @@ def _profile_point(a):
     return run(info_for("pbh", args, log10_tev=x, ref=ref), f"profile_{x:05.2f}", args)
 
 
+def _me_point(a):
+    args, x, ref = a
+    return run(info_for("me", args, ref=ref, me=x), f"me_{x:.4f}", args)
+
+
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("step", choices=["install", "lcdm", "profile", "free", "report"])
+    ap.add_argument("step", choices=["install", "lcdm", "profile", "free", "me", "meprofile", "report"])
+    ap.add_argument("--megrid", default="0.97,0.98,0.99,0.995,1.0,1.005,1.01,1.02,1.03")
     ap.add_argument("--packages", default="packages")
     ap.add_argument("--out", default="pbh_out")
     ap.add_argument("--data", default="all", choices=list(LIKES))
@@ -173,6 +190,21 @@ def main():
         run(info_for("pbh", args, ref=ref), "free", args)
         return
 
+    if args.step == "me":
+        run(info_for("me", args, ref=ref), "me_free", args)
+        return
+
+    if args.step == "meprofile":
+        grid = [float(x) for x in args.megrid.split(",")][: 1 if args.test else None]
+        jobs = [(args, x, ref) for x in grid]
+        if args.jobs > 1:
+            with ProcessPoolExecutor(args.jobs) as ex:
+                list(ex.map(_me_point, jobs))
+        else:
+            for j in jobs:
+                _me_point(j)
+        return
+
     # report
     base = json.load(open(lp))
     print(f"data: {args.data}    LCDM chi2 = {base['chi2_like']:.2f}")
@@ -194,6 +226,18 @@ def main():
         x = r["params"]["log10_tevap"] if "log10_tevap" in r["params"] else float("nan")
         print(f"free fit: f_pbh = {r['params'].get('f_pbh', 0):.4f}, log10 t_evap = {x:.2f}, "
               f"dchi2 = {r['chi2_like'] - base['chi2_like']:.2f}  (2 extra parameters)")
+    me_rows = sorted((float(fn[3:-5]), json.load(open(os.path.join(args.out, fn))))
+                     for fn in os.listdir(args.out) if fn.startswith("me_") and fn.endswith(".json") and fn != "me_free.json")
+    if me_rows:
+        print(f"\nrest-mass channel: m_e(recombination)/m_e(today)")
+        print(f"{'me_ratio':>9s} {'H0':>6s} {'dchi2':>8s}")
+        for x, r in me_rows:
+            print(f"{x:9.4f} {r['params'].get('H0', float('nan')):6.2f} {r['chi2_like'] - base['chi2_like']:8.2f}")
+    fp = os.path.join(args.out, "me_free.json")
+    if os.path.exists(fp):
+        r = json.load(open(fp))
+        print(f"free fit: me_ratio = {r['params'].get('varying_me', float('nan')):.4f}, H0 = {r['params'].get('H0', float('nan')):.2f}, "
+              f"dchi2 = {r['chi2_like'] - base['chi2_like']:.2f}  (1 extra parameter; 95% needs < -3.84)")
     print("Reading: dchi2 near 0 everywhere = no improvement; the law is then only constrained, via the f_pbh "
           "upper limit. A real improvement would need dchi2 well below -6 (2 extra parameters).")
 
