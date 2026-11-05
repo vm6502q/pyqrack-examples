@@ -80,7 +80,7 @@ def info_for(model, args, log10_tev=None, ref=None, me=None):
     if model in ("lcdm", "me"):
         params["omega_cdm"] = {"value": "lambda omega_dm: omega_dm", "latex": r"\omega_c"}
         if model == "me":
-            params["varying_me"] = ({"prior": {"min": 0.95, "max": 1.05}, "ref": 1.0, "proposal": 0.003,
+            params["varying_me"] = ({"prior": {"min": 0.95, "max": 1.05}, "ref": 1.008, "proposal": 0.003,
                                      "latex": r"m_e^{\rm rec}/m_e^{0}"} if me is None else {"value": float(me)})
     else:
         params["f_pbh"] = {"prior": {"min": 0.0, "max": 0.5}, "ref": 0.0, "proposal": 0.005, "drop": True,
