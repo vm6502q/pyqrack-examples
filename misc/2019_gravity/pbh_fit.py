@@ -19,6 +19,13 @@
 #      at recombination m_e(early)/m_e(today) = me_ratio (CLASS 'varying_me', switched off below z = 50). Since
 #      omega_b and omega_cdm are fitted anyway, this stands in for a near-uniform rest-mass shift (all masses
 #      relative to the Planck mass). Steps: 'me' (free me_ratio) and 'meprofile' (Delta chi^2 on a me_ratio grid).
+#      'me' starts from the best 'meprofile' point when one exists (the valley along m_e-H0 is long and shallow).
+#   5. Dilaton channel (continuous version of step 4): the trace (spin-0) part of the rank-2 potential, coupled to
+#      rest mass, is a Brans-Dicke scalar with matter coupling alpha^2 = 1/(2 omega_BD + 3). Its slow evolution makes
+#      rest masses (relative to the Planck mass) drift over cosmic history instead of jumping at one redshift, with
+#      G_eff for matter today pinned to the local G. Runs on hi_class (hiclass_theory.py, module 'hiclassy'), and is
+#      compared with its own alpha^2 = 0 limit computed by the same code. Step: 'bdprofile' (--bdgrid alpha^2 values).
+#      For scale: Cassini requires alpha^2 < ~1.2e-5 locally (unless screened); cosmology alone is much weaker.
 # The PBH mass that evaporates at t_evap is reported alongside: M0 = sqrt(t_evap c^5 l_P / (2 G^2)).
 #
 # Usage:
@@ -28,6 +35,7 @@
 #   python3 pbh_fit.py free                    # step 3
 #   python3 pbh_fit.py report                  # table of Delta chi^2 and best-fit f_pbh per t_evap
 #   python3 pbh_fit.py me / meprofile          # step 4 (needs step 1); 'report' then prints it too
+#   python3 pbh_fit.py bdprofile               # step 5 (needs hi_class installed as 'hiclassy'; see README)
 # Options: --packages DIR (default ./packages)   --out DIR (default ./pbh_out)
 #          --data planck|planck+bao|all (default all: Planck TTTEEE lite + lowl + lowE + lensing + DESI + Pantheon+)
 #          --grid 11,12,...   --jobs N (parallel profile points; set OMP_NUM_THREADS = cores / N)
@@ -75,12 +83,19 @@ BASE = {
 EXTRA = {"N_ur": 2.0328, "N_ncdm": 1, "m_ncdm": 0.06, "non_linear": "halofit", "l_max_scalars": 2600}
 
 
-def info_for(model, args, log10_tev=None, ref=None, me=None):
+def omega_bd_for(alpha2):
+    return 1e8 if alpha2 <= 0 else (1.0 / alpha2 - 3.0) / 2.0
+
+
+def info_for(model, args, log10_tev=None, ref=None, me=None, alpha2=None):
     params = json.loads(json.dumps(BASE))
-    if model in ("lcdm", "me"):
+    if model == "bd":
+        params["omega_cdm"] = {"value": "lambda omega_dm: omega_dm", "latex": r"\omega_c"}
+        params["omega_BD"] = {"value": omega_bd_for(alpha2), "latex": r"\omega_{\rm BD}"}
+    elif model in ("lcdm", "me"):
         params["omega_cdm"] = {"value": "lambda omega_dm: omega_dm", "latex": r"\omega_c"}
         if model == "me":
-            params["varying_me"] = ({"prior": {"min": 0.95, "max": 1.05}, "ref": 1.008, "proposal": 0.003,
+            params["varying_me"] = ({"prior": {"min": 0.95, "max": 1.05}, "ref": 1.0, "proposal": 0.003,
                                      "latex": r"m_e^{\rm rec}/m_e^{0}"} if me is None else {"value": float(me)})
     else:
         params["f_pbh"] = {"prior": {"min": 0.0, "max": 0.5}, "ref": 0.0, "proposal": 0.005, "drop": True,
@@ -108,6 +123,12 @@ def info_for(model, args, log10_tev=None, ref=None, me=None):
     theory = {"classy": {"extra_args": extra}}
     if args.class_path:
         theory["classy"]["path"] = os.path.abspath(args.class_path)
+    if model == "bd":
+        here = os.path.dirname(os.path.abspath(__file__))
+        sys.path.insert(0, here)
+        import hiclass_theory
+        theory = {"hiclass_theory.hiclass": {"python_path": here,
+                                             "extra_args": dict(hiclass_theory.HICLASS_BD_ARGS, **EXTRA)}}
     sampler = {"evaluate": None} if args.test else {"minimize": {"method": "bobyqa", "max_evals": 3000,
                                                                   "best_of": 2, "confidence_for_unbounded": 0.9999995}}
     return {"theory": theory, "likelihood": LIKES[args.data], "params": params, "sampler": sampler,
@@ -124,7 +145,15 @@ def summarize(vals, tag):
 
 
 def run(info, tag, args):
+    import glob
     from cobaya.run import run as cobaya_run
+    if args.test:
+        tag += "_test"   # never share an output prefix with a real fit
+    else:
+        # A leftover chain under this prefix (e.g. from an evaluate run) would make the minimizer start from it and
+        # take its (singular, one-point) covariance; clear it first.
+        for f in glob.glob(os.path.join(args.out, tag + ".*")):
+            os.remove(f)
     info = dict(info, output=os.path.join(args.out, tag), force=True)
     upd, sampler = cobaya_run(info)
     if args.test:
@@ -148,9 +177,15 @@ def _me_point(a):
     return run(info_for("me", args, ref=ref, me=x), f"me_{x:.4f}", args)
 
 
+def _bd_point(a):
+    args, x, ref = a
+    return run(info_for("bd", args, ref=ref, alpha2=x), "bd_0" if x <= 0 else f"bd_{x:.1e}", args)
+
+
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("step", choices=["install", "lcdm", "profile", "free", "me", "meprofile", "report"])
+    ap.add_argument("step", choices=["install", "lcdm", "profile", "free", "me", "meprofile", "bdprofile", "report"])
+    ap.add_argument("--bdgrid", default="0,1e-4,3e-4,1e-3,2e-3,5e-3,1e-2")
     ap.add_argument("--megrid", default="0.97,0.98,0.99,0.995,1.0,1.005,1.01,1.02,1.03")
     ap.add_argument("--packages", default="packages")
     ap.add_argument("--out", default="pbh_out")
@@ -191,7 +226,26 @@ def main():
         return
 
     if args.step == "me":
-        run(info_for("me", args, ref=ref), "me_free", args)
+        me_ref = dict(ref or {})
+        pts = [(json.load(open(os.path.join(args.out, fn))), float(fn[3:-5])) for fn in os.listdir(args.out)
+               if fn.startswith("me_") and fn.endswith(".json") and fn != "me_free.json"]
+        if pts:
+            best, x = min(pts, key=lambda t: t[0]["chi2_like"])
+            me_ref.update(best["params"])
+            me_ref["varying_me"] = x
+            print(f"[me] starting from the best profile point, me_ratio = {x}")
+        run(info_for("me", args, ref=me_ref), "me_free", args)
+        return
+
+    if args.step == "bdprofile":
+        grid = [float(x) for x in args.bdgrid.split(",")][: 1 if args.test else None]
+        jobs = [(args, x, ref) for x in grid]
+        if args.jobs > 1:
+            with ProcessPoolExecutor(args.jobs) as ex:
+                list(ex.map(_bd_point, jobs))
+        else:
+            for j in jobs:
+                _bd_point(j)
         return
 
     if args.step == "meprofile":
@@ -238,6 +292,25 @@ def main():
         r = json.load(open(fp))
         print(f"free fit: me_ratio = {r['params'].get('varying_me', float('nan')):.4f}, H0 = {r['params'].get('H0', float('nan')):.2f}, "
               f"dchi2 = {r['chi2_like'] - base['chi2_like']:.2f}  (1 extra parameter; 95% needs < -3.84)")
+    if me_rows and os.path.exists(fp):
+        bx, br = min(me_rows, key=lambda t: t[1]["chi2_like"])
+        if br["chi2_like"] < r["chi2_like"]:
+            print(f"  note: the profile point me_ratio = {bx:.4f} is better (dchi2 = {br['chi2_like'] - base['chi2_like']:.2f}); "
+                  f"the free fit stopped early, so trust the profile minimum.")
+    bd = {}
+    for fn in os.listdir(args.out):
+        if fn.startswith("bd_") and fn.endswith(".json"):
+            bd[0.0 if fn == "bd_0.json" else float(fn[3:-5])] = json.load(open(os.path.join(args.out, fn)))
+    if bd:
+        print(f"\ndilaton (Brans-Dicke) channel, hi_class; dchi2 relative to its own alpha^2 = 0 run"
+              + ("" if 0.0 in bd else " (MISSING: run bdprofile with 0 in --bdgrid)"))
+        print(f"{'alpha^2':>9s} {'omega_BD':>10s} {'H0':>6s} {'dchi2':>8s}")
+        ref0 = bd.get(0.0)
+        for x in sorted(bd):
+            r = bd[x]
+            d = r["chi2_like"] - ref0["chi2_like"] if ref0 else float("nan")
+            print(f"{x:9.1e} {omega_bd_for(x):10.4g} {r['params'].get('H0', float('nan')):6.2f} {d:8.2f}")
+        print("  (Cassini: alpha^2 < ~1.2e-5 in the solar system unless screened; 1 extra parameter, 95% needs dchi2 < -3.84)")
     print("Reading: dchi2 near 0 everywhere = no improvement; the law is then only constrained, via the f_pbh "
           "upper limit. A real improvement would need dchi2 well below -6 (2 extra parameters).")
 

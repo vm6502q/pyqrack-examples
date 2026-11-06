@@ -70,3 +70,34 @@ Add `--test` to any step to check the pipeline with a single likelihood evaluati
   where the fit could pull toward a higher H0 or a lower S8, and it is where to look for a negative Δχ².
 - **Mass:** the black-hole mass that evaporates at each t_evap is printed in the report.
   For example, t_evap = 13.8 Gyr corresponds to about 4×10²² kg.
+
+## Added channels
+
+### Rest-mass channel (`meprofile`, `me`)
+
+The rest-mass excitation is modeled as the electron mass at recombination relative to today, using CLASS's
+`varying_me` with a step at z = 50. ω_b and ω_cdm are fitted freely, so this stands in for a near-uniform shift
+of all rest masses relative to the Planck mass. The free fit (`me`) starts from the best `meprofile` point.
+The report flags the case where the profile still beats the free fit.
+
+### Dilaton channel (`bdprofile`)
+
+The trace (spin-0) part of the rank-2 potential, coupled to rest mass, is a Brans–Dicke scalar with matter coupling
+α² = 1/(2ω_BD + 3). This is the continuous version of the rest-mass channel: rest masses relative to the Planck
+mass drift over cosmic history instead of jumping at one redshift. G_eff for matter today is pinned to the local
+G (`normalize_G_NR`).
+
+- **Code:** hi_class (Zumalacárregui, Bellini, Sawicki, Lesgourgues & Ferreira 2017; Bellini et al. 2020),
+  wrapped for Cobaya by `hiclass_theory.py`.
+- **Grid:** default `--bdgrid` is 0, 1e-4, 3e-4, 1e-3, 2e-3, 5e-3, 1e-2.
+- **Comparison:** Δχ² is taken against hi_class's own α² = 0 run, which is ω_BD = 10⁸. A code-to-code offset of
+  about 0.1 in χ² against patched CLASS cancels this way.
+- **Scale:** Cassini allows α² ≲ 1.2×10⁻⁵ in the solar system unless the field is screened. Cosmology on its own
+  constrains α² much more weakly.
+
+### Not fitted, and why
+
+- **False-vacuum dark energy:** w = −1 exactly, which is ΛCDM.
+- **Oscillating-scalar dark matter:** needs a dedicated code such as axionCAMB, and the clock searches are the
+  sharper test.
+- **The axion's cosmic birefringence:** needs the Planck EB likelihood, which Cobaya doesn't ship.
