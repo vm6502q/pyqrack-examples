@@ -37,6 +37,6 @@ python3 pbh_fit.py install --packages packages
 CORES="$(nproc)"
 export OMP_NUM_THREADS="$(( CORES / JOBS > 0 ? CORES / JOBS : 1 ))"
 python3 pbh_fit.py lcdm --packages packages
-python3 pbh_fit.py ivacprofile --jobs 2
-python3 pbh_fit.py ivac
+python3 pbh_fit.py iceprofile --jobs 2
+python3 pbh_fit.py ice
 python3 pbh_fit.py report | tee pbh_out/report.txt
