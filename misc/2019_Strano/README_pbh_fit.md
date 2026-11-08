@@ -123,3 +123,21 @@ exact at ξ = 0 and treats the dark sector as smooth on small scales.
 **Output.** The report also lists today's gas temperature, for one bosonic degree of freedom.
 
 **Default grid.** ξ = 0, 0.02, 0.05, 0.1, 0.15, 0.2, 0.3, 0.45.
+
+### Ice-water coexistence (`iceprofile`, `ice`), which replaces Λ
+
+This is Dan Strano's picture: the scalar gas sits at a fixed coexistence temperature T_c.
+
+- **Physics.** With T_c fixed, ρ_gas stays constant, and the vacuum supplies exactly the latent heat
+  Q = 4Hρ_gas that expansion removes.
+- **Result.** ρ_V = ρ_V0 (1 − 4r ln a), with r = ρ_gas/ρ_V0, and the dark sector has
+  1 + w(a) = (4r/3)/(1 + r − 4r ln a). Today w₀ ≈ −1 + 4r/3, and w relaxes logarithmically back toward −1 in the
+  past (thawing).
+- **Parameters.** One: r, which is equivalent to T_c.
+- **Implementation.** CPL, with w₀ = −1 + (4r/3)/(1 + r) and w_a = −(16r²/3)/(1 + r)². For r = 0.05 this
+  matches the exact w(a) to within 0.004 out to z = 3.
+- **Consistency requirement.** Coexistence must have held since z ≳ 15. Otherwise the gas was hotter earlier and
+  would add radiation at recombination.
+- **Checks.** At r = 0 the χ² is identical to ΛCDM (1002.70 on Planck).
+- **Report.** Δχ² is taken relative to this channel's own r = 0 run, which removes the ±2 minimizer offset seen in
+  the ivac run. T_c is printed for one bosonic degree of freedom.

@@ -32,6 +32,13 @@
 #      w = -1 + xi/3 (>= -1, thawing direction), run with CLASS's built-in fluid (Omega_Lambda = 0) in its PPF form,
 #      which is exact at xi = 0 and treats the dark sector as smooth on small scales. Steps: 'ivacprofile' (--ivacgrid)
 #      and 'ivac' (free xi). Today's gas temperature for one bosonic dof is reported alongside.
+#   7. Ice-water coexistence (replaces Lambda; Dan Strano's picture): the scalar gas sits at a fixed coexistence
+#      temperature T_c, so rho_gas is constant and the vacuum must supply exactly the latent heat Q = 4 H rho_gas that
+#      expansion removes. Then rho_V = rho_V0 (1 - 4 r ln a), r = rho_gas/rho_V0, and the dark sector has
+#      1 + w(a) = (4r/3) / (1 + r - 4 r ln a): w0 ~ -1 + 4r/3, relaxing logarithmically toward -1 in the past (thawing).
+#      One parameter (r, equivalently T_c). Run as CPL with w0 = -1 + (4r/3)/(1+r), wa = -(16 r^2/3)/(1+r)^2, which
+#      matches w(a) to < 0.005 out to z ~ 3. Requires coexistence since z >~ 15 (else the gas was hotter earlier and
+#      would add radiation at recombination). Steps: 'iceprofile' (--icegrid r values) and 'ice' (free r).
 # The PBH mass that evaporates at t_evap is reported alongside: M0 = sqrt(t_evap c^5 l_P / (2 G^2)).
 #
 # Usage:
@@ -43,6 +50,7 @@
 #   python3 pbh_fit.py me / meprofile          # step 4 (needs step 1); 'report' then prints it too
 #   python3 pbh_fit.py bdprofile               # step 5 (needs hi_class installed as 'hiclassy'; see README)
 #   python3 pbh_fit.py ivacprofile / ivac      # step 6 (needs step 1)
+#   python3 pbh_fit.py iceprofile / ice        # step 7 (needs step 1)
 # Options: --packages DIR (default ./packages)   --out DIR (default ./pbh_out)
 #          --data planck|planck+bao|all (default all: Planck TTTEEE lite + lowl + lowE + lensing + DESI + Pantheon+)
 #          --grid 11,12,...   --jobs N (parallel profile points; set OMP_NUM_THREADS = cores / N)
@@ -94,9 +102,18 @@ def omega_bd_for(alpha2):
     return 1e8 if alpha2 <= 0 else (1.0 / alpha2 - 3.0) / 2.0
 
 
-def info_for(model, args, log10_tev=None, ref=None, me=None, alpha2=None, xi=None):
+def info_for(model, args, log10_tev=None, ref=None, me=None, alpha2=None, xi=None, r_ice=None):
     params = json.loads(json.dumps(BASE))
-    if model == "ivac":
+    if model == "ice":
+        params["omega_cdm"] = {"value": "lambda omega_dm: omega_dm", "latex": r"\omega_c"}
+        if r_ice is None:
+            params["r_ice"] = {"prior": {"min": 0.0, "max": 0.3}, "ref": 0.0, "proposal": 0.01, "drop": True,
+                               "latex": r"\rho_{\rm gas}/\rho_{V0}"}
+        else:
+            params["r_ice"] = {"value": float(r_ice), "drop": True}
+        params["w0_fld"] = {"value": "lambda r_ice: -1.0 + (4.0 * r_ice / 3.0) / (1.0 + r_ice)", "latex": r"w_0"}
+        params["wa_fld"] = {"value": "lambda r_ice: -(16.0 * r_ice ** 2 / 3.0) / (1.0 + r_ice) ** 2", "latex": r"w_a"}
+    elif model == "ivac":
         params["omega_cdm"] = {"value": "lambda omega_dm: omega_dm", "latex": r"\omega_c"}
         if xi is None:
             params["xi_vac"] = {"prior": {"min": 0.0, "max": 0.6}, "ref": 0.0, "proposal": 0.02, "drop": True,
@@ -132,6 +149,8 @@ def info_for(model, args, log10_tev=None, ref=None, me=None, alpha2=None, xi=Non
     extra = dict(EXTRA)
     if model == "pbh":
         extra["pbh_evaporation_law"] = "yes"
+    if model == "ice":
+        extra.update({"Omega_Lambda": 0.0, "use_ppf": "yes"})
     if model == "ivac":
         # PPF (Hu & Sawicki 2007) handles w = -1 exactly (a plain fluid diverges there); it treats the dark sector as
         # smooth inside the horizon, which is accurate for w this close to -1.
@@ -205,6 +224,19 @@ def gas_temperature_K(xi, omega_v0_h2):
     return 2.7255 * (2.0 * omega_gas / omega_gamma) ** 0.25
 
 
+def ice_temperature_K(r, omega_x_h2):
+    """Coexistence temperature (one bosonic dof): rho_gas = r rho_V0, rho_X = rho_V0 + rho_gas = Omega_X."""
+    if r <= 0:
+        return 0.0
+    omega_gas = r / (1.0 + r) * omega_x_h2
+    return 2.7255 * (2.0 * omega_gas / 2.4728e-5) ** 0.25
+
+
+def _ice_point(a):
+    args, x, ref = a
+    return run(info_for("ice", args, ref=ref, r_ice=x), f"ice_{x:.3f}", args)
+
+
 def _ivac_point(a):
     args, x, ref = a
     return run(info_for("ivac", args, ref=ref, xi=x), f"ivac_{x:.3f}", args)
@@ -218,7 +250,8 @@ def _bd_point(a):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("step", choices=["install", "lcdm", "profile", "free", "me", "meprofile", "bdprofile",
-                                     "ivacprofile", "ivac", "report"])
+                                     "ivacprofile", "ivac", "iceprofile", "ice", "report"])
+    ap.add_argument("--icegrid", default="0,0.01,0.02,0.03,0.045,0.06,0.08,0.12")
     ap.add_argument("--ivacgrid", default="0,0.02,0.05,0.1,0.15,0.2,0.3,0.45")
     ap.add_argument("--bdgrid", default="0,1e-4,3e-4,1e-3,2e-3,5e-3,1e-2")
     ap.add_argument("--megrid", default="0.97,0.98,0.99,0.995,1.0,1.005,1.01,1.02,1.03")
@@ -270,6 +303,21 @@ def main():
             me_ref["varying_me"] = x
             print(f"[me] starting from the best profile point, me_ratio = {x}")
         run(info_for("me", args, ref=me_ref), "me_free", args)
+        return
+
+    if args.step == "iceprofile":
+        grid = [float(x) for x in args.icegrid.split(",")][: 1 if args.test else None]
+        jobs = [(args, x, ref) for x in grid]
+        if args.jobs > 1:
+            with ProcessPoolExecutor(args.jobs) as ex:
+                list(ex.map(_ice_point, jobs))
+        else:
+            for j in jobs:
+                _ice_point(j)
+        return
+
+    if args.step == "ice":
+        run(info_for("ice", args, ref=ref), "ice_free", args)
         return
 
     if args.step == "ivacprofile":
@@ -381,6 +429,29 @@ def main():
         x = r["params"].get("xi_vac", float("nan"))
         print(f"free fit: xi = {x:.4f} (w = {-1 + x / 3:.4f}), H0 = {r['params'].get('H0', float('nan')):.2f}, "
               f"dchi2 = {r['chi2_like'] - base['chi2_like']:.2f}  (1 extra parameter; 95% needs < -3.84)")
+    ic = {}
+    for fn in os.listdir(args.out):
+        if fn.startswith("ice_") and fn.endswith(".json") and fn != "ice_free.json":
+            ic[float(fn[4:-5])] = json.load(open(os.path.join(args.out, fn)))
+    if ic:
+        ref0 = ic.get(0.0)
+        print(f"\nice-water coexistence (replaces Lambda): rho_gas = const at T_c, Q = 4 H rho_gas; "
+              f"dchi2 vs its own r = 0 run" + ("" if ref0 else " (MISSING: include 0 in --icegrid)"))
+        print(f"{'r':>6s} {'w0':>7s} {'wa':>8s} {'H0':>6s} {'T_c[K]':>7s} {'dchi2':>8s}")
+        for x in sorted(ic):
+            r = ic[x]
+            h = r['params'].get('H0', float('nan')) / 100.0
+            om = (r['params'].get('omega_b', 0) + r['params'].get('omega_dm', 0) + 0.000645) / h ** 2
+            tc = ice_temperature_K(x, (1.0 - om) * h ** 2)
+            d = r['chi2_like'] - ref0['chi2_like'] if ref0 else float('nan')
+            print(f"{x:6.3f} {-1 + (4 * x / 3) / (1 + x):7.4f} {-(16 * x * x / 3) / (1 + x) ** 2:8.5f} "
+                  f"{r['params'].get('H0', float('nan')):6.2f} {tc:7.2f} {d:8.2f}")
+    fp = os.path.join(args.out, "ice_free.json")
+    if os.path.exists(fp) and ic and 0.0 in ic:
+        r = json.load(open(fp))
+        x = r["params"].get("r_ice", float("nan"))
+        print(f"free fit: r = {x:.4f} (w0 = {-1 + (4 * x / 3) / (1 + x):.4f}), H0 = {r['params'].get('H0', float('nan')):.2f}, "
+              f"dchi2 = {r['chi2_like'] - ic[0.0]['chi2_like']:.2f}  (1 extra parameter; 95% needs < -3.84)")
     print("Reading: dchi2 near 0 everywhere = no improvement; the law is then only constrained, via the f_pbh "
           "upper limit. A real improvement would need dchi2 well below -6 (2 extra parameters).")
 
