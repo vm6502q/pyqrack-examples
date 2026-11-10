@@ -52,9 +52,16 @@ def make_template_theory():
             out["tt"][:n] *= self._tpl["rTT"][:n]
             out["ee"][:n] *= self._tpl["rEE"][:n]
             out["te"][:n] += self._tpl["dTEn"][:n] * np.sqrt(np.abs(tt0 * ee0))
+            if "pp" in out and "rPP" in self._tpl:
+                m = min(len(out["pp"]), len(self._tpl["rPP"]))
+                out["pp"][:m] *= self._tpl["rPP"][:m]
             return out
 
     return classy_template
+
+
+CLASS_PATH = None     # patched CLASS source dir; Cobaya then loads its classy (built with `python3 setup.py build` there)
+LENSING = False       # add the Planck 2018 lensing likelihood (native)
 
 
 def info(packages, m1, template=None):
@@ -71,14 +78,19 @@ def info(packages, m1, template=None):
         "H0": {"latex": "H_0"},
     }
     th = {"extra_args": nu_args(m1)}
+    if CLASS_PATH:
+        th["path"] = os.path.abspath(CLASS_PATH)
     if template:
         th.update({"external": make_template_theory(), "template_file": template})
         theory = {"classy_tpl": th}
     else:
         theory = {"classy": th}
+    lik = {"planck_2018_lowl.TT": None, "planck_2018_lowl.EE": None,
+           "planck_2018_highl_plik.TTTEEE_lite_native": None}
+    if LENSING:
+        lik["planck_2018_lensing.native"] = None
     return {"packages_path": packages, "theory": theory, "params": params,
-            "likelihood": {"planck_2018_lowl.TT": None, "planck_2018_lowl.EE": None,
-                           "planck_2018_highl_plik.TTTEEE_lite_native": None},
+            "likelihood": lik,
             "sampler": {"minimize": {"method": "bobyqa", "best_of": 1}}}
 
 
@@ -127,8 +139,12 @@ def template(a, best, m1, k):
     rTT[l] = dm[:, 1] / dl[:, 1]
     rEE[l] = dm[:, 2] / dl[:, 2]
     dTEn[l] = (dm[:, 3] - dl[:, 3]) / np.sqrt(dl[:, 1] * dl[:, 2])
-    f = os.path.join(OUT, f"template_m1_{m1:g}_it{k}.npz")
-    np.savez(f, rTT=rTT, rEE=rEE, dTEn=dTEn)
+    um, ul = np.loadtxt(rm + "_cl.dat"), np.loadtxt(rl + "_cl.dat")     # unlensed file: column 5 = phiphi
+    lu = um[:, 0].astype(int)
+    rPP = np.ones(lu.max() + 1)
+    rPP[lu] = um[:, 5] / ul[:, 5]
+    f = os.path.join(OUT, f"template_m1_{m1:g}_it{k}{'_lens' if LENSING else ''}.npz")
+    np.savez(f, rTT=rTT, rEE=rEE, dTEn=dTEn, rPP=rPP)
     return f, rm
 
 
@@ -138,11 +154,15 @@ def main():
     ap.add_argument("--packages", default="packages"); ap.add_argument("--class-bin", default="class_public/class")
     ap.add_argument("--dof", type=float, default=1.0); ap.add_argument("--m1", type=float, default=0.0)
     ap.add_argument("--iters", type=int, default=2)
+    ap.add_argument("--class-path", default=None, help="patched CLASS dir: Cobaya loads its classy (recommended)")
+    ap.add_argument("--lensing", action="store_true", help="include planck_2018_lensing.native")
     a = ap.parse_args()
+    global CLASS_PATH, LENSING
+    CLASS_PATH, LENSING = a.class_path, a.lensing
     os.makedirs(OUT, exist_ok=True)
     resf = os.path.join(OUT, "results.json")
     res = json.load(open(resf)) if os.path.exists(resf) else {}
-    key = f"m1_{a.m1:g}"
+    key = f"m1_{a.m1:g}" + ("_lens" if a.lensing else "")
 
     if a.step == "lcdm":
         best, mlp, chi2 = minimize(info(a.packages, a.m1), os.path.join(OUT, f"lcdm_{key}"))
@@ -151,7 +171,7 @@ def main():
 
     elif a.step == "model":
         from planck_chi2 import chi2 as full_chi2
-        best = res[f"lcdm_{key}"]["best"]
+        best = res[f"lcdm_{key}"]["best"]                 # run the matching `lcdm` step (same --lensing) first
         hist = []
         for k in range(a.iters):
             tf, _ = template(a, best, a.m1, k)
@@ -169,23 +189,26 @@ def main():
         vals = {}
         for tpl in (None, tf):
             inf = info(a.packages, a.m1, template=tpl); inf.pop("sampler")
-            vals[tpl] = -2 * sum(get_model(inf).loglikes(pt, as_dict=True)[0].values())
-        d_tpl = vals[tf] - vals[None]
-        chi2_full = vals[tf]
+            ll = get_model(inf).loglikes(pt, as_dict=True)[0]
+            vals[tpl] = (-2 * sum(ll.values()), -2 * sum(v for k, v in ll.items() if "lensing" not in k))
+        d_tpl = vals[tf][1] - vals[None][1]          # same likelihood set as the file pipeline (no lensing)
+        chi2_full = vals[tf][0]
         Tc = None
         for line in open(os.path.join(OUT, f"model_m1_{a.m1:g}_final.log")):
             if "T_c = " in line and "(ghost" in line:
                 Tc = float(line.split("T_c = ")[1].split(" K")[0])
         res[f"model_{key}_dof{a.dof:g}"] = {"best": best, "chi2_full": chi2_full, "Tc_K": Tc, "history": hist,
-                                             "dchi2_at_thetaM_full_class": d_file, "dchi2_at_thetaM_template": d_tpl}
-        print(f"validation at theta_M: full CLASS model-LCDM {d_file:+.3f} vs template {d_tpl:+.3f}", flush=True)
+                                             "dchi2_at_thetaM_full_class": d_file, "dchi2_at_thetaM_template": d_tpl,
+                                             "lcdm_key": f"lcdm_{key}"}
+        print(f"validation at theta_M: full CLASS model-LCDM {d_file:+.3f} vs template {d_tpl:+.3f}"
+              f"{'  (validation excludes the lensing likelihood: file pipeline has no phiphi likelihood)' if LENSING else ''}", flush=True)
         print(f"MODEL chi2_min = {chi2_full:.3f} (T_c = {Tc} K)", flush=True)
 
     json.dump(res, open(resf, "w"), indent=1)
     if a.step == "report" or a.step == "model":
         for k, v in res.items():
             if k.startswith("model"):
-                l0 = res.get("lcdm_" + k.split("_")[1] + "_" + k.split("_")[2])
+                l0 = res.get(v.get("lcdm_key", "lcdm_" + k.split("_")[1] + "_" + k.split("_")[2]))
                 if l0:
                     print(f"{k}: chi2_min {v['chi2_full']:.3f} vs LCDM {l0['chi2']:.3f}  ->  dchi2_min = {v['chi2_full'] - l0['chi2']:+.3f}")
                     print("   best-fit shifts:", {p: round(v['best'][p] - l0['best'][p], 6) for p in PARAM_KEYS + ['H0']})
