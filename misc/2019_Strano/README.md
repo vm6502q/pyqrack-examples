@@ -31,6 +31,7 @@ In steady state each species has a fixed physical spectrum, f₀ = C·Φ(p/T_c) 
 | `run_grid.py` | Runs the T_c × m_lightest grid against ΛCDM with the *same* relic neutrino masses, Planck 2018 best-fit parameters held fixed. |
 | `planck_chi2.py` | Planck 2018 low-ℓ TT + low-ℓ EE + plik-lite χ² from CLASS C_ℓ files, through Cobaya. |
 | `setup_and_run.sh` | Builds everything and runs the grid. Takes about 5 min per point on 2 cores. |
+| `cobaya_fit.py`, `cobaya_results.json` | Cobaya refit by template iteration, and its results. |
 | `grid_results.json`, `grid_results_dof.json` | The results below (T_c grid; self-consistent T_c). |
 | `tc_selfconsistent.py` | Standalone solve of the self-consistent T_c. |
 
@@ -104,9 +105,39 @@ amplitude changes by less than 0.1% and P(k) by less than 10⁻⁴. `grid_result
 
 **Assumption:** the ghost gas is fully thermalized, with zero chemical potential.
 
+## Cobaya best fit (g = 1, normal ordering, m_lightest = 0)
+
+All six ΛCDM parameters plus A_planck are refit with Cobaya (bobyqa), against Planck 2018 low-ℓ TT + low-ℓ EE + plik-lite.
+
+| | χ²_min | H0 | n_s | ln(10¹⁰A_s) |
+|---|---|---|---|---|
+| ΛCDM (same neutrino masses) | 1002.445 | 67.38 | 0.9649 | 3.0436 |
+| Model, T_c = 47.55 K (solved, g = 1) | 1001.090 | 67.36 | 0.9644 | 3.0438 |
+
+**Δχ²_min = −1.36, with zero added parameters.** The ΛCDM minimizer's own convergence is good to about 0.07: ΛCDM evaluated at
+the model's best fit gives 1002.378. All best-fit shifts are tiny, for example ΔH0 = −0.02 and Δn_s = −0.0005, so the
+large-angle suppression doesn't trade off against the standard parameters.
+
+**Method.** One full-model call takes about 5 minutes, so the model is minimized by template iteration (`cobaya_fit.py`):
+
+- At each step the model is approximated as ΛCDM(θ) × R_ℓ, where R_ℓ is the ratio computed with the full patched CLASS at
+  the current best fit.
+- The iteration converged at the first step: the second iteration reproduced the first exactly.
+- **Validation.** At the final point, model − ΛCDM is −1.323 from the full Boltzmann calculation and −1.288 from the
+  template, so they agree to 0.04. Each difference is taken within one pipeline, because the CLASS-binary pipeline and
+  Cobaya's classy differ by a constant precision offset of about 1.5 in plik-lite. That offset cancels in model − ΛCDM.
+
+`cobaya_results.json` holds the full numbers. To reproduce:
+
+    PYTHONPATH=<class>/python/build/lib.* python3 cobaya_fit.py lcdm  --packages packages
+    PYTHONPATH=<class>/python/build/lib.* python3 cobaya_fit.py model --packages packages --class-bin <class>/class --dof 1
+
+Build the patched classy first with `cd <class> && make libclass.a && cd python && python3 setup.py build`. Then symlink
+`<class>/external` into the build directory.
+
 ## Caveats
 
-1. **Fixed parameters.** ΛCDM parameters weren't refit. Because the change sits at ℓ ≲ 20 (late ISW), refitting should move them little. A Cobaya minimization with a classy build of this patch would settle it; it costs about 5 min per evaluation.
+1. **Refit done.** The parameter refit is now done (see the section above). As expected, the parameters barely move.
 2. **Slicing.** "Global creation" means a uniform rate on CDM-comoving (synchronous) slices. That is a physical choice of cosmic time. A "local" version, where creation tracks local expansion and the ghost is pinned at T_c locally, is not implemented and could change the large-angle signal.
 3. **Ghost microphysics.** The ghost is treated as a w = c_s² = 1/3 fluid with no shear. A free-streaming ghost gas would differ at the largest scales.
 4. **Missing likelihoods.** Planck lensing, DESI and Pantheon+ weren't available in the sandbox. DESI and supernovae are unaffected because the background is exact Λ. The lensing change is below 0.1%, against Planck's roughly 2.5% precision on the lensing amplitude.

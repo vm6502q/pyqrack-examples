@@ -44,12 +44,12 @@ class FileCls(Theory):
         return out
 
 
-def chi2(packages, root):
+def chi2(packages, root, A_planck=1.0):
     info = {"packages_path": packages,
             "likelihood": {"planck_2018_lowl.TT": None, "planck_2018_lowl.EE": None,
                            "planck_2018_highl_plik.TTTEEE_lite_native": None},
             "theory": {"files": {"external": FileCls, "root": root}},
-            "params": {"A_planck": 1.0, "cls_file_dummy": 0.0}}
+            "params": {"A_planck": A_planck, "cls_file_dummy": 0.0}}
     model = get_model(info)
     lp = model.loglikes({}, as_dict=True, cached=False)[0]
     return {k: -2 * float(v) for k, v in lp.items()}
