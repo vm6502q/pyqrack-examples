@@ -1,0 +1,217 @@
+diff --git a/include/background.h b/include/background.h
+index fe4d42d..f035a99 100644
+--- a/include/background.h
++++ b/include/background.h
+@@ -77,6 +77,9 @@ struct background
+   double Omega_ini_dcdm;  /**< \f$ \Omega_{ini,dcdm} \f$: rescaled initial value for dcdm density (see 1407.2418 for definitions) */
+   double Gamma_dcdm;      /**< \f$ \Gamma_{dcdm} \f$: decay constant for decaying cold dark matter */
+   double tau_dcdm;
++  short dcdm_pbh_law;     /**< PBH emission law (Strano): per-hole dM/dt ~ -1/M, so M(t)=M0 sqrt(1-t/t_evap) and Gamma(t)=1/(2(t_evap-t)) */
++  double t_evap_dcdm;     /**< evaporation time of the (monochromatic) PBH population, in Mpc */
++  double pbh_cutoff;      /**< stop the decay once (t_evap-t)/t_evap < pbh_cutoff (the dr source is capped there; energy error ~ sqrt(pbh_cutoff)) */
+ 
+   int N_ncdm;                            /**< Number of distinguishable ncdm species */
+   /* the following parameters help to define tabulated ncdm p-s-d passed in file */
+@@ -170,7 +173,8 @@ struct background
+   int index_bg_w_fld;         /**< fluid equation of state */
+   int index_bg_rho_idr;       /**< density of interacting dark radiation */
+   int index_bg_rho_ur;        /**< relativistic neutrinos/relics density */
+-  int index_bg_rho_dcdm;      /**< dcdm density */
++  int index_bg_rho_dcdm;
++  int index_bg_Gamma_dcdm;    /**< effective dcdm -> dr rate at this time (constant unless dcdm_pbh_law) */      /**< dcdm density */
+   int index_bg_rho_dr;        /**< dr density */
+ 
+   int index_bg_phi_scf;       /**< scalar field value */
+@@ -405,6 +409,9 @@ extern "C" {
+                           double * z
+                           );
+ 
++  double background_gamma_dcdm(struct background *pba, double t);
++  double background_pbh_survival(struct background *pba, double t);
++
+   int background_functions(
+                            struct background *pba,
+                            double a_rel,
+diff --git a/source/background.c b/source/background.c
+index 87d60c6..9922219 100644
+--- a/source/background.c
++++ b/source/background.c
+@@ -368,6 +368,33 @@ int background_z_of_tau(
+  * @return the error status
+  */
+ 
++/**
++ * Effective decay rate of the dcdm component at cosmological time t [Mpc].
++ * Default CLASS: constant Gamma_dcdm (exponential decay).
++ * dcdm_pbh_law: a monochromatic population of black holes each obeying dM/dt = -k/M
++ * (emission ~ E_P/(2 r_s) per Planck time), so M(t) = M0 sqrt(1 - t/t_evap) and the
++ * comoving density a^3 rho_dcdm falls as sqrt(1 - t/t_evap): Gamma(t) = 1/(2 (t_evap - t)).
++ * Past t_evap (1 - pbh_cutoff) the decay is switched off; a remnant fraction sqrt(pbh_cutoff) stays as cold matter.
++ */
++double background_gamma_dcdm(struct background *pba, double t) {
++  double x;
++  if (pba->dcdm_pbh_law == _FALSE_)
++    return pba->Gamma_dcdm;
++  x = 1. - t / pba->t_evap_dcdm;          /* remaining fraction of the evaporation time */
++  if (x <= 0.)
++    return 0.;
++  return 0.5 / (pba->t_evap_dcdm * MAX(x, pba->pbh_cutoff));
++}
++
++/** Surviving mass fraction M(t)/M0 = sqrt(1 - t/t_evap) of each hole (1 for exponential dcdm, handled by the ODE). */
++double background_pbh_survival(struct background *pba, double t) {
++  double x;
++  if (pba->dcdm_pbh_law == _FALSE_)
++    return 1.;
++  x = 1. - t / pba->t_evap_dcdm;
++  return (x > 0.) ? sqrt(x) : 0.;
++}
++
+ int background_functions(
+                          struct background * pba,
+                          double a,
+@@ -453,7 +480,9 @@ int background_functions(
+   /* dcdm */
+   if (pba->has_dcdm == _TRUE_) {
+     /* Pass value of rho_dcdm to output */
+-    pvecback[pba->index_bg_rho_dcdm] = pvecback_B[pba->index_bi_rho_dcdm];
++    pvecback[pba->index_bg_rho_dcdm] = pvecback_B[pba->index_bi_rho_dcdm]
++      * background_pbh_survival(pba, pvecback_B[pba->index_bi_time]);
++    pvecback[pba->index_bg_Gamma_dcdm] = background_gamma_dcdm(pba, pvecback_B[pba->index_bi_time]);
+     rho_tot += pvecback[pba->index_bg_rho_dcdm];
+     p_tot += 0.;
+     rho_m += pvecback[pba->index_bg_rho_dcdm];
+@@ -1059,6 +1088,7 @@ int background_indices(
+ 
+   /* - index for dcdm */
+   class_define_index(pba->index_bg_rho_dcdm,pba->has_dcdm,index_bg,1);
++  class_define_index(pba->index_bg_Gamma_dcdm,pba->has_dcdm,index_bg,1);
+ 
+   /* - index for dr */
+   class_define_index(pba->index_bg_rho_dr,pba->has_dr,index_bg,1);
+@@ -1986,7 +2016,8 @@ int background_solve(
+   pba->conformal_age = pvecback_integration[pba->index_bi_tau];
+   /* -> contribution of decaying dark matter and dark radiation to the critical density today: */
+   if (pba->has_dcdm == _TRUE_) {
+-    pba->Omega0_dcdm = pvecback_integration[pba->index_bi_rho_dcdm]/pba->H0/pba->H0;
++    pba->Omega0_dcdm = pvecback_integration[pba->index_bi_rho_dcdm]
++      * background_pbh_survival(pba, pvecback_integration[pba->index_bi_time])/pba->H0/pba->H0;
+   }
+   if (pba->has_dr == _TRUE_) {
+     pba->Omega0_dr = pvecback_integration[pba->index_bi_rho_dr]/pba->H0/pba->H0;
+@@ -2647,12 +2678,15 @@ int background_derivs(
+ 
+   if (pba->has_dcdm == _TRUE_) {
+     /** - compute dcdm density \f$ d\rho/dloga = -3 \rho - \Gamma/H \rho \f$*/
+-    dy[pba->index_bi_rho_dcdm] = -3.*y[pba->index_bi_rho_dcdm] - pba->Gamma_dcdm/H*y[pba->index_bi_rho_dcdm];
++    if (pba->dcdm_pbh_law == _TRUE_)
++      dy[pba->index_bi_rho_dcdm] = -3.*y[pba->index_bi_rho_dcdm];
++    else
++      dy[pba->index_bi_rho_dcdm] = -3.*y[pba->index_bi_rho_dcdm] - pvecback[pba->index_bg_Gamma_dcdm]/H*y[pba->index_bi_rho_dcdm];
+   }
+ 
+   if ((pba->has_dcdm == _TRUE_) && (pba->has_dr == _TRUE_)) {
+     /** - Compute dr density \f$ d\rho/dloga = -4\rho - \Gamma/H \rho \f$ */
+-    dy[pba->index_bi_rho_dr] = -4.*y[pba->index_bi_rho_dr]+pba->Gamma_dcdm/H*y[pba->index_bi_rho_dcdm];
++    dy[pba->index_bi_rho_dr] = -4.*y[pba->index_bi_rho_dr]+pvecback[pba->index_bg_Gamma_dcdm]/H*pvecback[pba->index_bg_rho_dcdm];
+   }
+ 
+   if (pba->has_fld == _TRUE_) {
+diff --git a/source/input.c b/source/input.c
+index d01e761..d25809c 100644
+--- a/source/input.c
++++ b/source/input.c
+@@ -2876,6 +2876,16 @@ int input_read_parameters_species(struct file_content * pfc,
+     class_test(pba->Gamma_dcdm<0.,
+                errmsg,
+                "You need to enter a decay constant for the decaying DM 'Gamma_dcdm > 0.'");
++    /* PBH emission law: tau_dcdm (or 1/Gamma_dcdm) is the evaporation time t_evap */
++    class_call(parser_read_string(pfc,"pbh_evaporation_law",&string1,&flag1,errmsg),
++               errmsg,
++               errmsg);
++    if ((flag1 == _TRUE_) && (string_begins_with(string1,'y') || string_begins_with(string1,'Y'))) {
++      pba->dcdm_pbh_law = _TRUE_;
++      pba->t_evap_dcdm = 1./pba->Gamma_dcdm;                                                       // [Mpc]
++      pba->Gamma_dcdm = 0.5/pba->t_evap_dcdm;    /* early-time rate, used by initial conditions */  // [1/Mpc]
++      class_read_double("pbh_cutoff",pba->pbh_cutoff);
++    }
+   }
+   if (has_m_budget == _TRUE_) {
+     class_test(Omega_m_remaining < pba->Omega0_dcdmdr, errmsg, "Too much energy density from massive species. At this point only %e is left for Omega_m, but requested 'Omega_dcdmdr = %e'",Omega_m_remaining, pba->Omega0_dcdmdr);
+@@ -5991,6 +6001,9 @@ int input_default_params(struct background *pba,
+   pba->Omega_ini_dcdm = 0.;
+   /** 7.1.c) Decay constant */
+   pba->Gamma_dcdm = 0.0;
++  pba->dcdm_pbh_law = _FALSE_;
++  pba->t_evap_dcdm = 0.;
++  pba->pbh_cutoff = 1.e-6;
+   pba->tau_dcdm = 0.0;
+ 
+   /** 7.2) Interacting Dark Matter */
+diff --git a/source/perturbations.c b/source/perturbations.c
+index b48cc64..a1fff6e 100644
+--- a/source/perturbations.c
++++ b/source/perturbations.c
+@@ -6219,7 +6219,7 @@ int perturbations_initial_conditions(struct precision * ppr,
+       }
+ 
+       if (pba->has_dcdm == _TRUE_) {
+-        ppw->pv->y[ppw->pv->index_pt_delta_dcdm] -= (3.*a_prime_over_a + a*pba->Gamma_dcdm)*alpha;
++        ppw->pv->y[ppw->pv->index_pt_delta_dcdm] -= (3.*a_prime_over_a + a*ppw->pvecback[pba->index_bg_Gamma_dcdm])*alpha;
+         ppw->pv->y[ppw->pv->index_pt_theta_dcdm] = k*k*alpha;
+       }
+ 
+@@ -6252,7 +6252,7 @@ int perturbations_initial_conditions(struct precision * ppr,
+         /* shear and l3 are gauge invariant */
+ 
+         if (pba->has_dr == _TRUE_)
+-          delta_dr += (-4.*a_prime_over_a + a*pba->Gamma_dcdm*ppw->pvecback[pba->index_bg_rho_dcdm]/ppw->pvecback[pba->index_bg_rho_dr])*alpha;
++          delta_dr += (-4.*a_prime_over_a + a*ppw->pvecback[pba->index_bg_Gamma_dcdm]*ppw->pvecback[pba->index_bg_rho_dcdm]/ppw->pvecback[pba->index_bg_rho_dr])*alpha;
+ 
+       }
+ 
+@@ -8674,7 +8674,7 @@ int perturbations_sources(
+     /* delta_dcdm */
+     if (ppt->has_source_delta_dcdm == _TRUE_) {
+       _set_source_(ppt->index_tp_delta_dcdm) = y[ppw->pv->index_pt_delta_dcdm]
+-        + (3.*a_prime_over_a+a*pba->Gamma_dcdm)*theta_over_k2; // N-body gauge correction;
++        + (3.*a_prime_over_a+a*pvecback[pba->index_bg_Gamma_dcdm])*theta_over_k2; // N-body gauge correction;
+     }
+ 
+     /* delta_fld */
+@@ -9463,7 +9463,7 @@ int perturbations_print_variables(double tau,
+       }
+ 
+       if (pba->has_dr == _TRUE_) {
+-        delta_dr += (-4.*a*H+a*pba->Gamma_dcdm*pvecback[pba->index_bg_rho_dcdm]/pvecback[pba->index_bg_rho_dr])*alpha;
++        delta_dr += (-4.*a*H+a*pvecback[pba->index_bg_Gamma_dcdm]*pvecback[pba->index_bg_rho_dcdm]/pvecback[pba->index_bg_rho_dr])*alpha;
+ 
+         theta_dr += k*k*alpha;
+       }
+@@ -9502,7 +9502,7 @@ int perturbations_print_variables(double tau,
+       }
+ 
+       if (pba->has_dcdm == _TRUE_) {
+-        delta_dcdm += alpha*(-a*pba->Gamma_dcdm-3.*a*H);
++        delta_dcdm += alpha*(-a*pvecback[pba->index_bg_Gamma_dcdm]-3.*a*H);
+         theta_dcdm += k*k*alpha;
+       }
+ 
+@@ -10739,7 +10739,7 @@ int perturbations_derivs(double tau,
+       /** - ----> dcdm */
+ 
+       dy[pv->index_pt_delta_dcdm] = -(y[pv->index_pt_theta_dcdm]+metric_continuity)
+-        - a * pba->Gamma_dcdm / k2 * metric_euler; /* dcdm density */
++        - a * pvecback[pba->index_bg_Gamma_dcdm] / k2 * metric_euler; /* dcdm density */
+ 
+       dy[pv->index_pt_theta_dcdm] = - a_prime_over_a*y[pv->index_pt_theta_dcdm] + metric_euler; /* dcdm velocity */
+     }
+@@ -10754,7 +10754,7 @@ int perturbations_derivs(double tau,
+       */
+ 
+       f_dr = pow(pow(a,2)/pba->H0,2)*pvecback[pba->index_bg_rho_dr];
+-      fprime_dr = pba->Gamma_dcdm*pvecback[pba->index_bg_rho_dcdm]*pow(a,5)/pow(pba->H0,2);
++      fprime_dr = pvecback[pba->index_bg_Gamma_dcdm]*pvecback[pba->index_bg_rho_dcdm]*pow(a,5)/pow(pba->H0,2);
+ 
+       /** - ----> dr F0 */
+       dy[pv->index_pt_F0_dr] = -k*y[pv->index_pt_F0_dr+1]-4./3.*metric_continuity*f_dr+
