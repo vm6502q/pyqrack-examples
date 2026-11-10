@@ -1,0 +1,448 @@
+diff --git a/include/perturbations.h b/include/perturbations.h
+index a722e60..ca2f272 100644
+--- a/include/perturbations.h
++++ b/include/perturbations.h
+@@ -146,6 +146,29 @@ struct perturbations
+   /* perturbed recombination */
+   /** Do we want to consider perturbed temperature and ionization fraction? */
+   short has_perturbed_recombination;
++
++  /* Created neutrinos + ghost coexistence gas (Strano model; by (Anthropic) Claude and Dan Strano).
++     Three ncdm mass eigenstates created at common temperature T_c in ratio m_i^2 (global creation),
++     balanced by a negative-energy ghost gas; the background is exactly Lambda. */
++  short has_crt;            /**< created-neutrino + ghost perturbations on? */
++  double crt_Tc_K;          /**< coexistence temperature in K */
++  double crt_z_on;          /**< momentum grid resolves the spectrum from about this redshift on */
++  double crt_a_on;          /**< 1/(1+crt_z_on) */
++  double crt_q_per_decade;  /**< momentum bins per decade */
++  int crt_lmax;             /**< hierarchy truncation */
++  double crt_x_max;         /**< E/T_c at the top of the momentum grid */
++  double crt_k_max;         /**< created species evolved only for k <= this (1/Mpc); <= 0: all k */
++  int crt_N;                /**< number of created species (ncdm with m>0, at most 3) */
++  double crt_mu[3];         /**< m_i/T_c */
++  double crt_rho[3];        /**< background density of each created species (CLASS units) */
++  double crt_rho_plus_p[3]; /**< its rho+p */
++  double crt_G;             /**< |rho_ghost| (CLASS units) */
++  double crt_Je[3], crt_Jrp[3]; /**< exact momentum integrals used to normalize perturbations */
++  int crt_nq;               /**< number of comoving-momentum bins */
++  double * crt_q;           /**< comoving momenta in units of T_c (a_0=1) */
++  int crt_ntab;             /**< table size for Phi(x) */
++  double crt_lnx_min, crt_dlnx;
++  double * crt_lnPhi_tab;   /**< ln Phi_i(x), Phi(x)=int_x^inf phi(y) dy/y, for each species */
+   /** Neutrino contribution to tensors */
+   enum tensor_methods tensor_method;  /**< way to treat neutrinos in tensor perturbations (neglect, approximate as massless, take exact equations) */
+   enum vector_methods vector_method;  /**< way to treat neutrinos in vector perturbations (approximate as massless, take exact equations) */
+@@ -584,6 +607,8 @@ struct perturbations_vector
+   int index_pt_F0_dr;
+   int l_max_dr;          /**< max momentum in Boltzmann hierarchy for dr) */
+   int index_pt_psi0_ncdm1; /**< first multipole of perturbation of first ncdm species, Psi_0 */
++  int index_pt_crt;        /**< ghost delta, ghost theta, then created-species hierarchies */
++  short crt_on;            /**< created species evolved for this k? */
+   int N_ncdm;		/**< number of distinct non-cold-dark-matter (ncdm) species */
+   int* l_max_ncdm;	/**< mutipole l at which Boltzmann hierarchy is truncated (for each ncdm species) */
+   int* q_size_ncdm;	/**< number of discrete momenta (for each ncdm species) */
+@@ -688,6 +713,7 @@ struct perturbations_workspace
+   double theta_cb;       /**< velocity divergence theta of only cdm and baryon */
+ 
+   double delta_rho_fld;        /**< density perturbation of fluid, not so trivial in PPF scheme */
++  double crt_drho, crt_dp, crt_rpt, crt_rps; /**< total ghost+created: delta rho, delta p, (rho+p)theta, (rho+p)sigma */
+   double delta_p_fld;          /**< pressure perturbation of fluid, very non-trivial in PPF scheme */
+   double rho_plus_p_theta_fld; /**< velocity divergence of fluid, not so trivial in PPF scheme */
+   double S_fld;                /**< S quantity sourcing Gamma_prime evolution in PPF scheme (equivalent to eq. 15 in 0808.3125) */
+diff --git a/source/input.c b/source/input.c
+index d01e761..b8347c1 100644
+--- a/source/input.c
++++ b/source/input.c
+@@ -2176,6 +2176,20 @@ int input_read_parameters_general(struct file_content * pfc,
+       }
+     }
+ 
++    /** 4.a.1) Created neutrinos + ghost coexistence gas (Strano model) */
++    class_call(parser_read_string(pfc,"created_neutrinos",&string1,&flag1,errmsg),
++               errmsg,
++               errmsg);
++    if ((flag1 == _TRUE_) && ((strstr(string1,"y") != NULL) || (strstr(string1,"Y") != NULL))) {
++      ppt->has_crt = _TRUE_;
++    }
++    class_read_double("created_Tc_K",ppt->crt_Tc_K);
++    class_read_double("created_z_on",ppt->crt_z_on);
++    class_read_double("created_q_per_decade",ppt->crt_q_per_decade);
++    class_read_int("created_l_max",ppt->crt_lmax);
++    class_read_double("created_E_max",ppt->crt_x_max);
++    class_read_double("created_k_max",ppt->crt_k_max);
++
+     /** 4.b) Do we want density and velocity transfer functions in Nbody gauge? */
+     if ((ppt->has_density_transfers == _TRUE_) || (ppt->has_velocity_transfers == _TRUE_)){
+ 
+@@ -5878,6 +5892,15 @@ int input_default_params(struct background *pba,
+ 
+   /** 4.a) Gauge */
+   ppt->gauge=synchronous;
++  ppt->has_crt=_FALSE_;
++  ppt->crt_Tc_K=60.;
++  ppt->crt_z_on=100.;
++  ppt->crt_q_per_decade=6.;
++  ppt->crt_lmax=8;
++  ppt->crt_x_max=30.;
++  ppt->crt_k_max=0.;
++  ppt->crt_q=NULL;
++  ppt->crt_lnPhi_tab=NULL;
+   /** 4.b) N-body gauge */
+   ppt->has_Nbody_gauge_transfers = _FALSE_;
+   /** 4.c) keep delta_m, theta_m, delta_cb, theta_cb in current gauge */
+diff --git a/source/perturbations.c b/source/perturbations.c
+index b48cc64..8096453 100644
+--- a/source/perturbations.c
++++ b/source/perturbations.c
+@@ -27,6 +27,159 @@
+ #include "perturbations.h"
+ #include "parallel.h"
+ 
++/* ===== Created neutrinos + ghost coexistence gas (Strano model) =====
++   By (Anthropic) Claude and Dan Strano.
++
++   Background (exact Lambda): ghost gas rho_g = -G, p_g = rho_g/3, held at T_c; it feeds Q = 4 H G (global rate)
++   into pair creation of the ncdm mass eigenstates, in number ratio m_i^2, thermal (Fermi-Dirac in E) at T_c in the
++   ghost frame. Steady state: f0_i(q,tau) = C_i Phi_i(q/a), Phi(x) = int_x^inf phi(y) dy/y, phi = 1/(e^{E/T_c}+1).
++   Then rho_i + p_i = (4G/3) s_i (energy shares s_i) and sum(rho) = rho_Lambda, sum(rho+p) = 0 exactly.
++
++   Perturbations (synchronous gauge), Psi_l(q) per created species, with f = f0 (1+Psi):
++     Psi_l' = [standard ncdm free streaming, dlnf0/dlnq = -phi/Phi] + Gamma_q (B_l - Psi_l),  Gamma_q = aH phi/Phi,
++     B_0 = 0 (global rate: no density perturbation of the source in synchronous slicing),
++     B_1 = [(1-phi) - 1/E] x theta_g/(3k)  (covariant source Q u_ghost: momentum injection a Q theta_g exactly),
++     B_l>=2 = 0.
++   Ghost fluid (w = c_s^2 = 1/3, no shear, delta Q = 0):
++     delta_g' = -4/3 (theta_g + h'/2) - 4 aH delta_g,   theta_g' = -aH theta_g + k^2 delta_g/4. */
++
++static double crt_phi(double E) { return 1./(exp(E)+1.); }
++static int crt_dbg = -1;   /* debug switches via CRT_DEBUG: 1 = no creation relaxation, 2 = no ghost dipole, 4 = no ghost in Einstein eqs */
++static int crt_debug(void) { if (crt_dbg < 0) { char * e = getenv("CRT_DEBUG"); crt_dbg = e ? atoi(e) : 0; } return crt_dbg; }
++
++static double crt_lnPhi(struct perturbations * ppt, int ic, double x) {
++  double * t = ppt->crt_lnPhi_tab + ic*ppt->crt_ntab;
++  double lx = log(x), u;
++  int j;
++  if (lx <= ppt->crt_lnx_min) {
++    /* Phi(x) ~ Phi(x_min) + phi(mu) ln(x_min/x) */
++    return log(exp(t[0]) + crt_phi(ppt->crt_mu[ic])*(ppt->crt_lnx_min-lx));
++  }
++  u = (lx - ppt->crt_lnx_min)/ppt->crt_dlnx;
++  j = (int)u;
++  if (j >= ppt->crt_ntab-1) return -1.e30;
++  u -= j;
++  return (1.-u)*t[j] + u*t[j+1];
++}
++
++/* r = phi/Phi = -dln f0/dln q (creation rate per particle in units of aH). Smoothly capped at r_cap: empty
++   high-momentum bins then relax quickly (stiffly) to their quasi-static values; D and Gamma share the same r, so the
++   quasi-static limit Psi_0 -> -h'/(6 aH) is unaffected by the cap. */
++static double crt_ratio(struct perturbations * ppt, int ic, double x, double E) {
++  double r, r_cap = 500.;
++  if (E < 60.) r = crt_phi(E)/exp(crt_lnPhi(ppt,ic,x));
++  else r = x*x/E + 1.;
++  return r_cap*tanh(r/r_cap);
++}
++
++int perturbations_crt_setup(struct precision * ppr, struct background * pba, struct perturbations * ppt) {
++
++  int n, ic, j, iq, ntab = 6000;
++  double Tc_eV, x, E, ph, lnx_max, rhoL, denom, a_on, q_lo, q_hi, kB = 8.617333262e-5;
++  double In[3], Ie[3], Je[3], Jp[3], nu[3], share[3], R[3], sumnuE = 0., sumnu = 0., sumsR = 0.;
++  double * tab;
++
++  class_test(ppt->gauge != synchronous, ppt->error_message,
++             "created_neutrinos is implemented in synchronous gauge only");
++  class_test(pba->has_ncdm == _FALSE_, ppt->error_message,
++             "created_neutrinos needs the neutrino mass eigenstates as ncdm species (N_ncdm, m_ncdm)");
++  class_test(pba->Omega0_lambda <= 0., ppt->error_message,
++             "created_neutrinos: the ghost + created gas reproduce Lambda; set Omega_Lambda > 0 (not fluid)");
++
++  Tc_eV = ppt->crt_Tc_K*kB;
++  ppt->crt_a_on = 1./(1.+ppt->crt_z_on);
++  ppt->crt_N = 0;
++  {
++    double mmax = 0.;
++    for (n=0; n<pba->N_ncdm; n++) mmax = MAX(mmax, pba->m_ncdm_in_eV[n]);
++    for (n=0; n<pba->N_ncdm && ppt->crt_N<3; n++) {
++    /* species whose creation share (~m^2) is below 1e-4 of the heaviest are dropped */
++    if (pba->m_ncdm_in_eV[n]*pba->m_ncdm_in_eV[n] > 1.e-4*mmax*mmax) {
++      ppt->crt_mu[ppt->crt_N] = pba->m_ncdm_in_eV[n]/Tc_eV;
++      class_test(sqrt(ppt->crt_mu[ppt->crt_N]*ppt->crt_mu[ppt->crt_N]) > ppt->crt_x_max-2., ppt->error_message,
++                 "created_neutrinos: m/T_c = %g too large for created_E_max = %g", ppt->crt_mu[ppt->crt_N], ppt->crt_x_max);
++      ppt->crt_N++;
++    }
++    }
++  }
++  class_test(ppt->crt_N == 0, ppt->error_message, "created_neutrinos: no massive ncdm species");
++
++  /* tables of ln Phi_i on a log grid in x = p/T_c */
++  ppt->crt_ntab = ntab;
++  ppt->crt_lnx_min = log(1.e-14);
++  lnx_max = log(ppt->crt_x_max + 50.);
++  ppt->crt_dlnx = (lnx_max - ppt->crt_lnx_min)/(ntab-1);
++  class_alloc(ppt->crt_lnPhi_tab, ppt->crt_N*ntab*sizeof(double), ppt->error_message);
++  class_alloc(tab, ntab*sizeof(double), ppt->error_message);
++
++  for (ic=0; ic<ppt->crt_N; ic++) {
++    double mu = ppt->crt_mu[ic], Ej, Ej1;
++    x = exp(lnx_max); E = sqrt(x*x+mu*mu);
++    tab[ntab-1] = crt_phi(E)/E;   /* tail estimate, negligible */
++    for (j=ntab-2; j>=0; j--) {
++      double x0 = exp(ppt->crt_lnx_min + j*ppt->crt_dlnx), x1 = exp(ppt->crt_lnx_min + (j+1)*ppt->crt_dlnx);
++      Ej = sqrt(x0*x0+mu*mu); Ej1 = sqrt(x1*x1+mu*mu);
++      tab[j] = tab[j+1] + 0.5*(crt_phi(Ej)+crt_phi(Ej1))*ppt->crt_dlnx;
++    }
++    In[ic] = Ie[ic] = Je[ic] = Jp[ic] = 0.;
++    for (j=0; j<ntab; j++) {
++      double w = (j==0 || j==ntab-1) ? 0.5 : 1.;
++      x = exp(ppt->crt_lnx_min + j*ppt->crt_dlnx); E = sqrt(x*x+mu*mu); ph = crt_phi(E);
++      ppt->crt_lnPhi_tab[ic*ntab+j] = log(tab[j]);
++      In[ic] += w*x*x*x*ph;            Ie[ic] += w*x*x*x*E*ph;
++      Je[ic] += w*x*x*x*E*tab[j];      Jp[ic] += w*x*x*x*x*x/(3.*E)*tab[j];
++    }
++    nu[ic] = mu*mu;                     /* creation rate per species ~ g_i^2 ~ m_i^2 */
++    sumnu += nu[ic];
++    sumnuE += nu[ic]*Ie[ic]/In[ic];
++  }
++  free(tab);
++
++  rhoL = pba->Omega0_lambda*pba->H0*pba->H0;
++  for (ic=0; ic<ppt->crt_N; ic++) {
++    share[ic] = nu[ic]*(Ie[ic]/In[ic])/sumnuE;   /* energy share of Q */
++    R[ic] = Je[ic]/(Je[ic]+Jp[ic]);              /* rho/(rho+p) of the steady spectrum */
++    sumsR += share[ic]*R[ic];
++  }
++  denom = -1. + 4./3.*sumsR;
++  class_test(denom <= 0., ppt->error_message,
++             "created_neutrinos: created gas too hot (sum s_i rho_i/(rho_i+p_i) <= 3/4); no ghost density reproduces Lambda");
++  ppt->crt_G = rhoL/denom;
++  for (ic=0; ic<ppt->crt_N; ic++) {
++    ppt->crt_rho_plus_p[ic] = 4./3.*ppt->crt_G*share[ic];
++    ppt->crt_rho[ic] = ppt->crt_rho_plus_p[ic]*R[ic];
++    ppt->crt_Je[ic] = Je[ic]*ppt->crt_dlnx;           /* exact int x^3 E Phi dlnx */
++    ppt->crt_Jrp[ic] = (Je[ic]+Jp[ic])*ppt->crt_dlnx; /* exact int x^3 (E + x^2/3E) Phi dlnx */
++  }
++
++  /* comoving momentum grid (units T_c, a_0 = 1) */
++  a_on = ppt->crt_a_on;
++  q_lo = 1.e-2*a_on;   /* x < 0.01 carries a negligible share of rho at all times */
++  q_hi = ppt->crt_x_max + 2.;
++  ppt->crt_nq = (int)ceil(log10(q_hi/q_lo)*ppt->crt_q_per_decade) + 1;
++  class_alloc(ppt->crt_q, ppt->crt_nq*sizeof(double), ppt->error_message);
++  for (iq=0; iq<ppt->crt_nq; iq++)
++    ppt->crt_q[iq] = q_lo*pow(q_hi/q_lo, (double)iq/(ppt->crt_nq-1));
++
++  if (ppt->perturbations_verbose > 0) {
++    printf(" -> created neutrinos: T_c = %g K, %d species, |rho_ghost| = %.4f rho_Lambda, %d q-bins x %d multipoles, on at z = %g\n",
++           ppt->crt_Tc_K, ppt->crt_N, ppt->crt_G/rhoL, ppt->crt_nq, ppt->crt_lmax+1, ppt->crt_z_on);
++    for (ic=0; ic<ppt->crt_N; ic++) {
++      /* checks: steady-state identity 3 (Je+Jp) = Ie, and momentum injection on the q-grid (should be 3) */
++      double Nrp = 0., M = 0., mu = ppt->crt_mu[ic];
++      for (iq=0; iq<ppt->crt_nq; iq++) {
++        x = ppt->crt_q[iq]; E = sqrt(x*x+mu*mu); ph = crt_phi(E);
++        Nrp += x*x*x*(E + x*x/(3.*E))*exp(crt_lnPhi(ppt,ic,x));
++        M += x*x*x*x*x*ph*((1.-ph) - 1./E)/3.;
++      }
++      printf("    species %d: m/T_c = %.3f, energy share %.4f, rho = %.4f rho_L, w = %.4f; identity 3(Je+Jp)/Ie = %.6f; grid momentum check %.5f (3)\n",
++             ic, mu, share[ic], ppt->crt_rho[ic]/rhoL, 1./R[ic]-1., 3.*(Je[ic]+Jp[ic])/Ie[ic], M/Nrp);
++    }
++  }
++
++  return _SUCCESS_;
++}
++
+ 
+ /**
+  * Source function \f$ S^{X} (k, \tau) \f$ at a given conformal time tau.
+@@ -773,6 +926,10 @@ int perturbations_init(
+              ppt->error_message,
+              "In the synchronous gauge, it is not self-consistent to assume no CDM: the later is used to define the initial timelike hypersurface. You can either add a negligible amount of CDM, or switch to newtonian gauge");
+ 
++  if (ppt->has_crt == _TRUE_) {
++    class_call(perturbations_crt_setup(ppr,pba,ppt), ppt->error_message, ppt->error_message);
++  }
++
+   class_test ((ppr->tight_coupling_approximation < first_order_MB) ||
+               (ppr->tight_coupling_approximation > compromise_CLASS),
+               ppt->error_message,
+@@ -1148,6 +1305,11 @@ int perturbations_free(
+ 
+   perturbations_free_input(ppt);
+ 
++  if (ppt->has_crt == _TRUE_) {
++    if (ppt->crt_q != NULL) { free(ppt->crt_q); ppt->crt_q = NULL; }
++    if (ppt->crt_lnPhi_tab != NULL) { free(ppt->crt_lnPhi_tab); ppt->crt_lnPhi_tab = NULL; }
++  }
++
+   if (ppt->has_perturbations == _TRUE_) {
+ 
+     for (index_md = 0; index_md < ppt->md_size; index_md++) {
+@@ -3378,6 +3540,10 @@ int perturbations_prepare_k_output(struct background * pba,
+       class_store_columntitle(ppt->scalar_titles, "theta_scf", pba->has_scf);
+       /** Fluid */
+       class_store_columntitle(ppt->scalar_titles, "delta_rho_fld", pba->has_fld);
++      class_store_columntitle(ppt->scalar_titles, "crt_drho", ppt->has_crt);
++      class_store_columntitle(ppt->scalar_titles, "crt_dp", ppt->has_crt);
++      class_store_columntitle(ppt->scalar_titles, "crt_rpt", ppt->has_crt);
++      class_store_columntitle(ppt->scalar_titles, "crt_rps", ppt->has_crt);
+       class_store_columntitle(ppt->scalar_titles, "rho_plus_p_theta_fld", pba->has_fld);
+       class_store_columntitle(ppt->scalar_titles, "delta_p_fld", pba->has_fld);
+ 
+@@ -4155,6 +4321,10 @@ int perturbations_vector_init(
+       }
+     }
+ 
++    /* created neutrinos + ghost */
++    ppv->crt_on = (ppt->has_crt == _TRUE_) && ((ppt->crt_k_max <= 0.) || (k <= ppt->crt_k_max));
++    class_define_index(ppv->index_pt_crt, ppv->crt_on, index_pt, 2 + ppt->crt_N*ppt->crt_nq*(ppt->crt_lmax+1));
++
+     /* metric (only quantities to be integrated, not those obeying constraint equations) */
+ 
+     /* metric perturbation eta of synchronous gauge */
+@@ -5697,6 +5867,12 @@ int perturbations_vector_init(
+       }
+     }
+ 
++    if (_scalars_ && (ppv->crt_on == _TRUE_)) {
++      int i_crt;
++      for (i_crt=0; i_crt < 2 + ppt->crt_N*ppt->crt_nq*(ppt->crt_lmax+1); i_crt++)
++        ppv->y[ppv->index_pt_crt+i_crt] = ppw->pv->y[ppw->pv->index_pt_crt+i_crt];
++    }
++
+     /** - --> (d) free the previous vector of perturbations */
+ 
+     class_call(perturbations_vector_free(ppw->pv),
+@@ -7854,6 +8030,39 @@ int perturbations_total_stress_energy(
+ 
+     /* add your extra species here */
+ 
++    ppw->crt_drho = ppw->crt_dp = ppw->crt_rpt = ppw->crt_rps = 0.;
++    if (ppw->pv->crt_on == _TRUE_) {
++      int ic, iq, lmax_c = ppt->crt_lmax, idc = ppw->pv->index_pt_crt;
++      double Gc = ppt->crt_G, dg = y[idc], tg = y[idc+1];
++      double dlnq = log(ppt->crt_q[1]/ppt->crt_q[0]);
++      ppw->crt_drho = -Gc*dg; ppw->crt_dp = -Gc*dg/3.; ppw->crt_rpt = -4./3.*Gc*tg; ppw->crt_rps = 0.;
++      if (!(crt_debug() & 4)) {
++        ppw->delta_rho += -Gc*dg;
++        ppw->delta_p += -Gc*dg/3.;
++        ppw->rho_plus_p_theta += -4./3.*Gc*tg;
++      }
++      idc += 2;
++      for (ic=0; ic<ppt->crt_N; ic++) {
++        double mu = ppt->crt_mu[ic], Sr=0., Sp=0., St=0., Ss=0., xc, Ec, wc;
++        for (iq=0; iq<ppt->crt_nq; iq++, idc += lmax_c+1) {
++          xc = ppt->crt_q[iq]/a; Ec = sqrt(xc*xc+mu*mu);
++          if (Ec > 700.) continue;
++          wc = xc*xc*xc*exp(crt_lnPhi(ppt,ic,xc))*dlnq*((iq==0 || iq==ppt->crt_nq-1) ? 0.5 : 1.);
++          Sr += wc*Ec*y[idc]; Sp += wc*xc*xc/(3.*Ec)*y[idc];
++          St += wc*xc*y[idc+1]; Ss += wc*xc*xc/Ec*y[idc+2];
++        }
++        /* exact normalization: the part of the spectrum below the grid (early times) is left unperturbed */
++        ppw->crt_drho += ppt->crt_rho[ic]*Sr/ppt->crt_Je[ic];
++        ppw->crt_dp += ppt->crt_rho[ic]*Sp/ppt->crt_Je[ic];
++        ppw->crt_rpt += ppt->crt_rho_plus_p[ic]*k*St/ppt->crt_Jrp[ic];
++        ppw->crt_rps += ppt->crt_rho_plus_p[ic]*2./3.*Ss/ppt->crt_Jrp[ic];
++        ppw->delta_rho += ppt->crt_rho[ic]*Sr/ppt->crt_Je[ic];
++        ppw->delta_p += ppt->crt_rho[ic]*Sp/ppt->crt_Je[ic];
++        ppw->rho_plus_p_theta += ppt->crt_rho_plus_p[ic]*k*St/ppt->crt_Jrp[ic];
++        ppw->rho_plus_p_shear += ppt->crt_rho_plus_p[ic]*2./3.*Ss/ppt->crt_Jrp[ic];
++      }
++    }
++
+     /* fluid contribution */
+     if (pba->has_fld == _TRUE_) {
+ 
+@@ -9594,6 +9803,10 @@ int perturbations_print_variables(double tau,
+     class_store_double(dataptr, theta_scf, pba->has_scf, storeidx);
+     /** Fluid */
+     class_store_double(dataptr, ppw->delta_rho_fld, pba->has_fld, storeidx);
++    class_store_double(dataptr, ppw->crt_drho, ppt->has_crt, storeidx);
++    class_store_double(dataptr, ppw->crt_dp, ppt->has_crt, storeidx);
++    class_store_double(dataptr, ppw->crt_rpt, ppt->has_crt, storeidx);
++    class_store_double(dataptr, ppw->crt_rps, ppt->has_crt, storeidx);
+     class_store_double(dataptr, ppw->rho_plus_p_theta_fld, pba->has_fld, storeidx);
+     class_store_double(dataptr, ppw->delta_p_fld, pba->has_fld, storeidx);
+     //fprintf(ppw->perturbations_output_file,"\n");
+@@ -11054,6 +11267,82 @@ int perturbations_derivs(double tau,
+       }
+     }
+ 
++    /** - ---> created neutrinos + ghost (Strano model) */
++
++    if (pv->crt_on == _TRUE_) {
++      int ic, iq, lc, lmax_c = ppt->crt_lmax, idc = pv->index_pt_crt;
++      double dg = y[idc], tg = y[idc+1], xc, Ec, ph, rc, Dc, Gam, qk_e, B1;
++      /* ghost fluid: w = cs2 = 1/3, global creation (delta Q = 0), momentum lost to created pairs */
++      dy[idc] = -4./3.*(tg + metric_continuity) - 4.*a_prime_over_a*dg;
++      dy[idc+1] = -a_prime_over_a*tg + k2*dg/4.;
++      idc += 2;
++      double dlnq = log(ppt->crt_q[1]/ppt->crt_q[0]);
++      double crt_chk[4] = {0.,0.,0.,0.};
++      for (ic=0; ic<ppt->crt_N; ic++) {
++        double mu = ppt->crt_mu[ic], Msum = 0., fmom = 1., Dsum = 0., fD = 1., Wq, Esum = 0., sres;
++        /* exact discrete momentum balance: the momentum injected into this species on the grid must equal
++           a Q_i theta_g = 3 aH (rho_i+p_i) theta_g (analytically true; enforced against quadrature error) */
++        for (iq=0; iq<ppt->crt_nq; iq++) {
++          xc = ppt->crt_q[iq]/a; Ec = sqrt(xc*xc+mu*mu);
++          if (Ec > 700.) continue;
++          ph = crt_phi(Ec);
++          Wq = xc*xc*xc*exp(crt_lnPhi(ppt,ic,xc))*dlnq*((iq==0 || iq==ppt->crt_nq-1) ? 0.5 : 1.)*crt_ratio(ppt,ic,xc,Ec);
++          Msum += Wq*xc*xc*((1.-ph) - 1./Ec)/3.;
++          Dsum += Wq*Ec;
++          Esum += Wq/crt_ratio(ppt,ic,xc,Ec)*Ec;
++        }
++        /* apply the exact-balance factors only once the grid resolves the spectrum (resolved energy fraction
++           Esum/Je ~ 1), blending in smoothly between 97% and 99% */
++        sres = (Esum/ppt->crt_Je[ic] - 0.97)/0.02;
++        sres = (sres <= 0.) ? 0. : ((sres >= 1.) ? 1. : sres*sres*(3.-2.*sres));
++        /* likewise the h' coupling must add up to -(rho_i+p_i) h'/2, cancelling the ghost's exactly */
++        if (sres > 0.) {
++          fmom = 1. + sres*(3.*ppt->crt_Jrp[ic]/Msum - 1.);
++          fD = 1. + sres*(3.*ppt->crt_Jrp[ic]/Dsum - 1.);
++        }
++        if ((crt_debug() & 64) && k < 1e-3) fprintf(stderr,"CRTF a=%g ic=%d res=%g fmom=%g fD=%g\n",a,ic,Esum/ppt->crt_Je[ic],fmom,fD);
++        for (iq=0; iq<ppt->crt_nq; iq++, idc += lmax_c+1) {
++          xc = ppt->crt_q[iq]/a; Ec = sqrt(xc*xc+mu*mu);
++          ph = (Ec < 700.) ? crt_phi(Ec) : 0.;
++          rc = crt_ratio(ppt,ic,xc,Ec);
++          Dc = -rc;                                  /* dln f0 / dln q */
++          Gam = a_prime_over_a*rc;                   /* creation rate per particle in this bin */
++          if (crt_debug() & 1) Gam = 0.;
++          qk_e = k*xc/Ec;
++          B1 = fmom*((1.-ph) - 1./Ec)*xc*tg/(3.*k);
++          if (crt_debug() & 2) B1 = 0.;
++          dy[idc] = -qk_e*y[idc+1] + fD*metric_continuity*Dc/3. - Gam*y[idc];
++          dy[idc+1] = qk_e/3.*(y[idc] - 2.*y[idc+2]) + Gam*(B1 - y[idc+1]);
++          dy[idc+2] = qk_e/5.*(2.*y[idc+1] - 3.*y[idc+3]) - metric_shear*2./15.*Dc - Gam*y[idc+2];
++          for (lc=3; lc<lmax_c; lc++)
++            dy[idc+lc] = qk_e/(2.*lc+1.)*(lc*y[idc+lc-1] - (lc+1.)*y[idc+lc+1]) - Gam*y[idc+lc];
++          dy[idc+lmax_c] = qk_e*y[idc+lmax_c-1] - (1.+lmax_c)/tau*y[idc+lmax_c] - Gam*y[idc+lmax_c];
++          if (crt_debug() & 128) {
++            /* accumulate exact d/dtau of (rho+p)theta and the RHS pieces for this species */
++            double Wx = xc*xc*xc*xc*exp(crt_lnPhi(ppt,ic,xc))*dlnq*((iq==0 || iq==ppt->crt_nq-1) ? 0.5 : 1.);
++            double phiPhi = (Ec < 60.) ? crt_phi(Ec)/exp(crt_lnPhi(ppt,ic,xc)) : rc;
++            double cst = ppt->crt_rho_plus_p[ic]/ppt->crt_Jrp[ic];
++            crt_chk[0] += cst*k*(Wx*(-4.*a_prime_over_a + a_prime_over_a*phiPhi)*y[idc+1] + Wx*dy[idc+1]);
++            crt_chk[1] += cst*k*Wx*y[idc+1];
++            crt_chk[2] += cst*Wx/xc*xc*xc/(3.*Ec)*y[idc];
++            crt_chk[3] += cst*2./3.*Wx/xc*xc*xc/Ec*y[idc+2];
++          }
++        }
++      }
++      if (crt_debug() & 128) {
++        static double crt_last = 0.;
++        double Gc = ppt->crt_G;
++        double Th = crt_chk[1] - 4./3.*Gc*y[pv->index_pt_crt+1];
++        double Thp = crt_chk[0] - 4./3.*Gc*dy[pv->index_pt_crt+1];
++        double dp = crt_chk[2] - Gc*y[pv->index_pt_crt]/3.;
++        double rhs = -4.*a_prime_over_a*Th + k2*dp - k2*crt_chk[3];
++        if (k > 0.02 && k < 0.04 && (a > crt_last*1.3 || a < crt_last)) {
++          fprintf(stderr,"CRTM k=%.3g a=%.4f Theta'=%.3e rhs=%.3e resid/k2dp=%.2e\n",k,a,Thp,rhs,(Thp-rhs)/(k2*fabs(dp)));
++          crt_last = a;
++        }
++      }
++    }
++
+     /** - ---> metric */
+ 
+     /** - ---> eta of synchronous gauge */
