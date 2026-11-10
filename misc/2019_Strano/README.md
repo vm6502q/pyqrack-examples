@@ -31,6 +31,7 @@ In steady state each species has a fixed physical spectrum, f₀ = C·Φ(p/T_c) 
 | `run_grid.py` | Runs the T_c × m_lightest grid against ΛCDM with the *same* relic neutrino masses, Planck 2018 best-fit parameters held fixed. |
 | `planck_chi2.py` | Planck 2018 low-ℓ TT + low-ℓ EE + plik-lite χ² from CLASS C_ℓ files, through Cobaya. |
 | `setup_and_run.sh` | Builds everything and runs the grid. Takes about 5 min per point on 2 cores. |
+| `slicing_test.py`, `slicing_results.json` | Creation-slicing robustness test, and its results. |
 | `cobaya_fit.py`, `cobaya_results.json` | Cobaya refit by template iteration, and its results. |
 | `grid_results.json`, `grid_results_dof.json` | The results below (T_c grid; self-consistent T_c). |
 | `tc_selfconsistent.py` | Standalone solve of the self-consistent T_c. |
@@ -46,6 +47,7 @@ In steady state each species has a fixed physical spectrum, f₀ = C·Φ(p/T_c) 
 | `created_z_on` | 100 | The grid resolves the spectrum from this redshift on. |
 | `created_E_max` | 30 | Top of the momentum grid, in units of T_c. |
 | `created_k_max` | 0 = all | Skip the new species above this k, in Mpc⁻¹. The grid uses 0.05. |
+| `created_slicing` | 0 | The hypersurfaces that carry the uniform creation rate. **0** = CDM-comoving (δQ = 0 in synchronous gauge). **1** = ghost-comoving (δQ/Q = (H′/H)θ_g/k²). **2** = coexistence-pinned: ghost held at T_c locally (δρ_g = δp_g = 0), so creation follows local expansion (δQ/Q = (θ_g + h′/2)/(3aH)). |
 | `created_ghost_dof` | 0 = off | g > 0: **solve T_c** so that the ghost gas is a blackbody with g massless bosonic degrees of freedom, (g/2)ρ_γ(T_c/T_cmb)⁴, equal to the |ρ_ghost| that closure (exact Λ) requires. The lowest root is used, and `created_Tc_K` is then ignored. |
 
 The masses are taken from `m_ncdm`. Normal ordering uses Δm²₂₁ = 7.42×10⁻⁵ and Δm²₃₁ = 2.51×10⁻³ eV². Species carrying less than 10⁻⁴ of the heaviest one's creation share are dropped.
@@ -135,10 +137,34 @@ large-angle suppression doesn't trade off against the standard parameters.
 Build the patched classy first with `cd <class> && make libclass.a && cd python && python3 setup.py build`. Then symlink
 `<class>/external` into the build directory.
 
+## Creation-slicing test
+
+"Uniform creation" needs a choice of which hypersurfaces count as "everywhere at once". The test below takes g = 1, uses the
+Cobaya ΛCDM best fit, and compares against ΛCDM at the same point (`slicing_test.py`, `slicing_results.json`).
+
+| slicing | Δχ² | low-ℓ TT | plik-lite | TT ℓ=2 | ℓ=3 | ℓ=6 | ℓ=10 | ℓ=30 | φφ L=10 | φφ L=100 |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 0, CDM-comoving | −1.27 | −0.91 | −0.37 | −29.5% | −23.5% | −12.7% | −6.2% | −0.4% | +6.8% | +0.25% |
+| 1, ghost-comoving | −1.25 | −0.90 | −0.37 | −28.3% | −22.8% | −12.5% | −6.1% | −0.4% | +6.6% | +0.24% |
+| 2, coexistence-pinned | **+33.9** | +27.1 | +6.8 | **+81%** | +80% | +64% | +41% | +5.3% | −25% | −5.6% |
+
+**Reading.**
+
+- **Global creation is robust.** For either global slicing (0 and 1), the quadrupole suppression agrees to about 1 point
+  (−29.5% vs −28.3%), and Δχ² agrees to 0.02. The large-angle signature therefore belongs to the model, not to the
+  gauge choice.
+- **Locally pinned creation is excluded.** If creation follows the local expansion so that the ghost is pinned at T_c
+  locally, the low multipoles are *enhanced* instead, and Planck rejects that by Δχ² ≈ +34. Low-ℓ TT is insensitive to the
+  standard parameters, so a refit cannot rescue it.
+- **This is the differential rule-out.** Creation that responds to local volume is a local channel. The data exclude
+  that, and they allow the global, no-information creation the model argues for.
+
+Both new slicings conserve the total (ghost + created) energy to about 10⁻³ at k = 3×10⁻⁴ to 3×10⁻² Mpc⁻¹.
+
 ## Caveats
 
 1. **Refit done.** The parameter refit is now done (see the section above). As expected, the parameters barely move.
-2. **Slicing.** "Global creation" means a uniform rate on CDM-comoving (synchronous) slices. That is a physical choice of cosmic time. A "local" version, where creation tracks local expansion and the ghost is pinned at T_c locally, is not implemented and could change the large-angle signal.
+2. **Slicing.** This is now tested; see the section above. Global slicings agree with each other, and the locally pinned variant is excluded.
 3. **Ghost microphysics.** The ghost is treated as a w = c_s² = 1/3 fluid with no shear. A free-streaming ghost gas would differ at the largest scales.
 4. **Missing likelihoods.** Planck lensing, DESI and Pantheon+ weren't available in the sandbox. DESI and supernovae are unaffected because the background is exact Λ. The lensing change is below 0.1%, against Planck's roughly 2.5% precision on the lensing amplitude.
 5. **Scope of the checks.** Low-ℓ TT is cosmic-variance limited, and the low-quadrupole anomaly has well-known look-elsewhere issues.
