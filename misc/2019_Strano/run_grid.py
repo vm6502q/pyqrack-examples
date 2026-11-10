@@ -17,7 +17,7 @@ from planck_chi2 import chi2  # noqa: E402
 DM21, DM31 = 7.42e-5, 2.51e-3   # eV^2, normal ordering
 
 
-def write_ini(path, root, crt, Tc, m1, a):
+def write_ini(path, root, crt, Tc, m1, a, g=0):
     m = [max(m1, 1e-4), np.sqrt(m1**2 + DM21), np.sqrt(m1**2 + DM31)]
     s = f"""h = 0.6736
 omega_b = 0.02237
@@ -40,6 +40,8 @@ created_z_on = {a.zon}
 created_q_per_decade = {a.qpd}
 created_l_max = {a.lmax}
 created_k_max = {a.kmax}
+created_ghost_dof = {g}
+perturbations_verbose = 1
 """
     open(path, "w").write(s)
 
@@ -62,6 +64,7 @@ def main():
     ap.add_argument("--qpd", type=float, default=6); ap.add_argument("--lmax", type=int, default=8)
     ap.add_argument("--kmax", type=float, default=0.05); ap.add_argument("--zon", type=float, default=100)
     ap.add_argument("--out", default="grid_out")
+    ap.add_argument("--ghost-dof", default="", help="comma list of g: solve T_c self-consistently (overrides --Tc)")
     a = ap.parse_args()
     os.makedirs(a.out, exist_ok=True)
     results = []
@@ -71,24 +74,32 @@ def main():
             write_ini(r0 + ".ini", r0, False, 60, m1, a)
             subprocess.run([a.class_bin, r0 + ".ini"], check=True, capture_output=True)
         c0 = chi2(a.packages, r0 + "_00")
-        for Tc in [float(x) for x in a.Tc.split(",")]:
-            r = os.path.join(a.out, f"crt_Tc{Tc:g}_m1_{m1:g}")
+        points = ([("g", float(g)) for g in a.ghost_dof.split(",")] if a.ghost_dof
+                  else [("Tc", float(T)) for T in a.Tc.split(",")])
+        for kind, val in points:
+            Tc, g = (val, 0) if kind == "Tc" else (60.0, val)
+            r = os.path.join(a.out, f"crt_Tc{Tc:g}_m1_{m1:g}" if kind == "Tc" else f"crt_g{g:g}_m1_{m1:g}")
             if not os.path.exists(r + "_00_cl_lensed.dat"):
-                write_ini(r + ".ini", r, True, Tc, m1, a)
+                write_ini(r + ".ini", r, True, Tc, m1, a, g)
                 p = subprocess.run([a.class_bin, r + ".ini"], capture_output=True, text=True)
                 if p.returncode != 0 or "Error" in p.stdout:
                     print(f"T_c={Tc} m1={m1}: CLASS failed\n{p.stdout[-600:]}{p.stderr[-300:]}", flush=True)
                     continue
                 open(r + ".log", "w").write(p.stdout)
+            if kind == "g":
+                import re
+                txt = open(r + ".log").read() if os.path.exists(r + ".log") else ""
+                mt = re.search(r"T_c = ([0-9.]+) K \(ghost", txt)
+                Tc = float(mt.group(1)) if mt else float("nan")
             c = chi2(a.packages, r + "_00")
             d = {k.split(".")[-1]: c[k] - c0[k] for k in c}
-            row = {"Tc_K": Tc, "m1_eV": m1, "dchi2_total": sum(d.values()), **{"dchi2_" + k: v for k, v in d.items()},
+            row = {"ghost_dof": g, "Tc_K": Tc, "m1_eV": m1, "dchi2_total": sum(d.values()), **{"dchi2_" + k: v for k, v in d.items()},
                    **observables(r, r0)}
             results.append(row)
-            print(f"T_c={Tc:4g} K m1={m1:5.3f}: dchi2 {row['dchi2_total']:+7.3f} (lowTT {d['TT']:+.3f}, lowEE {d['EE']:+.3f}, "
+            print(f"{'g=%g ' % g if g else ''}T_c={Tc:.2f} K m1={m1:5.3f}: dchi2 {row['dchi2_total']:+7.3f} (lowTT {d['TT']:+.3f}, lowEE {d['EE']:+.3f}, "
                   f"lite {d['TTTEEE_lite_native']:+.3f}) | TT l=2 {row['TT_l2']:+.3f}, l=10 {row['TT_l10']:+.4f} | "
                   f"A_phiphi(8-400) {row['A_phiphi_8_400']:+.4f} | P(0.2) {row['Pk_0.2']:+.4f}", flush=True)
-    json.dump(results, open(os.path.join(a.out, "grid_results.json"), "w"), indent=1)
+    json.dump(results, open(os.path.join(a.out, "grid_results_dof.json" if a.ghost_dof else "grid_results.json"), "w"), indent=1)
 
 
 if __name__ == "__main__":

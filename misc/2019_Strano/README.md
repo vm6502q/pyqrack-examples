@@ -31,7 +31,8 @@ In steady state each species has a fixed physical spectrum, f₀ = C·Φ(p/T_c) 
 | `run_grid.py` | Runs the T_c × m_lightest grid against ΛCDM with the *same* relic neutrino masses, Planck 2018 best-fit parameters held fixed. |
 | `planck_chi2.py` | Planck 2018 low-ℓ TT + low-ℓ EE + plik-lite χ² from CLASS C_ℓ files, through Cobaya. |
 | `setup_and_run.sh` | Builds everything and runs the grid. Takes about 5 min per point on 2 cores. |
-| `grid_results.json` | The results below. |
+| `grid_results.json`, `grid_results_dof.json` | The results below (T_c grid; self-consistent T_c). |
+| `tc_selfconsistent.py` | Standalone solve of the self-consistent T_c. |
 
 **New CLASS parameters.**
 
@@ -44,6 +45,7 @@ In steady state each species has a fixed physical spectrum, f₀ = C·Φ(p/T_c) 
 | `created_z_on` | 100 | The grid resolves the spectrum from this redshift on. |
 | `created_E_max` | 30 | Top of the momentum grid, in units of T_c. |
 | `created_k_max` | 0 = all | Skip the new species above this k, in Mpc⁻¹. The grid uses 0.05. |
+| `created_ghost_dof` | 0 = off | g > 0: **solve T_c** so that the ghost gas is a blackbody with g massless bosonic degrees of freedom, (g/2)ρ_γ(T_c/T_cmb)⁴, equal to the |ρ_ghost| that closure (exact Λ) requires. The lowest root is used, and `created_Tc_K` is then ignored. |
 
 The masses are taken from `m_ncdm`. Normal ordering uses Δm²₂₁ = 7.42×10⁻⁵ and Δm²₃₁ = 2.51×10⁻³ eV². Species carrying less than 10⁻⁴ of the heaviest one's creation share are dropped.
 
@@ -83,6 +85,25 @@ Cosmological parameters are held fixed at the Planck 2018 best fit. Δχ² = χ�
 - **m_lightest barely matters.** Creation goes as m², so the heaviest eigenstate (m₃ ≥ 50 meV) dominates.
 - **Lower T_c means a stronger effect.**
 
+## Self-consistent T_c (no free temperature)
+
+A pure global state seen from inside is thermal, at a temperature set by how many modes share the energy (canonical
+typicality). Requiring the ghost gas to be its own blackbody at T_c therefore fixes T_c from Λ. `tc_selfconsistent.py` is a
+standalone check of the same solve.
+
+| g (ghost dof) | m_lightest (eV) | T_c (solved) | Δχ² total | low-ℓ TT | low-ℓ EE | plik-lite | TT ℓ=2 | TT ℓ=10 |
+|---|---|---|---|---|---|---|---|---|
+| 1 | 0 | 47.55 K | −1.29 | −0.92 | +0.03 | −0.39 | −29.5% | −6.2% |
+| 1 | 0.03 | 47.54 K | −1.43 | −0.91 | −0.01 | −0.51 | −29.3% | −6.2% |
+| 2 | 0 | 39.64 K | −1.37 | −0.96 | +0.04 | −0.45 | −30.1% | −6.5% |
+| 2 | 0.03 | 39.63 K | −1.55 | −0.96 | −0.01 | −0.59 | −29.9% | −6.5% |
+
+The natural choice for a single scalar monopole mode is g = 1. It gives T_c = 47.5 K with no continuous parameter beyond
+ΛCDM's. Only the lightest neutrino mass and the mass ordering remain, and the mass barely matters. In every case the lensing
+amplitude changes by less than 0.1% and P(k) by less than 10⁻⁴. `grid_results_dof.json` holds these rows.
+
+**Assumption:** the ghost gas is fully thermalized, with zero chemical potential.
+
 ## Caveats
 
 1. **Fixed parameters.** ΛCDM parameters weren't refit. Because the change sits at ℓ ≲ 20 (late ISW), refitting should move them little. A Cobaya minimization with a classy build of this patch would settle it; it costs about 5 min per evaluation.
@@ -95,3 +116,4 @@ Cosmological parameters are held fixed at the Planck 2018 best fit. Δχ² = χ�
 
     bash setup_and_run.sh                         # default grid
     bash setup_and_run.sh --Tc 30,40,50 --m1 0     # or any other grid
+    bash setup_and_run.sh --ghost-dof 1 --m1 0     # self-consistent T_c
