@@ -24,7 +24,6 @@
    "A_planck": 0.999861639148263,
    "H0": 67.36238351323166
   },
-  "chi2_full": 1002.5555589679544,
   "chi2_parts": {
    "planck_2018_lowl.TT": 22.62039459079773,
    "planck_2018_lowl.EE": 396.16587809864717,
@@ -64,6 +63,9 @@
   "dchi2_min": -1.3551169491920518,
   "dchi2_file_at_thetaM": -1.3230616848044292,
   "dchi2_template_at_thetaM": -1.2880457596218093,
-  "chi2_model_min_cobaya_pipeline": 1001.0898616867014
+  "chi2_model_min_cobaya_pipeline": 1001.0898616867014,
+  "chi2_full_mixed_pipeline_superseded": 1002.5555589679544,
+  "chi2_full": 1001.0898616867014,
+  "lcdm_key": "lcdm_m1_0"
  }
 }

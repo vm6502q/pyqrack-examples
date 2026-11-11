@@ -105,6 +105,9 @@ def minimize(inf, prefix, start=None):
     p = sampler.products()["minimum"]
     best = {k: float(p[k]) for k in PARAM_KEYS}
     best["H0"] = float(p["H0"])
+    parts = {k.split("__", 1)[1].split(".")[-1].replace("TTTEEE_lite_native", "lite"): float(p[k])
+             for k in p.index if str(k).startswith("chi2__") and k != "chi2__CMB"}
+    best["_chi2_parts"] = parts
     return best, float(-2 * p["minuslogpost"]), float(p["chi2"])
 
 
@@ -207,11 +210,23 @@ def main():
     json.dump(res, open(resf, "w"), indent=1)
     if a.step == "report" or a.step == "model":
         for k, v in res.items():
-            if k.startswith("model"):
-                l0 = res.get(v.get("lcdm_key", "lcdm_" + k.split("_")[1] + "_" + k.split("_")[2]))
-                if l0:
-                    print(f"{k}: chi2_min {v['chi2_full']:.3f} vs LCDM {l0['chi2']:.3f}  ->  dchi2_min = {v['chi2_full'] - l0['chi2']:+.3f}")
-                    print("   best-fit shifts:", {p: round(v['best'][p] - l0['best'][p], 6) for p in PARAM_KEYS + ['H0']})
+            if not k.startswith("model"):
+                continue
+            l0 = res.get(v.get("lcdm_key", "lcdm_" + k.split("_")[1] + "_" + k.split("_")[2]))
+            if not l0:
+                continue
+            pl, pm = l0["best"].get("_chi2_parts", {}), v["best"].get("_chi2_parts", {})
+            names = [n for n in ("TT", "EE", "lite", "native") if n in pl and n in pm]
+            label = {"TT": "low-l TT", "EE": "low-l EE", "lite": "plik-lite", "native": "lensing"}
+            print(f"\n=== {k}  (T_c = {v.get('Tc_K')} K) ===")
+            print(f"{'':10s}" + "".join(f"{label[n]:>11s}" for n in names) + f"{'chi2_min':>11s}{'H0':>9s}{'n_s':>9s}")
+            print(f"{'LCDM':10s}" + "".join(f"{pl[n]:11.3f}" for n in names) + f"{l0['chi2']:11.3f}{l0['best']['H0']:9.3f}{l0['best']['n_s']:9.4f}")
+            print(f"{'model':10s}" + "".join(f"{pm[n]:11.3f}" for n in names) + f"{v['chi2_full']:11.3f}{v['best']['H0']:9.3f}{v['best']['n_s']:9.4f}")
+            print(f"{'delta':10s}" + "".join(f"{pm[n]-pl[n]:+11.3f}" for n in names) + f"{v['chi2_full']-l0['chi2']:+11.3f}"
+                  f"{v['best']['H0']-l0['best']['H0']:+9.3f}{v['best']['n_s']-l0['best']['n_s']:+9.4f}")
+            if "dchi2_at_thetaM_full_class" in v:
+                print(f"template check at the model best fit (no lensing): full CLASS {v['dchi2_at_thetaM_full_class']:+.3f}"
+                      f" vs template {v['dchi2_at_thetaM_template']:+.3f}")
 
 
 if __name__ == "__main__":
