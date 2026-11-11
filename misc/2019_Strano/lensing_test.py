@@ -81,6 +81,7 @@ def build(created):
     lik = dict(inf["likelihood"])
     if a.marged:
         lik = {"planck_2018_lensing.CMBMarged": None}
+        inf["params"].pop("A_planck", None)          # no CMB likelihood consumes it; Cobaya would pass it to CLASS
     elif not a.no_lensing:
         lik["planck_2018_lensing.native"] = None
     inf["likelihood"] = lik
