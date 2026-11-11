@@ -20,4 +20,6 @@ As an emergent scalar mode of the pure gravitational field, according to the EFE
 
 The created hot neutrino gas, balanced against the ghost scalar, plays the role of dark energy: the pair reproduces an exact cosmological constant, with the coexistence temperature (≈ 47.5 K for one ghost degree of freedom) fixed by Λ. The value of Λ is still an input. Cold dark matter is still required, as in ΛCDM. The model’s distinguishing predictions are suppressed large-angle CMB power (≈ −29% at the quadrupole), a relic created-neutrino density of order 10⁵ per cm³, and a matching change in the ISW–galaxy cross-correlation.
 
+The 2019 stationary-state power law for the monopole channel had the wrong order: dR/dt ∝ 1/R (power ∝ 1/M) instead of dR/dt ∝ 1/R² (power ∝ 1/M²). A horizon of temperature T cannot radiate more than a black body at T through a finite number of channels without violating the Second Law, and that bound fixes both the order and the coefficient: P = ħa²/(1920πc²) per massless scalar channel. QrackOpenRelativity now uses this law by default and keeps the 2019 rule as a legacy option. At this order the scalar channel’s effect on black-hole and accelerated-frame evaporation is of Hawking size, far below any foreseeable detection.
+
 (Thanks for caring enough to read this far. You rock.)
