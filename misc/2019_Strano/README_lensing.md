@@ -10,6 +10,9 @@ Put these in one folder, along with `created_nu_class.patch`, `planck_chi2.py` a
 - `lensing_test.py`
 - `cobaya_fit.py`
 
+Run:
+    fix_class_public.sh
+
 Then:
 
     bash run_lensing.sh quick     # tens of minutes: LCDM and the model at the existing best fits, + lensing
