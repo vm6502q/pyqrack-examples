@@ -14,7 +14,6 @@ tolman = 4*sp.pi*Gn*N*(rho + px + 2*pp)
 print("Tolman/Gauss sourcing: d_x(N_x) = 4 pi G N (rho + p_x + 2 p_perp) ->  with rho = p_x = 0:",
       sp.simplify(tolman.subs({rho: 0, px: 0}) - 8*sp.pi*Gn*N*pp) == 0)
 
-
 def ll(N, T=None):
     g = sp.diag(-N**2, 1, 1, 1); gi = g.inv(); mg = -g.det()
     H = lambda m, al, n, b: mg*(gi[m, n]*gi[al, b] - gi[m, al]*gi[n, b])
