@@ -2,20 +2,11 @@
 #   16 pi G (-g)(T^{mn} + t_LL^{mn}) = d_a d_b H^{manb},  H^{manb} = (-g)(g^{mn} g^{ab} - g^{ma} g^{nb}).
 # By (Anthropic) Claude and Dan Strano.
 import sympy as sp
-t, x, y, z = sp.symbols('t x y z', real=True)
+
+t, x, y, z, a, G = sp.symbols('t x y z a G', real=True)
+X = [t, x, y, z]
 a, xs, Gn, hb = sp.symbols('a x_s G hbar', positive=True)
-
-def einstein_mixed(N):
-    X = [t, x, y, z]; g = sp.diag(-N**2, 1, 1, 1); gi = g.inv()
-    Gam = [[[sum(gi[i, d]*(sp.diff(g[d, j], X[k]) + sp.diff(g[d, k], X[j]) - sp.diff(g[j, k], X[d])) for d in range(4))/2
-             for k in range(4)] for j in range(4)] for i in range(4)]
-    Ric = sp.Matrix(4, 4, lambda j, k: sp.simplify(sum(sp.diff(Gam[i][j][k], X[i]) - sp.diff(Gam[i][j][i], X[k])
-          + sum(Gam[i][i][d]*Gam[d][j][k] - Gam[i][k][d]*Gam[d][j][i] for d in range(4)) for i in range(4))))
-    R = sp.simplify(sum(gi[i, j]*Ric[i, j] for i in range(4) for j in range(4)))
-    return sp.simplify(gi*(Ric - R*g/2)), R
-
 N = sp.Function('N')(t, x)
-Gm, R = einstein_mixed(N)
 
 # Gauss/Tolman form: the vacuum equation N_xx = 0 is Gauss's law for the redshifted acceleration N_x.
 rho, px, pp = sp.symbols('rho p_x p_perp')
@@ -23,8 +14,7 @@ tolman = 4*sp.pi*Gn*N*(rho + px + 2*pp)
 print("Tolman/Gauss sourcing: d_x(N_x) = 4 pi G N (rho + p_x + 2 p_perp) ->  with rho = p_x = 0:",
       sp.simplify(tolman.subs({rho: 0, px: 0}) - 8*sp.pi*Gn*N*pp) == 0)
 
-t, x, y, z, a, G = sp.symbols('t x y z a G', real=True)
-X = [t, x, y, z]
+
 def ll(N, T=None):
     g = sp.diag(-N**2, 1, 1, 1); gi = g.inv(); mg = -g.det()
     H = lambda m, al, n, b: mg*(gi[m, n]*gi[al, b] - gi[m, al]*gi[n, b])
