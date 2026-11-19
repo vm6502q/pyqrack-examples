@@ -44,7 +44,11 @@
 # against the full 2^width ideal, so you can show the proxy tracks the
 # full-circuit XEB wherever both are computable.
 #
-# usage: python3 nn_bridge_orthogonal_proxy.py [width] [depth] [patches=2] [max_bonds=6] [proxy_patches=2] [--full] [--born]
+# usage: python3 nn_bridge_orthogonal_proxy.py [width] [depth] [patches=2] [max_bonds=6] [proxy_patches=2] [--full] [--born] [--defer-bits=4] [--seed=N]
+#
+# --seed=N fixes the circuit draw, so A/B runs compare the same circuit.
+# --defer-bits=N: per-layer deferred truncation, with each deferred block capped at N bond qubits of
+# exact growth per cut (see run_layers_bridge). --defer-bits=0 restores eager, per-gate truncation.
 
 import ctypes
 import math
@@ -223,6 +227,88 @@ def count_seam_couplers(qc, width, patches):
 
 
 # ---------------------------------------------------------------------------
+# Per-layer deferred execution on QrackBridge
+# ---------------------------------------------------------------------------
+#
+# Each layer of the generator is a run of single-qubit gates followed by
+# couplers on DISJOINT qubit pairs, so a layer's couplers all commute: running
+# the in-patch couplers first and the cross-patch ("bridged") couplers last is
+# the identical circuit. The bridged couplers then run inside QrackBridge's
+# deferred() block, which keeps patch tensors on the host and truncates once
+# at the end of the block, instead of a full engine round trip (and truncation)
+# after every bridged gate.
+#
+# Inside a deferred block, QBridge recompresses bonds only EXACTLY, so bonds
+# grow with every bridged gate until the block closes. To bound memory, a
+# layer's bridged couplers are split into consecutive blocks whose worst-case
+# exact growth stays within `defer_bits` bond qubits on any one cut (a block
+# always takes at least one gate). Upper bounds per gate, from how QBridge
+# splits it: a single-control gate adds 1 bond qubit to the cut it crosses,
+# swap/iswap/adjiswap add 2, and the composites pswap/mswap/nswap (controlled
+# Z, then a swap-family gate) add 3. Peak bonds are therefore at most
+# max_bonds + max(defer_bits, 3) per cut (logged as peak_bonds).
+#
+# defer_bits = 0 disables deferral: every gate runs in generator order, with
+# QrackBridge's default eager truncation (the original behavior), for A/B runs.
+
+GATE_BOND_BITS = {
+    cx: 1, cy: 1, cz: 1, acx: 1, acy: 1, acz: 1,
+    swap: 2, iswap: 2, iiswap: 2,
+    pswap: 3, mswap: 3, nswap: 3,
+}
+
+
+def split_layers(circ):
+    """Recover layers from a flat circuit: a new layer starts wherever a
+    single-qubit gate follows a coupler (true of both the full and proxy circuits)."""
+    layers = []
+    prev_u = False
+    for g in circ:
+        is_u = g[0] is u
+        if is_u and not prev_u:
+            layers.append([])
+        layers[-1].append(g)
+        prev_u = is_u
+    return layers
+
+
+def cut_of(pa, pb, patches, ring):
+    """Index of the bridge cut between adjacent patches pa != pb."""
+    if patches == 2:
+        return 0
+    if ring and {pa, pb} == {0, patches - 1}:
+        return patches - 1
+    return min(pa, pb)
+
+
+def run_layers_bridge(sim, circ, owner, patches, ring, defer_bits):
+    if defer_bits <= 0:
+        run_circuit(sim, circ)
+        return 0
+    blocks = 0
+    for layer in split_layers(circ):
+        local = [g for g in layer if (g[0] is u) or (owner[g[1]] == owner[g[2]])]
+        bridged = [g for g in layer if (g[0] is not u) and (owner[g[1]] != owner[g[2]])]
+        run_circuit(sim, local)
+        block, cost = [], {}
+        for g in bridged:
+            c = cut_of(owner[g[1]], owner[g[2]], patches, ring)
+            b = GATE_BOND_BITS[g[0]]
+            if block and (cost.get(c, 0) + b) > defer_bits:
+                with sim.deferred():
+                    run_circuit(sim, block)
+                blocks += 1
+                block, cost = [], {}
+            block.append(g)
+            cost[c] = cost.get(c, 0) + b
+        if block:
+            with sim.deferred():
+                run_circuit(sim, block)
+            blocks += 1
+    return blocks
+
+
+# ---------------------------------------------------------------------------
 # Orthogonal cut: bands of the LONG coordinate ("row")
 # ---------------------------------------------------------------------------
 
@@ -363,11 +449,12 @@ def calc_stats_factorized(bands, per_band, counts, shots, median_draws=1 << 16):
 # Benchmark
 # ---------------------------------------------------------------------------
 
-def bridge_counts(width, patches, max_bonds, truncation, circ, shots):
+def bridge_counts(width, patches, max_bonds, truncation, circ, shots, defer_bits):
     ring = patches >= 3
     check_bridge_layout(circ, width, patches, ring)
+    owner, _ = bridge_patch_of(width, patches)
     sim = QrackBridge(width, max_bonds=max_bonds, patches=patches, wrap=ring, truncation=truncation)
-    run_circuit(sim, circ)
+    blocks = run_layers_bridge(sim, circ, owner, patches, ring, defer_bits)
     counts = dict(Counter(sim.measure_shots(list(range(width)), shots)))
     # Fairness-critical settings and run statistics: logged, so every result
     # carries the exact configuration that produced it.
@@ -380,6 +467,8 @@ def bridge_counts(width, patches, max_bonds, truncation, circ, shots):
         "wrap": ring,
         "max_bonds": max_bonds,
         "truncation": truncation,
+        "defer_bits": defer_bits,
+        "deferred_blocks": blocks,
         "fidelity_estimate": float(sim.fidelity_estimate),
         "truncations": int(sim.truncations),
         "peak_bonds": int(sim.peak_bonds),
@@ -389,7 +478,7 @@ def bridge_counts(width, patches, max_bonds, truncation, circ, shots):
     return counts, stats
 
 
-def bench(width, depth, patches=2, max_bonds=6, k=2, full=False, truncation="greedy"):
+def bench(width, depth, patches=2, max_bonds=6, k=2, full=False, truncation="greedy", defer_bits=4):
     if width > 64:
         raise RuntimeError("QrackBridge.measure_shots() samples at most 64 qubits.")
     if not 2 <= patches <= width:
@@ -408,7 +497,7 @@ def bench(width, depth, patches=2, max_bonds=6, k=2, full=False, truncation="gre
           f"{' + '.join(str(len(b)) for b in bands)} qubits; {removed} of {len(qc) - width * depth} couplers cut; "
           f"bridge-seam couplers {seam_full} full -> {seam_proxy} proxy)", flush=True)
 
-    counts, stats = bridge_counts(width, patches, max_bonds, truncation, proxy, shots)
+    counts, stats = bridge_counts(width, patches, max_bonds, truncation, proxy, shots, defer_bits)
     t2 = time.perf_counter()
     print(f"bridge_proxy_seconds: {t2 - t1:.4f}", flush=True)
     for key, v in stats.items():
@@ -424,6 +513,7 @@ def bench(width, depth, patches=2, max_bonds=6, k=2, full=False, truncation="gre
         "patches": patches,
         "max_bonds": max_bonds,
         "truncation": truncation,
+        "defer_bits": defer_bits,
         "proxy_patches": k,
         "proxy_patch_qubits": [len(b) for b in bands],
         "couplers_cut": removed,
@@ -435,7 +525,7 @@ def bench(width, depth, patches=2, max_bonds=6, k=2, full=False, truncation="gre
     }
 
     if full:
-        counts_full, stats_full = bridge_counts(width, patches, max_bonds, truncation, qc, shots)
+        counts_full, stats_full = bridge_counts(width, patches, max_bonds, truncation, qc, shots, defer_bits)
         t4 = time.perf_counter()
         print(f"bridge_full_seconds: {t4 - t3:.4f}", flush=True)
         sim_ideal = QrackSimulator(width)
@@ -452,21 +542,29 @@ def bench(width, depth, patches=2, max_bonds=6, k=2, full=False, truncation="gre
 
 
 def main():
+    argv = sys.argv[1:]
+    defer_bits = 4
+    for a in argv:
+        if a.startswith("--defer-bits="):
+            defer_bits = int(a.split("=", 1)[1])
+        elif a.startswith("--seed="):
+            # Same seed, same circuit draw: for A/B runs (e.g. --defer-bits=0 vs 4).
+            random.seed(int(a.split("=", 1)[1]))
     flags = {"--full", "--born"}
-    args = [a for a in sys.argv[1:] if a not in flags]
-    full = "--full" in sys.argv[1:]
-    truncation = "born" if "--born" in sys.argv[1:] else "greedy"
+    args = [a for a in argv if (a not in flags) and not a.startswith(("--defer-bits=", "--seed="))]
+    full = "--full" in argv
+    truncation = "born" if "--born" in argv else "greedy"
     if len(args) < 2:
         raise RuntimeError(
             "Usage: python3 nn_bridge_orthogonal_proxy.py [width] [depth] "
-            "[patches=2] [max_bonds=6] [proxy_patches=2] [--full] [--born]"
+            "[patches=2] [max_bonds=6] [proxy_patches=2] [--full] [--born] [--defer-bits=4] [--seed=N]"
         )
     width = int(args[0])
     depth = int(args[1])
     patches = int(args[2]) if len(args) > 2 else 2
     max_bonds = int(args[3]) if len(args) > 3 else 6
     k = int(args[4]) if len(args) > 4 else 2
-    result = bench(width, depth, patches, max_bonds, k, full, truncation)
+    result = bench(width, depth, patches, max_bonds, k, full, truncation, defer_bits)
     for key, v in result.items():
         print(f"  {key}: {v}")
     return 0
