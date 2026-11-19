@@ -316,8 +316,23 @@ def gather_bits(keys, qubits):
     return x.astype(np.int64)
 
 
-def calc_stats_factorized(band_probs, bands, counts, shots, median_draws=1 << 16):
+def sum_of_squares(p, chunk=1 << 22):
+    """sum(p^2), accumulated in float64 over fixed-size chunks: BLAS speed with
+    no full-size float64 copy (the 2^n buffer may be float32)."""
+    s = 0.0
+    for i in range(0, p.size, chunk):
+        c = p[i:i + chunk].astype(np.float64)
+        s += np.dot(c, c)
+    return s
+
+
+def calc_stats_factorized(bands, per_band, counts, shots, median_draws=1 << 16):
     """The same estimator as calc_stats, for p(x) = prod_k p_k(x_k).
+
+    Streams the bands: each band's exact 2^n_k distribution is computed, reduced
+    to the three quantities the estimator needs (N_k sum p_k^2, N_k p_k at the
+    sampled keys, N_k p_k at the HOG median draws), and freed before the next
+    band is simulated. Peak memory is one band, not all of them.
 
     XEB is exact. HOG uses the median of the product distribution, which is
     estimated from `median_draws` uniformly random bitstrings (the median of
@@ -330,12 +345,13 @@ def calc_stats_factorized(band_probs, bands, counts, shots, median_draws=1 << 16
     scaled = np.ones(len(keys))
     rng = np.random.default_rng(12345)
     draws = np.ones(median_draws)
-    for p, qubits in zip(band_probs, bands):
+    for qubits, gates in zip(bands, per_band):
+        p = ideal_probs(len(qubits), gates)
         n_pow = float(p.size)
-        sum_sq *= n_pow * np.dot(p.astype(np.float64), p)
-        x_k = gather_bits(keys, qubits)
-        scaled *= n_pow * p[x_k].astype(np.float64)
+        sum_sq *= n_pow * sum_of_squares(p)
+        scaled *= n_pow * p[gather_bits(keys, qubits)].astype(np.float64)
         draws *= n_pow * p[rng.integers(0, p.size, median_draws)].astype(np.float64)
+        del p
 
     xeb = (np.dot(freq, scaled) - 1.0) / (sum_sq - 1.0)
     hog_approx = freq[scaled > np.median(draws)].sum()
@@ -398,12 +414,9 @@ def bench(width, depth, patches=2, max_bonds=6, k=2, full=False, truncation="gre
     for key, v in stats.items():
         print(f"  {key}: {v}")
 
-    band_probs = [ideal_probs(len(b), g) for b, g in zip(bands, per_band)]
+    xeb_proxy, hog_proxy = calc_stats_factorized(bands, per_band, counts, shots)
     t3 = time.perf_counter()
-    print(f"ideal_patches_seconds: {t3 - t2:.4f}", flush=True)
-
-    xeb_proxy, hog_proxy = calc_stats_factorized(band_probs, bands, counts, shots)
-    del band_probs
+    print(f"ideal_patches_and_stats_seconds: {t3 - t2:.4f}", flush=True)
 
     result = {
         "width": width,
