@@ -479,8 +479,6 @@ def bridge_counts(width, patches, max_bonds, truncation, circ, shots, defer_bits
 
 
 def bench(width, depth, patches=2, max_bonds=6, k=2, full=False, truncation="greedy", defer_bits=4):
-    if width > 64:
-        raise RuntimeError("QrackBridge.measure_shots() samples at most 64 qubits.")
     if not 2 <= patches <= width:
         raise RuntimeError("need 2 <= patches <= width.")
     shots = 1 << min(13, width + 2)
@@ -543,7 +541,7 @@ def bench(width, depth, patches=2, max_bonds=6, k=2, full=False, truncation="gre
 
 def main():
     argv = sys.argv[1:]
-    defer_bits = 4
+    defer_bits = 0
     for a in argv:
         if a.startswith("--defer-bits="):
             defer_bits = int(a.split("=", 1)[1])
